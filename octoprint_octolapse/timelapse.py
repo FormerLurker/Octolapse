@@ -139,10 +139,6 @@ class Timelapse(object):
             return 0
         return self._capture_snapshot.SnapshotsTotal
 
-    def get_printer_volume_dict(self):
-        return utility.get_bounding_box(
-            self._printer, self._octoprint_printer_profile)
-
     def get_current_profiles(self):
         return self._current_profiles
 
@@ -150,7 +146,7 @@ class Timelapse(object):
         return self._state
 
     def start_timelapse(
-        self, settings, octoprint_printer_profile, ffmpeg_path, g90_influences_extruder,
+        self, settings, overridable_printer_profile_settings, ffmpeg_path,
         gcode_file_path, snapshot_plans=None
     ):
         # we must supply the settings first!  Else reset won't work properly.
@@ -174,7 +170,8 @@ class Timelapse(object):
         assert (isinstance(self._printer, PrinterProfile))
 
         self.RequiresLocationDetectionAfterHome = False
-        self._octoprint_printer_profile = octoprint_printer_profile
+        self.overridable_printer_profile_settings = overridable_printer_profile_settings
+
         self._ffmpeg_path = ffmpeg_path
 
         self._current_job_info = utility.TimelapseJobInfo(
@@ -197,7 +194,7 @@ class Timelapse(object):
             self._rendering_processor.start()
 
         self._gcode = SnapshotGcodeGenerator(
-            self._settings, octoprint_printer_profile)
+            self._settings, self.overridable_printer_profile_settings)
 
         self._capture_snapshot = CaptureSnapshot(
             self._settings,
@@ -210,8 +207,9 @@ class Timelapse(object):
 
         self._position = Position(
             self._settings.profiles.current_printer(),
-            self._settings.profiles.current_trigger(), octoprint_printer_profile, g90_influences_extruder
+            self._settings.profiles.current_trigger(), self.overridable_printer_profile_settings
         )
+
         self._state = TimelapseState.WaitingForTrigger
         self._is_test_mode = self._settings.profiles.current_debug_profile().is_test_mode
         self._triggers = Triggers(self._settings)
@@ -445,9 +443,11 @@ class Timelapse(object):
                                 snapshot_plans.append(plan.to_dict())
                                 total_travel_distance += plan.travel_distance
                                 total_saved_travel_distance += plan.saved_travel_distance
-                        printer_volume = self.get_printer_volume_dict()
+                        printer_volume = self.overridable_printer_profile_settings["volume"]
+                        axes = self.overridable_printer_profile_settings["axes"]
                         snapshot_plan = {
                             "printer_volume": printer_volume,
+                            "axes": axes,
                             "snapshot_plans": snapshot_plans,
                             "total_travel_distance": total_travel_distance,
                             "total_saved_travel_distance": total_saved_travel_distance,
@@ -1192,7 +1192,7 @@ class Timelapse(object):
                         "trigger_type": "pre-calculated",
                         "snapshot_plan":
                         {
-                            "printer_volume": self.get_printer_volume_dict(),
+                            "printer_volume": self.overridable_printer_profile_settings["volume"],
                             "current_plan_index": self.current_snapshot_plan_index,
                             "current_file_line": self._current_file_line,
                         }

@@ -42,155 +42,479 @@
                 </div>
             </div>
         </div>
+        <!--Profile Import and Update-->
+        <div data-bind="template: {name:'octolapse-profile-library-test-template', data: automatic_configuration}"></div>
         <hr />
         <div>
             <h3>Current Slicer Settings</h3>
             <p>In most cases Octolapse can automatically detect your slicer settings.  Currently Cura, Simplify3d and Slic3r PE are supported.
         </div>
-
-        <div class="control-group">
-            <label class="control-label" for="printer_profile_slicer_type">Slicer Type</label>
-            <div class="controls">
-                <select id="printer_profile_slicer_type" data-bind="options: Octolapse.Printers.profileOptions.slicer_type_options,
+        <div>
+            <div class="control-group">
+                <label class="control-label" for="printer_profile_slicer_type">Slicer Type</label>
+                <div class="controls">
+                    <select id="printer_profile_slicer_type" data-bind="options: Octolapse.Printers.profileOptions.slicer_type_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: slicer_type"></select>
-                <a class="octolapse_help" data-help-url="profiles.printer.slicer_type.md" data-help-title="Slicer Type" />
-                <div class="error_label_container text-error" data-error-for="printer_profile_slicer_type"></div>
+                    <a class="octolapse_help" data-help-url="profiles.printer.slicer_type.md" data-help-title="Slicer Type" />
+                    <div class="error_label_container text-error" data-error-for="printer_profile_slicer_type"></div>
+                </div>
             </div>
+            <div data-bind="fadeVisible: !has_been_saved_by_user() && slicer_type() != 'automatic'" class="text-warning">
+                <p>You have not yet configured this slicer profile.  Either copy your slicer settings into this profile or select <i>Automatic Configuration</i> above before using Octolapse.</p>
+            </div>
+            <!-- Other Slicer Type -->
+            <div data-bind="fadeVisible: slicer_type() == 'other', template:'printer-slicer-other-template'"></div>
+            <div data-bind="fadeVisible: slicer_type() == 'slic3r-pe', template:'printer-slicer-slic3r-pe-template'"></div>
+            <div data-bind="fadeVisible: slicer_type() == 'cura', template:'printer-slicer-cura-template'"></div>
+            <div data-bind="fadeVisible: slicer_type() == 'simplify-3d', template:'printer-slicer-simplify-3d-template'"></div>
+            <div data-bind="fadeVisible: slicer_type() == 'automatic', template:'printer-slicer-automatic-template'"></div>
         </div>
-        <div data-bind="visible: !has_been_saved_by_user() && slicer_type() != 'automatic'" class="text-warning">
-            <p>You have not yet configured this slicer profile.  Either copy your slicer settings into this profile or select <i>Automatic Configuration</i> above before using Octolapse.</p>
-        </div>
-        <!-- Other Slicer Type -->
-        <div data-bind="visible: slicer_type() == 'other', template:'printer-slicer-other-template'"></div>
-        <div data-bind="visible: slicer_type() == 'slic3r-pe', template:'printer-slicer-slic3r-pe-template'"></div>
-        <div data-bind="visible: slicer_type() == 'cura', template:'printer-slicer-cura-template'"></div>
-        <div data-bind="visible: slicer_type() == 'simplify-3d', template:'printer-slicer-simplify-3d-template'"></div>
-        <div data-bind="visible: slicer_type() == 'automatic', template:'printer-slicer-automatic-template'"></div>
-
-        <div data-bind="template: {name:'octolapse-profile-library-test-template', data: automatic_configuration}"></div>
-
         <div data-bind="fadeVisible: !(automatic_configuration.updating_from_server())">
-            <hr/>
+            <hr />
             <div>
                 <h3>Printer Configuration</h3>
             </div>
             <div>
+                <div class="control-group">
+                    <label class="control-label" for="override_octoprint_profile_settings">Override Octoprint Printer Profile</label>
+                    <div class="controls">
+                        <label class="checkbox">
+                            <input name="override_octoprint_profile_settings" type="checkbox" data-bind="checked: override_octoprint_profile_settings" title="Uses the bed sizes from the Octoprint printer profiles." />Enabled
+                            <a class="octolapse_help" data-help-url="profiles.printer.override_octoprint_profile_settings.md" data-help-title="Override Octoprint Printer Profile" />
+                        </label>
+                        <span class="help-inline">
+                            When enabled Octolapse will use the Octoprint print bed & build volume and axis inversion settings from your current printer profile.  This does not affect the function of Octoprint, only the Octolapse plugin.
+                        </span>
+                    </div>
+                </div>
+                <div data-bind="fadeVisible:override_octoprint_profile_settings">
+                    <hr />
+                    <div>
+                        <h4>Print Volume</h4>
+                        <p>If you want to specify a custom volume, you may do so below.  Any values entered here will be used instead of Octoprint's printer profile.  All snapshot positions must be within the print volume, else they will be skipped.</p>
+                    </div>
+                    <div>
+                        <div class="control-group">
+                            <label class="control-label" for="printer_profile_bed_type">Bed Type</label>
+                            <div class="controls">
+                                <select id="printer_profile_bed_type" data-bind="options: Octolapse.Printers.profileOptions.bed_type_options,
+                                                   optionsText: 'name',
+                                                   optionsValue: 'value',
+                                                   value: bed_type"></select>
+                                <a class="octolapse_help" data-help-url="profiles.printer.bed_type.md" data-help-title="Bed Type" />
+                                <div class="error_label_container text-error" data-error-for="printer_profile_bed_type"></div>
+                            </div>
+                        </div>
+                        <div data-bind="fadeVisible: bed_type() == 'rectangular'">
+                            <div class="control-group">
+                                <label class="control-label" for="octolapse_printer_min_x">X - Width</label>
+                                <div class="controls">
+                                    <div class="row-fluid">
+                                        <div class="span3">
+                                            <div class="input-prepend input-append">
+                                                <span class="add-on">Min</span>
+                                                <input id="octolapse_printer_min_x" name="min_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: min_x" step="any" required />
+                                                <span class="add-on">mm</span>
+                                            </div>
+                                            <div class="error_label_container text-error" data-error-for="octolapse_printer_min_x"></div>
+                                        </div>
+                                        <div class="span3">
+                                            <div class="input-prepend input-append">
+                                                <span class="add-on">Max</span>
+                                                <input id="octolapse_printer_max_x" name="max_x" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: max_x" step="any" required />
+                                                <span class="add-on">mm</span>
+                                            </div>
+                                            <div class="error_label_container text-error" data-error-for="octolapse_printer_max_x"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label" for="octolapse_printer_min_y">Y - Depth</label>
+                                <div class="controls">
+                                    <div class="row-fluid">
+                                        <div class="span3">
+                                            <div class="input-prepend input-append">
+                                                <span class="add-on">Min</span>
+                                                <input id="octolapse_printer_min_y" name="min_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: min_y" step="any" required />
+                                                <span class="add-on">mm</span>
+                                            </div>
+                                            <div class="error_label_container text-error" data-error-for="octolapse_printer_min_y"></div>
+                                        </div>
+                                        <div class="span3">
+                                            <div class="input-prepend input-append">
+                                                <span class="add-on">Max</span>
+                                                <input id="octolapse_printer_max_y" name="max_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: max_y" step="any" required />
+                                                <span class="add-on">mm</span>
+                                            </div>
+                                            <div class="error_label_container text-error" data-error-for="octolapse_printer_max_y"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div data-bind="fadeVisible: bed_type() == 'circular'">
+                            <div class="control-group">
+                                <label class="control-label" for="octolapse_printer_diameter_xy">Diameter XY</label>
+                                <div class="controls">
+                                    <div class="row-fluid">
+                                        <div class="span3">
+                                            <div class="input-prepend input-append">
+                                                <span class="add-on">dia</span>
+                                                <input id="octolapse_printer_diameter_xy" name="diameter_xy" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: diameter_xy" step="any" min="1" required />
+                                                <span class="add-on">mm</span>
+                                            </div>
+                                            <div class="error_label_container text-error" data-error-for="octolapse_printer_diameter_xy"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label" for="octolapse_printer_min_z">Z - Height</label>
+                            <div class="controls">
+                                <div class="row-fluid">
+                                    <div class="span3">
+                                        <div class="input-prepend input-append">
+                                            <span class="add-on">Min</span>
+                                            <input id="octolapse_printer_min_z" name="min_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: min_z" step="any" required />
+                                            <span class="add-on">mm</span>
+                                        </div>
+                                        <div class="error_label_container text-error" data-error-for="octolapse_printer_min_z"></div>
+                                    </div>
+                                    <div class="span3">
+                                        <div class="input-prepend input-append">
+                                            <span class="add-on">Max</span>
+                                            <input id="octolapse_printer_max_z" name="max_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: max_z" step="any" required />
+                                            <span class="add-on">mm</span>
+                                        </div>
+                                        <div class="error_label_container text-error" data-error-for="octolapse_printer_max_z"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div>
+                        <h4>Origin</h4>
+                        <p>In order to take snapshots, Octolapse needs to know the location of each axis.  Providing a home position, either manually or through auto-discovery, will allow Octolapse to start taking snapshots immediately after a home command is sent to the printer.  If <i>Auto-Detect Home Position</i> is not enabled, and an absolute home position is not supplied, Octolapse will monitor the GCode in order to to discover the current absolute position.</p>
+                    </div>
+                    <div>
+                        <div class="control-group">
+                            <label class="control-label" for="printer_profile_origin_type">Origin Type</label>
+                            <div class="controls">
+                                <select id="printer_profile_origin_type" data-bind="options: Octolapse.Printers.profileOptions.origin_type_options,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: origin_type"></select>
+                                <a class="octolapse_help" data-help-url="profiles.printer.origin_type.md" data-help-title="Origin Type" />
+                                <div class="error_label_container text-error" data-error-for="printer_profile_origin_type"></div>
+                            </div>
+                        </div>
+                        <div data-bind="fadeVisible: origin_type() == 'custom'">
+                            <p class="help-inline">Enter the known origin for each of the three axes, or leave them blank to force Octolapse to search for absolute movement.</p>
+                            <div class="control-group">
+                                <label class="control-label" for="printer_profile_origin_x">X Origin</label>
+                                <div class="controls">
+                                    <div class="input-append form-inline">
+                                        <input id="printer_profile_origin_x" name="origin_x" type="number" class="input-small text-right" data-bind="value: origin_x" step="any" />
+                                        <span class="add-on">mm</span>
+                                    </div>
+                                    <div class="error_label_container text-error" data-error-for="printer_profile_origin_x"></div>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label class="control-label" for="printer_profile_origin_y">Y Origin</label>
+                                <div class="controls">
+                                    <div class="input-append form-inline">
+                                        <input id="printer_profile_origin_y" name="origin_y" type="number" class="input-small text-right" data-bind="value: origin_y" step="any" />
+                                        <span class="add-on">mm</span>
+                                    </div>
+                                    <div class="error_label_container text-error" data-error-for="printer_profile_origin_y"></div>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <label class="control-label" for="printer_profile_origin_z">Z Origin</label>
+                                <div class="controls">
+                                    <div class="input-append form-inline">
+                                        <input id="printer_profile_origin_z" name="origin_z" type="number" class="input-small text-right" data-bind="value: origin_z" step="any" />
+                                        <span class="add-on">mm</span>
+                                    </div>
+                                    <div class="error_label_container text-error" data-error-for="printer_profile_origin_z"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div>
+                        <h4>Restrict Snapshot Area</h4>
+                        <p>Octolapse can prevent snapshot from occurring while the printer is outside of a given boundary.  When enabled snapshot will not be allowed outside the provided coordinates.  This is useful for preventing snapshots while priming outside of the normal print area (like the Mk2 and Mk3's priming area at the front of the bed), or to prevent snapshots on the first/final layers if desired.  When disabled your print volume will be used.</p>
+                    </div>
+                    <div>
+                        <div class="control-group">
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input name="restrict_snapshot_area" type="checkbox" data-bind="checked: restrict_snapshot_area" title="Uses the bed sizes from the Octoprint printer profiles." />Enabled
+                                    <a class="octolapse_help" data-help-url="profiles.printer.restrict_snapshot_area.md" data-help-title="Restrict Snapshot Area" />
+                                </label>
+                            </div>
+                        </div>
+                        <div data-bind="fadeVisible:restrict_snapshot_area">
+                            <div data-bind="fadeVisible: bed_type() == 'circular'">
+                                <div class="control-group">
+                                    <label class="control-label" for="octolapse_printer_snapshot_diameter_xy">Diameter XY</label>
+                                    <div class="controls">
+                                        <div class="input-append input-append">
+                                            <div class="input-prepend input-append">
+                                                <span class="add-on">dia</span>
+                                                <input id="octolapse_printer_snapshot_diameter_xy" name="snapshot_diameter_xy" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_diameter_xy" step="any" min="1" required />
+                                                <span class="add-on">mm</span>
+                                            </div>
+                                            <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_diameter_xy"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div data-bind="fadeVisible: bed_type() == 'rectangular'">
+                                    <div class="control-group">
+                                        <label class="control-label" for="octolapse_printer_snapshot_min_x">Snapshot Boundary - X</label>
+                                        <div class="controls">
+                                            <div class="row-fluid">
+                                                <div class="span3">
+                                                    <div class="input-prepend input-append">
+                                                        <span class="add-on">Min</span>
+                                                        <input id="octolapse_printer_snapshot_min_x" name="snapshot_min_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_min_x" step="any" required />
+                                                        <span class="add-on">mm</span>
+                                                    </div>
+                                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_min_x"></div>
+                                                </div>
+                                                <div class="span3">
+                                                    <div class="input-prepend input-append">
+                                                        <span class="add-on">Max</span>
+                                                        <input id="octolapse_printer_snapshot_max_x" name="snapshot_max_x" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: snapshot_max_x" step="any" required />
+                                                        <span class="add-on">mm</span>
+                                                    </div>
+                                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_max_x"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="control-group">
+                                        <label class="control-label" for="octolapse_printer_snapshot_min_y">Snapshot Boundary - Y</label>
+                                        <div class="controls">
+                                            <div class="row-fluid">
+                                                <div class="span3">
+                                                    <div class="input-prepend input-append">
+                                                        <span class="add-on">Min</span>
+                                                        <input id="octolapse_printer_snapshot_min_y" name="snapshot_min_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_min_y" step="any" required />
+                                                        <span class="add-on">mm</span>
+                                                    </div>
+                                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_min_y"></div>
+                                                </div>
+                                                <div class="span3">
+                                                    <div class="input-prepend input-append">
+                                                        <span class="add-on">Max</span>
+                                                        <input id="octolapse_printer_snapshot_max_y" name="snapshot_max_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_max_y" step="any" required />
+                                                        <span class="add-on">mm</span>
+                                                    </div>
+                                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_max_y"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="octolapse_printer_snapshot_min_z">Snapshot Boundary - Z</label>
+                                    <div class="controls">
+                                        <div class="row-fluid">
+                                            <div class="span3">
+                                                <div class="input-prepend input-append">
+                                                    <span class="add-on">Min</span>
+                                                    <input id="octolapse_printer_snapshot_min_z" name="snapshot_min_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: snapshot_min_z" step="any" required />
+                                                    <span class="add-on">mm</span>
+                                                </div>
+                                                <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_min_z"></div>
+                                            </div>
+                                            <div class="span3">
+                                                <div class="input-prepend input-append">
+                                                    <span class="add-on">Max</span>
+                                                    <input id="octolapse_printer_snapshot_max_z" name="snapshot_max_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: snapshot_max_z" step="any" required />
+                                                    <span class="add-on">mm</span>
+                                                </div>
+                                                <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_max_z"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                        <div>
+                            <h4>Axis Inversion</h4>
+                        </div>
+                        <div>
+                            <div class="control-group">
+                                <label class="control-label" for="printer_profile_invert_x">Invert X Axis</label>
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input name="invert_x" type="checkbox" data-bind="checked: invert_x" title="Invert X Axis" />Enabled
+                                        <a class="octolapse_help" data-help-url="profiles.printer.invert_x.md" data-help-title="Invert X Axis" />
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label" for="printer_profile_invert_y">Invert Y Axis</label>
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input name="invert_y" type="checkbox" data-bind="checked: invert_y" title="Invert Y Axis" />Enabled
+                                        <a class="octolapse_help" data-help-url="profiles.printer.invert_y.md" data-help-title="Invert Y Axis" />
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label" for="printer_profile_invert_z">Invert Z Axis</label>
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input name="invert_z" type="checkbox" data-bind="checked: invert_z" title="Invert Z Axis" />Enabled
+                                        <a class="octolapse_help" data-help-url="profiles.printer.invert_z.md" data-help-title="Invert Z Axis" />
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label" for="printer_profile_invert_e">Invert E Axis</label>
+                                <div class="controls">
+                                    <label class="checkbox">
+                                        <input name="invert_e" type="checkbox" data-bind="checked: invert_e" title="Invert E Axis" />Enabled
+                                        <a class="octolapse_help" data-help-url="profiles.printer.invert_e.md" data-help-title="Invert E Axis" />
+                                    </label>
+                                </div>
+                            </div>
+                            <p>
+                                <span class="label label-important">Attention</span>  Do not invert any axis unless you are absolutely sure you need to.  If your axis is inverted within your firmware, you will NOT need to enable any inversion here.  Click the help links above for more information.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <hr />
                 <div>
                     <h4>Firmware Settings</h4>
                     <p>
                         The following settings depend on your printer's firmware.
                     </p>
                 </div>
-                <div class="control-group">
-                    <label class="control-label" for="printer_profile_xyz_axes_default_mode">X/Y/Z Axis Mode</label>
-                    <div class="controls">
-                        <select id="printer_profile_xyz_axes_default_mode" data-bind="options: Octolapse.Printers.profileOptions.xyz_axes_default_mode_options,
+                <div>
+                    <div class="control-group">
+                        <label class="control-label" for="printer_profile_xyz_axes_default_mode">X/Y/Z Axis Mode</label>
+                        <div class="controls">
+                            <select id="printer_profile_xyz_axes_default_mode" data-bind="options: Octolapse.Printers.profileOptions.xyz_axes_default_mode_options,
                                        optionsText: 'name',
                                        optionsValue: 'value',
                                        value: xyz_axes_default_mode"></select>
-                        <a class="octolapse_help" data-help-url="profiles.printer.xyz_axes_default_mode.md" data-help-title="X/Y/Z Axis Mode" />
-                        <div class="error_label_container text-error" data-error-for="printer_profile_xyz_axes_default_mode"></div>
+                            <a class="octolapse_help" data-help-url="profiles.printer.xyz_axes_default_mode.md" data-help-title="X/Y/Z Axis Mode" />
+                            <div class="error_label_container text-error" data-error-for="printer_profile_xyz_axes_default_mode"></div>
+                        </div>
                     </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label" for="printer_profile_e_axis_default_mode_options">E Axis Mode</label>
-                    <div class="controls">
-                        <select id="printer_profile_e_axis_default_mode_options" data-bind="options: Octolapse.Printers.profileOptions.e_axis_default_mode_options,
+                    <div class="control-group">
+                        <label class="control-label" for="printer_profile_e_axis_default_mode_options">E Axis Mode</label>
+                        <div class="controls">
+                            <select id="printer_profile_e_axis_default_mode_options" data-bind="options: Octolapse.Printers.profileOptions.e_axis_default_mode_options,
                                        optionsText: 'name',
                                        optionsValue: 'value',
                                        value: e_axis_default_mode"></select>
-                        <a class="octolapse_help" data-help-url="profiles.printer.e_axis_default_mode.md" data-help-title="E Axis Mode" />
-                        <div class="error_label_container text-error" data-error-for="printer_profile_e_axis_default_mode_options"></div>
+                            <a class="octolapse_help" data-help-url="profiles.printer.e_axis_default_mode.md" data-help-title="E Axis Mode" />
+                            <div class="error_label_container text-error" data-error-for="printer_profile_e_axis_default_mode_options"></div>
+                        </div>
                     </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label" for="printer_profile_g90_influences_extruder_options">G90/G91 Influences Extruder</label>
-                    <div class="controls">
-                        <select id="printer_profile_g90_influences_extruder_options" data-bind="options: Octolapse.Printers.profileOptions.g90_influences_extruder_options,
+                    <div class="control-group">
+                        <label class="control-label" for="printer_profile_g90_influences_extruder_options">G90/G91 Influences Extruder</label>
+                        <div class="controls">
+                            <select id="printer_profile_g90_influences_extruder_options" data-bind="options: Octolapse.Printers.profileOptions.g90_influences_extruder_options,
                                        optionsText: 'name',
                                        optionsValue: 'value',
                                        value: g90_influences_extruder"></select>
-                        <a class="octolapse_help" data-help-url="profiles.printer.g90_influences_extruder.md" data-help-title="G90/G91 Influences Extruder" />
-                        <div class="error_label_container text-error" data-error-for="printer_profile_g90_influences_extruder_options"></div>
+                            <a class="octolapse_help" data-help-url="profiles.printer.g90_influences_extruder.md" data-help-title="G90/G91 Influences Extruder" />
+                            <div class="error_label_container text-error" data-error-for="printer_profile_g90_influences_extruder_options"></div>
+                        </div>
                     </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label" for="printer_profile_units_default">Default Units</label>
-                    <div class="controls">
-                        <select id="printer_profile_units_default" data-bind="options: Octolapse.Printers.profileOptions.units_default_options,
+                    <div class="control-group">
+                        <label class="control-label" for="printer_profile_units_default">Default Units</label>
+                        <div class="controls">
+                            <select id="printer_profile_units_default" data-bind="options: Octolapse.Printers.profileOptions.units_default_options,
                                        optionsText: 'name',
                                        optionsValue: 'value',
                                        value: units_default"></select>
-                        <a class="octolapse_help" data-help-url="profiles.printer.units_default.md" data-help-title="Default Units" />
-                        <div class="error_label_container text-error" data-error-for="printer_profile_units_default"></div>
-                        <span class="help-inline">
-                            <span class="label label-important">Attention</span>&nbsp;Currently octolapse does not support any units besides Millimeters and will fail if movement is detected while using Inches.
-                        </span>
+                            <a class="octolapse_help" data-help-url="profiles.printer.units_default.md" data-help-title="Default Units" />
+                            <div class="error_label_container text-error" data-error-for="printer_profile_units_default"></div>
+                            <span class="help-inline">
+                                <span class="label label-important">Attention</span>&nbsp;Currently octolapse does not support any units besides Millimeters and will fail if movement is detected while using Inches.
+                            </span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label" for="default_firmware_retractions">Use Retraction/Deretraction settings for Firmware Retract/Deretract</label>
+                        <div class="controls">
+                            <label class="checkbox">
+                                <input name="default_firmware_retractions" type="checkbox" data-bind="checked: default_firmware_retractions" title="Use Retraction/Deretraction settings for Firmware Retract/Deretract" />Enabled
+                                <a class="octolapse_help" data-help-url="profiles.printer.default_firmware_retractions.md" data-help-title="Use Retraction/Deretraction settings for Firmware Retract/Deretract" />
+                            </label>
+                            <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same retraction/deretraction settings (except z-lift) as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/deretract so that Octolapse knows what values to use when tracking position.</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label" for="default_firmware_retractions_zhop">Use Z-Hop (Z-Lift) settings for Firmware Retract/Deretract</label>
+                        <div class="controls">
+                            <label class="checkbox">
+                                <input name="default_firmware_retractions_zhop" type="checkbox" data-bind="checked: default_firmware_retractions_zhop" title="Use Retraction/Deretraction settings for Firmware Retract/Deretract" />Enabled
+                                <a class="octolapse_help" data-help-url="profiles.printer.default_firmware_retractions_zhop.md" data-help-title="Use Z-Hop (Z-Lift) settings for Firmware Retract/Deretract" />
+                            </label>
+                            <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same zlift value for retraction/deretraction settings as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/deretract so that Octolapse knows what values to use when tracking position.</span>
+                            <p>
+                                <span class="label label-important">Attention</span>  Enable this setting ONLY if you are using firmware zlift!  If your gcode is performing zlift manually (g0/g1) using absolute coordinates, your nozzle may crash into your part.  When in doubt, leave this unchecked!.
+                            </p>
+                        </div>
                     </div>
                 </div>
-                <div class="control-group">
-                    <label class="control-label" for="default_firmware_retractions">Use Retraction/Deretraction settings for Firmware Retract/Deretract</label>
-                    <div class="controls">
-                        <label class="checkbox">
-                            <input name="default_firmware_retractions" type="checkbox" data-bind="checked: default_firmware_retractions" title="Use Retraction/Deretraction settings for Firmware Retract/Deretract" />Enabled
-                            <a class="octolapse_help" data-help-url="profiles.printer.default_firmware_retractions.md" data-help-title="Use Retraction/Deretraction settings for Firmware Retract/Deretract" />
-                        </label>
-                        <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same retraction/deretraction settings (except z-lift) as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/deretract so that Octolapse knows what values to use when tracking position.</span>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label" for="default_firmware_retractions_zhop">Use Z-Hop (Z-Lift) settings for Firmware Retract/Deretract</label>
-                    <div class="controls">
-                        <label class="checkbox">
-                            <input name="default_firmware_retractions_zhop" type="checkbox" data-bind="checked: default_firmware_retractions_zhop" title="Use Retraction/Deretraction settings for Firmware Retract/Deretract" />Enabled
-                            <a class="octolapse_help" data-help-url="profiles.printer.default_firmware_retractions_zhop.md" data-help-title="Use Z-Hop (Z-Lift) settings for Firmware Retract/Deretract" />
-                        </label>
-                        <span class="help-inline">When enabled Octolapse will assume that your firmware is set to use the same zlift value for retraction/deretraction settings as your Octolapse profile.  It is always a good idea to include an M207 and or M208 in your start gcode if you are using firmware retract/deretract so that Octolapse knows what values to use when tracking position.</span>
-                        <p>
-                            <span class="label label-important">Attention</span>  Enable this setting ONLY if you are using firmware zlift!  If your gcode is performing zlift manually (g0/g1) using absolute coordinates, your nozzle may crash into your part.  When in doubt, leave this unchecked!.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div>
+                <hr />
                 <div>
                     <h4>Layer Change Detection</h4>
                     <p>
                         The following settings affect how Octolapse detects layer changes
                     </p>
                 </div>
-                <div class="control-group">
-                    <label class="control-label" for="printer_profile_priming_height">Priming Height</label>
-                    <div class="controls">
-                        <div class="input-append form-inline">
-                            <input id="printer_profile_priming_height" name="priming_height" type="number" class="input-small text-right" data-bind="value: priming_height" required min="0.0" step="0.01" />
-                            <span class="add-on">mm</span>
+                <div>
+                    <div class="control-group">
+                        <label class="control-label" for="printer_profile_priming_height">Priming Height</label>
+                        <div class="controls">
+                            <div class="input-append form-inline">
+                                <input id="printer_profile_priming_height" name="priming_height" type="number" class="input-small text-right" data-bind="value: priming_height" required min="0.0" step="0.01" />
+                                <span class="add-on">mm</span>
+                            </div>
+                            <a class="octolapse_help" data-help-url="profiles.printer.priming_height.md" data-help-title="Priming Height" />
+                            <div class="error_label_container text-error" data-error-for="printer_profile_priming_height"></div>
+                            <span class="help-inline">Some start gcode is configured to prime quite far from the printer bed.  This setting will prevent layer detection until extrusion is detected BELOW a current height.  If the 'Position State' info panel displays a current layer height that is higher than you expect, and no snapshots are being taken, you may need to adjust this setting.  Set to 0 to turn off.</span>
                         </div>
-                        <a class="octolapse_help" data-help-url="profiles.printer.priming_height.md" data-help-title="Priming Height" />
-                        <div class="error_label_container text-error" data-error-for="printer_profile_priming_height"></div>
-                        <span class="help-inline">Some start gcode is configured to prime quite far from the printer bed.  This setting will prevent layer detection until extrusion is detected BELOW a current height.  If the 'Position State' info panel displays a current layer height that is higher than you expect, and no snapshots are being taken, you may need to adjust this setting.  Set to 0 to turn off.</span>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label" for="printer_profile_minimum_layer_height">Minimum Layer Height</label>
+                        <div class="controls">
+                            <div class="input-append form-inline">
+                                <input id="printer_profile_minimum_layer_height" name="minimum_layer_height" type="number" class="input-small text-right" data-bind="value: minimum_layer_height" required min="0.0" step="0.001" />
+                                <span class="add-on">mm</span>
+                            </div>
+                            <a class="octolapse_help" data-help-url="profiles.printer.minimum_layer_height.md" data-help-title="Minimum Layer Height" />
+                            <div class="error_label_container text-error" data-error-for="printer_profile_minimum_layer_height"></div>
+                            <span class="help-inline">This is the minimum height change necessary to trigger a layer change.  It can be used to prevent problems with vase mode if you forget to specify vase mode in the slicer settings above.</span>
+                        </div>
                     </div>
                 </div>
-                <div class="control-group">
-                    <label class="control-label" for="printer_profile_minimum_layer_height">Minimum Layer Height</label>
-                    <div class="controls">
-                        <div class="input-append form-inline">
-                            <input id="printer_profile_minimum_layer_height" name="minimum_layer_height" type="number" class="input-small text-right" data-bind="value: minimum_layer_height" required min="0.0" step="0.001" />
-                            <span class="add-on">mm</span>
-                        </div>
-                        <a class="octolapse_help" data-help-url="profiles.printer.minimum_layer_height.md" data-help-title="Minimum Layer Height" />
-                        <div class="error_label_container text-error" data-error-for="printer_profile_minimum_layer_height"></div>
-                        <span class="help-inline">This is the minimum height change necessary to trigger a layer change.  It can be used to prevent problems with vase mode if you forget to specify vase mode in the slicer settings above.</span>
-                    </div>
+                <hr />
+                <div>
+                    <h4>Autodetect Position</h4>
                 </div>
                 <div>
-                    <div>
-                        <h4>Automatic Position Detection</h4>
-                        <p>In order to take snapshots, Octolapse needs to know the location of each axis.  Providing a home position, either manually or through auto-discovery, will allow Octolapse to start taking snapshots immediately after a home command is sent to the printer.  If <i>Auto-Detect Home Position</i> is not enabled, and an absolute home position is not supplied, Octolapse will monitor the GCode in order to to discover the current absolute position.</p>
-                    </div>
-
                     <div class="control-group">
                         <label class="control-label" for="printer_profile_auto_detect_position">Auto-Detect Position</label>
                         <div class="controls">
@@ -203,7 +527,7 @@
                             </span>
                         </div>
                     </div>
-                    <div data-bind="visible:auto_detect_position">
+                    <div data-bind="fadeVisible:auto_detect_position">
                         <div class="control-group">
                             <label class="control-label" for="printer_profile_auto_position_detection_commands">Additional location detection commands</label>
                             <div class="controls">
@@ -217,210 +541,12 @@
                             </div>
                         </div>
                     </div>
-                    <div data-bind="visible:!auto_detect_position()">
-                        <p class="help-inline">Enter the known origin for each of the three axes, or leave them blank to force Octolapse to search for absolute movement.</p>
-                        <div class="control-group">
-                            <label class="control-label" for="printer_profile_origin_x">X Origin</label>
-                            <div class="controls">
-                                <div class="input-append form-inline">
-                                    <input id="printer_profile_origin_x" name="origin_x" type="number" class="input-small text-right" data-bind="value: origin_x" step="any" />
-                                    <span class="add-on">mm</span>
-                                </div>
-                                <div class="error_label_container text-error" data-error-for="printer_profile_origin_x"></div>
-                            </div>
-                        </div>
-
-                        <div class="control-group">
-                            <label class="control-label" for="printer_profile_origin_y">Y Origin</label>
-                            <div class="controls">
-                                <div class="input-append form-inline">
-                                    <input id="printer_profile_origin_y" name="origin_y" type="number" class="input-small text-right" data-bind="value: origin_y" step="any" />
-                                    <span class="add-on">mm</span>
-                                </div>
-                                <div class="error_label_container text-error" data-error-for="printer_profile_origin_y"></div>
-                            </div>
-                        </div>
-
-                        <div class="control-group">
-                            <label class="control-label" for="printer_profile_origin_z">Z Origin</label>
-                            <div class="controls">
-                                <div class="input-append form-inline">
-                                    <input id="printer_profile_origin_z" name="origin_z" type="number" class="input-small text-right" data-bind="value: origin_z" step="any" />
-                                    <span class="add-on">mm</span>
-                                </div>
-                                <div class="error_label_container text-error" data-error-for="printer_profile_origin_z"></div>
-                            </div>
-                        </div>
-
-                    </div>
+                </div>
+                <hr />
+                <div>
+                    <h4>Gcode Settings</h4>
                 </div>
                 <div>
-                    <div>
-                        <h4>Print Volume</h4>
-                        <p>If you want to specify a custom volume, you may do so below.  Any values entered here will be used instead of Octoprint's printer profile.  All snapshot positions must be within the print volume, else they will be skipped.</p>
-                    </div>
-                    <div class="control-group">
-                        <label class="control-label" for="override_octoprint_print_volume">Override Octoprint Printer Profile</label>
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input name="override_octoprint_print_volume" type="checkbox" data-bind="checked: override_octoprint_print_volume" title="Uses the bed sizes from the Octoprint printer profiles." />Enabled
-                                <a class="octolapse_help" data-help-url="profiles.printer.override_octoprint_print_volume.md" data-help-title="Override Octoprint Printer Profile" />
-                            </label>
-                            <span class="help-inline">
-                                When enabled the print volume within your current Octoprint Printer Profile will be overridden.  This does not affect the function of Octoprint, only the Octolapse plugin.
-                            </span>
-                        </div>
-                    </div>
-                    <div class="control-group" data-bind="visible:override_octoprint_print_volume">
-                        <label class="control-label" for="octolapse_printer_min_x">X - Width</label>
-                        <div class="controls">
-                            <div class="row-fluid">
-                                <div class="span6">
-                                    <div class="input-prepend input-append">
-                                        <span class="add-on">Min</span>
-                                        <input id="octolapse_printer_min_x" name="min_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: min_x" step="any" required />
-                                        <span class="add-on">mm</span>
-                                    </div>
-                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_min_x"></div>
-                                </div>
-                                <div class="span6">
-                                    <div class="input-prepend input-append">
-                                        <span class="add-on">Max</span>
-                                        <input id="octolapse_printer_max_x" name="max_x" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: max_x" step="any" required />
-                                        <span class="add-on">mm</span>
-                                    </div>
-                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_max_x"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="control-group" data-bind="visible:override_octoprint_print_volume">
-                        <label class="control-label" for="octolapse_printer_min_y">Y - Depth</label>
-                        <div class="controls">
-                            <div class="row-fluid">
-                                <div class="span6">
-                                    <div class="input-prepend input-append">
-                                        <span class="add-on">Min</span>
-                                        <input id="octolapse_printer_min_y" name="min_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: min_y" step="any" required />
-                                        <span class="add-on">mm</span>
-                                    </div>
-                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_min_y"></div>
-                                </div>
-                                <div class="span6">
-                                    <div class="input-prepend input-append">
-                                        <span class="add-on">Max</span>
-                                        <input id="octolapse_printer_max_y" name="max_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: max_y" step="any" required />
-                                        <span class="add-on">mm</span>
-                                    </div>
-                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_max_y"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="control-group" data-bind="visible:override_octoprint_print_volume">
-                        <label class="control-label" for="octolapse_printer_min_z">Z - Height</label>
-                        <div class="controls">
-                            <div class="row-fluid">
-                                <div class="span6">
-                                    <div class="input-prepend input-append">
-                                        <span class="add-on">Min</span>
-                                        <input id="octolapse_printer_min_z" name="min_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: min_z" step="any" required />
-                                        <span class="add-on">mm</span>
-                                    </div>
-                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_min_z"></div>
-                                </div>
-                                <div class="span6">
-                                    <div class="input-prepend input-append">
-                                        <span class="add-on">Max</span>
-                                        <input id="octolapse_printer_max_z" name="max_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: max_z" step="any" required />
-                                        <span class="add-on">mm</span>
-                                    </div>
-                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_max_z"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <h4>Restrict Snapshot Area</h4>
-                        <p>Octolapse can prevent snapshot from occurring while the printer is outside of a given boundary.  When enabled snapshot will not be allowed outside the provided coordinates.  This is useful for preventing snapshots while priming outside of the normal print area (like the Mk2 and Mk3's priming area at the front of the bed), or to prevent snapshots on the first/final layers if desired.  When disabled your print volume will be used.</p>
-                    </div>
-                    <div class="control-group">
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input name="restrict_snapshot_area" type="checkbox" data-bind="checked: restrict_snapshot_area" title="Uses the bed sizes from the Octoprint printer profiles." />Enabled
-                                <a class="octolapse_help" data-help-url="profiles.printer.restrict_snapshot_area.md" data-help-title="Restrict Snapshot Area" />
-                            </label>
-                        </div>
-                    </div>
-                    <div class="control-group" data-bind="visible:restrict_snapshot_area">
-                        <label class="control-label" for="octolapse_printer_snapshot_min_x">Snapshot Boundary - X</label>
-                        <div class="controls">
-                            <div class="row-fluid">
-                                <div class="span6">
-                                    <div class="input-prepend input-append">
-                                        <span class="add-on">Min</span>
-                                        <input id="octolapse_printer_snapshot_min_x" name="snapshot_min_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_min_x" step="any" required />
-                                        <span class="add-on">mm</span>
-                                    </div>
-                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_min_x"></div>
-                                </div>
-                                <div class="span6">
-                                    <div class="input-prepend input-append">
-                                        <span class="add-on">Max</span>
-                                        <input id="octolapse_printer_snapshot_max_x" name="snapshot_max_x" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: snapshot_max_x" step="any" required />
-                                        <span class="add-on">mm</span>
-                                    </div>
-                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_max_x"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="control-group" data-bind="visible:restrict_snapshot_area">
-                        <label class="control-label" for="octolapse_printer_snapshot_min_y">Snapshot Boundary - Y</label>
-                        <div class="controls">
-                            <div class="row-fluid">
-                                <div class="span6">
-                                    <div class="input-prepend input-append">
-                                        <span class="add-on">Min</span>
-                                        <input id="octolapse_printer_snapshot_min_y" name="snapshot_min_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_min_y" step="any" required />
-                                        <span class="add-on">mm</span>
-                                    </div>
-                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_min_y"></div>
-                                </div>
-                                <div class="span6">
-                                    <div class="input-prepend input-append">
-                                        <span class="add-on">Max</span>
-                                        <input id="octolapse_printer_snapshot_max_y" name="snapshot_max_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_max_y" step="any" required />
-                                        <span class="add-on">mm</span>
-                                    </div>
-                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_max_y"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="control-group" data-bind="visible:restrict_snapshot_area">
-                        <label class="control-label" for="octolapse_printer_snapshot_min_z">Snapshot Boundary - Z</label>
-                        <div class="controls">
-                            <div class="row-fluid">
-                                <div class="span6">
-                                    <div class="input-prepend input-append">
-                                        <span class="add-on">Min</span>
-                                        <input id="octolapse_printer_snapshot_min_z" name="snapshot_min_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: snapshot_min_z" step="any" required />
-                                        <span class="add-on">mm</span>
-                                    </div>
-                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_min_z"></div>
-                                </div>
-                                <div class="span6">
-                                    <div class="input-prepend input-append">
-                                        <span class="add-on">Max</span>
-                                        <input id="octolapse_printer_snapshot_max_z" name="snapshot_max_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: snapshot_max_z" step="any" required />
-                                        <span class="add-on">mm</span>
-                                    </div>
-                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_max_z"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     <div class="control-group">
                         <label class="control-label" for="abort_out_of_bounds">Abort Snapshot When Out-Of-Bounds</label>
                         <div class="controls">
@@ -430,11 +556,6 @@
                             </label>
                             <span class="help-inline">When enabled snapshots will be aborted if the snapshot position is out of bounds.  When disabled the closest in-bounds position will be used.  In either case an out-of-bounds error popup will display to let you know an error occurred.</span>
                         </div>
-                    </div>
-                </div>
-                <div>
-                    <div>
-                        <h4>Gcode Settings</h4>
                     </div>
                     <div class="control-group">
                         <label class="control-label" for="printer_profile_snapshot_command">Snapshot Command</label>
@@ -478,6 +599,7 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

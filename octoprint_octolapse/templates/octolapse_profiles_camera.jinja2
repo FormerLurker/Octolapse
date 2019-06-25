@@ -27,294 +27,310 @@
         <div>
             <h4>Profile</h4>
         </div>
-        <div class="control-group">
-            <label class="control-label">Name</label>
-            <div class="controls">
-                <input id="camera_profile_name" name="name" type="text" class="input-block-level" data-bind="value: name" required="true" />
-                <div class="error_label_container text-error" data-error-for="camera_profile_name"></div>
+        <div>
+            <div class="control-group">
+                <label class="control-label">Name</label>
+                <div class="controls">
+                    <input id="camera_profile_name" name="name" type="text" class="input-block-level" data-bind="value: name" required="true" />
+                    <div class="error_label_container text-error" data-error-for="camera_profile_name"></div>
+                </div>
             </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label">Description</label>
-            <div class="controls">
-                <textarea id="camera_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024" />
-                <div class="error_label_container text-error" data-error-for="camera_profile_description"></div>
+            <div class="control-group">
+                <label class="control-label">Description</label>
+                <div class="controls">
+                    <textarea id="camera_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024" />
+                    <div class="error_label_container text-error" data-error-for="camera_profile_description"></div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label class="control-label">Enabled</label>
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: enabled" />Enabled
+                    </label>
+                    <span class="help-inline">Octolapse will only acquire images from this camera if it is enabled.</span>
+                </div>
             </div>
         </div>
         <div data-bind="template: {name:'octolapse-profile-library-test-template', data: automatic_configuration}"></div>
-        <div class="control-group">
-            <hr/>
-            <label class="control-label">Enabled</label>
-            <div class="controls">
-                <label class="checkbox">
-                    <input type="checkbox" data-bind="checked: enabled" />Enabled
-                </label>
-                <span class="help-inline">Octolapse will only acquire images from this camera if it is enabled.</span>
+
+        <div data-bind="fadeVisible: !(automatic_configuration.updating_from_server())">
+            <hr />
+            <div>
+                <h4>Camera Type</h4>
             </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label">Camera Type</label>
-            <div class="controls">
-                <select id="camera_profile_camera_type" name="camera_type" data-bind="options: Octolapse.Cameras.profileOptions.camera_type_options,
+            <div class="control-group">
+                <div class="controls">
+                    <select id="camera_profile_camera_type" name="camera_type" data-bind="options: Octolapse.Cameras.profileOptions.camera_type_options,
                              optionsText: 'name',
                              optionsValue: 'value',
                              optionsCaption: 'Select One...',
                              value: camera_type"></select>
-                <a class="octolapse_help" data-help-url="profiles.camera.camera_type.md" data-help-title="Camera Type"/>
-                <div class="error_label_container text-error" data-error-for="camera_profile_camera_type"></div>
+                    <a class="octolapse_help" data-help-url="profiles.camera.camera_type.md" data-help-title="Camera Type" />
+                    <div class="error_label_container text-error" data-error-for="camera_profile_camera_type"></div>
+                </div>
             </div>
-        </div>
-    </div>
-    <hr />
+            <hr />
+            <div>
+                <div data-bind="visible: camera_type() == 'external-script'">
+                    <div>
+                        <h4>External Camera Setup - Script</h4>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Snapshot Acquire Script</label>
+                        <div class="controls">
+                            <input id="camera_profile_external_camera_snapshot_script" name="external_camera_snapshot_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: external_camera_snapshot_script" required="true" />
+                            <a class="octolapse_help" data-help-url="profiles.camera.external_camera_snapshot_script.md" data-help-title="Snapshot Acquire Script" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_external_camera_snapshot_script"></div>
 
-    <div data-bind="visible: camera_type() == 'external-script'">
-        <div>
-            <h4>External Camera Setup - Script</h4>
-        </div>
-        <div class="control-group">
-            <label class="control-label">Snapshot Acquire Script</label>
-            <div class="controls">
-                <input id="camera_profile_external_camera_snapshot_script" name="external_camera_snapshot_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: external_camera_snapshot_script" required="true" />
-                <a class="octolapse_help" data-help-url="profiles.camera.external_camera_snapshot_script.md" data-help-title="Snapshot Acquire Script"/>
-                <div class="error_label_container text-error" data-error-for="camera_profile_external_camera_snapshot_script"></div>
+                            <span class="help-inline">The full path and file name of a script that will be run executed after the printer is in the stabilization position.  Should be used to take a snapshot.</span>
+                        </div>
+                    </div>
+                </div>
 
-                <span class="help-inline">The full path and file name of a script that will be run executed after the printer is in the stabilization position.  Should be used to take a snapshot.</span>
+                <div data-bind="visible: camera_type() == 'printer-gcode'">
+                    <div>
+                        <h4>Gcode Script Camera - Send gcode to your printer to take a snapshot</h4>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Gcode</label>
+                        <div class="controls">
+                            <textarea id="camera_profile_gcode_camera_script" name="gcode_camera_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: gcode_camera_script" required="true" />
+                            <a class="octolapse_help" data-help-url="profiles.camera.gcode_camera_script.md" data-help-title="Gcode Script Camera" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_gcode_camera_script"></div>
+                            <span class="help-inline">Gcode to send to the printer in order to capture a snapshot.</span>
+                        </div>
+                    </div>
+                </div>
+                <div data-bind="visible: camera_type() == 'webcam'">
+                    <div>
+                        <h4>Webcam Setup</h4>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Base Address</label>
+                        <div class="controls">
+                            <input id="camera_profile_address" type="text" name="address" class="input-xxl ignore_hidden_errors" data-bind="value: webcam_settings.address" required="true" />
+                            <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.address.md" data-help-title="Webcam Base Address" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_address"></div>
+                            <span class="help-inline">The full address to the camera, including http:// or https://</span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Snapshot Address Template</label>
+                        <div class="controls">
+                            <input id="camera_profile_snapshot_request_template" name="snapshot_request_template" type="text" class="input-xxl ignore_hidden_errors" data-bind="value: webcam_settings.snapshot_request_template" required="true" />
+                            <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.snapshot_request_template.md" data-help-title="Webcam Snapshot Address Template" />
+                            <button class="btn btn-default input-xxl" data-bind="click: function() {$data.testCamera();}">Test</button>
+                            <div class="error_label_container text-error" data-error-for="camera_profile_snapshot_request_template"></div>
+                            <span class="help-inline">
+                                Enter a full url for accessing a snapshot image from your webcam.  The token <i>{camera_address}</i> will be replaced with the camera address above.
+                            </span>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Stream Address Template</label>
+                        <div class="controls">
+                            <input id="camera_profile_stream_template" name="stream_template" type="text" class="input-xxl ignore_hidden_errors" data-bind="value: webcam_settings.stream_template" required="true" />
+                            <a class="octolapse_help" data-help-url="profiles.camera.stream_template.md" data-help-title="Stream Address Template" />
+                            <div class="error_label_container text-error" data-error-for="camera_profile_stream_template"></div>
+                            <span class="help-inline">
+                                This is ONLY used for previewing webcam custom image preferences.
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-
-    <div data-bind="visible: camera_type() == 'printer-gcode'">
-        <div>
-            <h4>Gcode Script Camera - Send gcode to your printer to take a snapshot</h4>
-        </div>
-        <div class="control-group">
-            <label class="control-label">Gcode</label>
-            <div class="controls">
-                <textarea id="camera_profile_gcode_camera_script" name="gcode_camera_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: gcode_camera_script" required="true" />
-                <a class="octolapse_help" data-help-url="profiles.camera.gcode_camera_script.md" data-help-title="Gcode Script Camera"/>
-                <div class="error_label_container text-error" data-error-for="camera_profile_gcode_camera_script"></div>
-                <span class="help-inline">Gcode to send to the printer in order to capture a snapshot.</span>
+            <hr />
+            <div>
+                <h4>General Options</h4>
             </div>
-        </div>
-    </div>
-    <div data-bind="visible: camera_type() == 'webcam'">
-        <div>
-            <h4>Webcam Setup</h4>
-        </div>
-        <div class="control-group">
-            <label class="control-label">Base Address</label>
-            <div class="controls">
-                <input id="camera_profile_address" type="text" name="address" class="input-xxl ignore_hidden_errors" data-bind="value: webcam_settings.address" required="true" />
-                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.address.md" data-help-title="Webcam Base Address"/>
-                <div class="error_label_container text-error" data-error-for="camera_profile_address"></div>
-                <span class="help-inline">The full address to the camera, including http:// or https://</span>
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label">Snapshot Address Template</label>
-            <div class="controls">
-                <input id="camera_profile_snapshot_request_template" name="snapshot_request_template" type="text" class="input-xxl ignore_hidden_errors" data-bind="value: webcam_settings.snapshot_request_template" required="true" />
-                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.snapshot_request_template.md" data-help-title="Webcam Snapshot Address Template"/>
-                <button class="btn btn-default input-xxl" data-bind="click: function() {$data.testCamera();}">Test</button>
-                <div class="error_label_container text-error" data-error-for="camera_profile_snapshot_request_template"></div>
-                <span class="help-inline">
-                    Enter a full url for accessing a snapshot image from your webcam.  The token <i>{camera_address}</i> will be replaced with the camera address above.
-                </span>
-            </div>
-        </div>
-        <div class="control-group">
-            <label class="control-label">Stream Address Template</label>
-            <div class="controls">
-                <input id="camera_profile_stream_template" name="stream_template" type="text" class="input-xxl ignore_hidden_errors" data-bind="value: webcam_settings.stream_template" required="true" />
-                <a class="octolapse_help" data-help-url="profiles.camera.stream_template.md" data-help-title="Stream Address Template"/>
-                <div class="error_label_container text-error" data-error-for="camera_profile_stream_template"></div>
-                <span class="help-inline">
-                    This is ONLY used for previewing webcam custom image preferences.
-                </span>
-            </div>
-        </div>
-    </div>
-    <div>
-        <h4>General Options</h4>
-    </div>
-    <div class="control-group">
-        <label class="control-label">Snapshot Delay</label>
-        <div class="controls">
-            <span class="input-append">
-                <input id="camera_profile_delay" name="delay" type="number" class="input-small text-right" data-bind="value: delay" min="0" max="5000" step="1" required="true" />
-                <span class="add-on">MS</span>
-            </span>
-            <a class="octolapse_help" data-help-url="profiles.camera.delay.md" data-help-title="Snapshot Delay"/>
-            <div class="error_label_container text-error" data-error-for="camera_profile_delay"></div>
-            <span class="help-inline">Applied before taking a snapshot.  Use higher values if you encounter motion blur, but consider changing to manual focus/manual exposure/manual white balance in the Image Preferences below.  This can reduce the required delay substantially.  The optimal value = 1000/FPS.  Example for 30FPS:  1000/30FPS = 33.3</span>
-        </div>
-    </div>
-    <div class="control-group">
-        <label class="control-label">Snapshot Timeout</label>
-        <div class="controls">
-            <span class="input-append">
-                <input id="camera_profile_timeout_ms" name="timeout_ms" type="number" class="input-small text-right" data-bind="value: timeout_ms" min="0" max="25000" step="1" required="true" />
-                <span class="add-on">MS</span>
-            </span>
-            <a class="octolapse_help" data-help-url="profiles.camera.timeout_ms.md" data-help-title="Snapshot Timeout"/>
-            <div class="error_label_container text-error" data-error-for="camera_profile_timeout_ms"></div>
-            <span class="help-inline">Octolapse will wait this long (in milliseconds) to get an image from your camera, else it will timeout and the print will continue.  The timeout doesn't start until after the camera delay specified above.</span>
-        </div>
-    </div>
-    <div class="control-group" data-bind="visible: camera_type() != 'printer-gcode'">
-        <label class="control-label">Rotate, Mirror, Flip or Transpose Snapshots</label>
-        <div class="controls">
-            <select id="camera_profile_snapshot_transpose" data-bind="options: Octolapse.Cameras.profileOptions.snapshot_transpose_options,
+            <div>
+                <div class="control-group">
+                    <label class="control-label">Snapshot Delay</label>
+                    <div class="controls">
+                        <span class="input-append">
+                            <input id="camera_profile_delay" name="delay" type="number" class="input-small text-right" data-bind="value: delay" min="0" max="5000" step="1" required="true" />
+                            <span class="add-on">MS</span>
+                        </span>
+                        <a class="octolapse_help" data-help-url="profiles.camera.delay.md" data-help-title="Snapshot Delay" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_delay"></div>
+                        <span class="help-inline">Applied before taking a snapshot.  Use higher values if you encounter motion blur, but consider changing to manual focus/manual exposure/manual white balance in the Image Preferences below.  This can reduce the required delay substantially.  The optimal value = 1000/FPS.  Example for 30FPS:  1000/30FPS = 33.3</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Snapshot Timeout</label>
+                    <div class="controls">
+                        <span class="input-append">
+                            <input id="camera_profile_timeout_ms" name="timeout_ms" type="number" class="input-small text-right" data-bind="value: timeout_ms" min="0" max="25000" step="1" required="true" />
+                            <span class="add-on">MS</span>
+                        </span>
+                        <a class="octolapse_help" data-help-url="profiles.camera.timeout_ms.md" data-help-title="Snapshot Timeout" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_timeout_ms"></div>
+                        <span class="help-inline">Octolapse will wait this long (in milliseconds) to get an image from your camera, else it will timeout and the print will continue.  The timeout doesn't start until after the camera delay specified above.</span>
+                    </div>
+                </div>
+                <div class="control-group" data-bind="visible: camera_type() != 'printer-gcode'">
+                    <label class="control-label">Rotate, Mirror, Flip or Transpose Snapshots</label>
+                    <div class="controls">
+                        <select id="camera_profile_snapshot_transpose" data-bind="options: Octolapse.Cameras.profileOptions.snapshot_transpose_options,
                              optionsText: 'name',
                              optionsValue: 'value',
                              optionsCaption: 'Select One...',
                              value: snapshot_transpose"></select>
-            <a class="octolapse_help" data-help-url="profiles.camera.snapshot_transpose.md" data-help-title="Rotate, Mirror, Flip or Transpose Snapshots"/>
-            <div class="error_label_container text-error" data-error-for="camera_profile_snapshot_transpose"></div>
-            <span class="help-inline">Optionally rotate, mirror, or flip or transpose your snapshots.  Requires some additional power from your CPU.  Not recommended for slower hardware.  Does NOT affect your camera stream and is NOT affected by webcam rotation in the Octoprint webcam settings.</span>
-        </div>
-    </div>
-    <div>
-        <h4>Custom Camera Scripts</h4>
-    </div>
-    <hr />
-    <div class="control-group">
-        <label class="control-label">Before Print Start Script</label>
-        <div class="controls">
-            <input id="camera_profile_on_print_start_script" name="on_print_start_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: on_print_start_script" />
-            <a class="octolapse_help" data-help-url="profiles.camera.on_print_start_script.md" data-help-title="Before Print Start Script"/>
-            <button class="btn btn-default " data-bind="click: function() {$data.applySettingsToCamera('script');}">Test Script</button>
-            <div class="error_label_container text-error" data-error-for="camera_profile_on_print_start_script"></div>
-            <span class="help-inline">Octolapse will execute any script path entered here at the start of a print.</span>
-        </div>
-    </div>
-    <div class="control-group">
-        <label class="control-label">Before Snapshot Script</label>
-        <div class="controls">
-            <input id="camera_profile_on_before_snapshot_script" name="on_before_snapshot_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: on_before_snapshot_script" />
-            <a class="octolapse_help" data-help-url="profiles.camera.on_before_snapshot_script.md" data-help-title="Before Snapshot Script"/>
-            <div class="error_label_container text-error" data-error-for="camera_profile_on_before_snapshot_script"></div>
-            <span class="help-inline">Octolapse will execute any script path entered here after the printer has stabilized but before taking a snapshot.</span>
-        </div>
-    </div>
-    <div class="control-group">
-        <label class="control-label">After Snapshot Script</label>
-        <div class="controls">
-            <input id="camera_profile_on_after_snapshot_script" name="on_after_snapshot_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: on_after_snapshot_script" />
-            <a class="octolapse_help" data-help-url="profiles.camera.on_after_snapshot_script.md" data-help-title="After Snapshot Script"/>
-            <div class="error_label_container text-error" data-error-for="camera_profile_on_after_snapshot_script"></div>
-            <span class="help-inline">Octolapse will execute any script path entered here after a snapshot is complete.</span>
-        </div>
-    </div>
-    <div class="control-group">
-        <label class="control-label">Before Render Script</label>
-        <div class="controls">
-            <input id="camera_profile_on_before_render_script" name="on_before_render_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: on_before_render_script" />
-            <a class="octolapse_help" data-help-url="profiles.camera.on_before_render_script.md" data-help-title="Before Render Script"/>
-            <div class="error_label_container text-error" data-error-for="camera_profile_on_before_render_script"></div>
-            <span class="help-inline">Octolapse will execute any script path entered here right before rendering.  This is useful to transfer images from a remote location (DSLR or printer), or to apply custom filters.</span>
-        </div>
-    </div>
-    <div class="control-group">
-        <label class="control-label">After Render Script</label>
-        <div class="controls">
-            <input id="camera_profile_on_after_render_script" name="on_after_render_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: on_after_render_script" />
-            <a class="octolapse_help" data-help-url="profiles.camera.on_after_render_script.md" data-help-title="After Render Script"/>
-            <div class="error_label_container text-error" data-error-for="camera_profile_on_after_render_script"></div>
-            <span class="help-inline">Octolapse will execute any script path entered here after rendering is complete.</span>
-        </div>
-    </div>
-    <hr/>
-    <div>
-        <h4>Custom Image Preferences</h4>
-        <div data-bind="visible: camera_type()=='webcam'">
-            <p>Here you can adjust brightness, contrast, focus, pan, tilt, etc. for your webcam.  If enabled, these preferences are applied at the start of each print.</p>
-            <p>It is highly recommended that you take the time to configure these settings since they can make a big difference in the quality of your timelapse, and reduce the required snapshot delay.</p>
-        </div>
-        <div class="text-warning" data-bind="visible: camera_type()!='webcam'">
-            <p>Custom image preferences are only available for webcams running on mjpegstreamer.  Consider using a custom 'Before Print Start Script' or try using a web camera running on mjpegstreamer.</p>
-        </div>
-
-    </div>
-    <div data-bind="visible: camera_type()=='webcam'">
-        <div class="control-group">
-            <div class="controls">
-                <label class="checkbox">
-                    <a data-bind="click: toggleApplySettingsAtStartup" id="camera_profile_apply_settings_at_startup"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_at_startup , 'fa-square-o': !apply_settings_at_startup() } "></i></a>
-                    <span data-bind="click: toggleApplySettingsAtStartup">Enable And Apply Preferences at Startup</span>
-                    <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.apply_settings_at_startup.md" data-help-title="Apply webcam preferences at startup"/>
-                </label>
-                <label class="checkbox">
-                    <a data-bind="click: toggleApplySettingsBeforePrint" id="camera_profile_apply_settings_before_print"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_before_print , 'fa-square-o': !apply_settings_before_print() } "></i></a>
-                    <span data-bind="click: toggleApplySettingsBeforePrint">Enable And Apply Preferences Before Print</span>
-                    <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.apply_settings_before_print.md" data-help-title="Apply webcam preferences before print"/>
-                </label>
-                <p class="text-warning" data-bind="visible:is_testing_custom_image_preferences">Your camera is being tested to see if it supports custom image preferences.</p>
-            </div>
-        </div>
-        <div data-bind="visible: camera_stream_visible">
-            <div class="webcam_settings_preview">
-                <img class="webcam_stream_preview" data-bind="streamLoading:{src: webcam_settings.stream_url, loading_selector: '#octolapse_camera_profile_stream_loading', error_selector: '#octolapse_camera_profile_stream_error'}" style="display:none;">
-                <div id="octolapse_camera_profile_stream_error" class="alert webcam_stream_preview" style="display:none;">
-                    Unable to load the webcam stream
-                </div>
-                <div id="octolapse_camera_profile_stream_loading" class="webcam_stream_preview" style="display:none;">
-                    Unable to load the webcam stream
+                        <a class="octolapse_help" data-help-url="profiles.camera.snapshot_transpose.md" data-help-title="Rotate, Mirror, Flip or Transpose Snapshots" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_snapshot_transpose"></div>
+                        <span class="help-inline">Optionally rotate, mirror, or flip or transpose your snapshots.  Requires some additional power from your CPU.  Not recommended for slower hardware.  Does NOT affect your camera stream and is NOT affected by webcam rotation in the Octoprint webcam settings.</span>
+                    </div>
                 </div>
             </div>
-            <div data-bind="template:{name:'webcam-settings-template', data:webcam_settings}"></div>
-        </div>
-        <div data-bind="visible: !camera_stream_visible()">
-            <button type="button" class="span6 btn btn-default input-block-level" data-bind="click: webcam_settings.previewStabilization">Stabilize Extruder</button>
-        </div>
-
-    </div>
-    <hr />
-    <div>
-        <div class="control-group">
-            <a class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#camera-advanced.hide' }">
-                <i class="fa fa-no-shadow fa-caret-right"></i> {{ _('Advanced Camera Options') }}
-            </a>
-        </div>
-        <div id="camera-advanced" class="control-group hide">
+            <hr />
             <div>
-                <div>
-                    <h4>Security</h4>
-                </div>
+                <h4>Custom Camera Scripts</h4>
+            </div>
 
+            <div>
                 <div class="control-group">
-                    <label class="control-label">Ignore SSL Errors</label>
+                    <label class="control-label">Before Print Start Script</label>
+                    <div class="controls">
+                        <input id="camera_profile_on_print_start_script" name="on_print_start_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: on_print_start_script" />
+                        <a class="octolapse_help" data-help-url="profiles.camera.on_print_start_script.md" data-help-title="Before Print Start Script" />
+                        <button class="btn btn-default " data-bind="click: function() {$data.applySettingsToCamera('script');}">Test Script</button>
+                        <div class="error_label_container text-error" data-error-for="camera_profile_on_print_start_script"></div>
+                        <span class="help-inline">Octolapse will execute any script path entered here at the start of a print.</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Before Snapshot Script</label>
+                    <div class="controls">
+                        <input id="camera_profile_on_before_snapshot_script" name="on_before_snapshot_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: on_before_snapshot_script" />
+                        <a class="octolapse_help" data-help-url="profiles.camera.on_before_snapshot_script.md" data-help-title="Before Snapshot Script" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_on_before_snapshot_script"></div>
+                        <span class="help-inline">Octolapse will execute any script path entered here after the printer has stabilized but before taking a snapshot.</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">After Snapshot Script</label>
+                    <div class="controls">
+                        <input id="camera_profile_on_after_snapshot_script" name="on_after_snapshot_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: on_after_snapshot_script" />
+                        <a class="octolapse_help" data-help-url="profiles.camera.on_after_snapshot_script.md" data-help-title="After Snapshot Script" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_on_after_snapshot_script"></div>
+                        <span class="help-inline">Octolapse will execute any script path entered here after a snapshot is complete.</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Before Render Script</label>
+                    <div class="controls">
+                        <input id="camera_profile_on_before_render_script" name="on_before_render_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: on_before_render_script" />
+                        <a class="octolapse_help" data-help-url="profiles.camera.on_before_render_script.md" data-help-title="Before Render Script" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_on_before_render_script"></div>
+                        <span class="help-inline">Octolapse will execute any script path entered here right before rendering.  This is useful to transfer images from a remote location (DSLR or printer), or to apply custom filters.</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">After Render Script</label>
+                    <div class="controls">
+                        <input id="camera_profile_on_after_render_script" name="on_after_render_script" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: on_after_render_script" />
+                        <a class="octolapse_help" data-help-url="profiles.camera.on_after_render_script.md" data-help-title="After Render Script" />
+                        <div class="error_label_container text-error" data-error-for="camera_profile_on_after_render_script"></div>
+                        <span class="help-inline">Octolapse will execute any script path entered here after rendering is complete.</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <hr />
+        <div>
+            <h4>Custom Image Preferences</h4>
+            <div data-bind="visible: camera_type()=='webcam'">
+                <p>Here you can adjust brightness, contrast, focus, pan, tilt, etc. for your webcam.  If enabled, these preferences are applied at the start of each print.</p>
+                <p>It is highly recommended that you take the time to configure these settings since they can make a big difference in the quality of your timelapse, and reduce the required snapshot delay.</p>
+            </div>
+            <div class="text-warning" data-bind="visible: camera_type()!='webcam'">
+                <p>Custom image preferences are only available for webcams running on mjpegstreamer.  Consider using a custom 'Before Print Start Script' or try using a web camera running on mjpegstreamer.</p>
+            </div>
+        </div>
+        <div>
+            <div data-bind="visible: camera_type()=='webcam'">
+                <div class="control-group">
                     <div class="controls">
                         <label class="checkbox">
-                            <input type="checkbox" data-bind="checked: webcam_settings.ignore_ssl_error" />Enabled
-                            <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.ignore_ssl_error.md" data-help-title="Ignore Webcam SSL Errors"/>
+                            <a data-bind="click: toggleApplySettingsAtStartup" id="camera_profile_apply_settings_at_startup"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_at_startup , 'fa-square-o': !apply_settings_at_startup() } "></i></a>
+                            <span data-bind="click: toggleApplySettingsAtStartup">Enable And Apply Preferences at Startup</span>
+                            <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.apply_settings_at_startup.md" data-help-title="Apply webcam preferences at startup" />
                         </label>
-                        <span class="help-inline">
-                            Ignore any SSL errors at the camera address.  <span class="label label-important">Attention</span>&nbsp;Using this option will solve SSL issues if you are trying to stream your camera over https, but could leave you open to man in the middle attacks.
-                        </span>
+                        <label class="checkbox">
+                            <a data-bind="click: toggleApplySettingsBeforePrint" id="camera_profile_apply_settings_before_print"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_before_print , 'fa-square-o': !apply_settings_before_print() } "></i></a>
+                            <span data-bind="click: toggleApplySettingsBeforePrint">Enable And Apply Preferences Before Print</span>
+                            <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.apply_settings_before_print.md" data-help-title="Apply webcam preferences before print" />
+                        </label>
+                        <p class="text-warning" data-bind="visible:is_testing_custom_image_preferences">Your camera is being tested to see if it supports custom image preferences.</p>
                     </div>
                 </div>
-                <div class="control-group">
-                    <label class="control-label">User Name</label>
-                    <div class="controls">
-                        <input name="username" type="text" class="input" data-bind="value: webcam_settings.username" />
-                        <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.username.md" data-help-title="Webcam User Name"/>
-                        <span class="help-inline">
-                            Enter a username to be sent with the camera snapshot request.  If you leave this blank, no sign-in credentials will be sent
-                        </span>
+                <div data-bind="visible: camera_stream_visible">
+                    <div class="webcam_settings_preview">
+                        <img class="webcam_stream_preview" data-bind="streamLoading:{src: webcam_settings.stream_url, loading_selector: '#octolapse_camera_profile_stream_loading', error_selector: '#octolapse_camera_profile_stream_error'}" style="display:none;">
+                        <div id="octolapse_camera_profile_stream_error" class="alert webcam_stream_preview" style="display:none;">
+                            Unable to load the webcam stream
+                        </div>
+                        <div id="octolapse_camera_profile_stream_loading" class="webcam_stream_preview" style="display:none;">
+                            Unable to load the webcam stream
+                        </div>
                     </div>
+                    <div data-bind="template:{name:'webcam-settings-template', data:webcam_settings}"></div>
                 </div>
+                <div data-bind="visible: !camera_stream_visible()">
+                    <button type="button" class="span6 btn btn-default input-block-level" data-bind="click: webcam_settings.previewStabilization">Stabilize Extruder</button>
+                </div>
+
+            </div>
+            <hr />
+            <div>
                 <div class="control-group">
-                    <label class="control-label">Password</label>
-                    <div class="controls">
-                        <!-- The text and password here are to prevent FF from auto filling my login credentials because it ignores autocomplete="off"-->
-                        <input type="text" style="display:none" />
-                        <input type="password" style="display:none" />
-                        <input name="camera_profile_password" type="password" autocomplete="off" class="input" data-bind="value: webcam_settings.password" />
-                        <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.password.md" data-help-title="Webcam Password"/>
-                        <span class="help-inline">
-                            If required, enter a password to be sent with the camera snapshot request.  <span class="label label-important">Attention</span>&nbsp;Be sure you are using HTTPS when setting a password and that your camera URL is secure to keep your password secure!
-                        </span>
+                    <a class="muted" data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#camera-advanced.hide' }">
+                        <i class="fa fa-no-shadow fa-caret-right"></i> {{ _('Advanced Camera Options') }}
+                    </a>
+                </div>
+                <div id="camera-advanced" class="control-group hide">
+                    <div>
+                        <div>
+                            <h4>Security</h4>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label">Ignore SSL Errors</label>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input type="checkbox" data-bind="checked: webcam_settings.ignore_ssl_error" />Enabled
+                                    <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.ignore_ssl_error.md" data-help-title="Ignore Webcam SSL Errors" />
+                                </label>
+                                <span class="help-inline">
+                                    Ignore any SSL errors at the camera address.  <span class="label label-important">Attention</span>&nbsp;Using this option will solve SSL issues if you are trying to stream your camera over https, but could leave you open to man in the middle attacks.
+                                </span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">User Name</label>
+                            <div class="controls">
+                                <input name="username" type="text" class="input" data-bind="value: webcam_settings.username" />
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.username.md" data-help-title="Webcam User Name" />
+                                <span class="help-inline">
+                                    Enter a username to be sent with the camera snapshot request.  If you leave this blank, no sign-in credentials will be sent
+                                </span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label">Password</label>
+                            <div class="controls">
+                                <!-- The text and password here are to prevent FF from auto filling my login credentials because it ignores autocomplete="off"-->
+                                <input type="text" style="display:none" />
+                                <input type="password" style="display:none" />
+                                <input name="camera_profile_password" type="password" autocomplete="off" class="input" data-bind="value: webcam_settings.password" />
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.password.md" data-help-title="Webcam Password" />
+                                <span class="help-inline">
+                                    If required, enter a password to be sent with the camera snapshot request.  <span class="label label-important">Attention</span>&nbsp;Be sure you are using HTTPS when setting a password and that your camera URL is secure to keep your password secure!
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

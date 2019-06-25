@@ -280,10 +280,14 @@ class OctolapsePlugin(
                 logger.error(error)
                 return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
 
-            octoprint_printer_profile = self._printer_profile_manager.get_current()
+
+            overridable_printer_profile_settings = current_printer.get_overridable_profile_settings(
+                self.get_octoprint_g90_influences_extruder(),
+                self.get_octoprint_printer_profile()
+            )
             # create a snapshot gcode generator object
             gcode_generator = SnapshotGcodeGenerator(
-                self._octolapse_settings, octoprint_printer_profile
+                self._octolapse_settings, overridable_printer_profile_settings
             )
 
             # get the stabilization point
@@ -299,6 +303,7 @@ class OctolapsePlugin(
 
             feedrate_x = default_feedrate
             feedrate_y = default_feedrate
+            octoprint_printer_profile = self.get_octoprint_printer_profile()
             axes = octoprint_printer_profile.get("axes", None)
             if axes is not None:
                 x_axis = axes.get("x", {"speed": default_feedrate})
@@ -1569,7 +1574,7 @@ class OctolapsePlugin(
                 return True
 
             if len(timelapse_settings["warnings"]) > 0:
-                self.send_plugin_message("  ".join(timelapse_settings["warnings"]))
+                self.send_plugin_message("warning", "\r\n".join(timelapse_settings["warnings"]))
 
             gcode_file_path = timelapse_settings["gcode_file_path"]
             settings_clone = timelapse_settings["settings"]
@@ -1734,6 +1739,12 @@ class OctolapsePlugin(
 
         return {"success": True}
 
+    def get_octoprint_g90_influences_extruder(self):
+        return self._settings.global_get(["feature", "g90_influences_extruder"])
+
+    def get_octoprint_printer_profile(self):
+        return self._printer_profile_manager.get_current()
+
     def get_timelapse_settings(self):
         # Create a copy of the settings to send to the Timelapse object.
         # We make this copy here so that editing settings vis the GUI won't affect the
@@ -1751,18 +1762,6 @@ class OctolapsePlugin(
         else:
             message = "Could not find the gcode file path.  Cannot start timelapse."
             return {"success": False, "error": "no-gcode-file-path-found", "error-message": message}
-
-        octoprint_printer_profile = self._printer_profile_manager.get_current()
-        # check for circular bed.  If it exists, we can't continue:
-        if octoprint_printer_profile["volume"]["formFactor"] == "circle":
-            message = "This plugin does not yet support circular beds, sorry.  This functionality will be available " \
-                      " soon."
-            return {"success": False, "error": "circular-bed-not-supported", "error-message": message}
-        if octoprint_printer_profile["volume"]["origin"] != "lowerleft":
-            warnings.append(
-                "This plugin has not yet been tested on printers with origins that are not in the lower " \
-                "left.  Use at your own risk."
-            )
 
         # check the ffmpeg path
         ffmpeg_path = None
@@ -1790,22 +1789,6 @@ class OctolapsePlugin(
                       "settings pages located at Features->Webcam & Timelapse under Timelapse Recordings->Path " \
                       "to FFMPEG.".format(ffmpeg_path)
             return {"success": False, "error": "ffmpeg-not-at-path", "error-message": message}
-
-        g90_influences_extruder = False
-        if settings_clone.profiles.current_printer().g90_influences_extruder == 'true':
-            g90_influences_extruder = True
-        elif settings_clone.profiles.current_printer().g90_influences_extruder == 'false':
-            g90_influences_extruder = False
-        elif settings_clone.profiles.current_printer().g90_influences_extruder == 'use-octoprint-settings':
-            try:
-                octoprint_g90_influences_extruder = self._settings.global_get(["feature", "g90_influences_extruder"])
-                if octoprint_g90_influences_extruder is not None:
-                    g90_influences_extruder = octoprint_g90_influences_extruder
-            except Exception as e:
-                message = "An exception occurred while trying to extract the OctoPrint setting - " \
-                          "g90_influences_extruder."
-                logger.exception(message)
-                return {"success": False, "error": "error-extracting-g90-influences-extruder", "error-message": message}
 
         if current_printer_clone.slicer_type == 'automatic':
             # extract any slicer settings if possible.  This must be done before any calls to the printer profile
@@ -1869,14 +1852,16 @@ class OctolapsePlugin(
                 message = "Unable to start the print.  Some required slicer settings are missing or corrupt: {0}" \
                           .format(",".join(missing_settings))
                 return {"success": False, "error": "missing-manual-slicer-settings","error-message": message}
-
+        current_printer_clone = settings_clone.profiles.current_printer()
+        overridable_printer_profile_settings = current_printer_clone.get_overridable_profile_settings(
+            self.get_octoprint_g90_influences_extruder(), self.get_octoprint_printer_profile()
+        )
         return {
             'success': True,
             'warning': warnings,
             "settings": settings_clone,
-            "octoprint_printer_profile": octoprint_printer_profile,
+            "overridable_printer_profile_settings": overridable_printer_profile_settings,
             "ffmpeg_path": ffmpeg_path,
-            "g90_influences_extruder": g90_influences_extruder,
             "gcode_file_path": gcode_file_path,
             "warnings": warnings
         }
@@ -1884,9 +1869,8 @@ class OctolapsePlugin(
     def start_timelapse(self, timelapse_settings, snapshot_plans=None):
         self._timelapse.start_timelapse(
             timelapse_settings["settings"],
-            timelapse_settings["octoprint_printer_profile"],
+            timelapse_settings["overridable_printer_profile_settings"],
             timelapse_settings["ffmpeg_path"],
-            timelapse_settings["g90_influences_extruder"],
             timelapse_settings["gcode_file_path"],
             snapshot_plans=snapshot_plans
         )
@@ -1971,9 +1955,10 @@ class OctolapsePlugin(
 
     def pre_processing_failed(self, errors):
         if self._printer.is_printing():
-            if errors != "":
+            if len(errors) > 0:
                 # display error messages if there are any
-                self.on_print_start_failed(errors)
+                error_message = "\r\n".join(errors)
+                self.on_print_start_failed(error_message)
         # cancel the print
         self._printer.cancel_print(tags={'octolapse-preprocessing-cancelled'})
         # inform the timelapse object that preprocessing has failed
@@ -1981,6 +1966,7 @@ class OctolapsePlugin(
         # close the UI progress popup
         self.send_pre_processing_progress_message(
             100, 0, 0, 0, 0)
+
         self.preprocessing_job_guid = None
 
     def pre_processing_success(
@@ -2005,10 +1991,14 @@ class OctolapsePlugin(
         snapshot_plans = []
         total_travel_distance = 0
         total_saved_travel_distance = 0
-        octoprint_printer_profile = self._printer_profile_manager.get_current()
-        printer_volume = utility.get_bounding_box(
-            self.saved_timelapse_settings["settings"].profiles.current_printer(), octoprint_printer_profile
+        octoprint_printer_profile = self.get_octoprint_printer_profile()
+        current_printer_profile = self.saved_timelapse_settings["settings"].profiles.current_printer()
+        overridable_printer_profile_settings = current_printer_profile.get_overridable_profile_settings(
+            self.get_octoprint_g90_influences_extruder(),
+            octoprint_printer_profile
         )
+        printer_volume = overridable_printer_profile_settings["volume"]
+        axes = overridable_printer_profile_settings["axes"]
         for plan in self.saved_snapshot_plans:
             snapshot_plans.append(plan.to_dict())
             total_travel_distance += plan.travel_distance
@@ -2020,6 +2010,7 @@ class OctolapsePlugin(
             "snapshot_plans": {
             "snapshot_plans": snapshot_plans,
             "printer_volume": printer_volume,
+            "axes": axes,
             "total_travel_distance": total_travel_distance,
             "total_saved_travel_distance": total_saved_travel_distance,
             "current_plan_index": 0,

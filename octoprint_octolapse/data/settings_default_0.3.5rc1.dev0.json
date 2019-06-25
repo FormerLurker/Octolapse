@@ -1287,7 +1287,7 @@
         "name": "Default Printer",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": false,
+        "override_octoprint_profile_settings": false,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -1706,7 +1706,7 @@
         "name": "Monoprice Maker Select V2",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": false,
+        "override_octoprint_profile_settings": false,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -1833,7 +1833,7 @@
         "name": "Lulzbot Taz 6",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": true,
+        "override_octoprint_profile_settings": true,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -1960,7 +1960,7 @@
         "name": "Wanhao Duplicator i3",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": false,
+        "override_octoprint_profile_settings": false,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -2087,7 +2087,7 @@
         "name": "Prusa Mk2",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": true,
+        "override_octoprint_profile_settings": true,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -2214,7 +2214,7 @@
         "name": "Prusa Mk2S",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": true,
+        "override_octoprint_profile_settings": true,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -2341,7 +2341,7 @@
         "name": "CR-10 - Custom",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": false,
+        "override_octoprint_profile_settings": false,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -2468,7 +2468,7 @@
         "name": "Prusa Mk2.5",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": true,
+        "override_octoprint_profile_settings": true,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -2595,7 +2595,7 @@
         "name": "Prusa MK3",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": true,
+        "override_octoprint_profile_settings": true,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -2722,7 +2722,7 @@
         "name": "Anet A8",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": false,
+        "override_octoprint_profile_settings": false,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -2849,7 +2849,7 @@
         "name": "Prusa Mk2.5S",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": true,
+        "override_octoprint_profile_settings": true,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -2976,7 +2976,7 @@
         "name": "Dagoma Neva",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": true,
+        "override_octoprint_profile_settings": true,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -3103,7 +3103,7 @@
         "name": "Anycubic I3 Mega",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": false,
+        "override_octoprint_profile_settings": false,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -3230,7 +3230,7 @@
         "name": "Prusa MK3S",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": true,
+        "override_octoprint_profile_settings": true,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {
@@ -3357,7 +3357,7 @@
         "name": "Irapid Black",
         "minimum_layer_height": 0.05,
         "snapshot_command": "snap",
-        "override_octoprint_print_volume": false,
+        "override_octoprint_profile_settings": false,
         "default_firmware_retractions": false,
         "slicers": {
           "simplify_3d": {

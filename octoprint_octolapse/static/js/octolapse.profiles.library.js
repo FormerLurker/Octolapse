@@ -378,6 +378,7 @@ $(function() {
                 self.automatic_changed_to_custom(false);
                 // display a confirmation popup, then update the profile if confirmed, else revert to the previous
                 // settings
+                self.is_confirming(true);
                 Octolapse.showConfirmDialog(
                     'confirm-load-server-profile',
                     'Update Profile From Server',
@@ -394,6 +395,8 @@ $(function() {
                         self.ignore_is_custom_change = true;
                         self.is_custom(true);
                         self.ignore_is_custom_change = false;
+                    }, function() {
+                        self.is_confirming(false);
                     }
                 );
             }

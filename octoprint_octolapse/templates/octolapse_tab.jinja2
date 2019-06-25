@@ -115,12 +115,10 @@
                                     <span class="previous-snapshots">
                                     </span>
                                     <span class="latest-snapshot">
-                                        <img class="latest" src=""></img>
+                                        <img class="latest" src=""/>
                                     </span>
                                 </a>
                             </div>
-
-
                             <div class="snapshot_refresh_container ol_hover_button">
                                 <a class="start-animation"
                                    data-bind="click:function() { startSnapshotAnimation('octolapse_snapshot_thumbnail_container'); },visible:Octolapse.Globals.auto_reload_latest_snapshot">
@@ -143,7 +141,9 @@
                                     </span>
                                 </a>
                             </div>
-
+                            <div class="octolapse-snapshot-text">
+                                <span data-bind="visible:!current_camera_enabled()">Disabled</span>
+                            </div>
                         </div>
                         <div>
                             <select id="octolapse_current_snapshot_camera"
@@ -152,7 +152,7 @@
                                     options: Octolapse.Status.cameras_sorted,
                                     optionsText: 'name',
                                     optionsValue: 'guid',
-                                    event: {change: Octolapse.Status.snapshotCameraChanged},
+                                    optionsCaption: 'Select a camera',
                                     value: Octolapse.Status.current_camera_guid"></select>
                         </div>
                     </div>

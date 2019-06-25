@@ -1,0 +1,1 @@
+Inverts the E axis so that increasing E coordinates will retract and decreasing coordinates will extrude.  If your E axis is inverted, and this is not checked, Octolapse will extrude instead of retracting during movements.  Keep in mind that inverted E axes are unusual, so don't check this unless you are sure.

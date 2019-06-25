@@ -187,15 +187,13 @@ class SnapshotGcodeGenerator(object):
     CurrentXPathIndex = 0
     CurrentYPathIndex = 0
 
-    def __init__(self, octolapse_settings, octoprint_printer_profile):
+    def __init__(self, octolapse_settings, overridable_printer_profile_settings):
         self.Settings = octolapse_settings  # type: OctolapseSettings
         self._stabilization = self.Settings.profiles.current_stabilization()
         self.StabilizationPaths = self._stabilization.get_stabilization_paths()
         self.Printer = self.Settings.profiles.current_printer()
         self.snapshot_command = self.Printer.snapshot_command
-        self.OctoprintPrinterProfile = octoprint_printer_profile
-        self.BoundingBox = utility.get_bounding_box(
-            self.Printer, octoprint_printer_profile)
+        self.overridable_printer_profile_settings = overridable_printer_profile_settings
         self.has_snapshot_position_errors = False
         self.snapshot_position_errors = ""
         self.gcode_generation_settings = self.Printer.get_current_state_detection_settings()
@@ -299,36 +297,57 @@ class SnapshotGcodeGenerator(object):
         coordinates = dict(x=self.get_snapshot_coordinate(x_path, "x"),
                            y=self.get_snapshot_coordinate(y_path, "y"))
 
-        if not utility.is_in_bounds(self.BoundingBox, coordinates["x"], None, None):
+        coordinates = self.get_nearest_in_bounds_coordinate(coordinates)
+        return self.invert_coordinates_if_necessary(coordinates)
 
-            message = "The snapshot X position ({0}) is out of bounds!".format(
-                coordinates["x"])
-            self.has_snapshot_position_errors = True
-            logger.error("gcode.py - GetSnapshotPosition - %s", message)
-            if self.Printer.abort_out_of_bounds:
-                coordinates["x"] = None
-            else:
-                coordinates["x"] = utility.get_closest_in_bounds_position(
-                    self.BoundingBox, x=coordinates["x"])["x"]
-                message += "  Using nearest in-bound position ({0}).".format(
-                    coordinates["x"])
-            self.snapshot_position_errors += message
-        if not utility.is_in_bounds(self.BoundingBox, None, coordinates["y"], None):
-            message = "The snapshot Y position ({0}) is out of bounds!".format(
-                coordinates["y"])
-            self.has_snapshot_position_errors = True
-            logger.error(message)
-            if self.Printer.abort_out_of_bounds:
-                coordinates["y"] = None
-            else:
-                coordinates["y"] = utility.get_closest_in_bounds_position(
-                    self.BoundingBox, y=coordinates["y"])["y"]
-                message += "  Using nearest in-bound position ({0}).".format(
-                    coordinates["y"])
-            if len(self.snapshot_position_errors) > 0:
-                self.snapshot_position_errors += "  "
-            self.snapshot_position_errors += message
+    def invert_coordinates_if_necessary(self, coordinates):
+        invert_x = self.overridable_printer_profile_settings["axes"]["invert_x"]
+        invert_y = self.overridable_printer_profile_settings["axes"]["invert_y"]
 
+        def invert_coordinate(coord, min, max):
+            return max - min - coord
+
+        if invert_x:
+            min_x = self.overridable_printer_profile_settings["volume"]["min_x"]
+            max_x = self.overridable_printer_profile_settings["volume"]["max_x"]
+            x = coordinates["x"]
+            coordinates["x"] = invert_coordinate(x, min_x, max_x)
+
+        if invert_y:
+            min_y = self.overridable_printer_profile_settings["volume"]["min_y"]
+            max_y = self.overridable_printer_profile_settings["volume"]["max_y"]
+            y = coordinates["y"]
+            coordinates["y"] = invert_coordinate(y, min_y, max_y)
+
+        return coordinates
+
+    def get_nearest_in_bounds_coordinate(self, coordinates):
+        volume = self.overridable_printer_profile_settings["volume"]
+        x = coordinates["x"]
+        y = coordinates["y"]
+        bed_type = volume["bed_type"]
+        min_x = volume["min_x"]
+        max_x = volume["max_x"]
+        min_y = volume["min_y"]
+        max_y = volume["max_y"]
+        if bed_type == "circular":
+            # get the radius of the bed (either max_x or max_y)
+            r = max_x
+            # calculate the distance from the center of the bed
+            d = math.sqrt(x*x + y*y)
+            # if D is greater than the radius (max_x or max_y), we are outside the circle
+            if utility.greater_than(d, r):
+                x = x / d * r
+                y = y / d * r
+        else:
+            def clamp(v, v_min, v_max):
+                """Limits a value to lie between (or equal to) v_min and v_max."""
+                return None if v is None else min(max(v, v_min), v_max)
+            x = clamp(x, min_x, max_x)
+            y = clamp(y, min_y, max_y)
+
+        coordinates["x"] = x
+        coordinates["y"] = y
         return coordinates
 
     def get_snapshot_coordinate(self, path, axis):
@@ -368,9 +387,6 @@ class SnapshotGcodeGenerator(object):
         if path.coordinate_system == "absolute":
             return coord
         elif path.coordinate_system == "bed_relative":
-            if self.OctoprintPrinterProfile["volume"]["formFactor"] == "circle":
-                raise ValueError(
-                    'Cannot calculate relative coordinates within a circular bed (yet...), sorry')
             return self.get_bed_relative_coordinate(axis, coord)
 
     def get_bed_relative_coordinate(self, axis, coord):
@@ -385,13 +401,19 @@ class SnapshotGcodeGenerator(object):
         return rel_coordinate
 
     def get_bed_relative_x(self, percent):
-        return self.get_relative_coordinate(percent, self.BoundingBox["min_x"], self.BoundingBox["max_x"])
+        min_value = self.overridable_printer_profile_settings["volume"]["min_x"]
+        max_value = self.overridable_printer_profile_settings["volume"]["max_x"]
+        return self.get_relative_coordinate(percent, min_value, max_value)
 
     def get_bed_relative_y(self, percent):
-        return self.get_relative_coordinate(percent, self.BoundingBox["min_y"], self.BoundingBox["max_y"])
+        min_value = self.overridable_printer_profile_settings["volume"]["min_y"]
+        max_value = self.overridable_printer_profile_settings["volume"]["max_y"]
+        return self.get_relative_coordinate(percent, min_value, max_value)
 
     def get_bed_relative_z(self, percent):
-        return self.get_relative_coordinate(percent, self.BoundingBox["min_z"], self.BoundingBox["max_z"])
+        min_value = self.overridable_printer_profile_settings["volume"]["min_z"]
+        max_value = self.overridable_printer_profile_settings["volume"]["max_z"]
+        return self.get_relative_coordinate(percent, min_value, max_value)
 
     @staticmethod
     def get_relative_coordinate(percent, min_value, max_value):
@@ -404,6 +426,14 @@ class SnapshotGcodeGenerator(object):
                 self.get_gcode_extruder_relative()
             )
             self.is_extruder_relative_current = True
+
+    def set_e_to_absolute(self, gcode_type):
+        if self.is_extruder_relative_current:
+            self.snapshot_gcode.append(
+                gcode_type,
+                self.get_gcode_extruder_absolute()
+            )
+            self.is_extruder_relative_current = False
 
     def set_xyz_to_relative(self, gcode_type):
         if not self.is_relative_current:  # must be in relative mode
@@ -438,25 +468,37 @@ class SnapshotGcodeGenerator(object):
         return self.gcode_generation_settings.retract_before_move and self.length_to_retract > 0
 
     def can_zhop(self):
-        return (
+        if not (
             self.gcode_generation_settings.retract_before_move and
-            self.gcode_generation_settings.lift_when_retracted and self.distance_to_lift > 0 and
-            utility.is_in_bounds(
-                self.BoundingBox, None, None, self.snapshot_plan.initial_position.z + self.distance_to_lift
-            )
-        )
+            self.gcode_generation_settings.lift_when_retracted and self.distance_to_lift > 0
+        ):
+            return False
+
+        invert_z = self.overridable_printer_profile_settings["axes"]["invert_z"]
+        if not invert_z:
+            max_z = self.overridable_printer_profile_settings["volume"]["max_z"]
+            return utility.less_than_or_equal(self.snapshot_plan.initial_position.z + self.distance_to_lift, max_z)
+        else:
+            min_z = self.overridable_printer_profile_settings["volume"]["min_z"]
+            return utility.greater_than_or_equal(self.snapshot_plan.initial_position.z - self.distance_to_lift, min_z)
 
     ###########################
-    # Fixed mode travel, retract, and lift
-    # These methods are safer, but produce more gcode
+    # Relative retract/lift/travel functions
     ###########################
     def retract_relative(self):
-        self.e_current -= self.length_to_retract
         self.set_e_to_relative(SnapshotGcode.START_GCODE)
+        invert_e = self.overridable_printer_profile_settings["axes"]["invert_e"]
+        if invert_e:
+            multiplier = 1
+        else:
+            multiplier = -1
+        length_to_retract = multiplier * self.length_to_retract
+        self.e_current += length_to_retract
+
         self.snapshot_gcode.append(
             SnapshotGcode.START_GCODE,
             self.get_gcode_retract(
-                -1.0 * self.length_to_retract,
+                length_to_retract,
                 self.get_altered_feedrate(self.gcode_generation_settings.retraction_speed)
             )
         )
@@ -464,25 +506,39 @@ class SnapshotGcodeGenerator(object):
 
     def deretract_relative(self):
         if self.retracted_by_start_gcode:
-            self.e_current += self.length_to_retract
+            invert_e = self.overridable_printer_profile_settings["axes"]["invert_e"]
+            if invert_e:
+                multiplier = -1
+            else:
+                multiplier = 1
+
+            length_to_deretract = multiplier * self.length_to_retract
+            self.e_current += length_to_deretract
+
             self.set_e_to_relative(SnapshotGcode.END_GCODE)
             self.snapshot_gcode.append(
                 SnapshotGcode.END_GCODE,
                 self.get_gcode_retract(
-                    self.length_to_retract,
+                    length_to_deretract,
                     self.get_altered_feedrate(self.gcode_generation_settings.deretraction_speed)
                 )
             )
 
     def lift_z_relative(self):
+        invert_z = self.overridable_printer_profile_settings["axes"]["invert_z"]
+        if invert_z:
+            multiplier = -1
+        else:
+            multiplier = 1
         # if we can ZHop, do
-        self.z_current += self.distance_to_lift
+        distance_to_lift = multiplier * self.distance_to_lift
+        self.z_current += distance_to_lift
         self.set_xyz_to_relative(SnapshotGcode.START_GCODE)
         # append to snapshot gcode
         self.snapshot_gcode.append(
             SnapshotGcode.START_GCODE,
             self.get_gcode_z_lift(
-                self.distance_to_lift,
+                distance_to_lift,
                 self.get_altered_feedrate(self.gcode_generation_settings.z_lift_speed)
             )
         )
@@ -490,15 +546,137 @@ class SnapshotGcodeGenerator(object):
 
     def delift_z_relative(self):
         if self.lifted_by_start_gcode:
-            self.z_current -= self.distance_to_lift
+            invert_z = self.overridable_printer_profile_settings["axes"]["invert_z"]
+            if invert_z:
+                multiplier = 1
+            else:
+                multiplier = -1
+            # if we can ZHop, do
+            distance_to_delift = multiplier * self.distance_to_lift
+            self.z_current += distance_to_delift
             self.set_xyz_to_relative(SnapshotGcode.END_GCODE)
             self.snapshot_gcode.append(
                 SnapshotGcode.END_GCODE,
                 self.get_gcode_z_lift(
-                    -1 * self.distance_to_lift,
+                    distance_to_delift,
                     self.get_altered_feedrate(self.gcode_generation_settings.z_lift_speed)
                 )
             )
+
+    def add_travel_action_relative(self, step):
+        if self.x_current != step.x and self.y_current != step.y:
+            self.set_xyz_to_relative(SnapshotGcode.SNAPSHOT_COMMANDS)
+            x_relative = (step.x - self.x_current)
+            y_relative = (step.y - self.y_current)
+            self.x_current = step.x
+            self.y_current = step.y
+            self.snapshot_gcode.append(
+                SnapshotGcode.SNAPSHOT_COMMANDS,
+                self.get_gcode_travel(
+                    x_relative,
+                    y_relative,
+                    self.get_altered_feedrate(self.gcode_generation_settings.x_y_travel_speed)
+                )
+            )
+
+    def return_to_original_position_relative(self):
+        if (
+            self.snapshot_plan.return_position is not None and
+            self.x_current != self.snapshot_plan.return_position.x and
+            self.y_current != self.snapshot_plan.return_position.y
+        ):
+            self.set_xyz_to_relative(SnapshotGcode.SNAPSHOT_COMMANDS)
+            x_relative = (self.snapshot_plan.return_position.x - self.x_current)
+            y_relative = (self.snapshot_plan.return_position.y - self.y_current)
+            self.x_current = self.snapshot_plan.return_position.x
+            self.y_current = self.snapshot_plan.return_position.y
+            self.snapshot_gcode.append(
+                SnapshotGcode.RETURN_COMMANDS,
+                self.get_gcode_travel(
+                    x_relative,
+                    y_relative,
+                    self.get_altered_feedrate(self.gcode_generation_settings.x_y_travel_speed)
+                )
+            )
+
+    ###########################
+    # Absolute retract/lift/travel functions
+    ###########################
+    def retract_absolute(self):
+        self.set_e_to_absolute(SnapshotGcode.START_GCODE)
+        invert_e = self.overridable_printer_profile_settings["axes"]["invert_e"]
+        if invert_e:
+            multiplier = 1
+        else:
+            multiplier = -1
+        length_to_retract = multiplier * self.length_to_retract
+        self.e_current += length_to_retract
+        self.retracted_by_start_gcode = True
+        self.snapshot_gcode.append(
+            SnapshotGcode.START_GCODE,
+            self.get_gcode_retract(
+                self.e_current - self.snapshot_plan.initial_position.e_offset,
+                self.get_altered_feedrate(self.gcode_generation_settings.retraction_speed)
+            )
+        )
+
+    def deretract_absolute(self):
+        if self.retracted_by_start_gcode:
+            self.set_e_to_absolute(SnapshotGcode.END_GCODE)
+            invert_e = self.overridable_printer_profile_settings["axes"]["invert_e"]
+            if invert_e:
+                multiplier = -1
+            else:
+                multiplier = 1
+
+            length_to_deretract = multiplier * self.length_to_retract
+            self.e_current += length_to_deretract
+            self.snapshot_gcode.append(
+                SnapshotGcode.END_GCODE,
+                self.get_gcode_retract(
+                    self.e_current - self.snapshot_plan.initial_position.e_offset,
+                    self.get_altered_feedrate(self.gcode_generation_settings.deretraction_speed)
+                )
+            )
+
+    def lift_z_absolute(self):
+        self.set_xyz_to_absolute(SnapshotGcode.START_GCODE)
+        invert_z = self.overridable_printer_profile_settings["axes"]["invert_z"]
+        if invert_z:
+            multiplier = -1
+        else:
+            multiplier = 1
+        # if we can ZHop, do
+        distance_to_lift = multiplier * self.distance_to_lift
+        self.z_current += distance_to_lift
+        self.lifted_by_start_gcode = True
+        # append to snapshot gcode
+        self.snapshot_gcode.append(
+            SnapshotGcode.START_GCODE,
+            self.get_gcode_z_lift(
+                self.z_current - self.snapshot_plan.initial_position.z_offset,
+                self.get_altered_feedrate(self.gcode_generation_settings.z_lift_speed)
+            )
+        )
+
+    def delift_z_absolute(self):
+        self.set_xyz_to_absolute(SnapshotGcode.END_GCODE)
+        invert_z = self.overridable_printer_profile_settings["axes"]["invert_z"]
+        if invert_z:
+            multiplier = 1
+        else:
+            multiplier = -1
+        # if we can ZHop, do
+        distance_to_delift = multiplier * self.distance_to_lift
+        self.z_current += distance_to_delift
+        # append to snapshot gcode
+        self.snapshot_gcode.append(
+            SnapshotGcode.END_GCODE,
+            self.get_gcode_z_lift(
+                self.z_current - self.snapshot_plan.initial_position.z_offset,
+                self.get_altered_feedrate(self.gcode_generation_settings.z_lift_speed)
+            )
+        )
 
     def add_travel_action_absolute(self, step):
         assert (isinstance(step, SnapshotPlanStep))
@@ -540,104 +718,44 @@ class SnapshotGcodeGenerator(object):
                 )
 
     ###########################
-    # Current axis mode travel, retract, and lift
-    # These methods are safer, but produce more gcode
+    # Current axis mode  retract/lift/travel functions
     ###########################
     def retract_current_mode(self):
         if self.is_extruder_relative_current:
             self.retract_relative()
         else:
-            self.retracted_by_start_gcode = True
-            self.e_current -= self.length_to_retract
-            self.snapshot_gcode.append(
-                SnapshotGcode.START_GCODE,
-                self.get_gcode_retract(
-                    self.e_current - self.snapshot_plan.initial_position.e_offset,
-                    self.get_altered_feedrate(self.gcode_generation_settings.retraction_speed)
-                )
-            )
+            self.retract_absolute()
 
     def deretract_current_mode(self):
         if self.is_extruder_relative_current:
             self.deretract_relative()
         else:
-            if self.retracted_by_start_gcode:
-                self.e_current += self.length_to_retract
-                self.snapshot_gcode.append(
-                    SnapshotGcode.END_GCODE,
-                    self.get_gcode_retract(
-                        self.e_current - self.snapshot_plan.initial_position.e_offset,
-                        self.get_altered_feedrate(self.gcode_generation_settings.retraction_speed)
-                    )
-                )
+            self.deretract_absolute()
 
     def lift_z_current_mode(self):
         if self.is_relative_current:
             self.lift_z_relative()
         else:
-            self.lifted_by_start_gcode = True
-            self.z_current += self.distance_to_lift
-            # append to snapshot gcode
-            self.snapshot_gcode.append(
-                SnapshotGcode.START_GCODE,
-                self.get_gcode_z_lift(
-                    self.z_current - self.snapshot_plan.initial_position.z_offset,
-                    self.get_altered_feedrate(self.gcode_generation_settings.z_lift_speed)
-                )
-            )
+            self.lift_z_absolute()
 
     def delift_z_current_mode(self):
         if self.is_relative_current:
-            self.delift_z()
+            self.delift_z_relative()
         else:
-            self.z_current -= self.distance_to_lift
-            # append to snapshot gcode
-            self.snapshot_gcode.append(
-                SnapshotGcode.END_GCODE,
-                self.get_gcode_z_lift(
-                    self.z_current - self.snapshot_plan.initial_position.z_offset,
-                    self.get_altered_feedrate(self.gcode_generation_settings.z_lift_speed)
-                )
-            )
+            self.delift_z_absolute()
 
     def add_travel_action_current_mode(self, step):
-        assert (isinstance(step, SnapshotPlanStep))
-
         # Move to Snapshot Position
-        if not self.is_relative_current:
+        if self.is_relative_current:
+            self.add_travel_action_relative(step)
+        else:
             self.add_travel_action_absolute(step)
-        elif self.x_current != step.x and self.y_current != step.y:
-            self.x_current = step.x
-            self.y_current = step.y
-            self.snapshot_gcode.append(
-                SnapshotGcode.SNAPSHOT_COMMANDS,
-                self.get_gcode_travel(
-                    self.x_current - self.snapshot_plan.initial_position.x_offset,
-                    self.y_current - self.snapshot_plan.initial_position.y_offset,
-                    self.get_altered_feedrate(self.gcode_generation_settings.x_y_travel_speed)
-                )
-            )
 
     def return_to_original_position_current_mode(self):
-        if not self.is_relative_current:
+        if self.is_relative_current:
+            self.return_to_original_position_relative()
+        else:
             self.return_to_original_position_absolute()
-        elif (
-            self.snapshot_plan.return_position is not None and
-            self.x_current != self.snapshot_plan.return_position.x and
-            self.y_current != self.snapshot_plan.return_position.y
-        ):
-            x_relative = self.snapshot_plan.return_position.x - self.x_current
-            y_relative = self.snapshot_plan.return_position.y - self.y_current
-            self.x_current = self.snapshot_plan.return_position.x
-            self.y_current = self.snapshot_plan.return_position.y
-            self.snapshot_gcode.append(
-                SnapshotGcode.RETURN_COMMANDS,
-                self.get_gcode_travel(
-                    x_relative,
-                    y_relative,
-                    self.get_altered_feedrate(self.gcode_generation_settings.x_y_travel_speed)
-                )
-            )
 
     ######################################
     # common functions for retract, lift, travel, and returning to the original position
@@ -845,6 +963,7 @@ class SnapshotGcodeGenerator(object):
         return snapshot_plan
 
     def split_extrusion_gcode_at_point(self, triggering_command, start_position, end_position, intersection):
+        # TODO: TEST THIS WITH INVERTED AXES
         # get the coordinates necessary to split one gcode into 2 at an intersection point
         # start offset coordinates
         start_x_offset = start_position.offset_x()
@@ -897,7 +1016,6 @@ class SnapshotGcodeGenerator(object):
         else:
             gcode1_e = e1_offset
             gcode2_e = e2_offset
-
 
         # create the gcodes
         triggering_command_1_parameters = {}

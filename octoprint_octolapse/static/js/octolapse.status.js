@@ -62,9 +62,7 @@ $(function () {
             self.IsTabShowing = false;
             self.IsLatestSnapshotDialogShowing = false;
             self.current_print_volume = null;
-
-
-
+            self.current_camera_enabled = ko.observable(false);
             self.showLatestSnapshotDialog = function () {
 
                 var $SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
@@ -120,11 +118,45 @@ $(function () {
             };
 
             self.onAfterBinding = function () {
-                    self.current_settings_showing.subscribe(function (newData) {
+                self.current_settings_showing.subscribe(function (newData) {
                     //console.log("Setting local storage (" + self.SETTINGS_VISIBLE_KEY + ") to " + newData);
                     Octolapse.setLocalStorage(self.SETTINGS_VISIBLE_KEY,newData)
                 });
+            };
 
+            // Subscribe to current camera guid changes
+            self.current_camera_guid.subscribe(function(newValue){
+                self.snapshotCameraChanged();
+            });
+
+            self.getInitialCameraSelection = function (){
+                // See if the previous camera is in the list.  If so, select it.
+                var guid = Octolapse.getLocalStorage('previous-camera-guid');
+
+                for (var i = 0; i < self.profiles().cameras().length; i++)
+                {
+                    var camera_profile = self.profiles().cameras()[i];
+                    if(camera_profile.guid == guid)
+                    {
+                        self.current_camera_guid(camera_profile.guid);
+                        return camera_profile.guid;
+                    }
+                }
+                // This guid doesn't exist, get the first enabled camera
+                for (var i = 0; i < self.profiles().cameras().length; i++)
+                {
+                    var camera_profile = self.profiles().cameras()[i];
+                    if(camera_profile.enabled)
+                    {
+                        self.current_camera_guid(camera_profile.guid);
+                        return camera_profile.guid;
+                    }
+                }
+                // No enabled camera, just get the first camera
+                if(self.profiles().cameras().length>0)
+                    return self.profiles().cameras()[0].guid;
+                // Just set it to null, no camera available.
+                return null;
 
             };
 
@@ -268,6 +300,7 @@ $(function () {
 
             // takes the list of images, update the frames in the target accordingly and starts any animations
             self.IsAnimating = false;
+
             self.updateSnapshotAnimation = function (targetId, newSnapshotAddress) {
                 console.log("Updating animation for target id: " + targetId);
                 // Get the snapshot_container within the target
@@ -531,7 +564,7 @@ $(function () {
             };
 
             self.update = function (settings) {
-                console.log("octolapse.status.js - Updating main settings.")
+                console.log("octolapse.status.js - Updating main settings.");
                 self.is_timelapse_active(settings.is_timelapse_active);
                 self.snapshot_count(settings.snapshot_count);
                 self.is_taking_snapshot(settings.is_taking_snapshot);
@@ -550,12 +583,10 @@ $(function () {
                 self.current_snapshot_profile_guid(settings.profiles.current_snapshot_profile_guid);
                 self.current_rendering_profile_guid(settings.profiles.current_rendering_profile_guid);
                 self.current_debug_profile_guid(settings.profiles.current_debug_profile_guid);
-                // Only update the current camera guid if there is no value
-                if(self.current_camera_guid() == null)
-                    self.current_camera_guid(settings.profiles.current_camera_profile_guid);
 
                 self.is_real_time(self.is_current_trigger_real_time());
-
+                self.current_camera_guid(self.getInitialCameraSelection());
+                self.set_current_camera_enabled();
                 // Update snapshots
                 self.updateLatestSnapshotImage(true);
                 self.updateLatestSnapshotThumbnail(true);
@@ -722,45 +753,32 @@ $(function () {
                 //console.log("Opening current camera profile from tab.")
                 Octolapse.Cameras.getProfileByGuid(guid).toggleCamera();
             };
-            self.snapshotCameraChanged = function(obj, event) {
-                // Update the current camera profile
-                var guid = $("#octolapse_current_snapshot_camera").val();
-                if (guid == "")
-                    return;
-                //console.log("Updating current snapshot camera preview: " + guid)
-                if(event.originalEvent) {
-                    if (Octolapse.Globals.is_admin()) {
-                        var data = {'guid': guid};
-                        $.ajax({
-                            url: "./plugin/octolapse/setCurrentCameraProfile",
-                            type: "POST",
-                            data: JSON.stringify(data),
-                            contentType: "application/json",
-                            dataType: "json",
-                            success: function (result) {
-                                // Set the current profile guid observable.  This will cause the UI to react to the change.
-                                //console.log("current profile guid updated: " + result.guid)
-                            },
-                            error: function (XMLHttpRequest, textStatus, errorThrown) {
-                                var message = "Unable to set the current camera profile!.  Status: " + textStatus + ".  Error: " + errorThrown;
-                                var options = {
-                                    title: 'Camera Selection Error',
-                                    text: message,
-                                    type: 'error',
-                                    hide: false,
-                                    addclass: "octolapse",
-                                    desktop: {
-                                        desktop: true
-                                    }
-                                };
-                                Octolapse.displayPopup(options);
-                            }
-                        });
+            self.set_current_camera_enabled = function() {
+                var current_camera = null;
+                for (var i = 0; i < self.profiles().cameras().length; i++) {
+                    var camera_profile = self.profiles().cameras()[i];
+                    if (camera_profile.guid == self.current_camera_guid()) {
+                        current_camera = camera_profile;
+                        break;
                     }
                 }
+                if (current_camera)
+                    self.current_camera_enabled(current_camera.enabled);
+                else
+                    self.current_camera_enabled(true);
+            };
 
+            self.snapshotCameraChanged = function() {
+                if (self.current_camera_guid()) {
+                    // Set the local storage guid here.
+                    Octolapse.setLocalStorage('previous-camera-guid', self.current_camera_guid());
+                    self.current_camera_enabled(true);
+                }
+
+                self.set_current_camera_enabled();
+                // Update the current camera profile
+                var guid = self.current_camera_guid();
                 console.log("Updating the latest snapshot from: " + Octolapse.Status.current_camera_guid() + " to " + guid);
-                Octolapse.Status.current_camera_guid(guid);
                 self.erasePreviousSnapshotImages('octolapse_snapshot_image_container',true);
                 self.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container',true);
                 self.updateLatestSnapshotThumbnail(true);

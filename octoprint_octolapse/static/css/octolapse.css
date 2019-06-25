@@ -25,10 +25,26 @@
     pointer-events: none;
     opacity: 0.25;
 }
+.float_right {
+    float:right;
+}
 .octolapse a:hover{
     cursor: pointer;
     text-decoration: none;
 
+}
+.octolapse-snapshot-text {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    mix-blend-mode: difference;
+    font-size:22px;
+}
+.octolapse .label-important, .octolapse .badge-important {
+    background-color: #b94a48!important;
+    color: #cccccc!important;
 }
 .text-left{
     text-align:left;

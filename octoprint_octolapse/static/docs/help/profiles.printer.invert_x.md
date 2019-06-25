@@ -1,0 +1,1 @@
+Inverts the X axis so that the lowest coordinate value is on the right of the bed.  For example, if Octolapse is taking snapshots on the back right side of the bed even though you have chosen 'back left' as your stabilization profile, you will need to invert your X axis.

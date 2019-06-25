@@ -125,6 +125,10 @@ def less_than_or_equal(a, b):
     return a < b or is_equal(a,b)
 
 
+def greater_than_or_equal(a, b):
+    return a > b or is_equal(a, b)
+
+
 def is_equal(a,b):
     return a - b < FLOAT_MATH_EQUALITY_RANGE
 
@@ -323,22 +327,27 @@ def is_in_bounds(bounding_box, x, y, z):
 
 
 def get_closest_in_bounds_position(bounding_box, x=None, y=None, z=None):
-    min_x = bounding_box['min_x']
-    max_x = bounding_box['max_x']
-    min_y = bounding_box['min_y']
-    max_y = bounding_box['max_y']
-    min_z = bounding_box['min_z']
-    max_z = bounding_box['max_z']
+    # Todo:  Make sure circular beds work
 
-    def clamp(v, v_min, v_max):
-        """Limits a value to lie between (or equal to) v_min and v_max."""
-        return None if v is None else min(max(v, v_min), v_max)
+    if bounding_box["bed_type"] == 'rectangular':
+        min_x = bounding_box['min_x']
+        max_x = bounding_box['max_x']
+        min_y = bounding_box['min_y']
+        max_y = bounding_box['max_y']
+        min_z = bounding_box['min_z']
+        max_z = bounding_box['max_z']
 
-    c_x = clamp(x, min_x, max_x)
-    c_y = clamp(y, min_y, max_y)
-    c_z = clamp(z, min_z, max_z)
+        def clamp(v, v_min, v_max):
+            """Limits a value to lie between (or equal to) v_min and v_max."""
+            return None if v is None else min(max(v, v_min), v_max)
 
-    return {'X': c_x, 'Y': c_y, 'Z': c_z}
+        c_x = clamp(x, min_x, max_x)
+        c_y = clamp(y, min_y, max_y)
+        c_z = clamp(z, min_z, max_z)
+
+        return {'X': c_x, 'Y': c_y, 'Z': c_z}
+    else:
+        raise ValueError("We've not implemented circular bed stuff yet!")
 
 
 def is_snapshot_command(command_string, snapshot_command):
@@ -346,53 +355,6 @@ def is_snapshot_command(command_string, snapshot_command):
     if snapshot_command is not None and len(snapshot_command)>0:
         return command_string.lower() == snapshot_command.lower()
     return False
-
-
-def get_bounding_box(octolapse_printer_profile, octoprint_printer_profile):
-    min_x = None
-    max_x = None
-    min_y = None
-    max_y = None
-    min_z = None
-    max_z = None
-
-    if octolapse_printer_profile is not None and octoprint_printer_profile is not None:
-
-        # get octolapse min and max
-        if octolapse_printer_profile.override_octoprint_print_volume:
-            min_x = octolapse_printer_profile.min_x
-            max_x = octolapse_printer_profile.max_x
-            min_y = octolapse_printer_profile.min_y
-            max_y = octolapse_printer_profile.max_y
-            min_z = octolapse_printer_profile.min_z
-            max_z = octolapse_printer_profile.max_z
-        else:
-            volume = octoprint_printer_profile["volume"]
-            custom_box = volume["custom_box"]
-            # see if we have a custom bounding box
-            if custom_box:
-                min_x = custom_box["x_min"]
-                max_x = custom_box["x_max"]
-                min_y = custom_box["y_min"]
-                max_y = custom_box["y_max"]
-                min_z = custom_box["z_min"]
-                max_z = custom_box["z_max"]
-            else:
-                min_x = 0
-                max_x = volume["width"]
-                min_y = 0
-                max_y = volume["depth"]
-                min_z = 0
-                max_z = volume["height"]
-
-    return {
-        "min_x": None if min_x is None else float(min_x),
-        "max_x": None if max_x is None else float(max_x),
-        "min_y": None if min_y is None else float(min_y),
-        "max_y": None if max_y is None else float(max_y),
-        "min_z": None if min_z is None else float(min_z),
-        "max_z": None if max_z is None else float(max_z)
-    }
 
 
 def get_intersections_circle(x1, y1, x2, y2, c_x, c_y, c_radius):

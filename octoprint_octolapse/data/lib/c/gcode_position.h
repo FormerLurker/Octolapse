@@ -30,6 +30,7 @@ struct gcode_position_args {
 	gcode_position_args() {
 		// Wipe Variables
 		autodetect_position = true;
+		is_circular_bed = false;
 		origin_x = 0;
 		origin_y = 0;
 		origin_z = 0;
@@ -45,15 +46,26 @@ struct gcode_position_args {
 		e_axis_default_mode = "absolute";
 		units_default = "millimeters";
 		is_bound_ = false;
-		x_min_ = 0;
-		x_max_ = 0;
-		y_min_ = 0;
-		y_max_ = 0;
-		z_min_ = 0;
-		z_max_ = 0;
+		invert_x = false;
+		invert_y = false;
+		invert_z = false;
+		invert_e = false;
+		x_min = 0;
+		x_max = 0;
+		y_min = 0;
+		y_max = 0;
+		z_min = 0;
+		z_max = 0;
+		snapshot_x_min = 0;
+		snapshot_x_max = 0;
+		snapshot_y_min = 0;
+		snapshot_y_max = 0;
+		snapshot_z_min = 0;
+		snapshot_z_max = 0;
 		std::vector<std::string> location_detection_commands; // Final list of location detection commands
 	}
 	bool autodetect_position;
+	bool is_circular_bed;
 	// Wipe variables
 	double origin_x;
 	double origin_y;
@@ -61,18 +73,28 @@ struct gcode_position_args {
 	bool origin_x_none;
 	bool origin_y_none;
 	bool origin_z_none;
+	bool invert_x;
+	bool invert_y;
+	bool invert_z;
+	bool invert_e;
 	double retraction_length;
 	double z_lift_height;
 	double priming_height;
 	double minimum_layer_height;
 	bool g90_influences_extruder;
 	bool is_bound_;
-	double x_min_;
-	double x_max_;
-	double y_min_;
-	double y_max_;
-	double z_min_;
-	double z_max_;
+	double snapshot_x_min;
+	double snapshot_x_max;
+	double snapshot_y_min;
+	double snapshot_y_max;
+	double snapshot_z_min;
+	double snapshot_z_max;
+	double x_min;
+	double x_max;
+	double y_min;
+	double y_max;
+	double z_min;
+	double z_max;
 	std::string xyz_axis_default_mode;
 	std::string e_axis_default_mode;
 	std::string units_default;
@@ -82,12 +104,12 @@ struct gcode_position_args {
 class gcode_position
 {
 public:
-	typedef void(gcode_position::*posFunctionType)(position*, parsed_command*);
+	typedef void(gcode_position::*pos_function_type)(position*, parsed_command*);
 	gcode_position(gcode_position_args* args);
 	gcode_position();
 	~gcode_position();
 
-	void update(parsed_command* cmd, int file_line_number, int gcode_number);
+	void update(parsed_command* command, int file_line_number, int gcode_number);
 	void update_position(position*, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1_g0);
 	void undo_update();
 	position * get_current_position();
@@ -120,11 +142,26 @@ private:
 	double y_max_;
 	double z_min_;
 	double z_max_;
+	bool invert_x_;
+	bool invert_y_;
+	bool invert_z_;
+	bool invert_e_;
+	double e_multiplier_;
+	double z_multiplier_;
+	bool is_circular_bed_;
+	double snapshot_x_min_;
+	double snapshot_x_max_;
+	double snapshot_y_min_;
+	double snapshot_y_max_;
+	double snapshot_z_min_;
+	double snapshot_z_max_;
 
-	std::map<std::string, posFunctionType> gcode_functions_;
-	std::map<std::string, posFunctionType>::iterator gcode_functions_iterator_;
+	std::map<std::string, pos_function_type> gcode_functions_;
+	std::map<std::string, pos_function_type>::iterator gcode_functions_iterator_;
 	
-	std::map<std::string, posFunctionType> get_gcode_functions();
+	std::map<std::string, pos_function_type> get_gcode_functions();
+
+	double get_height_from_z(double z);
 	/// Process Gcode Command Functions
 	void process_g0_g1(position*, parsed_command*);
 	void process_g2(position*, parsed_command*);

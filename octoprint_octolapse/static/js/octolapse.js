@@ -361,7 +361,7 @@ $(function () {
             }
         }
     }
-    Octolapse.showConfirmDialog = function(key, title, text, onConfirm, onCancel)
+    Octolapse.showConfirmDialog = function(key, title, text, onConfirm, onCancel, onComplete)
     {
         Octolapse.closeConfirmDialogsForKeys([key]);
         Octolapse.ConfirmDialogs[key] = (
@@ -382,7 +382,18 @@ $(function () {
                     history: false
                 }
             })
-        ).get().on('pnotify.confirm', onConfirm).on('pnotify.cancel', onCancel);
+        ).get().on('pnotify.confirm', function(){
+            onConfirm();
+            if(onComplete)
+            {
+                onComplete();
+            }
+        }).on('pnotify.cancel', function() {
+          onCancel();
+          if(onComplete) {
+              onComplete();
+          }
+        });
     };
 
     Octolapse.ToggleElement = function (element) {
@@ -1472,6 +1483,25 @@ $(function () {
                         );
                     }
 
+                    break;
+                case "gcode-preprocessing-failed":
+                    // clear the job guid
+                    console.log("Gcode preprocessing failed.");
+                    self.preprocessing_job_guid = null;
+                    // report the issue
+                    var options = {
+                        title: 'Preprocessing Error',
+                        text: data.errors,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopupForKey(
+                        options,['gcode-preprocessing-failed'],['gcode-preprocessing-failed']
+                    );
                     break;
                 case "updated-profiles-available":
                     if (self.is_admin())

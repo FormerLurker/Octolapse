@@ -21,7 +21,7 @@ def get_printer_profile():
           "retract_length": 4.0,
           "xyz_axes_default_mode": "require-explicit",
           "snapshot_command": "snap",
-          "override_octoprint_print_volume": False,
+          "override_octoprint_profile_settings": False,
           "z_hop": 0.5,
           "deretract_speed": 3000.0,
           "default_firmware_retractions": True,

@@ -56,7 +56,9 @@ class StabilizationPreprocessingThread(Thread):
         assert (
             trigger.trigger_type in TriggerProfile.get_precalculated_trigger_types()
         )
-        self.gcode_generator = SnapshotGcodeGenerator(timelapse_settings["settings"], timelapse_settings["octoprint_printer_profile"])
+        self.gcode_generator = SnapshotGcodeGenerator(
+            timelapse_settings["settings"], timelapse_settings["overridable_printer_profile_settings"]
+        )
         self.progress_callback = progress_callback
         self.start_callback = start_callback
         self.complete_callback = complete_callback
@@ -78,7 +80,7 @@ class StabilizationPreprocessingThread(Thread):
         self.total_seconds = 0
         self.gcodes_processed = 0
         self.lines_processed = 0
-        self.cpp_position_args = printer.get_position_args(timelapse_settings["g90_influences_extruder"])
+        self.cpp_position_args = printer.get_position_args(timelapse_settings["overridable_printer_profile_settings"])
 
     def run(self):
         try:
@@ -113,12 +115,18 @@ class StabilizationPreprocessingThread(Thread):
             )
         logger.info("Unpacking results")
         success = results[0]
-        errors = results[1]
+        error = results[1]
+        errors = []
+        if error:
+            errors.append(error)
         # get snapshot plans
         cpp_snapshot_plans = results[2]
         if not cpp_snapshot_plans:
             snapshot_plans = []
             success = False
+            error_message = "No snapshots were detected in the Gcode.  This is probably either a problem with your " \
+                            "printer settings, an issue with the gcode file, or a bug in Octolapse. "
+            errors.insert(0, error_message)
         else:
             snapshot_plans = SnapshotPlan.create_from_cpp_snapshot_plans(cpp_snapshot_plans)
         seconds_elapsed = results[3]

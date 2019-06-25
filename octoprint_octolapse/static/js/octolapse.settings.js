@@ -192,17 +192,7 @@ $(function () {
             // Printers
             Octolapse.Printers.profiles([]);
             Octolapse.Printers.default_profile(settings.profiles.defaults.printer);
-            Octolapse.Printers.profileOptions = {
-                'gcode_configuration_options': settings.profiles.options.printer.gcode_configuration_options,
-                'slicer_type_options': settings.profiles.options.printer.slicer_type_options,
-                'e_axis_default_mode_options': settings.profiles.options.printer.e_axis_default_mode_options,
-                'g90_influences_extruder_options': settings.profiles.options.printer.g90_influences_extruder_options,
-                'xyz_axes_default_mode_options': settings.profiles.options.printer.xyz_axes_default_mode_options,
-                'units_default_options': settings.profiles.options.printer.units_default_options,
-                'axis_speed_display_unit_options': settings.profiles.options.printer.axis_speed_display_unit_options,
-                'cura_surface_mode_options': settings.profiles.options.printer.cura_surface_mode_options,
-                'server_profiles': settings.profiles.options.printer.server_profiles
-            };
+            Octolapse.Printers.profileOptions = settings.profiles.options.printer;
             Octolapse.Printers.current_profile_guid(settings.profiles.current_printer_profile_guid);
             Object.keys(settings.profiles.printers).forEach(function(key) {
                 Octolapse.Printers.profiles.push(new Octolapse.PrinterProfileViewModel(settings.profiles.printers[key]));
@@ -211,16 +201,7 @@ $(function () {
             // Stabilizations
             Octolapse.Stabilizations.profiles([]);
             Octolapse.Stabilizations.default_profile(settings.profiles.defaults.stabilization);
-            Octolapse.Stabilizations.profileOptions = {
-                'server_profiles': settings.profiles.options.stabilization.server_profiles,
-                'stabilization_type_options': settings.profiles.options.stabilization.stabilization_type_options,
-                'real_time_xy_stabilization_type_options': settings.profiles.options.stabilization.real_time_xy_stabilization_type_options,
-                'smart_layer_trigger_type_options': settings.profiles.options.stabilization.smart_layer_trigger_type_options,
-                'trigger_types': settings.profiles.options.stabilization.trigger_types,
-                'snapshot_extruder_trigger_options': settings.profiles.options.stabilization.snapshot_extruder_trigger_options,
-                'position_restriction_shapes': settings.profiles.options.stabilization.position_restriction_shapes,
-                'position_restriction_types': settings.profiles.options.stabilization.position_restriction_types
-            };
+            Octolapse.Stabilizations.profileOptions = settings.profiles.options.stabilization;
             Octolapse.Stabilizations.current_profile_guid(settings.profiles.current_stabilization_profile_guid);
             Object.keys(settings.profiles.stabilizations).forEach(function(key) {
                 Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(settings.profiles.stabilizations[key]));
@@ -229,16 +210,7 @@ $(function () {
             // Triggers
             Octolapse.Triggers.profiles([]);
             Octolapse.Triggers.default_profile(settings.profiles.defaults.trigger);
-            Octolapse.Triggers.profileOptions = {
-                'server_profiles': settings.profiles.options.trigger.server_profiles,
-                'trigger_type_options': settings.profiles.options.trigger.trigger_type_options,
-                'real_time_xy_trigger_type_options': settings.profiles.options.trigger.real_time_xy_trigger_type_options,
-                'smart_layer_trigger_type_options': settings.profiles.options.trigger.smart_layer_trigger_type_options,
-                'trigger_subtype_options': settings.profiles.options.trigger.trigger_subtype_options,
-                'snapshot_extruder_trigger_options': settings.profiles.options.trigger.snapshot_extruder_trigger_options,
-                'position_restriction_shapes': settings.profiles.options.trigger.position_restriction_shapes,
-                'position_restriction_types': settings.profiles.options.trigger.position_restriction_types
-            };
+            Octolapse.Triggers.profileOptions = settings.profiles.options.trigger;
             Octolapse.Triggers.current_profile_guid(settings.profiles.current_trigger_profile_guid);
             Object.keys(settings.profiles.triggers).forEach(function(key) {
                 Octolapse.Triggers.profiles.push(new Octolapse.TriggerProfileViewModel(settings.profiles.triggers[key]));
@@ -247,16 +219,7 @@ $(function () {
             // Renderings
             Octolapse.Renderings.profiles([]);
             Octolapse.Renderings.default_profile(settings.profiles.defaults.rendering);
-            Octolapse.Renderings.profileOptions = {
-                'server_profiles': settings.profiles.options.rendering.server_profiles,
-                'rendering_fps_calculation_options': settings.profiles.options.rendering.rendering_fps_calculation_options,
-                'rendering_output_format_options': settings.profiles.options.rendering.rendering_output_format_options,
-                'rendering_file_templates': settings.profiles.options.rendering.rendering_file_templates,
-                'overlay_text_templates': settings.profiles.options.rendering.overlay_text_templates,
-                'overlay_text_alignment_options': settings.profiles.options.rendering.overlay_text_alignment_options,
-                'overlay_text_valign_options': settings.profiles.options.rendering.overlay_text_valign_options,
-                'overlay_text_halign_options': settings.profiles.options.rendering.overlay_text_halign_options
-            };
+            Octolapse.Renderings.profileOptions = settings.profiles.options.rendering;
             Octolapse.Renderings.current_profile_guid(settings.profiles.current_rendering_profile_guid);
             Object.keys(settings.profiles.renderings).forEach(function(key) {
                 Octolapse.Renderings.profiles.push(new Octolapse.RenderingProfileViewModel(settings.profiles.renderings[key]));
@@ -265,15 +228,7 @@ $(function () {
             // Cameras
             Octolapse.Cameras.profiles([]);
             Octolapse.Cameras.default_profile(settings.profiles.defaults.camera);
-            Octolapse.Cameras.profileOptions = {
-                'server_profiles': settings.profiles.options.camera.server_profiles,
-                'camera_powerline_frequency_options': settings.profiles.options.camera.camera_powerline_frequency_options,
-                'camera_exposure_type_options': settings.profiles.options.camera.camera_exposure_type_options,
-                'camera_led_1_mode_options': settings.profiles.options.camera.camera_led_1_mode_options,
-                'snapshot_transpose_options': settings.profiles.options.camera.snapshot_transpose_options,
-                'camera_type_options': settings.profiles.options.camera.camera_type_options
-
-            };
+            Octolapse.Cameras.profileOptions = settings.profiles.options.camera;
             console.log("Creating initial camera profiles.");
             Object.keys(settings.profiles.cameras).forEach(function(key) {
                 Octolapse.Cameras.profiles.push(new Octolapse.CameraProfileViewModel(settings.profiles.cameras[key]));
@@ -282,11 +237,7 @@ $(function () {
             // Debug
             Octolapse.DebugProfiles.profiles([]);
             Octolapse.DebugProfiles.default_profile(settings.profiles.defaults.debug);
-            Octolapse.DebugProfiles.profileOptions = {
-                'server_profiles': settings.profiles.options.debug.server_profiles,
-                'logging_levels': settings.profiles.options.debug.logging_levels,
-                'all_logger_names': settings.profiles.options.debug.all_logger_names
-            };
+            Octolapse.DebugProfiles.profileOptions = settings.profiles.options.debug;
             Octolapse.DebugProfiles.current_profile_guid(settings.profiles.current_debug_profile_guid);
             //console.log("Creating Debug Profiles")
             Object.keys(settings.profiles.debug).forEach(function(key) {

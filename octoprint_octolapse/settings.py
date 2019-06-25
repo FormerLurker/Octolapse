@@ -240,7 +240,12 @@ class AutomaticConfigurationProfile(ProfileSettings):
 
 class PrinterProfile(ProfileSettings):
     minimum_height_increment = 0.05
-
+    bed_type_rectangular = 'rectangular'
+    bed_type_circular = 'circular'
+    origin_type_front_left = 'front_left'
+    origin_type_center = 'center'
+    origin_type_custom = 'custom'
+    
     def __init__(self, name="New Printer Profile"):
         super(PrinterProfile, self).__init__(name)
         # flag that is false until the profile has been saved by the user at least once
@@ -254,11 +259,18 @@ class PrinterProfile(ProfileSettings):
         self.snapshot_command = "snap"
         self.suppress_snapshot_command_always = True
         self.auto_detect_position = True
+        self.origin_type = PrinterProfile.origin_type_front_left
         self.origin_x = None
         self.origin_y = None
         self.origin_z = None
         self.abort_out_of_bounds = True
-        self.override_octoprint_print_volume = False
+        self.invert_x = False
+        self.invert_y = False
+        self.invert_z = False
+        self.invert_e = False
+        self.override_octoprint_profile_settings = False
+        self.bed_type = PrinterProfile.bed_type_rectangular
+        self.diameter_xy = 0.0
         self.min_x = 0.0
         self.max_x = 0.0
         self.min_y = 0.0
@@ -266,6 +278,7 @@ class PrinterProfile(ProfileSettings):
         self.min_z = 0.0
         self.max_z = 0.0
         self.restrict_snapshot_area = False
+        self.snapshot_diameter_xy = 0.0
         self.snapshot_min_x = 0.0
         self.snapshot_max_x = 0.0
         self.snapshot_min_y = 0.0
@@ -325,9 +338,194 @@ class PrinterProfile(ProfileSettings):
         identifiers["guid"] = self.guid
         return identifiers
 
+    def _get_overridable_settings_dict(self):
+        settings_dict = {}
+        volume_dict = {}
+        volume_dict["bed_type"] = self.bed_type
+        if self.bed_type == "rectangular":
+            volume_dict["min_x"] = float(self.min_x)
+            volume_dict["max_x"] = float(self.max_x)
+            volume_dict["min_y"] = float(self.min_y)
+            volume_dict["max_y"] = float(self.max_y)
+        else:
+            radius_xy = float(self.diameter_xy) / 2.0
+            volume_dict["min_x"] = -1.0 * radius_xy
+            volume_dict["max_x"] = radius_xy
+            volume_dict["min_y"] = -1.0 * radius_xy
+            volume_dict["max_y"] = radius_xy
+
+        volume_dict["min_z"] = float(self.min_z)
+        volume_dict["max_z"] = float(self.max_z)
+
+        if not self.restrict_snapshot_area:
+            volume_dict["bounds"] = False
+        else:
+            if self.bed_type == "circular":
+                radius_xy = float(self.snapshot_diameter_xy) / 2.0
+                volume_dict["bounds"] = {
+                    "min_x": -1 * radius_xy,
+                    "max_x": radius_xy,
+                    "min_y": -1 * radius_xy,
+                    "max_y": radius_xy,
+                }
+            else:
+                volume_dict["bounds"] = {
+                    "min_x": float(self.snapshot_min_x),
+                    "max_x": float(self.snapshot_max_x),
+                    "min_y": float(self.snapshot_min_y),
+                    "max_y": float(self.snapshot_max_y),
+                }
+            volume_dict["bounds"]["min_z"] = float(self.snapshot_min_z)
+            volume_dict["bounds"]["max_z"] = float(self.snapshot_max_z)
+
+        settings_dict["volume"] = volume_dict
+
+        inverted_axis_dict = {
+            "invert_x": self.invert_x,
+            "invert_y": self.invert_y,
+            "invert_z": self.invert_z,
+            "invert_e": self.invert_e
+        }
+        settings_dict["axes"] = inverted_axis_dict
+
+        origin_dict = {}
+        if self.origin_type == PrinterProfile.origin_type_custom:
+            origin_dict['origin_x'] = float(self.origin_x)
+            origin_dict["origin_y"] = float(self.origin_y)
+            origin_dict["origin_z"] = float(self.origin_z)
+        else:
+            if self.bed_type == 'rectangular':
+                if self.origin_type == PrinterProfile.origin_type_front_left:
+                    if self.invert_x:
+                        origin_dict["origin_x"] = volume_dict["max_x"]
+                    else:
+                        origin_dict["origin_x"] = volume_dict["min_x"]
+                    if self.invert_y:
+                        origin_dict["origin_y"] = volume_dict["max_y"]
+                    else:
+                        origin_dict["origin_y"] = volume_dict["min_y"]
+                else:
+                    origin_dict["origin_x"] = volume_dict["min_x"] + (volume_dict["max_x"] - volume_dict["min_x"])/2.0
+                    origin_dict["origin_y"] = volume_dict["min_y"] + (volume_dict["max_y"] - volume_dict["min_y"])/2.0
+            else:
+                # circular bed origin is always at 0,0
+                origin_dict["origin_x"] = 0
+                origin_dict["origin_y"] = 0
+
+            if self.invert_z:
+                origin_dict["origin_z"] = volume_dict["max_z"]
+            else:
+                origin_dict["origin_z"] = volume_dict["min_z"]
+
+        settings_dict["origin"] = origin_dict
+
+        return settings_dict
+
+    @staticmethod
+    def get_octoprint_settings_dict(octoprint_printer_profile):
+        settings_dict = {}
+        volume = octoprint_printer_profile["volume"]
+        # see if this is a circular or rectangular bed
+        custom_box = volume["custom_box"]
+        volume_dict = {}
+
+        if volume["formFactor"] == "circle":
+            volume_dict["bed_type"] = "circular"
+        else:
+            volume_dict["bed_type"] = "rectangular"
+
+        if custom_box:
+            # set the bounds to the custom box
+            volume_dict["min_x"] = float(custom_box["x_min"])
+            volume_dict["max_x"] = float(custom_box["x_max"])
+            volume_dict["min_y"] = float(custom_box["y_min"])
+            volume_dict["max_y"] = float(custom_box["y_max"])
+            volume_dict["min_z"] = float(custom_box["z_min"])
+            volume_dict["max_z"] = float(custom_box["z_max"])
+        else:
+            if volume["formFactor"] == "circle":
+                radius_xy = float(volume["width"])/2.0
+                volume_dict["min_x"] = -1.0 * radius_xy
+                volume_dict["max_x"] = radius_xy
+                volume_dict["min_y"] = -1.0 * radius_xy
+                volume_dict["max_y"] = radius_xy
+            else:
+                # see if we have a custom bounding box
+                volume_dict["min_x"] = 0.0
+                volume_dict["max_x"] = float(volume["width"])
+                volume_dict["min_y"] = 0.0
+                volume_dict["max_y"] = float(volume["depth"])
+            volume_dict["min_z"] = 0.0
+            volume_dict["max_z"] = float(volume["height"])
+
+        # there can be no bounds on the default octoprint printer profile
+        volume_dict["bounds"] = False
+
+        settings_dict["volume"] = volume_dict
+        axes = octoprint_printer_profile["axes"]
+        inverted_axis_dict = {
+            'invert_x': axes["x"]["inverted"],
+            'invert_y': axes["y"]["inverted"],
+            'invert_z': axes["z"]["inverted"],
+            'invert_e': False
+        }
+        settings_dict["axes"] = inverted_axis_dict
+        origin_dict = {}
+        # get the origin from the octoprint settings
+        if volume_dict["bed_type"] == 'circular':
+            origin_dict["origin_x"] = 0.0
+            origin_dict["origin_y"] = 0.0
+        elif octoprint_printer_profile["volume"]["origin"] == 'center':
+            origin_dict["origin_x"] = volume_dict["min_x"] + (volume_dict["max_x"] - volume_dict["min_x"])/2.0
+            origin_dict["origin_y"] = volume_dict["min_y"] + (volume_dict["max_y"] - volume_dict["min_y"])/2.0
+        else:
+            if inverted_axis_dict["invert_x"]:
+                origin_dict["origin_x"] = volume_dict["max_x"]
+            else:
+                origin_dict["origin_x"] = volume_dict["min_x"]
+            if inverted_axis_dict["invert_y"]:
+                origin_dict["origin_y"] = volume_dict["max_y"]
+            else:
+                origin_dict["origin_y"] = volume_dict["min_y"]
+
+        if inverted_axis_dict["invert_z"]:
+            origin_dict["origin_z"] = volume_dict["max_z"]
+        else:
+            origin_dict["origin_z"] = volume_dict["min_z"]
+
+        settings_dict["origin"] = origin_dict
+        return settings_dict
+
+    # Gets a bounding box or circle for the current printer profile
+    # takes into account any octoprint printer profile settings if
+    # they are not overridden
+    def get_overridable_profile_settings(self, octoprint_g90_influences_extruder, octoprint_printer_profile):
+        # Get Volume
+        if self.override_octoprint_profile_settings:
+            settings_dict = self._get_overridable_settings_dict()
+        else:
+            settings_dict = PrinterProfile.get_octoprint_settings_dict(octoprint_printer_profile)
+
+        # get g90 influences extruder
+        if self.g90_influences_extruder == 'use-octoprint-settings':
+            settings_dict["g90_influences_extruder"] = octoprint_g90_influences_extruder
+        else:
+            settings_dict["g90_influences_extruder"] = self.g90_influences_extruder == 'true'
+
+        return settings_dict
+
     @staticmethod
     def get_options():
         return {
+            'origin_type_options': [
+                dict(value=PrinterProfile.origin_type_front_left, name='Front Left'),
+                dict(value=PrinterProfile.origin_type_center, name='Center'),
+                dict(value=PrinterProfile.origin_type_custom, name='Custom')
+            ],
+            'bed_type_options': [
+                dict(value=PrinterProfile.bed_type_rectangular, name='Rectangular'),
+                dict(value=PrinterProfile.bed_type_circular, name='Circular')
+            ],
             'gcode_configuration_options': [
                 dict(value='use-slicer-settings', name='Use Slicer Settings'),
                 dict(value='manual', name='Manual Configuration')
@@ -474,39 +672,21 @@ class PrinterProfile(ProfileSettings):
                 return float(value)
         return super(PrinterProfile, cls).try_convert_value(destination, value, key)
 
-    def get_position_args(self, octoprint_g90_influences_extruder):
-
-        if self.g90_influences_extruder == 'true':
-            g90_influences_extruder = True
-        elif self.g90_influences_extruder == 'false':
-            g90_influences_extruder = False
-        else:
-            g90_influences_extruder = octoprint_g90_influences_extruder
-
-        return {
-            "is_bound": self.restrict_snapshot_area,
-            "bounds": {
-                'x_min': self.snapshot_min_x,
-                'x_max': self.snapshot_max_x,
-                'y_min': self.snapshot_min_y,
-                'y_max': self.snapshot_max_y,
-                'z_min': self.snapshot_min_z,
-                'z_max': self.snapshot_max_z,
-            },
+    def get_position_args(self, overridable_profile_settings):
+        # get the settings that cannot be overridden by Octoprint settings
+        position_args = {
             "location_detection_commands": self.get_location_detection_command_list(),
             "xyz_axis_default_mode": self.xyz_axes_default_mode,
             "e_axis_default_mode": self.e_axis_default_mode,
             "units_default": self.units_default,
             "autodetect_position": self.auto_detect_position,
-            "origin_x": self.origin_x,
-            "origin_y": self.origin_y,
-            "origin_z": self.origin_z,
             "slicer_settings": self.gcode_generation_settings.to_dict(),
             "priming_height": self.priming_height,
             "minimum_layer_height": self.minimum_layer_height,
-            "g90_influences_extruder": g90_influences_extruder
         }
-
+        # merge the overridable settings
+        position_args.update(overridable_profile_settings)
+        return position_args
 
 class StabilizationPath(Settings):
     def __init__(self):

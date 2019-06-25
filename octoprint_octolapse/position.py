@@ -398,18 +398,13 @@ class Pos(object):
         return self.e - self.e_offset
 
 class Position(object):
-    def __init__(self, printer_profile, trigger_profile, octoprint_printer_profile,
-                 g90_influences_extruder):
+    def __init__(self, printer_profile, trigger_profile, overridable_printer_profile_settings):
         # This key is used to call the unique gcode_position object for Octolapse.
         # This way multiple position trackers can be used at the same time with no
         # ill effects.
         self.key = "plugin_octolapse"
-
-        # Todo:  make sure this setting is being read correctly, it doesn't look correct
-        if printer_profile.g90_influences_extruder in ['true', 'false']:
-            self.g90_influences_extruder = True if printer_profile.g90_influences_extruder == 'true' else False
-        else:
-            self.g90_influences_extruder = g90_influences_extruder
+        self.g90_influences_extruder = overridable_printer_profile_settings["g90_influences_extruder"]
+        self.overridable_printer_profile_settings = overridable_printer_profile_settings
 
         # create location detection commands
         self._location_detection_commands = []
@@ -433,29 +428,17 @@ class Position(object):
         #     self._location_detection_commands.append("G162")
         self._gcode_generation_settings = printer_profile.get_current_state_detection_settings()
 
-        cpp_position_args = printer_profile.get_position_args(g90_influences_extruder)
+        cpp_position_args = printer_profile.get_position_args(overridable_printer_profile_settings)
 
         GcodePositionProcessor.Initialize(self.key, cpp_position_args)
         self._auto_detect_position = printer_profile.auto_detect_position
         self._priming_height = printer_profile.priming_height
         self._position_restrictions = None if trigger_profile is None else trigger_profile.position_restrictions
-        self._octoprint_printer_profile = octoprint_printer_profile
-        self._origin = {
-            "x": printer_profile.origin_x,
-            "y": printer_profile.origin_y,
-            "z": printer_profile.origin_z
-        }
-
         self._retraction_length = self._gcode_generation_settings.retraction_length
 
         self._has_restricted_position = False if trigger_profile is None else (
             len(trigger_profile.position_restrictions) > 0 and trigger_profile.position_restrictions_enabled
         )
-        # Todo:  make sure this setting is being read correctly, it doesn't look correct
-        if printer_profile.g90_influences_extruder in ['true', 'false']:
-            self.g90_influences_extruder = True if printer_profile.g90_influences_extruder == 'true' else False
-        else:
-            self.g90_influences_extruder = g90_influences_extruder
 
         self._gcode_generation_settings = printer_profile.get_current_state_detection_settings()
         assert (isinstance(self._gcode_generation_settings, OctolapseGcodeSettings))

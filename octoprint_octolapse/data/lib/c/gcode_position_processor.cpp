@@ -731,82 +731,198 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 /// Argument Parsing
 static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 {
-	// Get IsBound
-	PyObject * py_is_bound = PyDict_GetItemString(py_args, "is_bound");
-	if (py_is_bound == NULL)
+	// Here is the full structure of the position args:
+	// get the volume py object
+	PyObject * py_volume = PyDict_GetItemString(py_args, "volume");
+	if (py_volume == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve is_bound from the position args dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve py_volume from the position args dict.");
 		return false;
 	}
-	args->is_bound_ = PyLong_AsLong(py_is_bound) > 0;
 
-	if (args->is_bound_)
+	// Here is the full structure of the position args:
+	// get the volume py object
+	PyObject * py_bed_type = PyDict_GetItemString(py_volume, "bed_type");
+	if (py_bed_type == NULL)
 	{
-		// Extract the bounds
-		PyObject * py_bounds = PyDict_GetItemString(py_args, "bounds");
-		if (py_bounds == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve bounds from the position args dict.");
-			return false;
-		}
-
-		PyObject * py_x_min = PyDict_GetItemString(py_bounds, "x_min");
-		if (py_x_min == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_min from the bounds dict.");
-			return false;
-		}
-		args->x_min_ = PyFloatOrInt_AsDouble(py_x_min);
-
-		PyObject * py_x_max = PyDict_GetItemString(py_bounds, "x_max");
-		if (py_x_max == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_max from the bounds dict.");
-			return false;
-		}
-		args->x_max_ = PyFloatOrInt_AsDouble(py_x_max);
-
-		PyObject * py_y_min = PyDict_GetItemString(py_bounds, "y_min");
-		if (py_y_min == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_min from the bounds dict.");
-			return false;
-		}
-		args->y_min_ = PyFloatOrInt_AsDouble(py_y_min);
-
-		PyObject * py_y_max = PyDict_GetItemString(py_bounds, "y_max");
-		if (py_y_max == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_max from the bounds dict.");
-			return false;
-		}
-		args->y_max_ = PyFloatOrInt_AsDouble(py_y_max);
-
-		PyObject * py_z_min = PyDict_GetItemString(py_bounds, "z_min");
-		if (py_z_min == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_min from the bounds dict.");
-			return false;
-		}
-		args->z_min_ = PyFloatOrInt_AsDouble(py_z_min);
-
-		PyObject * py_z_max = PyDict_GetItemString(py_bounds, "z_max");
-		if (py_z_max == NULL)
-		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_max from the bounds dict.");
-			return false;
-		}
-		args->z_max_ = PyFloatOrInt_AsDouble(py_z_max);
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve py_bed_type from the position args dict.");
+		return false;
 	}
-	//PyObject_Print(args, stdout, Py_PRINT_RAW);
+	// Extract the bed type string
+	args->is_circular_bed = strcmp(PyUnicode_SafeAsString(py_bed_type), "circular") == 0;
+	
+	// Get Build Plate Area
+	PyObject * py_x_min = PyDict_GetItemString(py_volume, "min_x");
+	if (py_x_min == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_x from the bounds dict.");
+		return false;
+	}
+	args->x_min = PyFloatOrInt_AsDouble(py_x_min);
+
+	PyObject * py_x_max = PyDict_GetItemString(py_volume, "max_x");
+	if (py_x_max == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_x from the bounds dict.");
+		return false;
+	}
+	args->x_max = PyFloatOrInt_AsDouble(py_x_max);
+
+	PyObject * py_y_min = PyDict_GetItemString(py_volume, "min_y");
+	if (py_y_min == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_y from the bounds dict.");
+		return false;
+	}
+	args->y_min = PyFloatOrInt_AsDouble(py_y_min);
+
+	PyObject * py_y_max = PyDict_GetItemString(py_volume, "max_y");
+	if (py_y_max == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_y from the bounds dict.");
+		return false;
+	}
+	args->y_max = PyFloatOrInt_AsDouble(py_y_max);
+
+	PyObject * py_z_min = PyDict_GetItemString(py_volume, "min_z");
+	if (py_z_min == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_z from the bounds dict.");
+		return false;
+	}
+	args->z_min = PyFloatOrInt_AsDouble(py_z_min);
+
+	PyObject * py_z_max = PyDict_GetItemString(py_volume, "max_z");
+	if (py_z_max == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_z from the bounds dict.");
+		return false;
+	}
+	args->z_max = PyFloatOrInt_AsDouble(py_z_max);
+
+	// Get Axes Settings
+	PyObject * py_axes = PyDict_GetItemString(py_args, "axes");
+	if (py_axes == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve axes from the position args dict.");
+		return false;
+	}
+
+	PyObject * py_invert_x = PyDict_GetItemString(py_axes, "invert_x");
+	if (py_invert_x == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve invert_x from the bounds dict.");
+		return false;
+	}
+	args->invert_x = PyLong_AsLong(py_invert_x) > 0;
+
+	PyObject * py_invert_y = PyDict_GetItemString(py_axes, "invert_y");
+	if (py_invert_y == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve invert_y from the bounds dict.");
+		return false;
+	}
+	args->invert_y = PyLong_AsLong(py_invert_y) > 0;
+
+	PyObject * py_invert_z = PyDict_GetItemString(py_axes, "invert_z");
+	if (py_invert_z == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve invert_z from the bounds dict.");
+		return false;
+	}
+	args->invert_z = PyLong_AsLong(py_invert_z) > 0;
+
+	PyObject * py_invert_e = PyDict_GetItemString(py_axes, "invert_e");
+	if (py_invert_e == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve invert_e from the bounds dict.");
+		return false;
+	}
+	args->invert_e = PyLong_AsLong(py_invert_e) > 0;
+
+	// Get Bounds
+	PyObject * py_bounds = PyDict_GetItemString(py_volume, "bounds");
+	if (py_bounds == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve bounds from the position args dict.");
+		return false;
+	}
+	// If py_bounds is a dict, we have no snapshot boundaries other than the printer volume
+	if (PyDict_Check(py_bounds))
+	{
+		args->is_bound_ = false;
+	}
+	else
+	{
+		
+		PyObject * py_snapshot_x_min = PyDict_GetItemString(py_bounds, "min_x");
+		if (py_snapshot_x_min == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_x from the bounds dict.");
+			return false;
+		}
+		args->snapshot_x_min = PyFloatOrInt_AsDouble(py_snapshot_x_min);
+
+		PyObject * py_snapshot_x_max = PyDict_GetItemString(py_bounds, "max_x");
+		if (py_snapshot_x_max == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_x from the bounds dict.");
+			return false;
+		}
+		args->snapshot_x_max = PyFloatOrInt_AsDouble(py_snapshot_x_max);
+
+		PyObject * py_snapshot_y_min = PyDict_GetItemString(py_bounds, "min_y");
+		if (py_snapshot_y_min == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_y from the bounds dict.");
+			return false;
+		}
+		args->snapshot_y_min = PyFloatOrInt_AsDouble(py_snapshot_y_min);
+
+		PyObject * py_snapshot_y_max = PyDict_GetItemString(py_bounds, "max_y");
+		if (py_snapshot_y_max == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_y from the bounds dict.");
+			return false;
+		}
+		args->snapshot_y_max = PyFloatOrInt_AsDouble(py_snapshot_y_max);
+
+		PyObject * py_snapshot_z_min = PyDict_GetItemString(py_bounds, "min_z");
+		if (py_snapshot_z_min == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_z from the bounds dict.");
+			return false;
+		}
+		args->snapshot_z_min = PyFloatOrInt_AsDouble(py_snapshot_z_min);
+
+		PyObject * py_snapshot_z_max = PyDict_GetItemString(py_bounds, "max_z");
+		if (py_snapshot_z_max == NULL)
+		{
+			PyErr_Print();
+			PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_z from the bounds dict.");
+			return false;
+		}
+		args->snapshot_z_max = PyFloatOrInt_AsDouble(py_snapshot_z_max);
+	}
 
 	// Get LocationDetection Commands
 	PyObject * py_location_detection_commands = PyDict_GetItemString(py_args, "location_detection_commands");
@@ -817,7 +933,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		return false;
 	}
 	// Extract the elements from  the location detection command list pyobject
-	int listSize = PyList_Size(py_location_detection_commands);
+	const int listSize = PyList_Size(py_location_detection_commands);
 	if (listSize < 0)
 	{
 		std::string message = "Unable to build position arguments, LocationDetectionCommands is not a list.";
@@ -889,8 +1005,18 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	}
 	args->autodetect_position = PyLong_AsLong(py_autodetect_position) > 0;
 
+	// Here is the full structure of the position args:
+	// get the volume py object
+	PyObject * py_origin = PyDict_GetItemString(py_args, "origin");
+	if (py_origin == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve py_origin from the position args dict.");
+		return false;
+	}
+
 	// origin_x
-	PyObject * py_origin_x = PyDict_GetItemString(py_args, "origin_x");
+	PyObject * py_origin_x = PyDict_GetItemString(py_origin, "origin_x");
 	if (py_origin_x == NULL)
 	{
 		PyErr_Print();
@@ -907,7 +1033,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	}
 	
 	// origin_y
-	PyObject * py_origin_y = PyDict_GetItemString(py_args, "origin_y");
+	PyObject * py_origin_y = PyDict_GetItemString(py_origin, "origin_y");
 	if (py_origin_y == NULL)
 	{
 		PyErr_Print();
@@ -924,7 +1050,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	}
 
 	// origin_z
-	PyObject * py_origin_z = PyDict_GetItemString(py_args, "origin_z");
+	PyObject * py_origin_z = PyDict_GetItemString(py_origin, "origin_z");
 	if (py_origin_z == NULL)
 	{
 		PyErr_Print();

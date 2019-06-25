@@ -45,6 +45,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.saved_travel_distance = ko.observable(0).extend({numeric: 1});
             self.total_travel_distance = ko.observable(0).extend({numeric: 1});
             self.total_saved_travel_percent = ko.observable(0).extend({numeric: 1});
+            self.printer_volume = null;
+            self.axes = null;
             self.is_preview = false;
 
             self.update = function (state) {
@@ -75,6 +77,10 @@ Octolapse.snapshotPlanStateViewModel = function() {
 
                 if (state.printer_volume != null)
                     self.printer_volume = state.printer_volume;
+
+                if (state.axes != null)
+                    self.axes = state.axes;
+
                 self.update_current_plan();
             };
 
@@ -310,6 +316,43 @@ Octolapse.snapshotPlanStateViewModel = function() {
 
             self.canvas_draw_print_bed = function()
             {
+                if (self.printer_volume.bed_type == 'circular'){
+                    self.canvas_draw_circular_bed();
+                }
+                else {
+                    self.canvas_draw_rectangular_bed();
+                }
+
+            };
+
+            self.canvas_draw_circular_bed = function() {
+                // draw a circle around the print area
+                // draw the x axis linebottom border plus the intersection
+                self.canvas_context.strokeStyle = '#000000';
+                // get the center coordinates and radius
+                var radius = self.canvas_printer_size[0]/2;
+                var center_x = self.canvas_border_size[0] + self.canvas_printer_size[0]/2;
+                var center_y = self.canvas_border_size[1] + self.canvas_printer_size[1]/2;
+
+                // draw the outside
+                self.canvas_context.beginPath();
+                self.canvas_context.arc(center_x,center_y, radius, 0, 2 * Math.PI);
+                self.canvas_context.stroke();
+
+                //draw inner rings
+                var num_increments = 4;
+                var radius_increment = radius/num_increments;
+                for (var increment = 0; increment<num_increments ; increment++)
+                {
+                    // draw the inner ring
+                    radius = radius - radius_increment;
+                    self.canvas_context.beginPath();
+                    self.canvas_context.arc(center_x,center_y, radius, 0, 2 * Math.PI);
+                    self.canvas_context.stroke();
+                }
+            };
+
+            self.canvas_draw_rectangular_bed = function() {
                 // draw a line around the print area
                 // draw the x axis linebottom border plus the intersection
                 self.canvas_context.strokeStyle = '#000000';
@@ -342,6 +385,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
             };
 
             self.axis_line_length = 25;
+
             self.canvas_draw_axis = function() {
                 self.canvas_context.strokeStyle = '#000000';
                 // **draw the x arrow
@@ -511,7 +555,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 );
             };
 
-            self.canvas_draw_start_location = function()             {
+            self.canvas_draw_start_location = function() {
                 self.canvas_context.strokeStyle = '#ff0000';
                 self.canvas_context.beginPath();
                 self.canvas_context.arc(self.to_canvas_x(self.x_initial()), self.to_canvas_y(self.y_initial()), self.initial_position_radius, 0, 2 * Math.PI);
@@ -541,19 +585,41 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.canvas_context.fill();
             };
 
+            self.invert_coordinate = function(coord, min, max){
+                return (max - min) - coord;
+            };
+
+            self.normalize_coordinate = function(coord, min)
+            {
+                return coord - min;
+            };
+
             self.to_canvas_x = function(x)
             {
-                return (x + self.printer_volume.min_x)*self.x_canvas_scale + self.canvas_border_size[0];
+                x = self.normalize_coordinate(x, self.printer_volume.min_x);
+                if (self.axes.invert_x)
+                    x = self.invert_coordinate(x, self.printer_volume.min_x, self.printer_volume.max_x);
+                return x *self.x_canvas_scale + self.canvas_border_size[0];
             };
 
             self.to_canvas_y = function(y)
             {
-                return (self.printer_volume.max_y - y)*self.y_canvas_scale + self.canvas_border_size[1];
+                y = self.normalize_coordinate(y, self.printer_volume.min_y);
+                // Y coordinates are flipped on the camera when compared to the standard 3d printer
+                // coordinates, so flip it UNLESS it is inverted.
+                if (!self.axes.invert_y)
+                    y = self.invert_coordinate(y, self.printer_volume.min_y, self.printer_volume.max_y);
+
+                return y*self.y_canvas_scale + self.canvas_border_size[1];
             };
 
             self.to_canvas_z = function(z)
             {
-                return (z + self.printer_volume.min_z)*self.z_canvas_scale + self.canvas_border_size[2];
+                z = self.normalize_coordinate(z, self.printer_volume.min_z);
+
+                if (self.axes.invert_z)
+                    z = self.invert_coordinate(z, self.printer_volume.min_z, self.printer_volume.max_z);
+                return z *self.z_canvas_scale + self.canvas_border_size[2];
             };
 
         };
