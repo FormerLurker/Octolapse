@@ -153,13 +153,12 @@ class OctolapsePlugin(
     def snapshot_request(self):
         file_type = flask.request.args.get('file_type')
         guid = flask.request.args.get('camera_guid')
-
         """Public access function to get the latest snapshot image"""
         if file_type == 'snapshot':
             # get the latest snapshot image
             mime_type = 'image/jpeg'
             filename = utility.get_latest_snapshot_download_path(
-                self.get_plugin_data_folder(), guid)
+                self.get_plugin_data_folder(), guid, self._basefolder)
             if not os.path.isfile(filename):
                 # we haven't captured any images, return the built in png.
                 mime_type = 'image/png'
@@ -169,7 +168,7 @@ class OctolapsePlugin(
             # get the latest snapshot image
             mime_type = 'image/jpeg'
             filename = utility.get_latest_snapshot_thumbnail_download_path(
-                self.get_plugin_data_folder(), guid)
+                self.get_plugin_data_folder(), guid, self._basefolder)
             if not os.path.isfile(filename):
                 # we haven't captured any images, return the built in png.
                 mime_type = 'image/png'

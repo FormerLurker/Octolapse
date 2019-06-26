@@ -42,7 +42,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     color: white;
-    mix-blend-mode: difference;
+    text-shadow: 0px 0px 2px #000000;
     font-size:22px;
 }
 .octolapse .label-important, .octolapse .badge-important {

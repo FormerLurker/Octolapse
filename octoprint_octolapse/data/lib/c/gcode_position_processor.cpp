@@ -862,7 +862,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		return false;
 	}
 	// If py_bounds is a dict, we have no snapshot boundaries other than the printer volume
-	if (PyDict_Check(py_bounds))
+	if (!PyDict_Check(py_bounds))
 	{
 		args->is_bound_ = false;
 	}
