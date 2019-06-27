@@ -597,8 +597,6 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.to_canvas_x = function(x)
             {
                 x = self.normalize_coordinate(x, self.printer_volume.min_x);
-                if (self.axes.invert_x)
-                    x = self.invert_coordinate(x, self.printer_volume.min_x, self.printer_volume.max_x);
                 return x *self.x_canvas_scale + self.canvas_border_size[0];
             };
 
@@ -606,9 +604,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
             {
                 y = self.normalize_coordinate(y, self.printer_volume.min_y);
                 // Y coordinates are flipped on the camera when compared to the standard 3d printer
-                // coordinates, so flip it UNLESS it is inverted.
-                if (!self.axes.invert_y)
-                    y = self.invert_coordinate(y, self.printer_volume.min_y, self.printer_volume.max_y);
+                // coordinates, so invert the coordinate
+                y = self.invert_coordinate(y, self.printer_volume.min_y, self.printer_volume.max_y);
 
                 return y*self.y_canvas_scale + self.canvas_border_size[1];
             };
@@ -616,9 +613,6 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.to_canvas_z = function(z)
             {
                 z = self.normalize_coordinate(z, self.printer_volume.min_z);
-
-                if (self.axes.invert_z)
-                    z = self.invert_coordinate(z, self.printer_volume.min_z, self.printer_volume.max_z);
                 return z *self.z_canvas_scale + self.canvas_border_size[2];
             };
 

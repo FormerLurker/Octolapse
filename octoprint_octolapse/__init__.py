@@ -1997,7 +1997,6 @@ class OctolapsePlugin(
             octoprint_printer_profile
         )
         printer_volume = overridable_printer_profile_settings["volume"]
-        axes = overridable_printer_profile_settings["axes"]
         for plan in self.saved_snapshot_plans:
             snapshot_plans.append(plan.to_dict())
             total_travel_distance += plan.travel_distance
@@ -2009,7 +2008,6 @@ class OctolapsePlugin(
             "snapshot_plans": {
             "snapshot_plans": snapshot_plans,
             "printer_volume": printer_volume,
-            "axes": axes,
             "total_travel_distance": total_travel_distance,
             "total_saved_travel_distance": total_saved_travel_distance,
             "current_plan_index": 0,

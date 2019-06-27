@@ -46,10 +46,6 @@ struct gcode_position_args {
 		e_axis_default_mode = "absolute";
 		units_default = "millimeters";
 		is_bound_ = false;
-		invert_x = false;
-		invert_y = false;
-		invert_z = false;
-		invert_e = false;
 		x_min = 0;
 		x_max = 0;
 		y_min = 0;
@@ -73,10 +69,6 @@ struct gcode_position_args {
 	bool origin_x_none;
 	bool origin_y_none;
 	bool origin_z_none;
-	bool invert_x;
-	bool invert_y;
-	bool invert_z;
-	bool invert_e;
 	double retraction_length;
 	double z_lift_height;
 	double priming_height;
@@ -142,12 +134,6 @@ private:
 	double y_max_;
 	double z_min_;
 	double z_max_;
-	bool invert_x_;
-	bool invert_y_;
-	bool invert_z_;
-	bool invert_e_;
-	double e_multiplier_;
-	double z_multiplier_;
 	bool is_circular_bed_;
 	double snapshot_x_min_;
 	double snapshot_x_max_;
@@ -160,8 +146,6 @@ private:
 	std::map<std::string, pos_function_type>::iterator gcode_functions_iterator_;
 	
 	std::map<std::string, pos_function_type> get_gcode_functions();
-
-	double get_height_from_z(double z);
 	/// Process Gcode Command Functions
 	void process_g0_g1(position*, parsed_command*);
 	void process_g2(position*, parsed_command*);

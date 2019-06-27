@@ -808,51 +808,6 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	}
 	args->z_max = PyFloatOrInt_AsDouble(py_z_max);
 
-	// Get Axes Settings
-	PyObject * py_axes = PyDict_GetItemString(py_args, "axes");
-	if (py_axes == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve axes from the position args dict.");
-		return false;
-	}
-
-	PyObject * py_invert_x = PyDict_GetItemString(py_axes, "invert_x");
-	if (py_invert_x == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve invert_x from the bounds dict.");
-		return false;
-	}
-	args->invert_x = PyLong_AsLong(py_invert_x) > 0;
-
-	PyObject * py_invert_y = PyDict_GetItemString(py_axes, "invert_y");
-	if (py_invert_y == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve invert_y from the bounds dict.");
-		return false;
-	}
-	args->invert_y = PyLong_AsLong(py_invert_y) > 0;
-
-	PyObject * py_invert_z = PyDict_GetItemString(py_axes, "invert_z");
-	if (py_invert_z == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve invert_z from the bounds dict.");
-		return false;
-	}
-	args->invert_z = PyLong_AsLong(py_invert_z) > 0;
-
-	PyObject * py_invert_e = PyDict_GetItemString(py_axes, "invert_e");
-	if (py_invert_e == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve invert_e from the bounds dict.");
-		return false;
-	}
-	args->invert_e = PyLong_AsLong(py_invert_e) > 0;
-
 	// Get Bounds
 	PyObject * py_bounds = PyDict_GetItemString(py_volume, "bounds");
 	if (py_bounds == NULL)

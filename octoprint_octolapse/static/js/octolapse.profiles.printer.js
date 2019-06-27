@@ -125,10 +125,6 @@ $(function() {
         self.origin_y = ko.observable(values.origin_y);
         self.origin_z = ko.observable(values.origin_z);
         self.abort_out_of_bounds = ko.observable(values.abort_out_of_bounds);
-        self.invert_x = ko.observable(values.invert_x);
-        self.invert_y = ko.observable(values.invert_y);
-        self.invert_z = ko.observable(values.invert_z);
-        self.invert_e = ko.observable(values.invert_e);
         self.override_octoprint_profile_settings = ko.observable(values.override_octoprint_profile_settings);
         self.bed_type = ko.observable(values.bed_type);
         self.diameter_xy = ko.observable(values.diameter_xy);
@@ -172,10 +168,6 @@ $(function() {
             self.origin_y(server_profile.origin_y);
             self.origin_z(server_profile.origin_z);
             self.abort_out_of_bounds(server_profile.abort_out_of_bounds);
-            self.invert_x(server_profile.invert_x);
-            self.invert_y(server_profile.invert_y);
-            self.invert_z(server_profile.invert_z);
-            self.invert_e(server_profile.invert_e);
             self.override_octoprint_profile_settings(server_profile.override_octoprint_profile_settings);
             self.bed_type(server_profile.bed_type);
             self.diameter_xy(server_profile.diameter_xy);

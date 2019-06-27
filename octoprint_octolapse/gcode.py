@@ -297,29 +297,7 @@ class SnapshotGcodeGenerator(object):
         coordinates = dict(x=self.get_snapshot_coordinate(x_path, "x"),
                            y=self.get_snapshot_coordinate(y_path, "y"))
 
-        coordinates = self.get_nearest_in_bounds_coordinate(coordinates)
-        return self.invert_coordinates_if_necessary(coordinates)
-
-    def invert_coordinates_if_necessary(self, coordinates):
-        invert_x = self.overridable_printer_profile_settings["axes"]["invert_x"]
-        invert_y = self.overridable_printer_profile_settings["axes"]["invert_y"]
-
-        def invert_coordinate(coord, min, max):
-            return max - min - coord
-
-        if invert_x:
-            min_x = self.overridable_printer_profile_settings["volume"]["min_x"]
-            max_x = self.overridable_printer_profile_settings["volume"]["max_x"]
-            x = coordinates["x"]
-            coordinates["x"] = invert_coordinate(x, min_x, max_x)
-
-        if invert_y:
-            min_y = self.overridable_printer_profile_settings["volume"]["min_y"]
-            max_y = self.overridable_printer_profile_settings["volume"]["max_y"]
-            y = coordinates["y"]
-            coordinates["y"] = invert_coordinate(y, min_y, max_y)
-
-        return coordinates
+        return self.get_nearest_in_bounds_coordinate(coordinates)
 
     def get_nearest_in_bounds_coordinate(self, coordinates):
         volume = self.overridable_printer_profile_settings["volume"]
@@ -473,26 +451,15 @@ class SnapshotGcodeGenerator(object):
             self.gcode_generation_settings.lift_when_retracted and self.distance_to_lift > 0
         ):
             return False
-
-        invert_z = self.overridable_printer_profile_settings["axes"]["invert_z"]
-        if not invert_z:
-            max_z = self.overridable_printer_profile_settings["volume"]["max_z"]
-            return utility.less_than_or_equal(self.snapshot_plan.initial_position.z + self.distance_to_lift, max_z)
-        else:
-            min_z = self.overridable_printer_profile_settings["volume"]["min_z"]
-            return utility.greater_than_or_equal(self.snapshot_plan.initial_position.z - self.distance_to_lift, min_z)
+        max_z = self.overridable_printer_profile_settings["volume"]["max_z"]
+        return utility.less_than_or_equal(self.snapshot_plan.initial_position.z + self.distance_to_lift, max_z)
 
     ###########################
     # Relative retract/lift/travel functions
     ###########################
     def retract_relative(self):
         self.set_e_to_relative(SnapshotGcode.START_GCODE)
-        invert_e = self.overridable_printer_profile_settings["axes"]["invert_e"]
-        if invert_e:
-            multiplier = 1
-        else:
-            multiplier = -1
-        length_to_retract = multiplier * self.length_to_retract
+        length_to_retract = -1 * self.length_to_retract
         self.e_current += length_to_retract
 
         self.snapshot_gcode.append(
@@ -506,13 +473,7 @@ class SnapshotGcodeGenerator(object):
 
     def deretract_relative(self):
         if self.retracted_by_start_gcode:
-            invert_e = self.overridable_printer_profile_settings["axes"]["invert_e"]
-            if invert_e:
-                multiplier = -1
-            else:
-                multiplier = 1
-
-            length_to_deretract = multiplier * self.length_to_retract
+            length_to_deretract = self.length_to_retract
             self.e_current += length_to_deretract
 
             self.set_e_to_relative(SnapshotGcode.END_GCODE)
@@ -525,13 +486,8 @@ class SnapshotGcodeGenerator(object):
             )
 
     def lift_z_relative(self):
-        invert_z = self.overridable_printer_profile_settings["axes"]["invert_z"]
-        if invert_z:
-            multiplier = -1
-        else:
-            multiplier = 1
         # if we can ZHop, do
-        distance_to_lift = multiplier * self.distance_to_lift
+        distance_to_lift = self.distance_to_lift
         self.z_current += distance_to_lift
         self.set_xyz_to_relative(SnapshotGcode.START_GCODE)
         # append to snapshot gcode
@@ -546,13 +502,8 @@ class SnapshotGcodeGenerator(object):
 
     def delift_z_relative(self):
         if self.lifted_by_start_gcode:
-            invert_z = self.overridable_printer_profile_settings["axes"]["invert_z"]
-            if invert_z:
-                multiplier = 1
-            else:
-                multiplier = -1
             # if we can ZHop, do
-            distance_to_delift = multiplier * self.distance_to_lift
+            distance_to_delift = -1 * self.distance_to_lift
             self.z_current += distance_to_delift
             self.set_xyz_to_relative(SnapshotGcode.END_GCODE)
             self.snapshot_gcode.append(
@@ -604,12 +555,7 @@ class SnapshotGcodeGenerator(object):
     ###########################
     def retract_absolute(self):
         self.set_e_to_absolute(SnapshotGcode.START_GCODE)
-        invert_e = self.overridable_printer_profile_settings["axes"]["invert_e"]
-        if invert_e:
-            multiplier = 1
-        else:
-            multiplier = -1
-        length_to_retract = multiplier * self.length_to_retract
+        length_to_retract = -1 * self.length_to_retract
         self.e_current += length_to_retract
         self.retracted_by_start_gcode = True
         self.snapshot_gcode.append(
@@ -623,13 +569,7 @@ class SnapshotGcodeGenerator(object):
     def deretract_absolute(self):
         if self.retracted_by_start_gcode:
             self.set_e_to_absolute(SnapshotGcode.END_GCODE)
-            invert_e = self.overridable_printer_profile_settings["axes"]["invert_e"]
-            if invert_e:
-                multiplier = -1
-            else:
-                multiplier = 1
-
-            length_to_deretract = multiplier * self.length_to_retract
+            length_to_deretract = self.length_to_retract
             self.e_current += length_to_deretract
             self.snapshot_gcode.append(
                 SnapshotGcode.END_GCODE,
@@ -641,13 +581,8 @@ class SnapshotGcodeGenerator(object):
 
     def lift_z_absolute(self):
         self.set_xyz_to_absolute(SnapshotGcode.START_GCODE)
-        invert_z = self.overridable_printer_profile_settings["axes"]["invert_z"]
-        if invert_z:
-            multiplier = -1
-        else:
-            multiplier = 1
         # if we can ZHop, do
-        distance_to_lift = multiplier * self.distance_to_lift
+        distance_to_lift = self.distance_to_lift
         self.z_current += distance_to_lift
         self.lifted_by_start_gcode = True
         # append to snapshot gcode
@@ -661,13 +596,8 @@ class SnapshotGcodeGenerator(object):
 
     def delift_z_absolute(self):
         self.set_xyz_to_absolute(SnapshotGcode.END_GCODE)
-        invert_z = self.overridable_printer_profile_settings["axes"]["invert_z"]
-        if invert_z:
-            multiplier = 1
-        else:
-            multiplier = -1
         # if we can ZHop, do
-        distance_to_delift = multiplier * self.distance_to_lift
+        distance_to_delift = -1 * self.distance_to_lift
         self.z_current += distance_to_delift
         # append to snapshot gcode
         self.snapshot_gcode.append(
@@ -963,7 +893,6 @@ class SnapshotGcodeGenerator(object):
         return snapshot_plan
 
     def split_extrusion_gcode_at_point(self, triggering_command, start_position, end_position, intersection):
-        # TODO: TEST THIS WITH INVERTED AXES
         # get the coordinates necessary to split one gcode into 2 at an intersection point
         # start offset coordinates
         start_x_offset = start_position.offset_x()

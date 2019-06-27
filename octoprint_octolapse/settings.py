@@ -264,10 +264,6 @@ class PrinterProfile(ProfileSettings):
         self.origin_y = None
         self.origin_z = None
         self.abort_out_of_bounds = True
-        self.invert_x = False
-        self.invert_y = False
-        self.invert_z = False
-        self.invert_e = False
         self.override_octoprint_profile_settings = False
         self.bed_type = PrinterProfile.bed_type_rectangular
         self.diameter_xy = 0.0
@@ -380,14 +376,6 @@ class PrinterProfile(ProfileSettings):
 
         settings_dict["volume"] = volume_dict
 
-        inverted_axis_dict = {
-            "invert_x": self.invert_x,
-            "invert_y": self.invert_y,
-            "invert_z": self.invert_z,
-            "invert_e": self.invert_e
-        }
-        settings_dict["axes"] = inverted_axis_dict
-
         origin_dict = {}
         if self.origin_type == PrinterProfile.origin_type_custom:
             origin_dict['origin_x'] = float(self.origin_x)
@@ -396,14 +384,8 @@ class PrinterProfile(ProfileSettings):
         else:
             if self.bed_type == 'rectangular':
                 if self.origin_type == PrinterProfile.origin_type_front_left:
-                    if self.invert_x:
-                        origin_dict["origin_x"] = volume_dict["max_x"]
-                    else:
-                        origin_dict["origin_x"] = volume_dict["min_x"]
-                    if self.invert_y:
-                        origin_dict["origin_y"] = volume_dict["max_y"]
-                    else:
-                        origin_dict["origin_y"] = volume_dict["min_y"]
+                    origin_dict["origin_x"] = volume_dict["min_x"]
+                    origin_dict["origin_y"] = volume_dict["min_y"]
                 else:
                     origin_dict["origin_x"] = volume_dict["min_x"] + (volume_dict["max_x"] - volume_dict["min_x"])/2.0
                     origin_dict["origin_y"] = volume_dict["min_y"] + (volume_dict["max_y"] - volume_dict["min_y"])/2.0
@@ -412,10 +394,7 @@ class PrinterProfile(ProfileSettings):
                 origin_dict["origin_x"] = 0
                 origin_dict["origin_y"] = 0
 
-            if self.invert_z:
-                origin_dict["origin_z"] = volume_dict["max_z"]
-            else:
-                origin_dict["origin_z"] = volume_dict["min_z"]
+            origin_dict["origin_z"] = volume_dict["min_z"]
 
         settings_dict["origin"] = origin_dict
 
@@ -462,14 +441,6 @@ class PrinterProfile(ProfileSettings):
         volume_dict["bounds"] = False
 
         settings_dict["volume"] = volume_dict
-        axes = octoprint_printer_profile["axes"]
-        inverted_axis_dict = {
-            'invert_x': axes["x"]["inverted"],
-            'invert_y': axes["y"]["inverted"],
-            'invert_z': axes["z"]["inverted"],
-            'invert_e': False
-        }
-        settings_dict["axes"] = inverted_axis_dict
         origin_dict = {}
         # get the origin from the octoprint settings
         if volume_dict["bed_type"] == 'circular':
@@ -479,19 +450,10 @@ class PrinterProfile(ProfileSettings):
             origin_dict["origin_x"] = volume_dict["min_x"] + (volume_dict["max_x"] - volume_dict["min_x"])/2.0
             origin_dict["origin_y"] = volume_dict["min_y"] + (volume_dict["max_y"] - volume_dict["min_y"])/2.0
         else:
-            if inverted_axis_dict["invert_x"]:
-                origin_dict["origin_x"] = volume_dict["max_x"]
-            else:
-                origin_dict["origin_x"] = volume_dict["min_x"]
-            if inverted_axis_dict["invert_y"]:
-                origin_dict["origin_y"] = volume_dict["max_y"]
-            else:
-                origin_dict["origin_y"] = volume_dict["min_y"]
+            origin_dict["origin_x"] = volume_dict["min_x"]
+            origin_dict["origin_y"] = volume_dict["min_y"]
 
-        if inverted_axis_dict["invert_z"]:
-            origin_dict["origin_z"] = volume_dict["max_z"]
-        else:
-            origin_dict["origin_z"] = volume_dict["min_z"]
+        origin_dict["origin_z"] = volume_dict["min_z"]
 
         settings_dict["origin"] = origin_dict
         return settings_dict

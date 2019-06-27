@@ -58,10 +58,6 @@ gcode_position::gcode_position()
 	y_max_ = 0;
 	z_min_ = 0;
 	z_max_ = 0;
-	invert_x_ = false;
-	invert_y_ = false;
-	invert_z_ = false;
-	invert_e_ = false;
 	is_circular_bed_ = false;
 
 	p_previous_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
@@ -103,18 +99,13 @@ gcode_position::gcode_position(gcode_position_args* args)
 	y_max_ = args->y_max;
 	z_min_ = args->z_min;
 	z_max_ = args->z_max;
-	invert_x_ = args->invert_x;
-	invert_y_ = args->invert_y;
-	invert_z_ = args->invert_z;
-	invert_e_ = args->invert_e;
+
 	is_circular_bed_ = args->is_circular_bed;
 
 	p_previous_pos_ = new position(xyz_axis_default_mode_,e_axis_default_mode_, units_default_);
 	p_current_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 	p_undo_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 
-	e_multiplier_ = invert_e_ ? -1.0 : 1.0;
-	z_multiplier_ = invert_z_ ? -1.0 : 1.0;
 }
 
 gcode_position::gcode_position(const gcode_position &source)
@@ -151,14 +142,6 @@ position * gcode_position::get_previous_position()
 	return p_previous_pos_;
 }
 
-double gcode_position::get_height_from_z(double z)
-{
-	if (invert_z_)
-		return z_max_ - z;
-	else
-		return z;
-}
-
 void gcode_position::update(parsed_command *command, const int file_line_number, const int gcode_number)
 {
 	if (command->cmd_.empty())
@@ -193,8 +176,8 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 		const pos_function_type func = gcode_functions_iterator_->second;
 		(this->*func)(p_current_pos_, command);
 		// calculate z and e relative distances
-		p_current_pos_->e_relative_ = e_multiplier_ * (p_current_pos_->e_ - p_previous_pos_->e_);
-		p_current_pos_->z_relative_ = z_multiplier_ * (p_current_pos_->z_ - p_previous_pos_->z_);
+		p_current_pos_->e_relative_ = (p_current_pos_->e_ - p_previous_pos_->e_);
+		p_current_pos_->z_relative_ = (p_current_pos_->z_ - p_previous_pos_->z_);
 		// Have the XYZ positions changed after processing a command ?
 		
 		p_current_pos_->has_xy_position_changed_ = (
@@ -276,14 +259,13 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 		// calculate last_extrusion_height and height
 		// If we are extruding on a higher level, or if retract is enabled and the nozzle is primed
 		// adjust the last extrusion height
-		const double height = get_height_from_z(p_current_pos_->z_);
-		if (!utilities::is_equal(height, p_current_pos_->last_extrusion_height_))
+		if (!utilities::is_equal(p_current_pos_->z_, p_current_pos_->last_extrusion_height_))
 		{
 			if (!p_current_pos_->z_null_)
 			{
 				if (p_current_pos_->is_extruding_)
 				{
-					p_current_pos_->last_extrusion_height_ = height;
+					p_current_pos_->last_extrusion_height_ = p_current_pos_->z_;
 					p_current_pos_->last_extrusion_height_null_ = false;
 					// Is Primed
 					if (!p_current_pos_->is_printer_primed_)
@@ -303,9 +285,9 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 					if(p_current_pos_->is_printer_primed_)
 					{
 						// Calculate current height
-						if (utilities::greater_than_or_equal(height, p_previous_pos_->height_ + minimum_layer_height_))
+						if (utilities::greater_than_or_equal(p_current_pos_->z_, p_previous_pos_->height_ + minimum_layer_height_))
 						{
-							p_current_pos_->height_ = height;
+							p_current_pos_->height_ = p_current_pos_->z_;
 							p_current_pos_->is_layer_change_ = true;
 							p_current_pos_->layer_++;
 						}
@@ -316,7 +298,7 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 				if (p_current_pos_->is_extruding_ || p_current_pos_->z_null_ || p_current_pos_->last_extrusion_height_null_)
 					p_current_pos_->is_zhop_ = false;
 				else
-					p_current_pos_->is_zhop_ = utilities::greater_than_or_equal(height - p_current_pos_->last_extrusion_height_, z_lift_height_);
+					p_current_pos_->is_zhop_ = utilities::greater_than_or_equal(p_current_pos_->z_ - p_current_pos_->last_extrusion_height_, z_lift_height_);
 			}
 
 		}
