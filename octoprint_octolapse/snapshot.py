@@ -370,7 +370,7 @@ class ImagePostProcessing(object):
             shutil.copy(self.snapshot_job_info.full_path, latest_snapshot_path)
 
             # create a thumbnail of the image
-            basewidth = 300
+            basewidth = 500
             img = Image.open(latest_snapshot_path)
             wpercent = (basewidth / float(img.size[0]))
             hsize = int((float(img.size[1]) * float(wpercent)))

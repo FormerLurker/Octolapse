@@ -21,6 +21,13 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 */
+#octolapse_tab div.panel-heading.tab-heading
+{
+    padding: 5px 5px 0px 5px;
+}
+
+
+
 .octolapse_unclickable {
     pointer-events: none;
     opacity: 0.25;
@@ -32,19 +39,202 @@
     cursor: pointer;
     text-decoration: none;
 }
-.octolapse a:disabled, .octolapse select:disabled, .octolapse .disabled{
+
+.octolapse a:active{
+    text-decoration: none;
+}
+
+/* CHECKBOX SWITCH CONTROL STYLE */
+/* Remove the existing checkbox */
+.toggle-switch-fa-lg input,
+.toggle-switch-fa input,
+.toggle-switch-fa-sm input,
+.toggle-switch-fa-xsm input  {
+    opacity:0;
+    box-shadow: none;
+}
+
+.toggle-switch-fa-lg, .toggle-switch-fa, .toggle-switch-fa-sm, .toggle-switch-fa-xsm  {
+    position: relative;
+    display: inline-block;
+
+}
+.toggle-switch-fa-lg
+{
+    margin: 5px;
+}
+/* Sizes */
+.toggle-switch-fa-lg {
+    width: 70px;
+    height: 48px;
+}
+
+.toggle-switch-fa {
+    width: 60px;
+    height: 34px;
+    margin-bottom: 0px;
+
+}
+
+.toggle-switch-fa-sm
+{
+    width:35px;
+    height:20px;
+}
+
+.toggle-switch-fa-xsm
+{
+    width:30px;
+    height:19px;
+}
+
+
+/* the slider part of the switch */
+.fa-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: lightgray; /*disabled color*/
+    cursor: pointer;
+    border-radius: 10px;
+    -webkit-transition: 0.5s;
+    transition: 0.5s;
+}
+
+
+/* The round part of the slider */
+.fa-slider i {
+    position: absolute;
+    content: "";
+    left: 7px;
+    bottom: 3px;
+    font-size:24px;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.toggle-switch-fa-sm .fa-slider i
+{
+    left: 5px;
+    bottom: 4px;
+    font-size: 12px;
+}
+.toggle-switch-fa-xsm .fa-slider i
+{
+    left: 5px;
+    bottom: 4px;
+    font-size: 12px;
+}
+.toggle-switch-fa-lg .fa-slider i
+{
+    left: 10px;
+    bottom: 10px;
+    font-size: 28px;
+}
+
+input[type="checkbox"]:checked + .fa-slider {
+  background-color: #000000;
+}
+input[type="checkbox"] + .fa-slider
+{
+    color: white;
+}
+input[type="checkbox"]:focus + .fa-slider {
+    box-shadow: 2px 2px 2px rgba(129,182,224,0.867)
+}
+input[type="checkbox"]:checked + .fa-slider
+{
+    color: greenyellow;
+}
+input[type="checkbox"]:checked + .fa-slider i{
+    -webkit-transform: translateX(24px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+.toggle-switch-fa-lg input[type="checkbox"]:checked + .fa-slider i{
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+.toggle-switch-fa-sm input[type="checkbox"]:checked + .fa-slider i{
+    -webkit-transform: translateX(15px);
+    -ms-transform: translateX(15px);
+    transform: translateX(15px);
+}
+
+.toggle-switch-fa-xsm input[type="checkbox"]:checked + .fa-slider i{
+    -webkit-transform: translateX(10px);
+    -ms-transform: translateX(10px);
+    transform: translateX(10px);
+}
+/* ol-button and ol-hover-button*/
+.ol-hover-button a .fa-stack,
+a.ol-button{
+    color: greenyellow;
+}
+
+.ol-hover-button span.fa-stack i.fa-square,
+a.ol-button .fa-square{
+    color: black;
+}
+
+.ol-hover-button a:not(.disable):hover .fa-square, .snapshot_refresh_container a:not(.disable):active .fa-square {
+    /*color: lightgray;*/
+}
+.ol-hover-button a:not(.disable):hover .fa-stack:nth-child(1){
+    color: green;
+}
+.ol-hover-button a:not(.disable):active,
+a.ol-button:not(.disable):active i:nth-child(2){
+    color: black;
+    -webkit-transition: none;
+    -moz-transition: none;
+    -o-transition: none;
+    transition: none;
+}
+
+.ol-hover-button a:not(.disable):hover:not(:active) i,
+a.ol-button:hover:not(:active) span.fs-stack:nth-child(2),
+.fa-slider:hover:not(:active)
+/*,.ol-hover-button .fa-square*/
+{
+    -webkit-transition: color 0.250s 0s ease-in;
+    -moz-transition: color 0.250s 0s ease-in;
+    -o-transition: color 0.250s 0s ease-in;
+    transition: color 0.250s 0s ease-in;
+}
+
+.ol-button .fa-gear, .ol-button .fa-stop {
+    color: greenyellow;
+}
+
+.ol-button i.fa-stop:hover {
+    color:red;
+}
+.ol-button i.fa-gear:hover, .fa-slider:hover i{
+    color:green;
+}
+
+.octolapse-enabled-toggle
+{
+    top: -6px;
+}
+
+div#octolapse-current-camera{
+    margin-left:auto;
+    margin-right:auto;
+    width:500px;
+}
+
+disabled, .octolapse select:disabled, .octolapse .disabled{
     cursor: not-allowed;
     text-decoration: none;
 }
-.octolapse-snapshot-text {
-    position: absolute;
-    top: 15px;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: white;
-    text-shadow: 0px 0px 2px #000000;
-    font-size:22px;
-}
+
 .octolapse .label-important, .octolapse .badge-important {
     background-color: #b94a48!important;
     color: #cccccc!important;
@@ -95,38 +285,6 @@ a.disabled {
 
 .ui-pnotify.octolapse .ui-pnotify-text{
     word-wrap: break-word;
-}
-
-.ol_hover_button a {
-    color: greenyellow;
-}
-
-
-.ol_hover_button .fa-square {
-    color: black;
-}
-
-.ol_hover_button a:not(.disable):hover .fa-square, .snapshot_refresh_container a:not(.disable):active .fa-square {
-    color: lightgray;
-}
-.ol_hover_button a:not(.disable):hover {
-    color: white;
-}
-.ol_hover_button a:not(.disable):active {
-    color: black;
-    -webkit-transition: none;
-    -moz-transition: none;
-    -o-transition: none;
-    transition: none;
-}
-
-.ol_hover_button a:not(.disable):hover:not(:active)
-/*,.ol_hover_button .fa-square*/
-{
-    -webkit-transition: color 0.250s 0s ease-in;
-    -moz-transition: color 0.250s 0s ease-in;
-    -o-transition: color 0.250s 0s ease-in;
-    transition: color 0.250s 0s ease-in;
 }
 
 #snapshot_plan_canvas {
@@ -185,26 +343,6 @@ table.octolapse-profiles td.profile_action {
     border-radius: 4px;
     -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
     box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
-}
-
-.octolapse_status_container {
-    align-items: center;
-    flex-direction: row;
-    display: flex;
-    height: 110px;
-}
-
-.octolapse_status {
-    align-items: center;
-    flex-direction: column;
-    width: 100%;
-    display: flex
-}
-
-.octolapse_status div {
-    flex-direction: row;
-    display: flex;
-    align-items: center;
 }
 
 div.webcam_settings_preview{
@@ -397,28 +535,12 @@ form.octolapse_form .modal-body {
 }
 
 
-#octolapse_snapshot_thumbnail_container {
-    position: relative;
-    min-height: 150px;
-}
-
-.snapshot_refresh_container {
-    z-index: 999;
-    position: absolute;
-    top: 5px;
-    right: 5px;
-}
-
 table.octolapse-profiles {
     border-collapse: collapse;
     table-layout: auto;
     max-width: 100%;
 }
 
-.latest-snapshot-modal .button-container {
-    z-index: 1000;
-    position: absolute;
-}
 
 .button-container.top-right {
     top: 10px;
@@ -432,2089 +554,67 @@ table.octolapse-profiles {
     left: 50%;
     margin-left: -50px;
 }
-
-.snapshot_container img {
+.snapshot_refresh_container {
+    z-index: 999;
     position: absolute;
-    display: block;
-    width: auto;
-    height: auto;
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 100%;
+    top: 5px;
+    right: 5px;
+}
+
+.latest-snapshot-modal .button-container {
+    z-index: 1000;
+    position: absolute;
+}
+#octolapse_snapshot_thumbnail_container{
+    position:relative;
+}
+.octolapse-snapshot-text {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translate(-50%, 0%);
+    color: white;
+    text-shadow: 0px 0px 2px #000000;
+    font-size:28px;
+}
+.snapshot-container
+{
+    position: relative;
+}
+div#octolapse_snapshot_thumbnail_container .snapshot-container
+{
+    width:100%;
+    height:281px;
+}
+div#octolapse_snapshot_thumbnail_container .snapshot-container img{
+    max-width: 556px;
+    max-height: 281px;
+}
+
+.snapshot-container img{
+    position:absolute;
+    top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
     max-height: 100%;
-    left: 0;
-    right: 0;
+    max-width: 100%;
 }
 
-#octolapse_snapshot_thumbnail_container {
-    max-width: 300px;
-    max-height: 150px;
+div#octolapse_snapshot_image_container {
+    position:absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 100%;
 }
-
-
-/* 16FPS animations for latest snapshot*/
-img.effect-delay-0.visible {
-    z-index: 258;
-    -webkit-transition: opacity 0.0625s 0s linear;
-    -moz-transition: opacity 0.0625s 0s linear;
-    -o-transition: opacity 0.0625s 0s linear;
-    transition: opacity 0.0625s 0s linear;
-}
-
-img.effect-delay-1.visible {
-    z-index: 257;
-    -webkit-transition: opacity 0.0625s 0.0625s linear;
-    -moz-transition: opacity 0.0625s 0.0625s linear;
-    -o-transition: opacity 0.0625s 0.0625s linear;
-    transition: opacity 0.0625s 0.0625s linear;
-}
-
-img.effect-delay-2.visible {
-    z-index: 256;
-    -webkit-transition: opacity 0.0625s 0.125s linear;
-    -moz-transition: opacity 0.0625s 0.125s linear;
-    -o-transition: opacity 0.0625s 0.125s linear;
-    transition: opacity 0.0625s 0.125s linear;
-}
-
-img.effect-delay-3.visible {
-    z-index: 255;
-    -webkit-transition: opacity 0.0625s 0.1875s linear;
-    -moz-transition: opacity 0.0625s 0.1875s linear;
-    -o-transition: opacity 0.0625s 0.1875s linear;
-    transition: opacity 0.0625s 0.1875s linear;
-}
-
-img.effect-delay-4.visible {
-    z-index: 254;
-    -webkit-transition: opacity 0.0625s 0.25s linear;
-    -moz-transition: opacity 0.0625s 0.25s linear;
-    -o-transition: opacity 0.0625s 0.25s linear;
-    transition: opacity 0.0625s 0.25s linear;
-}
-
-img.effect-delay-5.visible {
-    z-index: 253;
-    -webkit-transition: opacity 0.0625s 0.3125s linear;
-    -moz-transition: opacity 0.0625s 0.3125s linear;
-    -o-transition: opacity 0.0625s 0.3125s linear;
-    transition: opacity 0.0625s 0.3125s linear;
-}
-
-img.effect-delay-6.visible {
-    z-index: 252;
-    -webkit-transition: opacity 0.0625s 0.375s linear;
-    -moz-transition: opacity 0.0625s 0.375s linear;
-    -o-transition: opacity 0.0625s 0.375s linear;
-    transition: opacity 0.0625s 0.375s linear;
-}
-
-img.effect-delay-7.visible {
-    z-index: 251;
-    -webkit-transition: opacity 0.0625s 0.4375s linear;
-    -moz-transition: opacity 0.0625s 0.4375s linear;
-    -o-transition: opacity 0.0625s 0.4375s linear;
-    transition: opacity 0.0625s 0.4375s linear;
-}
-
-img.effect-delay-8.visible {
-    z-index: 250;
-    -webkit-transition: opacity 0.0625s 0.5s linear;
-    -moz-transition: opacity 0.0625s 0.5s linear;
-    -o-transition: opacity 0.0625s 0.5s linear;
-    transition: opacity 0.0625s 0.5s linear;
-}
-
-img.effect-delay-9.visible {
-    z-index: 249;
-    -webkit-transition: opacity 0.0625s 0.5625s linear;
-    -moz-transition: opacity 0.0625s 0.5625s linear;
-    -o-transition: opacity 0.0625s 0.5625s linear;
-    transition: opacity 0.0625s 0.5625s linear;
-}
-
-img.effect-delay-10.visible {
-    z-index: 248;
-    -webkit-transition: opacity 0.0625s 0.625s linear;
-    -moz-transition: opacity 0.0625s 0.625s linear;
-    -o-transition: opacity 0.0625s 0.625s linear;
-    transition: opacity 0.0625s 0.625s linear;
-}
-
-img.effect-delay-11.visible {
-    z-index: 247;
-    -webkit-transition: opacity 0.0625s 0.6875s linear;
-    -moz-transition: opacity 0.0625s 0.6875s linear;
-    -o-transition: opacity 0.0625s 0.6875s linear;
-    transition: opacity 0.0625s 0.6875s linear;
-}
-
-img.effect-delay-12.visible {
-    z-index: 246;
-    -webkit-transition: opacity 0.0625s 0.75s linear;
-    -moz-transition: opacity 0.0625s 0.75s linear;
-    -o-transition: opacity 0.0625s 0.75s linear;
-    transition: opacity 0.0625s 0.75s linear;
-}
-
-img.effect-delay-13.visible {
-    z-index: 245;
-    -webkit-transition: opacity 0.0625s 0.8125s linear;
-    -moz-transition: opacity 0.0625s 0.8125s linear;
-    -o-transition: opacity 0.0625s 0.8125s linear;
-    transition: opacity 0.0625s 0.8125s linear;
-}
-
-img.effect-delay-14.visible {
-    z-index: 244;
-    -webkit-transition: opacity 0.0625s 0.875s linear;
-    -moz-transition: opacity 0.0625s 0.875s linear;
-    -o-transition: opacity 0.0625s 0.875s linear;
-    transition: opacity 0.0625s 0.875s linear;
-}
-
-img.effect-delay-15.visible {
-    z-index: 243;
-    -webkit-transition: opacity 0.0625s 0.9375s linear;
-    -moz-transition: opacity 0.0625s 0.9375s linear;
-    -o-transition: opacity 0.0625s 0.9375s linear;
-    transition: opacity 0.0625s 0.9375s linear;
-}
-
-img.effect-delay-16.visible {
-    z-index: 242;
-    -webkit-transition: opacity 0.0625s 1s linear;
-    -moz-transition: opacity 0.0625s 1s linear;
-    -o-transition: opacity 0.0625s 1s linear;
-    transition: opacity 0.0625s 1s linear;
-}
-
-img.effect-delay-17.visible {
-    z-index: 241;
-    -webkit-transition: opacity 0.0625s 1.0625s linear;
-    -moz-transition: opacity 0.0625s 1.0625s linear;
-    -o-transition: opacity 0.0625s 1.0625s linear;
-    transition: opacity 0.0625s 1.0625s linear;
-}
-
-img.effect-delay-18.visible {
-    z-index: 240;
-    -webkit-transition: opacity 0.0625s 1.125s linear;
-    -moz-transition: opacity 0.0625s 1.125s linear;
-    -o-transition: opacity 0.0625s 1.125s linear;
-    transition: opacity 0.0625s 1.125s linear;
-}
-
-img.effect-delay-19.visible {
-    z-index: 239;
-    -webkit-transition: opacity 0.0625s 1.1875s linear;
-    -moz-transition: opacity 0.0625s 1.1875s linear;
-    -o-transition: opacity 0.0625s 1.1875s linear;
-    transition: opacity 0.0625s 1.1875s linear;
-}
-
-img.effect-delay-20.visible {
-    z-index: 238;
-    -webkit-transition: opacity 0.0625s 1.25s linear;
-    -moz-transition: opacity 0.0625s 1.25s linear;
-    -o-transition: opacity 0.0625s 1.25s linear;
-    transition: opacity 0.0625s 1.25s linear;
-}
-
-img.effect-delay-21.visible {
-    z-index: 237;
-    -webkit-transition: opacity 0.0625s 1.3125s linear;
-    -moz-transition: opacity 0.0625s 1.3125s linear;
-    -o-transition: opacity 0.0625s 1.3125s linear;
-    transition: opacity 0.0625s 1.3125s linear;
-}
-
-img.effect-delay-22.visible {
-    z-index: 236;
-    -webkit-transition: opacity 0.0625s 1.375s linear;
-    -moz-transition: opacity 0.0625s 1.375s linear;
-    -o-transition: opacity 0.0625s 1.375s linear;
-    transition: opacity 0.0625s 1.375s linear;
-}
-
-img.effect-delay-23.visible {
-    z-index: 235;
-    -webkit-transition: opacity 0.0625s 1.4375s linear;
-    -moz-transition: opacity 0.0625s 1.4375s linear;
-    -o-transition: opacity 0.0625s 1.4375s linear;
-    transition: opacity 0.0625s 1.4375s linear;
-}
-
-img.effect-delay-24.visible {
-    z-index: 234;
-    -webkit-transition: opacity 0.0625s 1.5s linear;
-    -moz-transition: opacity 0.0625s 1.5s linear;
-    -o-transition: opacity 0.0625s 1.5s linear;
-    transition: opacity 0.0625s 1.5s linear;
-}
-
-img.effect-delay-25.visible {
-    z-index: 233;
-    -webkit-transition: opacity 0.0625s 1.5625s linear;
-    -moz-transition: opacity 0.0625s 1.5625s linear;
-    -o-transition: opacity 0.0625s 1.5625s linear;
-    transition: opacity 0.0625s 1.5625s linear;
-}
-
-img.effect-delay-26.visible {
-    z-index: 232;
-    -webkit-transition: opacity 0.0625s 1.625s linear;
-    -moz-transition: opacity 0.0625s 1.625s linear;
-    -o-transition: opacity 0.0625s 1.625s linear;
-    transition: opacity 0.0625s 1.625s linear;
-}
-
-img.effect-delay-27.visible {
-    z-index: 231;
-    -webkit-transition: opacity 0.0625s 1.6875s linear;
-    -moz-transition: opacity 0.0625s 1.6875s linear;
-    -o-transition: opacity 0.0625s 1.6875s linear;
-    transition: opacity 0.0625s 1.6875s linear;
-}
-
-img.effect-delay-28.visible {
-    z-index: 230;
-    -webkit-transition: opacity 0.0625s 1.75s linear;
-    -moz-transition: opacity 0.0625s 1.75s linear;
-    -o-transition: opacity 0.0625s 1.75s linear;
-    transition: opacity 0.0625s 1.75s linear;
-}
-
-img.effect-delay-29.visible {
-    z-index: 229;
-    -webkit-transition: opacity 0.0625s 1.8125s linear;
-    -moz-transition: opacity 0.0625s 1.8125s linear;
-    -o-transition: opacity 0.0625s 1.8125s linear;
-    transition: opacity 0.0625s 1.8125s linear;
-}
-
-img.effect-delay-30.visible {
-    z-index: 228;
-    -webkit-transition: opacity 0.0625s 1.875s linear;
-    -moz-transition: opacity 0.0625s 1.875s linear;
-    -o-transition: opacity 0.0625s 1.875s linear;
-    transition: opacity 0.0625s 1.875s linear;
-}
-
-img.effect-delay-31.visible {
-    z-index: 227;
-    -webkit-transition: opacity 0.0625s 1.9375s linear;
-    -moz-transition: opacity 0.0625s 1.9375s linear;
-    -o-transition: opacity 0.0625s 1.9375s linear;
-    transition: opacity 0.0625s 1.9375s linear;
-}
-
-img.effect-delay-32.visible {
-    z-index: 226;
-    -webkit-transition: opacity 0.0625s 2s linear;
-    -moz-transition: opacity 0.0625s 2s linear;
-    -o-transition: opacity 0.0625s 2s linear;
-    transition: opacity 0.0625s 2s linear;
-}
-
-img.effect-delay-33.visible {
-    z-index: 225;
-    -webkit-transition: opacity 0.0625s 2.0625s linear;
-    -moz-transition: opacity 0.0625s 2.0625s linear;
-    -o-transition: opacity 0.0625s 2.0625s linear;
-    transition: opacity 0.0625s 2.0625s linear;
-}
-
-img.effect-delay-34.visible {
-    z-index: 224;
-    -webkit-transition: opacity 0.0625s 2.125s linear;
-    -moz-transition: opacity 0.0625s 2.125s linear;
-    -o-transition: opacity 0.0625s 2.125s linear;
-    transition: opacity 0.0625s 2.125s linear;
-}
-
-img.effect-delay-35.visible {
-    z-index: 223;
-    -webkit-transition: opacity 0.0625s 2.1875s linear;
-    -moz-transition: opacity 0.0625s 2.1875s linear;
-    -o-transition: opacity 0.0625s 2.1875s linear;
-    transition: opacity 0.0625s 2.1875s linear;
-}
-
-img.effect-delay-36.visible {
-    z-index: 222;
-    -webkit-transition: opacity 0.0625s 2.25s linear;
-    -moz-transition: opacity 0.0625s 2.25s linear;
-    -o-transition: opacity 0.0625s 2.25s linear;
-    transition: opacity 0.0625s 2.25s linear;
-}
-
-img.effect-delay-37.visible {
-    z-index: 221;
-    -webkit-transition: opacity 0.0625s 2.3125s linear;
-    -moz-transition: opacity 0.0625s 2.3125s linear;
-    -o-transition: opacity 0.0625s 2.3125s linear;
-    transition: opacity 0.0625s 2.3125s linear;
-}
-
-img.effect-delay-38.visible {
-    z-index: 220;
-    -webkit-transition: opacity 0.0625s 2.375s linear;
-    -moz-transition: opacity 0.0625s 2.375s linear;
-    -o-transition: opacity 0.0625s 2.375s linear;
-    transition: opacity 0.0625s 2.375s linear;
-}
-
-img.effect-delay-39.visible {
-    z-index: 219;
-    -webkit-transition: opacity 0.0625s 2.4375s linear;
-    -moz-transition: opacity 0.0625s 2.4375s linear;
-    -o-transition: opacity 0.0625s 2.4375s linear;
-    transition: opacity 0.0625s 2.4375s linear;
-}
-
-img.effect-delay-40.visible {
-    z-index: 218;
-    -webkit-transition: opacity 0.0625s 2.5s linear;
-    -moz-transition: opacity 0.0625s 2.5s linear;
-    -o-transition: opacity 0.0625s 2.5s linear;
-    transition: opacity 0.0625s 2.5s linear;
-}
-
-img.effect-delay-41.visible {
-    z-index: 217;
-    -webkit-transition: opacity 0.0625s 2.5625s linear;
-    -moz-transition: opacity 0.0625s 2.5625s linear;
-    -o-transition: opacity 0.0625s 2.5625s linear;
-    transition: opacity 0.0625s 2.5625s linear;
-}
-
-img.effect-delay-42.visible {
-    z-index: 216;
-    -webkit-transition: opacity 0.0625s 2.625s linear;
-    -moz-transition: opacity 0.0625s 2.625s linear;
-    -o-transition: opacity 0.0625s 2.625s linear;
-    transition: opacity 0.0625s 2.625s linear;
-}
-
-img.effect-delay-43.visible {
-    z-index: 215;
-    -webkit-transition: opacity 0.0625s 2.6875s linear;
-    -moz-transition: opacity 0.0625s 2.6875s linear;
-    -o-transition: opacity 0.0625s 2.6875s linear;
-    transition: opacity 0.0625s 2.6875s linear;
-}
-
-img.effect-delay-44.visible {
-    z-index: 214;
-    -webkit-transition: opacity 0.0625s 2.75s linear;
-    -moz-transition: opacity 0.0625s 2.75s linear;
-    -o-transition: opacity 0.0625s 2.75s linear;
-    transition: opacity 0.0625s 2.75s linear;
-}
-
-img.effect-delay-45.visible {
-    z-index: 213;
-    -webkit-transition: opacity 0.0625s 2.8125s linear;
-    -moz-transition: opacity 0.0625s 2.8125s linear;
-    -o-transition: opacity 0.0625s 2.8125s linear;
-    transition: opacity 0.0625s 2.8125s linear;
-}
-
-img.effect-delay-46.visible {
-    z-index: 212;
-    -webkit-transition: opacity 0.0625s 2.875s linear;
-    -moz-transition: opacity 0.0625s 2.875s linear;
-    -o-transition: opacity 0.0625s 2.875s linear;
-    transition: opacity 0.0625s 2.875s linear;
-}
-
-img.effect-delay-47.visible {
-    z-index: 211;
-    -webkit-transition: opacity 0.0625s 2.9375s linear;
-    -moz-transition: opacity 0.0625s 2.9375s linear;
-    -o-transition: opacity 0.0625s 2.9375s linear;
-    transition: opacity 0.0625s 2.9375s linear;
-}
-
-img.effect-delay-48.visible {
-    z-index: 210;
-    -webkit-transition: opacity 0.0625s 3s linear;
-    -moz-transition: opacity 0.0625s 3s linear;
-    -o-transition: opacity 0.0625s 3s linear;
-    transition: opacity 0.0625s 3s linear;
-}
-
-img.effect-delay-49.visible {
-    z-index: 209;
-    -webkit-transition: opacity 0.0625s 3.0625s linear;
-    -moz-transition: opacity 0.0625s 3.0625s linear;
-    -o-transition: opacity 0.0625s 3.0625s linear;
-    transition: opacity 0.0625s 3.0625s linear;
-}
-
-img.effect-delay-50.visible {
-    z-index: 208;
-    -webkit-transition: opacity 0.0625s 3.125s linear;
-    -moz-transition: opacity 0.0625s 3.125s linear;
-    -o-transition: opacity 0.0625s 3.125s linear;
-    transition: opacity 0.0625s 3.125s linear;
-}
-
-img.effect-delay-51.visible {
-    z-index: 207;
-    -webkit-transition: opacity 0.0625s 3.1875s linear;
-    -moz-transition: opacity 0.0625s 3.1875s linear;
-    -o-transition: opacity 0.0625s 3.1875s linear;
-    transition: opacity 0.0625s 3.1875s linear;
-}
-
-img.effect-delay-52.visible {
-    z-index: 206;
-    -webkit-transition: opacity 0.0625s 3.25s linear;
-    -moz-transition: opacity 0.0625s 3.25s linear;
-    -o-transition: opacity 0.0625s 3.25s linear;
-    transition: opacity 0.0625s 3.25s linear;
-}
-
-img.effect-delay-53.visible {
-    z-index: 205;
-    -webkit-transition: opacity 0.0625s 3.3125s linear;
-    -moz-transition: opacity 0.0625s 3.3125s linear;
-    -o-transition: opacity 0.0625s 3.3125s linear;
-    transition: opacity 0.0625s 3.3125s linear;
-}
-
-img.effect-delay-54.visible {
-    z-index: 204;
-    -webkit-transition: opacity 0.0625s 3.375s linear;
-    -moz-transition: opacity 0.0625s 3.375s linear;
-    -o-transition: opacity 0.0625s 3.375s linear;
-    transition: opacity 0.0625s 3.375s linear;
-}
-
-img.effect-delay-55.visible {
-    z-index: 203;
-    -webkit-transition: opacity 0.0625s 3.4375s linear;
-    -moz-transition: opacity 0.0625s 3.4375s linear;
-    -o-transition: opacity 0.0625s 3.4375s linear;
-    transition: opacity 0.0625s 3.4375s linear;
-}
-
-img.effect-delay-56.visible {
-    z-index: 202;
-    -webkit-transition: opacity 0.0625s 3.5s linear;
-    -moz-transition: opacity 0.0625s 3.5s linear;
-    -o-transition: opacity 0.0625s 3.5s linear;
-    transition: opacity 0.0625s 3.5s linear;
-}
-
-img.effect-delay-57.visible {
-    z-index: 201;
-    -webkit-transition: opacity 0.0625s 3.5625s linear;
-    -moz-transition: opacity 0.0625s 3.5625s linear;
-    -o-transition: opacity 0.0625s 3.5625s linear;
-    transition: opacity 0.0625s 3.5625s linear;
-}
-
-img.effect-delay-58.visible {
-    z-index: 200;
-    -webkit-transition: opacity 0.0625s 3.625s linear;
-    -moz-transition: opacity 0.0625s 3.625s linear;
-    -o-transition: opacity 0.0625s 3.625s linear;
-    transition: opacity 0.0625s 3.625s linear;
-}
-
-img.effect-delay-59.visible {
-    z-index: 199;
-    -webkit-transition: opacity 0.0625s 3.6875s linear;
-    -moz-transition: opacity 0.0625s 3.6875s linear;
-    -o-transition: opacity 0.0625s 3.6875s linear;
-    transition: opacity 0.0625s 3.6875s linear;
-}
-
-img.effect-delay-60.visible {
-    z-index: 198;
-    -webkit-transition: opacity 0.0625s 3.75s linear;
-    -moz-transition: opacity 0.0625s 3.75s linear;
-    -o-transition: opacity 0.0625s 3.75s linear;
-    transition: opacity 0.0625s 3.75s linear;
-}
-
-img.effect-delay-61.visible {
-    z-index: 197;
-    -webkit-transition: opacity 0.0625s 3.8125s linear;
-    -moz-transition: opacity 0.0625s 3.8125s linear;
-    -o-transition: opacity 0.0625s 3.8125s linear;
-    transition: opacity 0.0625s 3.8125s linear;
-}
-
-img.effect-delay-62.visible {
-    z-index: 196;
-    -webkit-transition: opacity 0.0625s 3.875s linear;
-    -moz-transition: opacity 0.0625s 3.875s linear;
-    -o-transition: opacity 0.0625s 3.875s linear;
-    transition: opacity 0.0625s 3.875s linear;
-}
-
-img.effect-delay-63.visible {
-    z-index: 195;
-    -webkit-transition: opacity 0.0625s 3.9375s linear;
-    -moz-transition: opacity 0.0625s 3.9375s linear;
-    -o-transition: opacity 0.0625s 3.9375s linear;
-    transition: opacity 0.0625s 3.9375s linear;
-}
-
-img.effect-delay-64.visible {
-    z-index: 194;
-    -webkit-transition: opacity 0.0625s 4s linear;
-    -moz-transition: opacity 0.0625s 4s linear;
-    -o-transition: opacity 0.0625s 4s linear;
-    transition: opacity 0.0625s 4s linear;
-}
-
-img.effect-delay-65.visible {
-    z-index: 193;
-    -webkit-transition: opacity 0.0625s 4.0625s linear;
-    -moz-transition: opacity 0.0625s 4.0625s linear;
-    -o-transition: opacity 0.0625s 4.0625s linear;
-    transition: opacity 0.0625s 4.0625s linear;
-}
-
-img.effect-delay-66.visible {
-    z-index: 192;
-    -webkit-transition: opacity 0.0625s 4.125s linear;
-    -moz-transition: opacity 0.0625s 4.125s linear;
-    -o-transition: opacity 0.0625s 4.125s linear;
-    transition: opacity 0.0625s 4.125s linear;
-}
-
-img.effect-delay-67.visible {
-    z-index: 191;
-    -webkit-transition: opacity 0.0625s 4.1875s linear;
-    -moz-transition: opacity 0.0625s 4.1875s linear;
-    -o-transition: opacity 0.0625s 4.1875s linear;
-    transition: opacity 0.0625s 4.1875s linear;
-}
-
-img.effect-delay-68.visible {
-    z-index: 190;
-    -webkit-transition: opacity 0.0625s 4.25s linear;
-    -moz-transition: opacity 0.0625s 4.25s linear;
-    -o-transition: opacity 0.0625s 4.25s linear;
-    transition: opacity 0.0625s 4.25s linear;
-}
-
-img.effect-delay-69.visible {
-    z-index: 189;
-    -webkit-transition: opacity 0.0625s 4.3125s linear;
-    -moz-transition: opacity 0.0625s 4.3125s linear;
-    -o-transition: opacity 0.0625s 4.3125s linear;
-    transition: opacity 0.0625s 4.3125s linear;
-}
-
-img.effect-delay-70.visible {
-    z-index: 188;
-    -webkit-transition: opacity 0.0625s 4.375s linear;
-    -moz-transition: opacity 0.0625s 4.375s linear;
-    -o-transition: opacity 0.0625s 4.375s linear;
-    transition: opacity 0.0625s 4.375s linear;
-}
-
-img.effect-delay-71.visible {
-    z-index: 187;
-    -webkit-transition: opacity 0.0625s 4.4375s linear;
-    -moz-transition: opacity 0.0625s 4.4375s linear;
-    -o-transition: opacity 0.0625s 4.4375s linear;
-    transition: opacity 0.0625s 4.4375s linear;
-}
-
-img.effect-delay-72.visible {
-    z-index: 186;
-    -webkit-transition: opacity 0.0625s 4.5s linear;
-    -moz-transition: opacity 0.0625s 4.5s linear;
-    -o-transition: opacity 0.0625s 4.5s linear;
-    transition: opacity 0.0625s 4.5s linear;
-}
-
-img.effect-delay-73.visible {
-    z-index: 185;
-    -webkit-transition: opacity 0.0625s 4.5625s linear;
-    -moz-transition: opacity 0.0625s 4.5625s linear;
-    -o-transition: opacity 0.0625s 4.5625s linear;
-    transition: opacity 0.0625s 4.5625s linear;
-}
-
-img.effect-delay-74.visible {
-    z-index: 184;
-    -webkit-transition: opacity 0.0625s 4.625s linear;
-    -moz-transition: opacity 0.0625s 4.625s linear;
-    -o-transition: opacity 0.0625s 4.625s linear;
-    transition: opacity 0.0625s 4.625s linear;
-}
-
-img.effect-delay-75.visible {
-    z-index: 183;
-    -webkit-transition: opacity 0.0625s 4.6875s linear;
-    -moz-transition: opacity 0.0625s 4.6875s linear;
-    -o-transition: opacity 0.0625s 4.6875s linear;
-    transition: opacity 0.0625s 4.6875s linear;
-}
-
-img.effect-delay-76.visible {
-    z-index: 182;
-    -webkit-transition: opacity 0.0625s 4.75s linear;
-    -moz-transition: opacity 0.0625s 4.75s linear;
-    -o-transition: opacity 0.0625s 4.75s linear;
-    transition: opacity 0.0625s 4.75s linear;
-}
-
-img.effect-delay-77.visible {
-    z-index: 181;
-    -webkit-transition: opacity 0.0625s 4.8125s linear;
-    -moz-transition: opacity 0.0625s 4.8125s linear;
-    -o-transition: opacity 0.0625s 4.8125s linear;
-    transition: opacity 0.0625s 4.8125s linear;
-}
-
-img.effect-delay-78.visible {
-    z-index: 180;
-    -webkit-transition: opacity 0.0625s 4.875s linear;
-    -moz-transition: opacity 0.0625s 4.875s linear;
-    -o-transition: opacity 0.0625s 4.875s linear;
-    transition: opacity 0.0625s 4.875s linear;
-}
-
-img.effect-delay-79.visible {
-    z-index: 179;
-    -webkit-transition: opacity 0.0625s 4.9375s linear;
-    -moz-transition: opacity 0.0625s 4.9375s linear;
-    -o-transition: opacity 0.0625s 4.9375s linear;
-    transition: opacity 0.0625s 4.9375s linear;
-}
-
-img.effect-delay-80.visible {
-    z-index: 178;
-    -webkit-transition: opacity 0.0625s 5s linear;
-    -moz-transition: opacity 0.0625s 5s linear;
-    -o-transition: opacity 0.0625s 5s linear;
-    transition: opacity 0.0625s 5s linear;
-}
-
-img.effect-delay-81.visible {
-    z-index: 177;
-    -webkit-transition: opacity 0.0625s 5.0625s linear;
-    -moz-transition: opacity 0.0625s 5.0625s linear;
-    -o-transition: opacity 0.0625s 5.0625s linear;
-    transition: opacity 0.0625s 5.0625s linear;
-}
-
-img.effect-delay-82.visible {
-    z-index: 176;
-    -webkit-transition: opacity 0.0625s 5.125s linear;
-    -moz-transition: opacity 0.0625s 5.125s linear;
-    -o-transition: opacity 0.0625s 5.125s linear;
-    transition: opacity 0.0625s 5.125s linear;
-}
-
-img.effect-delay-83.visible {
-    z-index: 175;
-    -webkit-transition: opacity 0.0625s 5.1875s linear;
-    -moz-transition: opacity 0.0625s 5.1875s linear;
-    -o-transition: opacity 0.0625s 5.1875s linear;
-    transition: opacity 0.0625s 5.1875s linear;
-}
-
-img.effect-delay-84.visible {
-    z-index: 174;
-    -webkit-transition: opacity 0.0625s 5.25s linear;
-    -moz-transition: opacity 0.0625s 5.25s linear;
-    -o-transition: opacity 0.0625s 5.25s linear;
-    transition: opacity 0.0625s 5.25s linear;
-}
-
-img.effect-delay-85.visible {
-    z-index: 173;
-    -webkit-transition: opacity 0.0625s 5.3125s linear;
-    -moz-transition: opacity 0.0625s 5.3125s linear;
-    -o-transition: opacity 0.0625s 5.3125s linear;
-    transition: opacity 0.0625s 5.3125s linear;
-}
-
-img.effect-delay-86.visible {
-    z-index: 172;
-    -webkit-transition: opacity 0.0625s 5.375s linear;
-    -moz-transition: opacity 0.0625s 5.375s linear;
-    -o-transition: opacity 0.0625s 5.375s linear;
-    transition: opacity 0.0625s 5.375s linear;
-}
-
-img.effect-delay-87.visible {
-    z-index: 171;
-    -webkit-transition: opacity 0.0625s 5.4375s linear;
-    -moz-transition: opacity 0.0625s 5.4375s linear;
-    -o-transition: opacity 0.0625s 5.4375s linear;
-    transition: opacity 0.0625s 5.4375s linear;
-}
-
-img.effect-delay-88.visible {
-    z-index: 170;
-    -webkit-transition: opacity 0.0625s 5.5s linear;
-    -moz-transition: opacity 0.0625s 5.5s linear;
-    -o-transition: opacity 0.0625s 5.5s linear;
-    transition: opacity 0.0625s 5.5s linear;
-}
-
-img.effect-delay-89.visible {
-    z-index: 169;
-    -webkit-transition: opacity 0.0625s 5.5625s linear;
-    -moz-transition: opacity 0.0625s 5.5625s linear;
-    -o-transition: opacity 0.0625s 5.5625s linear;
-    transition: opacity 0.0625s 5.5625s linear;
-}
-
-img.effect-delay-90.visible {
-    z-index: 168;
-    -webkit-transition: opacity 0.0625s 5.625s linear;
-    -moz-transition: opacity 0.0625s 5.625s linear;
-    -o-transition: opacity 0.0625s 5.625s linear;
-    transition: opacity 0.0625s 5.625s linear;
-}
-
-img.effect-delay-91.visible {
-    z-index: 167;
-    -webkit-transition: opacity 0.0625s 5.6875s linear;
-    -moz-transition: opacity 0.0625s 5.6875s linear;
-    -o-transition: opacity 0.0625s 5.6875s linear;
-    transition: opacity 0.0625s 5.6875s linear;
-}
-
-img.effect-delay-92.visible {
-    z-index: 166;
-    -webkit-transition: opacity 0.0625s 5.75s linear;
-    -moz-transition: opacity 0.0625s 5.75s linear;
-    -o-transition: opacity 0.0625s 5.75s linear;
-    transition: opacity 0.0625s 5.75s linear;
-}
-
-img.effect-delay-93.visible {
-    z-index: 165;
-    -webkit-transition: opacity 0.0625s 5.8125s linear;
-    -moz-transition: opacity 0.0625s 5.8125s linear;
-    -o-transition: opacity 0.0625s 5.8125s linear;
-    transition: opacity 0.0625s 5.8125s linear;
-}
-
-img.effect-delay-94.visible {
-    z-index: 164;
-    -webkit-transition: opacity 0.0625s 5.875s linear;
-    -moz-transition: opacity 0.0625s 5.875s linear;
-    -o-transition: opacity 0.0625s 5.875s linear;
-    transition: opacity 0.0625s 5.875s linear;
-}
-
-img.effect-delay-95.visible {
-    z-index: 163;
-    -webkit-transition: opacity 0.0625s 5.9375s linear;
-    -moz-transition: opacity 0.0625s 5.9375s linear;
-    -o-transition: opacity 0.0625s 5.9375s linear;
-    transition: opacity 0.0625s 5.9375s linear;
-}
-
-img.effect-delay-96.visible {
-    z-index: 162;
-    -webkit-transition: opacity 0.0625s 6s linear;
-    -moz-transition: opacity 0.0625s 6s linear;
-    -o-transition: opacity 0.0625s 6s linear;
-    transition: opacity 0.0625s 6s linear;
-}
-
-img.effect-delay-97.visible {
-    z-index: 161;
-    -webkit-transition: opacity 0.0625s 6.0625s linear;
-    -moz-transition: opacity 0.0625s 6.0625s linear;
-    -o-transition: opacity 0.0625s 6.0625s linear;
-    transition: opacity 0.0625s 6.0625s linear;
-}
-
-img.effect-delay-98.visible {
-    z-index: 160;
-    -webkit-transition: opacity 0.0625s 6.125s linear;
-    -moz-transition: opacity 0.0625s 6.125s linear;
-    -o-transition: opacity 0.0625s 6.125s linear;
-    transition: opacity 0.0625s 6.125s linear;
-}
-
-img.effect-delay-99.visible {
-    z-index: 159;
-    -webkit-transition: opacity 0.0625s 6.1875s linear;
-    -moz-transition: opacity 0.0625s 6.1875s linear;
-    -o-transition: opacity 0.0625s 6.1875s linear;
-    transition: opacity 0.0625s 6.1875s linear;
-}
-
-img.effect-delay-100.visible {
-    z-index: 158;
-    -webkit-transition: opacity 0.0625s 6.25s linear;
-    -moz-transition: opacity 0.0625s 6.25s linear;
-    -o-transition: opacity 0.0625s 6.25s linear;
-    transition: opacity 0.0625s 6.25s linear;
-}
-
-img.effect-delay-101.visible {
-    z-index: 157;
-    -webkit-transition: opacity 0.0625s 6.3125s linear;
-    -moz-transition: opacity 0.0625s 6.3125s linear;
-    -o-transition: opacity 0.0625s 6.3125s linear;
-    transition: opacity 0.0625s 6.3125s linear;
-}
-
-img.effect-delay-102.visible {
-    z-index: 156;
-    -webkit-transition: opacity 0.0625s 6.375s linear;
-    -moz-transition: opacity 0.0625s 6.375s linear;
-    -o-transition: opacity 0.0625s 6.375s linear;
-    transition: opacity 0.0625s 6.375s linear;
-}
-
-img.effect-delay-103.visible {
-    z-index: 155;
-    -webkit-transition: opacity 0.0625s 6.4375s linear;
-    -moz-transition: opacity 0.0625s 6.4375s linear;
-    -o-transition: opacity 0.0625s 6.4375s linear;
-    transition: opacity 0.0625s 6.4375s linear;
-}
-
-img.effect-delay-104.visible {
-    z-index: 154;
-    -webkit-transition: opacity 0.0625s 6.5s linear;
-    -moz-transition: opacity 0.0625s 6.5s linear;
-    -o-transition: opacity 0.0625s 6.5s linear;
-    transition: opacity 0.0625s 6.5s linear;
-}
-
-img.effect-delay-105.visible {
-    z-index: 153;
-    -webkit-transition: opacity 0.0625s 6.5625s linear;
-    -moz-transition: opacity 0.0625s 6.5625s linear;
-    -o-transition: opacity 0.0625s 6.5625s linear;
-    transition: opacity 0.0625s 6.5625s linear;
-}
-
-img.effect-delay-106.visible {
-    z-index: 152;
-    -webkit-transition: opacity 0.0625s 6.625s linear;
-    -moz-transition: opacity 0.0625s 6.625s linear;
-    -o-transition: opacity 0.0625s 6.625s linear;
-    transition: opacity 0.0625s 6.625s linear;
-}
-
-img.effect-delay-107.visible {
-    z-index: 151;
-    -webkit-transition: opacity 0.0625s 6.6875s linear;
-    -moz-transition: opacity 0.0625s 6.6875s linear;
-    -o-transition: opacity 0.0625s 6.6875s linear;
-    transition: opacity 0.0625s 6.6875s linear;
-}
-
-img.effect-delay-108.visible {
-    z-index: 150;
-    -webkit-transition: opacity 0.0625s 6.75s linear;
-    -moz-transition: opacity 0.0625s 6.75s linear;
-    -o-transition: opacity 0.0625s 6.75s linear;
-    transition: opacity 0.0625s 6.75s linear;
-}
-
-img.effect-delay-109.visible {
-    z-index: 149;
-    -webkit-transition: opacity 0.0625s 6.8125s linear;
-    -moz-transition: opacity 0.0625s 6.8125s linear;
-    -o-transition: opacity 0.0625s 6.8125s linear;
-    transition: opacity 0.0625s 6.8125s linear;
-}
-
-img.effect-delay-110.visible {
-    z-index: 148;
-    -webkit-transition: opacity 0.0625s 6.875s linear;
-    -moz-transition: opacity 0.0625s 6.875s linear;
-    -o-transition: opacity 0.0625s 6.875s linear;
-    transition: opacity 0.0625s 6.875s linear;
-}
-
-img.effect-delay-111.visible {
-    z-index: 147;
-    -webkit-transition: opacity 0.0625s 6.9375s linear;
-    -moz-transition: opacity 0.0625s 6.9375s linear;
-    -o-transition: opacity 0.0625s 6.9375s linear;
-    transition: opacity 0.0625s 6.9375s linear;
-}
-
-img.effect-delay-112.visible {
-    z-index: 146;
-    -webkit-transition: opacity 0.0625s 7s linear;
-    -moz-transition: opacity 0.0625s 7s linear;
-    -o-transition: opacity 0.0625s 7s linear;
-    transition: opacity 0.0625s 7s linear;
-}
-
-img.effect-delay-113.visible {
-    z-index: 145;
-    -webkit-transition: opacity 0.0625s 7.0625s linear;
-    -moz-transition: opacity 0.0625s 7.0625s linear;
-    -o-transition: opacity 0.0625s 7.0625s linear;
-    transition: opacity 0.0625s 7.0625s linear;
-}
-
-img.effect-delay-114.visible {
-    z-index: 144;
-    -webkit-transition: opacity 0.0625s 7.125s linear;
-    -moz-transition: opacity 0.0625s 7.125s linear;
-    -o-transition: opacity 0.0625s 7.125s linear;
-    transition: opacity 0.0625s 7.125s linear;
-}
-
-img.effect-delay-115.visible {
-    z-index: 143;
-    -webkit-transition: opacity 0.0625s 7.1875s linear;
-    -moz-transition: opacity 0.0625s 7.1875s linear;
-    -o-transition: opacity 0.0625s 7.1875s linear;
-    transition: opacity 0.0625s 7.1875s linear;
-}
-
-img.effect-delay-116.visible {
-    z-index: 142;
-    -webkit-transition: opacity 0.0625s 7.25s linear;
-    -moz-transition: opacity 0.0625s 7.25s linear;
-    -o-transition: opacity 0.0625s 7.25s linear;
-    transition: opacity 0.0625s 7.25s linear;
-}
-
-img.effect-delay-117.visible {
-    z-index: 141;
-    -webkit-transition: opacity 0.0625s 7.3125s linear;
-    -moz-transition: opacity 0.0625s 7.3125s linear;
-    -o-transition: opacity 0.0625s 7.3125s linear;
-    transition: opacity 0.0625s 7.3125s linear;
-}
-
-img.effect-delay-118.visible {
-    z-index: 140;
-    -webkit-transition: opacity 0.0625s 7.375s linear;
-    -moz-transition: opacity 0.0625s 7.375s linear;
-    -o-transition: opacity 0.0625s 7.375s linear;
-    transition: opacity 0.0625s 7.375s linear;
-}
-
-img.effect-delay-119.visible {
-    z-index: 139;
-    -webkit-transition: opacity 0.0625s 7.4375s linear;
-    -moz-transition: opacity 0.0625s 7.4375s linear;
-    -o-transition: opacity 0.0625s 7.4375s linear;
-    transition: opacity 0.0625s 7.4375s linear;
-}
-
-img.effect-delay-120.visible {
-    z-index: 138;
-    -webkit-transition: opacity 0.0625s 7.5s linear;
-    -moz-transition: opacity 0.0625s 7.5s linear;
-    -o-transition: opacity 0.0625s 7.5s linear;
-    transition: opacity 0.0625s 7.5s linear;
-}
-
-img.effect-delay-121.visible {
-    z-index: 137;
-    -webkit-transition: opacity 0.0625s 7.5625s linear;
-    -moz-transition: opacity 0.0625s 7.5625s linear;
-    -o-transition: opacity 0.0625s 7.5625s linear;
-    transition: opacity 0.0625s 7.5625s linear;
-}
-
-img.effect-delay-122.visible {
-    z-index: 136;
-    -webkit-transition: opacity 0.0625s 7.625s linear;
-    -moz-transition: opacity 0.0625s 7.625s linear;
-    -o-transition: opacity 0.0625s 7.625s linear;
-    transition: opacity 0.0625s 7.625s linear;
-}
-
-img.effect-delay-123.visible {
-    z-index: 135;
-    -webkit-transition: opacity 0.0625s 7.6875s linear;
-    -moz-transition: opacity 0.0625s 7.6875s linear;
-    -o-transition: opacity 0.0625s 7.6875s linear;
-    transition: opacity 0.0625s 7.6875s linear;
-}
-
-img.effect-delay-124.visible {
-    z-index: 134;
-    -webkit-transition: opacity 0.0625s 7.75s linear;
-    -moz-transition: opacity 0.0625s 7.75s linear;
-    -o-transition: opacity 0.0625s 7.75s linear;
-    transition: opacity 0.0625s 7.75s linear;
-}
-
-img.effect-delay-125.visible {
-    z-index: 133;
-    -webkit-transition: opacity 0.0625s 7.8125s linear;
-    -moz-transition: opacity 0.0625s 7.8125s linear;
-    -o-transition: opacity 0.0625s 7.8125s linear;
-    transition: opacity 0.0625s 7.8125s linear;
-}
-
-img.effect-delay-126.visible {
-    z-index: 132;
-    -webkit-transition: opacity 0.0625s 7.875s linear;
-    -moz-transition: opacity 0.0625s 7.875s linear;
-    -o-transition: opacity 0.0625s 7.875s linear;
-    transition: opacity 0.0625s 7.875s linear;
-}
-
-img.effect-delay-127.visible {
-    z-index: 131;
-    -webkit-transition: opacity 0.0625s 7.9375s linear;
-    -moz-transition: opacity 0.0625s 7.9375s linear;
-    -o-transition: opacity 0.0625s 7.9375s linear;
-    transition: opacity 0.0625s 7.9375s linear;
-}
-
-img.effect-delay-128.visible {
-    z-index: 130;
-    -webkit-transition: opacity 0.0625s 8s linear;
-    -moz-transition: opacity 0.0625s 8s linear;
-    -o-transition: opacity 0.0625s 8s linear;
-    transition: opacity 0.0625s 8s linear;
+div#octolapse_snapshot_image_container .snapshot-container {
+    width:100%;
+    height:100%;
 }
-
-img.effect-delay-129.visible {
-    z-index: 129;
-    -webkit-transition: opacity 0.0625s 8.0625s linear;
-    -moz-transition: opacity 0.0625s 8.0625s linear;
-    -o-transition: opacity 0.0625s 8.0625s linear;
-    transition: opacity 0.0625s 8.0625s linear;
-}
-
-img.effect-delay-130.visible {
-    z-index: 128;
-    -webkit-transition: opacity 0.0625s 8.125s linear;
-    -moz-transition: opacity 0.0625s 8.125s linear;
-    -o-transition: opacity 0.0625s 8.125s linear;
-    transition: opacity 0.0625s 8.125s linear;
-}
-
-img.effect-delay-131.visible {
-    z-index: 127;
-    -webkit-transition: opacity 0.0625s 8.1875s linear;
-    -moz-transition: opacity 0.0625s 8.1875s linear;
-    -o-transition: opacity 0.0625s 8.1875s linear;
-    transition: opacity 0.0625s 8.1875s linear;
-}
-
-img.effect-delay-132.visible {
-    z-index: 126;
-    -webkit-transition: opacity 0.0625s 8.25s linear;
-    -moz-transition: opacity 0.0625s 8.25s linear;
-    -o-transition: opacity 0.0625s 8.25s linear;
-    transition: opacity 0.0625s 8.25s linear;
-}
-
-img.effect-delay-133.visible {
-    z-index: 125;
-    -webkit-transition: opacity 0.0625s 8.3125s linear;
-    -moz-transition: opacity 0.0625s 8.3125s linear;
-    -o-transition: opacity 0.0625s 8.3125s linear;
-    transition: opacity 0.0625s 8.3125s linear;
-}
-
-img.effect-delay-134.visible {
-    z-index: 124;
-    -webkit-transition: opacity 0.0625s 8.375s linear;
-    -moz-transition: opacity 0.0625s 8.375s linear;
-    -o-transition: opacity 0.0625s 8.375s linear;
-    transition: opacity 0.0625s 8.375s linear;
-}
-
-img.effect-delay-135.visible {
-    z-index: 123;
-    -webkit-transition: opacity 0.0625s 8.4375s linear;
-    -moz-transition: opacity 0.0625s 8.4375s linear;
-    -o-transition: opacity 0.0625s 8.4375s linear;
-    transition: opacity 0.0625s 8.4375s linear;
-}
-
-img.effect-delay-136.visible {
-    z-index: 122;
-    -webkit-transition: opacity 0.0625s 8.5s linear;
-    -moz-transition: opacity 0.0625s 8.5s linear;
-    -o-transition: opacity 0.0625s 8.5s linear;
-    transition: opacity 0.0625s 8.5s linear;
-}
-
-img.effect-delay-137.visible {
-    z-index: 121;
-    -webkit-transition: opacity 0.0625s 8.5625s linear;
-    -moz-transition: opacity 0.0625s 8.5625s linear;
-    -o-transition: opacity 0.0625s 8.5625s linear;
-    transition: opacity 0.0625s 8.5625s linear;
-}
-
-img.effect-delay-138.visible {
-    z-index: 120;
-    -webkit-transition: opacity 0.0625s 8.625s linear;
-    -moz-transition: opacity 0.0625s 8.625s linear;
-    -o-transition: opacity 0.0625s 8.625s linear;
-    transition: opacity 0.0625s 8.625s linear;
-}
-
-img.effect-delay-139.visible {
-    z-index: 119;
-    -webkit-transition: opacity 0.0625s 8.6875s linear;
-    -moz-transition: opacity 0.0625s 8.6875s linear;
-    -o-transition: opacity 0.0625s 8.6875s linear;
-    transition: opacity 0.0625s 8.6875s linear;
-}
-
-img.effect-delay-140.visible {
-    z-index: 118;
-    -webkit-transition: opacity 0.0625s 8.75s linear;
-    -moz-transition: opacity 0.0625s 8.75s linear;
-    -o-transition: opacity 0.0625s 8.75s linear;
-    transition: opacity 0.0625s 8.75s linear;
-}
-
-img.effect-delay-141.visible {
-    z-index: 117;
-    -webkit-transition: opacity 0.0625s 8.8125s linear;
-    -moz-transition: opacity 0.0625s 8.8125s linear;
-    -o-transition: opacity 0.0625s 8.8125s linear;
-    transition: opacity 0.0625s 8.8125s linear;
-}
-
-img.effect-delay-142.visible {
-    z-index: 116;
-    -webkit-transition: opacity 0.0625s 8.875s linear;
-    -moz-transition: opacity 0.0625s 8.875s linear;
-    -o-transition: opacity 0.0625s 8.875s linear;
-    transition: opacity 0.0625s 8.875s linear;
-}
-
-img.effect-delay-143.visible {
-    z-index: 115;
-    -webkit-transition: opacity 0.0625s 8.9375s linear;
-    -moz-transition: opacity 0.0625s 8.9375s linear;
-    -o-transition: opacity 0.0625s 8.9375s linear;
-    transition: opacity 0.0625s 8.9375s linear;
-}
-
-img.effect-delay-144.visible {
-    z-index: 114;
-    -webkit-transition: opacity 0.0625s 9s linear;
-    -moz-transition: opacity 0.0625s 9s linear;
-    -o-transition: opacity 0.0625s 9s linear;
-    transition: opacity 0.0625s 9s linear;
-}
-
-img.effect-delay-145.visible {
-    z-index: 113;
-    -webkit-transition: opacity 0.0625s 9.0625s linear;
-    -moz-transition: opacity 0.0625s 9.0625s linear;
-    -o-transition: opacity 0.0625s 9.0625s linear;
-    transition: opacity 0.0625s 9.0625s linear;
-}
-
-img.effect-delay-146.visible {
-    z-index: 112;
-    -webkit-transition: opacity 0.0625s 9.125s linear;
-    -moz-transition: opacity 0.0625s 9.125s linear;
-    -o-transition: opacity 0.0625s 9.125s linear;
-    transition: opacity 0.0625s 9.125s linear;
-}
-
-img.effect-delay-147.visible {
-    z-index: 111;
-    -webkit-transition: opacity 0.0625s 9.1875s linear;
-    -moz-transition: opacity 0.0625s 9.1875s linear;
-    -o-transition: opacity 0.0625s 9.1875s linear;
-    transition: opacity 0.0625s 9.1875s linear;
-}
-
-img.effect-delay-148.visible {
-    z-index: 110;
-    -webkit-transition: opacity 0.0625s 9.25s linear;
-    -moz-transition: opacity 0.0625s 9.25s linear;
-    -o-transition: opacity 0.0625s 9.25s linear;
-    transition: opacity 0.0625s 9.25s linear;
-}
-
-img.effect-delay-149.visible {
-    z-index: 109;
-    -webkit-transition: opacity 0.0625s 9.3125s linear;
-    -moz-transition: opacity 0.0625s 9.3125s linear;
-    -o-transition: opacity 0.0625s 9.3125s linear;
-    transition: opacity 0.0625s 9.3125s linear;
-}
-
-img.effect-delay-150.visible {
-    z-index: 108;
-    -webkit-transition: opacity 0.0625s 9.375s linear;
-    -moz-transition: opacity 0.0625s 9.375s linear;
-    -o-transition: opacity 0.0625s 9.375s linear;
-    transition: opacity 0.0625s 9.375s linear;
-}
-
-img.effect-delay-151.visible {
-    z-index: 107;
-    -webkit-transition: opacity 0.0625s 9.4375s linear;
-    -moz-transition: opacity 0.0625s 9.4375s linear;
-    -o-transition: opacity 0.0625s 9.4375s linear;
-    transition: opacity 0.0625s 9.4375s linear;
-}
-
-img.effect-delay-152.visible {
-    z-index: 106;
-    -webkit-transition: opacity 0.0625s 9.5s linear;
-    -moz-transition: opacity 0.0625s 9.5s linear;
-    -o-transition: opacity 0.0625s 9.5s linear;
-    transition: opacity 0.0625s 9.5s linear;
-}
-
-img.effect-delay-153.visible {
-    z-index: 105;
-    -webkit-transition: opacity 0.0625s 9.5625s linear;
-    -moz-transition: opacity 0.0625s 9.5625s linear;
-    -o-transition: opacity 0.0625s 9.5625s linear;
-    transition: opacity 0.0625s 9.5625s linear;
-}
-
-img.effect-delay-154.visible {
-    z-index: 104;
-    -webkit-transition: opacity 0.0625s 9.625s linear;
-    -moz-transition: opacity 0.0625s 9.625s linear;
-    -o-transition: opacity 0.0625s 9.625s linear;
-    transition: opacity 0.0625s 9.625s linear;
-}
-
-img.effect-delay-155.visible {
-    z-index: 103;
-    -webkit-transition: opacity 0.0625s 9.6875s linear;
-    -moz-transition: opacity 0.0625s 9.6875s linear;
-    -o-transition: opacity 0.0625s 9.6875s linear;
-    transition: opacity 0.0625s 9.6875s linear;
-}
-
-img.effect-delay-156.visible {
-    z-index: 102;
-    -webkit-transition: opacity 0.0625s 9.75s linear;
-    -moz-transition: opacity 0.0625s 9.75s linear;
-    -o-transition: opacity 0.0625s 9.75s linear;
-    transition: opacity 0.0625s 9.75s linear;
-}
-
-img.effect-delay-157.visible {
-    z-index: 101;
-    -webkit-transition: opacity 0.0625s 9.8125s linear;
-    -moz-transition: opacity 0.0625s 9.8125s linear;
-    -o-transition: opacity 0.0625s 9.8125s linear;
-    transition: opacity 0.0625s 9.8125s linear;
-}
-
-img.effect-delay-158.visible {
-    z-index: 100;
-    -webkit-transition: opacity 0.0625s 9.875s linear;
-    -moz-transition: opacity 0.0625s 9.875s linear;
-    -o-transition: opacity 0.0625s 9.875s linear;
-    transition: opacity 0.0625s 9.875s linear;
-}
-
-img.effect-delay-159.visible {
-    z-index: 99;
-    -webkit-transition: opacity 0.0625s 9.9375s linear;
-    -moz-transition: opacity 0.0625s 9.9375s linear;
-    -o-transition: opacity 0.0625s 9.9375s linear;
-    transition: opacity 0.0625s 9.9375s linear;
-}
-
-img.effect-delay-160.visible {
-    z-index: 98;
-    -webkit-transition: opacity 0.0625s 10s linear;
-    -moz-transition: opacity 0.0625s 10s linear;
-    -o-transition: opacity 0.0625s 10s linear;
-    transition: opacity 0.0625s 10s linear;
-}
-
-img.effect-delay-161.visible {
-    z-index: 97;
-    -webkit-transition: opacity 0.0625s 10.0625s linear;
-    -moz-transition: opacity 0.0625s 10.0625s linear;
-    -o-transition: opacity 0.0625s 10.0625s linear;
-    transition: opacity 0.0625s 10.0625s linear;
-}
-
-img.effect-delay-162.visible {
-    z-index: 96;
-    -webkit-transition: opacity 0.0625s 10.125s linear;
-    -moz-transition: opacity 0.0625s 10.125s linear;
-    -o-transition: opacity 0.0625s 10.125s linear;
-    transition: opacity 0.0625s 10.125s linear;
-}
-
-img.effect-delay-163.visible {
-    z-index: 95;
-    -webkit-transition: opacity 0.0625s 10.1875s linear;
-    -moz-transition: opacity 0.0625s 10.1875s linear;
-    -o-transition: opacity 0.0625s 10.1875s linear;
-    transition: opacity 0.0625s 10.1875s linear;
-}
-
-img.effect-delay-164.visible {
-    z-index: 94;
-    -webkit-transition: opacity 0.0625s 10.25s linear;
-    -moz-transition: opacity 0.0625s 10.25s linear;
-    -o-transition: opacity 0.0625s 10.25s linear;
-    transition: opacity 0.0625s 10.25s linear;
-}
-
-img.effect-delay-165.visible {
-    z-index: 93;
-    -webkit-transition: opacity 0.0625s 10.3125s linear;
-    -moz-transition: opacity 0.0625s 10.3125s linear;
-    -o-transition: opacity 0.0625s 10.3125s linear;
-    transition: opacity 0.0625s 10.3125s linear;
-}
-
-img.effect-delay-166.visible {
-    z-index: 92;
-    -webkit-transition: opacity 0.0625s 10.375s linear;
-    -moz-transition: opacity 0.0625s 10.375s linear;
-    -o-transition: opacity 0.0625s 10.375s linear;
-    transition: opacity 0.0625s 10.375s linear;
-}
-
-img.effect-delay-167.visible {
-    z-index: 91;
-    -webkit-transition: opacity 0.0625s 10.4375s linear;
-    -moz-transition: opacity 0.0625s 10.4375s linear;
-    -o-transition: opacity 0.0625s 10.4375s linear;
-    transition: opacity 0.0625s 10.4375s linear;
-}
-
-img.effect-delay-168.visible {
-    z-index: 90;
-    -webkit-transition: opacity 0.0625s 10.5s linear;
-    -moz-transition: opacity 0.0625s 10.5s linear;
-    -o-transition: opacity 0.0625s 10.5s linear;
-    transition: opacity 0.0625s 10.5s linear;
-}
-
-img.effect-delay-169.visible {
-    z-index: 89;
-    -webkit-transition: opacity 0.0625s 10.5625s linear;
-    -moz-transition: opacity 0.0625s 10.5625s linear;
-    -o-transition: opacity 0.0625s 10.5625s linear;
-    transition: opacity 0.0625s 10.5625s linear;
-}
-
-img.effect-delay-170.visible {
-    z-index: 88;
-    -webkit-transition: opacity 0.0625s 10.625s linear;
-    -moz-transition: opacity 0.0625s 10.625s linear;
-    -o-transition: opacity 0.0625s 10.625s linear;
-    transition: opacity 0.0625s 10.625s linear;
-}
-
-img.effect-delay-171.visible {
-    z-index: 87;
-    -webkit-transition: opacity 0.0625s 10.6875s linear;
-    -moz-transition: opacity 0.0625s 10.6875s linear;
-    -o-transition: opacity 0.0625s 10.6875s linear;
-    transition: opacity 0.0625s 10.6875s linear;
-}
-
-img.effect-delay-172.visible {
-    z-index: 86;
-    -webkit-transition: opacity 0.0625s 10.75s linear;
-    -moz-transition: opacity 0.0625s 10.75s linear;
-    -o-transition: opacity 0.0625s 10.75s linear;
-    transition: opacity 0.0625s 10.75s linear;
-}
-
-img.effect-delay-173.visible {
-    z-index: 85;
-    -webkit-transition: opacity 0.0625s 10.8125s linear;
-    -moz-transition: opacity 0.0625s 10.8125s linear;
-    -o-transition: opacity 0.0625s 10.8125s linear;
-    transition: opacity 0.0625s 10.8125s linear;
-}
-
-img.effect-delay-174.visible {
-    z-index: 84;
-    -webkit-transition: opacity 0.0625s 10.875s linear;
-    -moz-transition: opacity 0.0625s 10.875s linear;
-    -o-transition: opacity 0.0625s 10.875s linear;
-    transition: opacity 0.0625s 10.875s linear;
-}
-
-img.effect-delay-175.visible {
-    z-index: 83;
-    -webkit-transition: opacity 0.0625s 10.9375s linear;
-    -moz-transition: opacity 0.0625s 10.9375s linear;
-    -o-transition: opacity 0.0625s 10.9375s linear;
-    transition: opacity 0.0625s 10.9375s linear;
-}
-
-img.effect-delay-176.visible {
-    z-index: 82;
-    -webkit-transition: opacity 0.0625s 11s linear;
-    -moz-transition: opacity 0.0625s 11s linear;
-    -o-transition: opacity 0.0625s 11s linear;
-    transition: opacity 0.0625s 11s linear;
-}
-
-img.effect-delay-177.visible {
-    z-index: 81;
-    -webkit-transition: opacity 0.0625s 11.0625s linear;
-    -moz-transition: opacity 0.0625s 11.0625s linear;
-    -o-transition: opacity 0.0625s 11.0625s linear;
-    transition: opacity 0.0625s 11.0625s linear;
-}
-
-img.effect-delay-178.visible {
-    z-index: 80;
-    -webkit-transition: opacity 0.0625s 11.125s linear;
-    -moz-transition: opacity 0.0625s 11.125s linear;
-    -o-transition: opacity 0.0625s 11.125s linear;
-    transition: opacity 0.0625s 11.125s linear;
-}
-
-img.effect-delay-179.visible {
-    z-index: 79;
-    -webkit-transition: opacity 0.0625s 11.1875s linear;
-    -moz-transition: opacity 0.0625s 11.1875s linear;
-    -o-transition: opacity 0.0625s 11.1875s linear;
-    transition: opacity 0.0625s 11.1875s linear;
-}
-
-img.effect-delay-180.visible {
-    z-index: 78;
-    -webkit-transition: opacity 0.0625s 11.25s linear;
-    -moz-transition: opacity 0.0625s 11.25s linear;
-    -o-transition: opacity 0.0625s 11.25s linear;
-    transition: opacity 0.0625s 11.25s linear;
-}
-
-img.effect-delay-181.visible {
-    z-index: 77;
-    -webkit-transition: opacity 0.0625s 11.3125s linear;
-    -moz-transition: opacity 0.0625s 11.3125s linear;
-    -o-transition: opacity 0.0625s 11.3125s linear;
-    transition: opacity 0.0625s 11.3125s linear;
-}
-
-img.effect-delay-182.visible {
-    z-index: 76;
-    -webkit-transition: opacity 0.0625s 11.375s linear;
-    -moz-transition: opacity 0.0625s 11.375s linear;
-    -o-transition: opacity 0.0625s 11.375s linear;
-    transition: opacity 0.0625s 11.375s linear;
-}
-
-img.effect-delay-183.visible {
-    z-index: 75;
-    -webkit-transition: opacity 0.0625s 11.4375s linear;
-    -moz-transition: opacity 0.0625s 11.4375s linear;
-    -o-transition: opacity 0.0625s 11.4375s linear;
-    transition: opacity 0.0625s 11.4375s linear;
-}
-
-img.effect-delay-184.visible {
-    z-index: 74;
-    -webkit-transition: opacity 0.0625s 11.5s linear;
-    -moz-transition: opacity 0.0625s 11.5s linear;
-    -o-transition: opacity 0.0625s 11.5s linear;
-    transition: opacity 0.0625s 11.5s linear;
-}
-
-img.effect-delay-185.visible {
-    z-index: 73;
-    -webkit-transition: opacity 0.0625s 11.5625s linear;
-    -moz-transition: opacity 0.0625s 11.5625s linear;
-    -o-transition: opacity 0.0625s 11.5625s linear;
-    transition: opacity 0.0625s 11.5625s linear;
-}
-
-img.effect-delay-186.visible {
-    z-index: 72;
-    -webkit-transition: opacity 0.0625s 11.625s linear;
-    -moz-transition: opacity 0.0625s 11.625s linear;
-    -o-transition: opacity 0.0625s 11.625s linear;
-    transition: opacity 0.0625s 11.625s linear;
-}
-
-img.effect-delay-187.visible {
-    z-index: 71;
-    -webkit-transition: opacity 0.0625s 11.6875s linear;
-    -moz-transition: opacity 0.0625s 11.6875s linear;
-    -o-transition: opacity 0.0625s 11.6875s linear;
-    transition: opacity 0.0625s 11.6875s linear;
-}
-
-img.effect-delay-188.visible {
-    z-index: 70;
-    -webkit-transition: opacity 0.0625s 11.75s linear;
-    -moz-transition: opacity 0.0625s 11.75s linear;
-    -o-transition: opacity 0.0625s 11.75s linear;
-    transition: opacity 0.0625s 11.75s linear;
-}
-
-img.effect-delay-189.visible {
-    z-index: 69;
-    -webkit-transition: opacity 0.0625s 11.8125s linear;
-    -moz-transition: opacity 0.0625s 11.8125s linear;
-    -o-transition: opacity 0.0625s 11.8125s linear;
-    transition: opacity 0.0625s 11.8125s linear;
-}
-
-img.effect-delay-190.visible {
-    z-index: 68;
-    -webkit-transition: opacity 0.0625s 11.875s linear;
-    -moz-transition: opacity 0.0625s 11.875s linear;
-    -o-transition: opacity 0.0625s 11.875s linear;
-    transition: opacity 0.0625s 11.875s linear;
-}
-
-img.effect-delay-191.visible {
-    z-index: 67;
-    -webkit-transition: opacity 0.0625s 11.9375s linear;
-    -moz-transition: opacity 0.0625s 11.9375s linear;
-    -o-transition: opacity 0.0625s 11.9375s linear;
-    transition: opacity 0.0625s 11.9375s linear;
-}
-
-img.effect-delay-192.visible {
-    z-index: 66;
-    -webkit-transition: opacity 0.0625s 12s linear;
-    -moz-transition: opacity 0.0625s 12s linear;
-    -o-transition: opacity 0.0625s 12s linear;
-    transition: opacity 0.0625s 12s linear;
-}
-
-img.effect-delay-193.visible {
-    z-index: 65;
-    -webkit-transition: opacity 0.0625s 12.0625s linear;
-    -moz-transition: opacity 0.0625s 12.0625s linear;
-    -o-transition: opacity 0.0625s 12.0625s linear;
-    transition: opacity 0.0625s 12.0625s linear;
-}
-
-img.effect-delay-194.visible {
-    z-index: 64;
-    -webkit-transition: opacity 0.0625s 12.125s linear;
-    -moz-transition: opacity 0.0625s 12.125s linear;
-    -o-transition: opacity 0.0625s 12.125s linear;
-    transition: opacity 0.0625s 12.125s linear;
-}
-
-img.effect-delay-195.visible {
-    z-index: 63;
-    -webkit-transition: opacity 0.0625s 12.1875s linear;
-    -moz-transition: opacity 0.0625s 12.1875s linear;
-    -o-transition: opacity 0.0625s 12.1875s linear;
-    transition: opacity 0.0625s 12.1875s linear;
-}
-
-img.effect-delay-196.visible {
-    z-index: 62;
-    -webkit-transition: opacity 0.0625s 12.25s linear;
-    -moz-transition: opacity 0.0625s 12.25s linear;
-    -o-transition: opacity 0.0625s 12.25s linear;
-    transition: opacity 0.0625s 12.25s linear;
-}
-
-img.effect-delay-197.visible {
-    z-index: 61;
-    -webkit-transition: opacity 0.0625s 12.3125s linear;
-    -moz-transition: opacity 0.0625s 12.3125s linear;
-    -o-transition: opacity 0.0625s 12.3125s linear;
-    transition: opacity 0.0625s 12.3125s linear;
-}
-
-img.effect-delay-198.visible {
-    z-index: 60;
-    -webkit-transition: opacity 0.0625s 12.375s linear;
-    -moz-transition: opacity 0.0625s 12.375s linear;
-    -o-transition: opacity 0.0625s 12.375s linear;
-    transition: opacity 0.0625s 12.375s linear;
-}
-
-img.effect-delay-199.visible {
-    z-index: 59;
-    -webkit-transition: opacity 0.0625s 12.4375s linear;
-    -moz-transition: opacity 0.0625s 12.4375s linear;
-    -o-transition: opacity 0.0625s 12.4375s linear;
-    transition: opacity 0.0625s 12.4375s linear;
-}
-
-img.effect-delay-200.visible {
-    z-index: 58;
-    -webkit-transition: opacity 0.0625s 12.5s linear;
-    -moz-transition: opacity 0.0625s 12.5s linear;
-    -o-transition: opacity 0.0625s 12.5s linear;
-    transition: opacity 0.0625s 12.5s linear;
-}
-
-img.effect-delay-201.visible {
-    z-index: 57;
-    -webkit-transition: opacity 0.0625s 12.5625s linear;
-    -moz-transition: opacity 0.0625s 12.5625s linear;
-    -o-transition: opacity 0.0625s 12.5625s linear;
-    transition: opacity 0.0625s 12.5625s linear;
-}
-
-img.effect-delay-202.visible {
-    z-index: 56;
-    -webkit-transition: opacity 0.0625s 12.625s linear;
-    -moz-transition: opacity 0.0625s 12.625s linear;
-    -o-transition: opacity 0.0625s 12.625s linear;
-    transition: opacity 0.0625s 12.625s linear;
-}
-
-img.effect-delay-203.visible {
-    z-index: 55;
-    -webkit-transition: opacity 0.0625s 12.6875s linear;
-    -moz-transition: opacity 0.0625s 12.6875s linear;
-    -o-transition: opacity 0.0625s 12.6875s linear;
-    transition: opacity 0.0625s 12.6875s linear;
-}
-
-img.effect-delay-204.visible {
-    z-index: 54;
-    -webkit-transition: opacity 0.0625s 12.75s linear;
-    -moz-transition: opacity 0.0625s 12.75s linear;
-    -o-transition: opacity 0.0625s 12.75s linear;
-    transition: opacity 0.0625s 12.75s linear;
-}
-
-img.effect-delay-205.visible {
-    z-index: 53;
-    -webkit-transition: opacity 0.0625s 12.8125s linear;
-    -moz-transition: opacity 0.0625s 12.8125s linear;
-    -o-transition: opacity 0.0625s 12.8125s linear;
-    transition: opacity 0.0625s 12.8125s linear;
-}
-
-img.effect-delay-206.visible {
-    z-index: 52;
-    -webkit-transition: opacity 0.0625s 12.875s linear;
-    -moz-transition: opacity 0.0625s 12.875s linear;
-    -o-transition: opacity 0.0625s 12.875s linear;
-    transition: opacity 0.0625s 12.875s linear;
-}
-
-img.effect-delay-207.visible {
-    z-index: 51;
-    -webkit-transition: opacity 0.0625s 12.9375s linear;
-    -moz-transition: opacity 0.0625s 12.9375s linear;
-    -o-transition: opacity 0.0625s 12.9375s linear;
-    transition: opacity 0.0625s 12.9375s linear;
-}
-
-img.effect-delay-208.visible {
-    z-index: 50;
-    -webkit-transition: opacity 0.0625s 13s linear;
-    -moz-transition: opacity 0.0625s 13s linear;
-    -o-transition: opacity 0.0625s 13s linear;
-    transition: opacity 0.0625s 13s linear;
-}
-
-img.effect-delay-209.visible {
-    z-index: 49;
-    -webkit-transition: opacity 0.0625s 13.0625s linear;
-    -moz-transition: opacity 0.0625s 13.0625s linear;
-    -o-transition: opacity 0.0625s 13.0625s linear;
-    transition: opacity 0.0625s 13.0625s linear;
-}
-
-img.effect-delay-210.visible {
-    z-index: 48;
-    -webkit-transition: opacity 0.0625s 13.125s linear;
-    -moz-transition: opacity 0.0625s 13.125s linear;
-    -o-transition: opacity 0.0625s 13.125s linear;
-    transition: opacity 0.0625s 13.125s linear;
-}
-
-img.effect-delay-211.visible {
-    z-index: 47;
-    -webkit-transition: opacity 0.0625s 13.1875s linear;
-    -moz-transition: opacity 0.0625s 13.1875s linear;
-    -o-transition: opacity 0.0625s 13.1875s linear;
-    transition: opacity 0.0625s 13.1875s linear;
-}
-
-img.effect-delay-212.visible {
-    z-index: 46;
-    -webkit-transition: opacity 0.0625s 13.25s linear;
-    -moz-transition: opacity 0.0625s 13.25s linear;
-    -o-transition: opacity 0.0625s 13.25s linear;
-    transition: opacity 0.0625s 13.25s linear;
-}
-
-img.effect-delay-213.visible {
-    z-index: 45;
-    -webkit-transition: opacity 0.0625s 13.3125s linear;
-    -moz-transition: opacity 0.0625s 13.3125s linear;
-    -o-transition: opacity 0.0625s 13.3125s linear;
-    transition: opacity 0.0625s 13.3125s linear;
-}
-
-img.effect-delay-214.visible {
-    z-index: 44;
-    -webkit-transition: opacity 0.0625s 13.375s linear;
-    -moz-transition: opacity 0.0625s 13.375s linear;
-    -o-transition: opacity 0.0625s 13.375s linear;
-    transition: opacity 0.0625s 13.375s linear;
-}
-
-img.effect-delay-215.visible {
-    z-index: 43;
-    -webkit-transition: opacity 0.0625s 13.4375s linear;
-    -moz-transition: opacity 0.0625s 13.4375s linear;
-    -o-transition: opacity 0.0625s 13.4375s linear;
-    transition: opacity 0.0625s 13.4375s linear;
-}
-
-img.effect-delay-216.visible {
-    z-index: 42;
-    -webkit-transition: opacity 0.0625s 13.5s linear;
-    -moz-transition: opacity 0.0625s 13.5s linear;
-    -o-transition: opacity 0.0625s 13.5s linear;
-    transition: opacity 0.0625s 13.5s linear;
-}
-
-img.effect-delay-217.visible {
-    z-index: 41;
-    -webkit-transition: opacity 0.0625s 13.5625s linear;
-    -moz-transition: opacity 0.0625s 13.5625s linear;
-    -o-transition: opacity 0.0625s 13.5625s linear;
-    transition: opacity 0.0625s 13.5625s linear;
-}
-
-img.effect-delay-218.visible {
-    z-index: 40;
-    -webkit-transition: opacity 0.0625s 13.625s linear;
-    -moz-transition: opacity 0.0625s 13.625s linear;
-    -o-transition: opacity 0.0625s 13.625s linear;
-    transition: opacity 0.0625s 13.625s linear;
-}
-
-img.effect-delay-219.visible {
-    z-index: 39;
-    -webkit-transition: opacity 0.0625s 13.6875s linear;
-    -moz-transition: opacity 0.0625s 13.6875s linear;
-    -o-transition: opacity 0.0625s 13.6875s linear;
-    transition: opacity 0.0625s 13.6875s linear;
-}
-
-img.effect-delay-220.visible {
-    z-index: 38;
-    -webkit-transition: opacity 0.0625s 13.75s linear;
-    -moz-transition: opacity 0.0625s 13.75s linear;
-    -o-transition: opacity 0.0625s 13.75s linear;
-    transition: opacity 0.0625s 13.75s linear;
-}
-
-img.effect-delay-221.visible {
-    z-index: 37;
-    -webkit-transition: opacity 0.0625s 13.8125s linear;
-    -moz-transition: opacity 0.0625s 13.8125s linear;
-    -o-transition: opacity 0.0625s 13.8125s linear;
-    transition: opacity 0.0625s 13.8125s linear;
-}
-
-img.effect-delay-222.visible {
-    z-index: 36;
-    -webkit-transition: opacity 0.0625s 13.875s linear;
-    -moz-transition: opacity 0.0625s 13.875s linear;
-    -o-transition: opacity 0.0625s 13.875s linear;
-    transition: opacity 0.0625s 13.875s linear;
-}
-
-img.effect-delay-223.visible {
-    z-index: 35;
-    -webkit-transition: opacity 0.0625s 13.9375s linear;
-    -moz-transition: opacity 0.0625s 13.9375s linear;
-    -o-transition: opacity 0.0625s 13.9375s linear;
-    transition: opacity 0.0625s 13.9375s linear;
-}
-
-img.effect-delay-224.visible {
-    z-index: 34;
-    -webkit-transition: opacity 0.0625s 14s linear;
-    -moz-transition: opacity 0.0625s 14s linear;
-    -o-transition: opacity 0.0625s 14s linear;
-    transition: opacity 0.0625s 14s linear;
-}
-
-img.effect-delay-225.visible {
-    z-index: 33;
-    -webkit-transition: opacity 0.0625s 14.0625s linear;
-    -moz-transition: opacity 0.0625s 14.0625s linear;
-    -o-transition: opacity 0.0625s 14.0625s linear;
-    transition: opacity 0.0625s 14.0625s linear;
-}
-
-img.effect-delay-226.visible {
-    z-index: 32;
-    -webkit-transition: opacity 0.0625s 14.125s linear;
-    -moz-transition: opacity 0.0625s 14.125s linear;
-    -o-transition: opacity 0.0625s 14.125s linear;
-    transition: opacity 0.0625s 14.125s linear;
-}
-
-img.effect-delay-227.visible {
-    z-index: 31;
-    -webkit-transition: opacity 0.0625s 14.1875s linear;
-    -moz-transition: opacity 0.0625s 14.1875s linear;
-    -o-transition: opacity 0.0625s 14.1875s linear;
-    transition: opacity 0.0625s 14.1875s linear;
-}
-
-img.effect-delay-228.visible {
-    z-index: 30;
-    -webkit-transition: opacity 0.0625s 14.25s linear;
-    -moz-transition: opacity 0.0625s 14.25s linear;
-    -o-transition: opacity 0.0625s 14.25s linear;
-    transition: opacity 0.0625s 14.25s linear;
-}
-
-img.effect-delay-229.visible {
-    z-index: 29;
-    -webkit-transition: opacity 0.0625s 14.3125s linear;
-    -moz-transition: opacity 0.0625s 14.3125s linear;
-    -o-transition: opacity 0.0625s 14.3125s linear;
-    transition: opacity 0.0625s 14.3125s linear;
-}
-
-img.effect-delay-230.visible {
-    z-index: 28;
-    -webkit-transition: opacity 0.0625s 14.375s linear;
-    -moz-transition: opacity 0.0625s 14.375s linear;
-    -o-transition: opacity 0.0625s 14.375s linear;
-    transition: opacity 0.0625s 14.375s linear;
-}
-
-img.effect-delay-231.visible {
-    z-index: 27;
-    -webkit-transition: opacity 0.0625s 14.4375s linear;
-    -moz-transition: opacity 0.0625s 14.4375s linear;
-    -o-transition: opacity 0.0625s 14.4375s linear;
-    transition: opacity 0.0625s 14.4375s linear;
-}
-
-img.effect-delay-232.visible {
-    z-index: 26;
-    -webkit-transition: opacity 0.0625s 14.5s linear;
-    -moz-transition: opacity 0.0625s 14.5s linear;
-    -o-transition: opacity 0.0625s 14.5s linear;
-    transition: opacity 0.0625s 14.5s linear;
-}
-
-img.effect-delay-233.visible {
-    z-index: 25;
-    -webkit-transition: opacity 0.0625s 14.5625s linear;
-    -moz-transition: opacity 0.0625s 14.5625s linear;
-    -o-transition: opacity 0.0625s 14.5625s linear;
-    transition: opacity 0.0625s 14.5625s linear;
-}
-
-img.effect-delay-234.visible {
-    z-index: 24;
-    -webkit-transition: opacity 0.0625s 14.625s linear;
-    -moz-transition: opacity 0.0625s 14.625s linear;
-    -o-transition: opacity 0.0625s 14.625s linear;
-    transition: opacity 0.0625s 14.625s linear;
-}
-
-img.effect-delay-235.visible {
-    z-index: 23;
-    -webkit-transition: opacity 0.0625s 14.6875s linear;
-    -moz-transition: opacity 0.0625s 14.6875s linear;
-    -o-transition: opacity 0.0625s 14.6875s linear;
-    transition: opacity 0.0625s 14.6875s linear;
-}
-
-img.effect-delay-236.visible {
-    z-index: 22;
-    -webkit-transition: opacity 0.0625s 14.75s linear;
-    -moz-transition: opacity 0.0625s 14.75s linear;
-    -o-transition: opacity 0.0625s 14.75s linear;
-    transition: opacity 0.0625s 14.75s linear;
-}
-
-img.effect-delay-237.visible {
-    z-index: 21;
-    -webkit-transition: opacity 0.0625s 14.8125s linear;
-    -moz-transition: opacity 0.0625s 14.8125s linear;
-    -o-transition: opacity 0.0625s 14.8125s linear;
-    transition: opacity 0.0625s 14.8125s linear;
-}
-
-img.effect-delay-238.visible {
-    z-index: 20;
-    -webkit-transition: opacity 0.0625s 14.875s linear;
-    -moz-transition: opacity 0.0625s 14.875s linear;
-    -o-transition: opacity 0.0625s 14.875s linear;
-    transition: opacity 0.0625s 14.875s linear;
-}
-
-img.effect-delay-239.visible {
-    z-index: 19;
-    -webkit-transition: opacity 0.0625s 14.9375s linear;
-    -moz-transition: opacity 0.0625s 14.9375s linear;
-    -o-transition: opacity 0.0625s 14.9375s linear;
-    transition: opacity 0.0625s 14.9375s linear;
-}
-
-img.effect-delay-240.visible {
-    z-index: 18;
-    -webkit-transition: opacity 0.0625s 15s linear;
-    -moz-transition: opacity 0.0625s 15s linear;
-    -o-transition: opacity 0.0625s 15s linear;
-    transition: opacity 0.0625s 15s linear;
-}
-
-img.effect-delay-241.visible {
-    z-index: 17;
-    -webkit-transition: opacity 0.0625s 15.0625s linear;
-    -moz-transition: opacity 0.0625s 15.0625s linear;
-    -o-transition: opacity 0.0625s 15.0625s linear;
-    transition: opacity 0.0625s 15.0625s linear;
-}
-
-img.effect-delay-242.visible {
-    z-index: 16;
-    -webkit-transition: opacity 0.0625s 15.125s linear;
-    -moz-transition: opacity 0.0625s 15.125s linear;
-    -o-transition: opacity 0.0625s 15.125s linear;
-    transition: opacity 0.0625s 15.125s linear;
-}
-
-img.effect-delay-243.visible {
-    z-index: 15;
-    -webkit-transition: opacity 0.0625s 15.1875s linear;
-    -moz-transition: opacity 0.0625s 15.1875s linear;
-    -o-transition: opacity 0.0625s 15.1875s linear;
-    transition: opacity 0.0625s 15.1875s linear;
-}
-
-img.effect-delay-244.visible {
-    z-index: 14;
-    -webkit-transition: opacity 0.0625s 15.25s linear;
-    -moz-transition: opacity 0.0625s 15.25s linear;
-    -o-transition: opacity 0.0625s 15.25s linear;
-    transition: opacity 0.0625s 15.25s linear;
-}
-
-img.effect-delay-245.visible {
-    z-index: 13;
-    -webkit-transition: opacity 0.0625s 15.3125s linear;
-    -moz-transition: opacity 0.0625s 15.3125s linear;
-    -o-transition: opacity 0.0625s 15.3125s linear;
-    transition: opacity 0.0625s 15.3125s linear;
-}
-
-img.effect-delay-246.visible {
-    z-index: 12;
-    -webkit-transition: opacity 0.0625s 15.375s linear;
-    -moz-transition: opacity 0.0625s 15.375s linear;
-    -o-transition: opacity 0.0625s 15.375s linear;
-    transition: opacity 0.0625s 15.375s linear;
-}
-
-img.effect-delay-247.visible {
-    z-index: 11;
-    -webkit-transition: opacity 0.0625s 15.4375s linear;
-    -moz-transition: opacity 0.0625s 15.4375s linear;
-    -o-transition: opacity 0.0625s 15.4375s linear;
-    transition: opacity 0.0625s 15.4375s linear;
-}
-
-img.effect-delay-248.visible {
-    z-index: 10;
-    -webkit-transition: opacity 0.0625s 15.5s linear;
-    -moz-transition: opacity 0.0625s 15.5s linear;
-    -o-transition: opacity 0.0625s 15.5s linear;
-    transition: opacity 0.0625s 15.5s linear;
-}
-
-img.effect-delay-249.visible {
-    z-index: 9;
-    -webkit-transition: opacity 0.0625s 15.5625s linear;
-    -moz-transition: opacity 0.0625s 15.5625s linear;
-    -o-transition: opacity 0.0625s 15.5625s linear;
-    transition: opacity 0.0625s 15.5625s linear;
-}
-
-img.effect-delay-250.visible {
-    z-index: 8;
-    -webkit-transition: opacity 0.0625s 15.625s linear;
-    -moz-transition: opacity 0.0625s 15.625s linear;
-    -o-transition: opacity 0.0625s 15.625s linear;
-    transition: opacity 0.0625s 15.625s linear;
-}
-
-img.effect-delay-251.visible {
-    z-index: 7;
-    -webkit-transition: opacity 0.0625s 15.6875s linear;
-    -moz-transition: opacity 0.0625s 15.6875s linear;
-    -o-transition: opacity 0.0625s 15.6875s linear;
-    transition: opacity 0.0625s 15.6875s linear;
-}
-
-img.effect-delay-252.visible {
-    z-index: 6;
-    -webkit-transition: opacity 0.0625s 15.75s linear;
-    -moz-transition: opacity 0.0625s 15.75s linear;
-    -o-transition: opacity 0.0625s 15.75s linear;
-    transition: opacity 0.0625s 15.75s linear;
-}
-
-img.effect-delay-253.visible {
-    z-index: 5;
-    -webkit-transition: opacity 0.0625s 15.8125s linear;
-    -moz-transition: opacity 0.0625s 15.8125s linear;
-    -o-transition: opacity 0.0625s 15.8125s linear;
-    transition: opacity 0.0625s 15.8125s linear;
-}
-
-img.effect-delay-254.visible {
-    z-index: 4;
-    -webkit-transition: opacity 0.0625s 15.875s linear;
-    -moz-transition: opacity 0.0625s 15.875s linear;
-    -o-transition: opacity 0.0625s 15.875s linear;
-    transition: opacity 0.0625s 15.875s linear;
-}
-
-img.effect-delay-255.visible {
-    z-index: 3;
-    -webkit-transition: opacity 0.0625s 15.9375s linear;
-    -moz-transition: opacity 0.0625s 15.9375s linear;
-    -o-transition: opacity 0.0625s 15.9375s linear;
-    transition: opacity 0.0625s 15.9375s linear;
-}
-
-.previous-snapshots {
-    visibility: hidden;
-    opacity: 1;
+.latest-snapshot
+{
+    z-index:256;
 }
-
-    .previous-snapshots img.newest {
-        visibility: visible;
-        opacity: 1;
-    }
-
-    .previous-snapshots img.visible.newest, .previous-snapshots img.visible {
-        visibility: visible;
-        opacity: 0;
-    }
 
 @keyframes fadeInVisibility {
     99% {
@@ -2576,137 +676,22 @@ input.error {
     border-bottom: none;
     font-weight: 400;
 }
-#octolapse_tab i.fa, #octolapse_tab span.fa {
-	text-shadow: 1px 0px black, -1px 0px black, 0px 1px black, 0px -1px black;
+
+#octolapse_tab i.fa, #octolapse_tab span.fa-slider {
+    border: 1px solid #000000;
 }
+
+#octolapse_tab i.fa, #octolapse_tab span.fa,
+#octolapse_tab i.fa, #octolapse_tab span.fa-slider i{
+	text-shadow: 1px 0px black, -1px 0px black, 0px 1px black, 0px -1px black;
+    border: none;
+}
+
 
 #octolapse_tab i.fa-no-shadow, #octolapse_tab span.fa-no-shadow {
     text-shadow:none;
 }
-/* CHECKBOX SWITCH CONTROL STYLE */
-/* Remove the existing checkbox */
-.toggle-switch-fa-lg input,
-.toggle-switch-fa input,
-.toggle-switch-fa-sm input,
-.toggle-switch-fa-xsm input  {
-    opacity:0;
-    box-shadow: none;
-}
 
-.toggle-switch-fa-lg, .toggle-switch-fa, .toggle-switch-fa-sm, .toggle-switch-fa-xsm  {
-    position: relative;
-    display: inline-block;
-
-}
-.toggle-switch-fa-lg
-{
-    margin: 5px;
-}
-/* Sizes */
-.toggle-switch-fa-lg {
-    width: 70px;
-    height: 48px;
-}
-
-.toggle-switch-fa {
-    width: 60px;
-    height: 34px;
-}
-
-.toggle-switch-fa-sm
-{
-    width:35px;
-    height:20px;
-}
-
-.toggle-switch-fa-xsm
-{
-    width:30px;
-    height:19px;
-}
-
-
-/* the slider part of the switch */
-.fa-slider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: lightgray; /*disabled color*/
-    cursor: pointer;
-    border-radius: 10px;
-    -webkit-transition: 0.5s;
-    transition: 0.5s;
-}
-
-
-/* The round part of the slider */
-.fa-slider i {
-    position: absolute;
-    content: "";
-    left: 7px;
-    bottom: 5px;
-    font-size:24px;
-    -webkit-transition: .4s;
-    transition: .4s;
-}
-
-.toggle-switch-fa-sm .fa-slider i
-{
-    left: 5px;
-    bottom: 4px;
-    font-size: 12px;
-}
-.toggle-switch-fa-xsm .fa-slider i
-{
-    left: 5px;
-    bottom: 4px;
-    font-size: 12px;
-}
-.toggle-switch-fa-lg .fa-slider i
-{
-    left: 10px;
-    bottom: 10px;
-    font-size: 28px;
-}
-
-
-input[type="checkbox"]:checked + .fa-slider {
-  background-color: #000000;
-}
-
-input[type="checkbox"]:focus + .fa-slider {
-    box-shadow: 2px 2px 2px rgba(129,182,224,0.867)
-}
-
-input[type="checkbox"]:checked + .fa-slider i {
-    color: greenyellow;
-    -webkit-transform: translateX(24px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
-}
-
-witch-fa-lg input[type="checkbox"]:checked + .fa-slider i {
-    color: greenyellow;
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
-}
-
-.toggle-switch-fa-sm input[type="checkbox"]:checked + .fa-slider i {
-    color: greenyellow;
-    -webkit-transform: translateX(15px);
-    -ms-transform: translateX(15px);
-    transform: translateX(15px);
-}
-
-.toggle-switch-fa-xsm input[type="checkbox"]:checked + .fa-slider i {
-    color: greenyellow;
-    -webkit-transform: translateX(10px);
-    -ms-transform: translateX(10px);
-    transform: translateX(10px);
-}
 fieldset.octolapse {
     display: block;
     margin: 0px 2px 10px 2px;

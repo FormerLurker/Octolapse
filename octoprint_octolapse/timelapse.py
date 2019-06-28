@@ -444,10 +444,8 @@ class Timelapse(object):
                                 total_travel_distance += plan.travel_distance
                                 total_saved_travel_distance += plan.saved_travel_distance
                         printer_volume = self.overridable_printer_profile_settings["volume"]
-                        axes = self.overridable_printer_profile_settings["axes"]
                         snapshot_plan = {
                             "printer_volume": printer_volume,
-                            "axes": axes,
                             "snapshot_plans": snapshot_plans,
                             "total_travel_distance": total_travel_distance,
                             "total_saved_travel_distance": total_saved_travel_distance,

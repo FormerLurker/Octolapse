@@ -87,11 +87,19 @@ $(function () {
                 });
 
                 // cancel button click handler
-                $SnapshotDialog.find('.cancel').one('click', function () {
+                $SnapshotDialog.find('.cancel').one('click', function(){
+                    closeSnapshotDialog($SnapshotDialog);
+                });
+
+                $SnapshotDialog.find('.snapshot-container').one('click', function() {
+                    closeSnapshotDialog($SnapshotDialog);
+                } );
+
+                function closeSnapshotDialog($dialog) {
                     //console.log("Hiding snapshot dialog.");
                     self.IsLatestSnapshotDialogShowing = false;
-                    $SnapshotDialog.modal("hide");
-                });
+                    $dialog.modal("hide");
+                }
 
 
                 self.IsLatestSnapshotDialogShowing = true;
@@ -120,7 +128,7 @@ $(function () {
             self.onAfterBinding = function () {
                 self.current_settings_showing.subscribe(function (newData) {
                     //console.log("Setting local storage (" + self.SETTINGS_VISIBLE_KEY + ") to " + newData);
-                    Octolapse.setLocalStorage(self.SETTINGS_VISIBLE_KEY,newData)
+                    Octolapse.setLocalStorage(self.SETTINGS_VISIBLE_KEY, newData)
                 });
             };
 
@@ -234,10 +242,9 @@ $(function () {
             };
 
             self.startSnapshotAnimation = function (targetId) {
-                if (self.IsAnimating) {
+                if (targetId in self.IsAnimating && self.IsAnimating[targetId]) {
                     return;
                 }
-                self.IsAnimating = true;
                 console.log("Starting Snapshot Animation for" + targetId);
                 // Hide and show the play/refresh button
                 if (Octolapse.Globals.auto_reload_latest_snapshot()) {
@@ -245,21 +252,50 @@ $(function () {
 
                     $startAnimationButton.fadeOut({
                         start: function () {
-                            var $images = $('#' + targetId + ' .snapshot_container .previous-snapshots img');
+                            self.IsAnimating[targetId] = true;
+                            var $images = $('#' + targetId + ' .snapshot-container .previous-snapshots img');
+                            var $current = $('#' + targetId + ' .snapshot-container .latest-snapshot img');
+                            i = 0;
+                            // hide all previous images
+                            if ($images)
+                            {
+                                $images.each(function (index, element) {
+                                    $(element).css("display","none");
+                                });
+                            }
+                            else
+                            {
+                                $startAnimationButton.fadeIn();
+                                self.IsAnimating[targetId] = false;
+                                return;
+                            }
+                            // fade out the current image
+                            $current.css("display","none");
+                            animate_snapshots($images);
+                            function animate_snapshots(images) {
+                                if (images && i < images.length) {
+                                    $(images).eq(i).css("display","block");
+                                    i++;
+                                    setTimeout(function () {
+                                        animate_snapshots(images)
+                                    }, 80);
+                                }
+                                else
+                                {
+                                    if($current) {
+                                        $current.css("display","block");
+                                        if (images)
+                                        {
+                                            images.each(function (index, element) {
+                                                $(element).css("display","block");
+                                            });
+                                        }
+                                        $startAnimationButton.fadeIn();
+                                        self.IsAnimating[targetId] = false;
+                                    }
+                                }
 
-                            // Remove any existing visible class
-                            $images.each(function (index, element) {
-                                $(element).removeClass('visible');
-                            });
-
-                            // Remove any hidden class and add visible to trigger the animation.
-                            $images.each(function (index, element) {
-                                $(element).removeClass('hidden');
-                                $(element).addClass('visible');
-                            });
-                        },
-                        complete: function() {
-                            $startAnimationButton.fadeIn();
+                            }
                         }
                     });
                 }
@@ -291,22 +327,22 @@ $(function () {
             self.erasePreviousSnapshotImages = function (targetId, eraseCurrentImage) {
                 eraseCurrentImage = eraseCurrentImage || false;
                 if (eraseCurrentImage) {
-                    $('#' + targetId + ' .snapshot_container .latest-snapshot img').each(function () {
+                    $('#' + targetId + ' .snapshot-container .latest-snapshot img').each(function () {
                         $(this).remove();
                     });
                 }
-                $('#' + targetId + ' .snapshot_container .previous-snapshots img').each(function () {
+                $('#' + targetId + ' .snapshot-container .previous-snapshots img').each(function () {
                     $(this).remove();
                 });
             };
 
             // takes the list of images, update the frames in the target accordingly and starts any animations
-            self.IsAnimating = false;
+            self.IsAnimating = {};
 
             self.updateSnapshotAnimation = function (targetId, newSnapshotAddress) {
                 console.log("Updating animation for target id: " + targetId);
-                // Get the snapshot_container within the target
-                var $target = $('#' + targetId + ' .snapshot_container');
+                // Get the snapshot-container within the target
+                var $target = $('#' + targetId + ' .snapshot-container');
                 // Get the latest image
                 var $latestSnapshotContainer = $target.find('.latest-snapshot');
                 var $latestSnapshot = $latestSnapshotContainer.find('img');
@@ -338,26 +374,14 @@ $(function () {
 
                         numSnapshots--;
                     }
-                    // Set the total animation duration based on the number of snapshots
-                    $previousSnapshotContainer.removeClass().addClass('previous-snapshots snapshot-animation-duration-' + numSnapshots);
-                    // TODO: Do we need to do this??  Find out
                     $previousSnapshots = $previousSnapshotContainer.find("img");
                     var numPreviousSnapshots = $previousSnapshots.length;
                     var newestImageIndex = numPreviousSnapshots - 1;
                     //console.log("Updating classes for previous " + numPreviousSnapshots + " images.");
                     for (var previousImageIndex = 0; previousImageIndex < numPreviousSnapshots; previousImageIndex++) {
                         $element = $($previousSnapshots.eq(previousImageIndex));
-                        $element.removeClass();
-                        if (previousImageIndex === newestImageIndex) {
-                            //console.log("Updating classes for the newest image.");
-                            $element.addClass("newest");
-                        }
-                        else {
-                            $element.addClass("hidden");
-                        }
-                        var previousImageDelayClass = "effect-delay-" + previousImageIndex;
                         //console.log("Updating classes for the previous image delay " + previousImageDelayClass+ ".");
-                        $element.addClass(previousImageDelayClass);
+                        $element.css('z-index', previousImageIndex.toString());
                     }
                 }
 
@@ -375,10 +399,8 @@ $(function () {
                     // Add the new snapshot to the container
                     $newSnapshot.appendTo($latestSnapshotContainer);
                     $newSnapshot.one('load', function () {
-                        self.IsAnimating = false;
                         self.startSnapshotAnimation(targetId);
                     });
-                    // create an error handler for the newest image
 
                 }
                 else {
@@ -401,15 +423,11 @@ $(function () {
                 $newSnapshot.one('error', function () {
                     //console.log("An error occurred loading the newest image, reverting to previous image.");
                     // move the latest preview image back into the newest image section
-                    self.IsAnimating = false;
                     $latestSnapshot.removeClass();
-                    $newSnapshot.addClass('latest');
                     $latestSnapshot.appendTo($latestSnapshotContainer)
 
                 });
 
-                // set the class
-                $newSnapshot.addClass('latest');
                 // set the src and start to load
                 $newSnapshot.attr('src', newSnapshotAddress)
             };
@@ -520,12 +538,10 @@ $(function () {
             }, self);
 
             self.getStatusText = ko.pureComputed(function () {
-                if (self.is_timelapse_active())
-                    return 'Octolapse - Running';
-                if (self.is_rendering())
-                    return 'Octolapse - Rendering';
+                if (self.is_timelapse_active() || self.is_rendering())
+                    return 'Octolapse';
                 if (self.waiting_to_render())
-                    return 'Octolapse - Waiting to Render';
+                    return 'Octolapse - Stopped';
                 if (Octolapse.Globals.enabled())
                     return 'Octolapse';
                 return 'Octolapse - Disabled';
@@ -590,8 +606,8 @@ $(function () {
                 self.current_camera_guid(self.getInitialCameraSelection());
                 self.set_current_camera_enabled();
                 // Update snapshots
-                self.updateLatestSnapshotImage(true);
-                self.updateLatestSnapshotThumbnail(true, false);
+                //self.updateLatestSnapshotImage(true);
+                //self.updateLatestSnapshotThumbnail(true, false);
             };
 
             self.onTimelapseStart = function () {
