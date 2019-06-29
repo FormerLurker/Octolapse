@@ -198,6 +198,110 @@
                     </div>
                     <hr />
                     <div>
+                        <h4>Restrict Snapshot Area</h4>
+                        <p>Octolapse can prevent snapshot from occurring while the printer is outside of a given boundary.  When enabled snapshot will not be allowed outside the provided coordinates.  This is useful for preventing snapshots while priming outside of the normal print area (like the Mk2 and Mk3's priming area at the front of the bed), or to prevent snapshots on the first/final layers if desired.  When disabled your print volume will be used.</p>
+                    </div>
+                    <div>
+                        <div class="control-group">
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input name="restrict_snapshot_area" type="checkbox" data-bind="checked: restrict_snapshot_area" title="Uses the bed sizes from the Octoprint printer profiles." />Enabled
+                                    <a class="octolapse_help" data-help-url="profiles.printer.restrict_snapshot_area.md" data-help-title="Restrict Snapshot Area" />
+                                </label>
+                            </div>
+                        </div>
+                        <div data-bind="fadeVisible:restrict_snapshot_area">
+                            <div data-bind="fadeVisible: bed_type() == 'circular'">
+                                <div class="control-group">
+                                    <label class="control-label" for="octolapse_printer_snapshot_diameter_xy">Diameter XY</label>
+                                    <div class="controls">
+                                        <div class="input-append input-append">
+                                            <div class="input-prepend input-append">
+                                                <span class="add-on">dia</span>
+                                                <input id="octolapse_printer_snapshot_diameter_xy" name="snapshot_diameter_xy" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_diameter_xy" step="any" min="1" required />
+                                                <span class="add-on">mm</span>
+                                            </div>
+                                            <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_diameter_xy"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div data-bind="fadeVisible: bed_type() == 'rectangular'">
+                                <div class="control-group">
+                                    <label class="control-label" for="octolapse_printer_snapshot_min_x">Snapshot Boundary - X</label>
+                                    <div class="controls">
+                                        <div class="row-fluid">
+                                            <div class="span3">
+                                                <div class="input-prepend input-append">
+                                                    <span class="add-on">Min</span>
+                                                    <input id="octolapse_printer_snapshot_min_x" name="snapshot_min_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_min_x" step="any" required />
+                                                    <span class="add-on">mm</span>
+                                                </div>
+                                                <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_min_x"></div>
+                                            </div>
+                                            <div class="span3">
+                                                <div class="input-prepend input-append">
+                                                    <span class="add-on">Max</span>
+                                                    <input id="octolapse_printer_snapshot_max_x" name="snapshot_max_x" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: snapshot_max_x" step="any" required />
+                                                    <span class="add-on">mm</span>
+                                                </div>
+                                                <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_max_x"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="octolapse_printer_snapshot_min_y">Snapshot Boundary - Y</label>
+                                    <div class="controls">
+                                        <div class="row-fluid">
+                                            <div class="span3">
+                                                <div class="input-prepend input-append">
+                                                    <span class="add-on">Min</span>
+                                                    <input id="octolapse_printer_snapshot_min_y" name="snapshot_min_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_min_y" step="any" required />
+                                                    <span class="add-on">mm</span>
+                                                </div>
+                                                <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_min_y"></div>
+                                            </div>
+                                            <div class="span3">
+                                                <div class="input-prepend input-append">
+                                                    <span class="add-on">Max</span>
+                                                    <input id="octolapse_printer_snapshot_max_y" name="snapshot_max_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_max_y" step="any" required />
+                                                    <span class="add-on">mm</span>
+                                                </div>
+                                                <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_max_y"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="control-group">
+                                <label class="control-label" for="octolapse_printer_snapshot_min_z">Snapshot Boundary - Z</label>
+                                <div class="controls">
+                                    <div class="row-fluid">
+                                        <div class="span3">
+                                            <div class="input-prepend input-append">
+                                                <span class="add-on">Min</span>
+                                                <input id="octolapse_printer_snapshot_min_z" name="snapshot_min_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: snapshot_min_z" step="any" required />
+                                                <span class="add-on">mm</span>
+                                            </div>
+                                            <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_min_z"></div>
+                                        </div>
+                                        <div class="span3">
+                                            <div class="input-prepend input-append">
+                                                <span class="add-on">Max</span>
+                                                <input id="octolapse_printer_snapshot_max_z" name="snapshot_max_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: snapshot_max_z" step="any" required />
+                                                <span class="add-on">mm</span>
+                                            </div>
+                                            <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_max_z"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div>
                         <h4>Origin</h4>
                         <p>In order to take snapshots, Octolapse needs to know the location of each axis.  Providing a home position, either manually or through auto-discovery, will allow Octolapse to start taking snapshots immediately after a home command is sent to the printer.  If <i>Auto-Detect Home Position</i> is not enabled, and an absolute home position is not supplied, Octolapse will monitor the GCode in order to to discover the current absolute position.</p>
                     </div>
@@ -249,109 +353,8 @@
                             </div>
                         </div>
                     </div>
-                    <hr />
-                    <div>
-                        <h4>Restrict Snapshot Area</h4>
-                        <p>Octolapse can prevent snapshot from occurring while the printer is outside of a given boundary.  When enabled snapshot will not be allowed outside the provided coordinates.  This is useful for preventing snapshots while priming outside of the normal print area (like the Mk2 and Mk3's priming area at the front of the bed), or to prevent snapshots on the first/final layers if desired.  When disabled your print volume will be used.</p>
-                    </div>
-                    <div>
-                        <div class="control-group">
-                            <div class="controls">
-                                <label class="checkbox">
-                                    <input name="restrict_snapshot_area" type="checkbox" data-bind="checked: restrict_snapshot_area" title="Uses the bed sizes from the Octoprint printer profiles." />Enabled
-                                    <a class="octolapse_help" data-help-url="profiles.printer.restrict_snapshot_area.md" data-help-title="Restrict Snapshot Area" />
-                                </label>
-                            </div>
-                        </div>
-                        <div data-bind="fadeVisible:restrict_snapshot_area">
-                            <div data-bind="fadeVisible: bed_type() == 'circular'">
-                                <div class="control-group">
-                                    <label class="control-label" for="octolapse_printer_snapshot_diameter_xy">Diameter XY</label>
-                                    <div class="controls">
-                                        <div class="input-append input-append">
-                                            <div class="input-prepend input-append">
-                                                <span class="add-on">dia</span>
-                                                <input id="octolapse_printer_snapshot_diameter_xy" name="snapshot_diameter_xy" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_diameter_xy" step="any" min="1" required />
-                                                <span class="add-on">mm</span>
-                                            </div>
-                                            <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_diameter_xy"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div data-bind="fadeVisible: bed_type() == 'rectangular'">
-                                    <div class="control-group">
-                                        <label class="control-label" for="octolapse_printer_snapshot_min_x">Snapshot Boundary - X</label>
-                                        <div class="controls">
-                                            <div class="row-fluid">
-                                                <div class="span3">
-                                                    <div class="input-prepend input-append">
-                                                        <span class="add-on">Min</span>
-                                                        <input id="octolapse_printer_snapshot_min_x" name="snapshot_min_x" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_min_x" step="any" required />
-                                                        <span class="add-on">mm</span>
-                                                    </div>
-                                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_min_x"></div>
-                                                </div>
-                                                <div class="span3">
-                                                    <div class="input-prepend input-append">
-                                                        <span class="add-on">Max</span>
-                                                        <input id="octolapse_printer_snapshot_max_x" name="snapshot_max_x" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: snapshot_max_x" step="any" required />
-                                                        <span class="add-on">mm</span>
-                                                    </div>
-                                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_max_x"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="control-group">
-                                        <label class="control-label" for="octolapse_printer_snapshot_min_y">Snapshot Boundary - Y</label>
-                                        <div class="controls">
-                                            <div class="row-fluid">
-                                                <div class="span3">
-                                                    <div class="input-prepend input-append">
-                                                        <span class="add-on">Min</span>
-                                                        <input id="octolapse_printer_snapshot_min_y" name="snapshot_min_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_min_y" step="any" required />
-                                                        <span class="add-on">mm</span>
-                                                    </div>
-                                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_min_y"></div>
-                                                </div>
-                                                <div class="span3">
-                                                    <div class="input-prepend input-append">
-                                                        <span class="add-on">Max</span>
-                                                        <input id="octolapse_printer_snapshot_max_y" name="snapshot_max_y" type="number" class="input-small ignore_hidden_errors text-right" data-bind="value: snapshot_max_y" step="any" required />
-                                                        <span class="add-on">mm</span>
-                                                    </div>
-                                                    <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_max_y"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="control-group">
-                                    <label class="control-label" for="octolapse_printer_snapshot_min_z">Snapshot Boundary - Z</label>
-                                    <div class="controls">
-                                        <div class="row-fluid">
-                                            <div class="span3">
-                                                <div class="input-prepend input-append">
-                                                    <span class="add-on">Min</span>
-                                                    <input id="octolapse_printer_snapshot_min_z" name="snapshot_min_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: snapshot_min_z" step="any" required />
-                                                    <span class="add-on">mm</span>
-                                                </div>
-                                                <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_min_z"></div>
-                                            </div>
-                                            <div class="span3">
-                                                <div class="input-prepend input-append">
-                                                    <span class="add-on">Max</span>
-                                                    <input id="octolapse_printer_snapshot_max_z" name="snapshot_max_z" type="number" class="input-small ignore_hidden_errors  text-right" data-bind="value: snapshot_max_z" step="any" required />
-                                                    <span class="add-on">mm</span>
-                                                </div>
-                                                <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_max_z"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
+
                 </div>
                 <hr />
                 <div>

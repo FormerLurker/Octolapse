@@ -58,19 +58,19 @@ $(function () {
                 $overlay.click(function(){
                     notice.remove();
                 });
-                console.log("Adding resize handler.");
+                //console.log("Adding resize handler.");
                 $(window).on("resize",self.resize_handler);
             },
             after_close: function(notice){
                 var $parentDiv = $(notice.elem).parent();
                 $parentDiv.remove();
-                console.log("Removing resize handler.");
+                //console.log("Removing resize handler.");
                 $(window).off("resize", self.resize_handler);
             }
         };
 
         self.resize_handler = function(event) {
-            console.log("Resizing octolapse help.");
+            //console.log("Resizing octolapse help.");
             var width = self.popup_width.toString() + "px";
             if (document.body.clientWidth < self.popup_width_with_margin) {
                 self.stack_center.firstpos2 = self.popup_margin;
@@ -151,7 +151,7 @@ $(function () {
             var default_selector = ".octolapse_help[data-help-url]";
             selector = selector + " " + default_selector;
 
-            console.log("octolapse.help.js - Binding help links to " + selector);
+            //console.log("octolapse.help.js - Binding help links to " + selector);
             $(selector).each(function(){
                if (!$(this).attr('title'))
                    $(this).attr('title',"Click for help with this");
@@ -162,7 +162,7 @@ $(function () {
             });
             $(selector).unbind("click");
             $(selector).click( function(e) {
-                console.log("octolapse.help.js - Help link clicked");
+                //console.log("octolapse.help.js - Help link clicked");
                // get the data group data
                 var url = $(this).data('help-url');
                 var title = $(this).data('help-title');

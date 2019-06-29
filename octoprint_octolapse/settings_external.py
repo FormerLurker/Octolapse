@@ -50,8 +50,16 @@ class ExternalSettings(object):
         profiles_dict = ExternalSettings._load_available_profiles(default_profiles_path)
         if profiles_dict and "profiles" in profiles_dict:
             return profiles_dict["profiles"]
-
         return None
+
+    @staticmethod
+    def get_available_profile_for_profile(server_profiles, octolapse_profile, profile_type):
+        key_values = [x["value"] for x in octolapse_profile.automatic_configuration.key_values]
+        return ExternalSettings._get_profile_for_keys(
+            server_profiles,
+            key_values,
+            profile_type
+        )
 
     @staticmethod
     def _save_available_profiles(profiles_dict, file_path):
@@ -103,7 +111,7 @@ class ExternalSettings(object):
 
 
     @staticmethod
-    def check_for_updates(available_profiles, updatable_profiles):
+    def check_for_updates(available_profiles, updatable_profiles, force_updates):
         profiles_to_update = {
             "printer": [],
             "stabilization": [],
@@ -138,8 +146,9 @@ class ExternalSettings(object):
                         (
                             LooseVersion(available_profile["version"]) > LooseVersion(updatable_profile["version"]) and
                             (
-                                updatable_profile["suppress_update_notification_version"] is None or
+                                not updatable_profile["suppress_update_notification_version"] or
                                 (
+                                    force_updates or
                                     LooseVersion(available_profile["version"]) >
                                     LooseVersion(updatable_profile["suppress_update_notification_version"])
                                 )

@@ -121,7 +121,7 @@ $(function() {
         // Create options
         self.createOptions = function () {
             for (var index = 0; index < self.available_keys.length; index++) {
-                console.log("Creating profile library keys.");
+                //console.log("Creating profile library keys.");
                 self.options.push(ko.observableArray([]));
                 var current_key_value = null;
                 if (self.key_values && self.key_values.length > index)
@@ -280,10 +280,10 @@ $(function() {
             self.ignore_key_change = true;
             if(key_index > self.options().length-1)
             {
-                console.log("Cannot update option key index " + key_index.toString() + ".  It is out of bounds.");
+                console.error("Cannot update option key index " + key_index.toString() + ".  It is out of bounds.");
                 return;
             }
-            console.log("Updating server profile for " + key_index.toString());
+            //console.log("Updating server profile for " + key_index.toString());
             // clear the current options
             self.options()[key_index].removeAll();
             // get the current observableArray and clear it

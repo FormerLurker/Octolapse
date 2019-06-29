@@ -786,6 +786,7 @@ class Timelapse(object):
 
                                 # undo the position update since we'll be suppressing this command
                                 self._position.undo_update()
+
                                 # suppress the current command, we'll send it later
                                 return None,
 

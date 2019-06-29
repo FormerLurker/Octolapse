@@ -26,7 +26,9 @@
     padding: 5px 5px 0px 5px;
 }
 
-
+.row-fluid [class*="span"].no-space-col{
+    margin-left: 0px;
+}
 
 .octolapse_unclickable {
     pointer-events: none;
@@ -70,10 +72,10 @@
 }
 
 .toggle-switch-fa {
-    width: 60px;
-    height: 34px;
-    margin-bottom: 0px;
-
+	width: 60px;
+	height: 33px;
+	margin-top: 2px;
+	margin-bottom: 0px;
 }
 
 .toggle-switch-fa-sm
@@ -134,39 +136,39 @@
     font-size: 28px;
 }
 
-input[type="checkbox"]:checked + .fa-slider {
+input[type="checkbox"]:checked + label .fa-slider {
   background-color: #000000;
 }
-input[type="checkbox"] + .fa-slider
+input[type="checkbox"] + label .fa-slider
 {
     color: white;
 }
-input[type="checkbox"]:focus + .fa-slider {
+input[type="checkbox"]:focus + label .fa-slider {
     box-shadow: 2px 2px 2px rgba(129,182,224,0.867)
 }
-input[type="checkbox"]:checked + .fa-slider
+input[type="checkbox"]:checked + label .fa-slider
 {
     color: greenyellow;
 }
-input[type="checkbox"]:checked + .fa-slider i{
+input[type="checkbox"]:checked + label .fa-slider i{
     -webkit-transform: translateX(24px);
     -ms-transform: translateX(26px);
     transform: translateX(26px);
 }
 
-.toggle-switch-fa-lg input[type="checkbox"]:checked + .fa-slider i{
+.toggle-switch-fa-lg input[type="checkbox"]:checked + label .fa-slider i{
     -webkit-transform: translateX(26px);
     -ms-transform: translateX(26px);
     transform: translateX(26px);
 }
 
-.toggle-switch-fa-sm input[type="checkbox"]:checked + .fa-slider i{
+.toggle-switch-fa-sm input[type="checkbox"]:checked + label .fa-slider i{
     -webkit-transform: translateX(15px);
     -ms-transform: translateX(15px);
     transform: translateX(15px);
 }
 
-.toggle-switch-fa-xsm input[type="checkbox"]:checked + .fa-slider i{
+.toggle-switch-fa-xsm input[type="checkbox"]:checked + label .fa-slider i{
     -webkit-transform: translateX(10px);
     -ms-transform: translateX(10px);
     transform: translateX(10px);
@@ -217,11 +219,6 @@ a.ol-button:hover:not(:active) span.fs-stack:nth-child(2),
 }
 .ol-button i.fa-gear:hover, .fa-slider:hover i{
     color:green;
-}
-
-.octolapse-enabled-toggle
-{
-    top: -6px;
 }
 
 div#octolapse-current-camera{
@@ -584,11 +581,11 @@ table.octolapse-profiles {
 div#octolapse_snapshot_thumbnail_container .snapshot-container
 {
     width:100%;
-    height:281px;
+    height:282px;
 }
 div#octolapse_snapshot_thumbnail_container .snapshot-container img{
     max-width: 556px;
-    max-height: 281px;
+    max-height: 282px;
 }
 
 .snapshot-container img{
@@ -686,7 +683,9 @@ input.error {
 	text-shadow: 1px 0px black, -1px 0px black, 0px 1px black, 0px -1px black;
     border: none;
 }
-
+a.ol-button i {
+    text-shadow: none!important;
+}
 
 #octolapse_tab i.fa-no-shadow, #octolapse_tab span.fa-no-shadow {
     text-shadow:none;

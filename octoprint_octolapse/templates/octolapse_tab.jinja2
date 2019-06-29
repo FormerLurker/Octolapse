@@ -80,7 +80,7 @@
                             </span>
                         </div>
                     </div>
-                    <div class="span4 text-right">
+                    <div class="span3 text-right">
                         <span class="text-center" data-bind="visible: (is_timelapse_active() && Octolapse.Globals.is_admin())">
                             <a class="ol-button" title="Stop Octolapse" data-bind="click: function() {$data.stopTimelapse();}">
                                 <span class="fa-stack fa-lg">
@@ -89,10 +89,15 @@
                                 </span>
                             </a>
                         </span>
-                        <label class="toggle-switch-fa octolapse-enabled-toggle" data-bind="visible: (!is_timelapse_active() && Octolapse.Globals.is_admin), attr: {title: (!Octolapse.Globals.enabled() && is_timelapse_active() ? 'Octolapse will remain active until the current timelapse ends' : (Octolapse.Globals.enabled() ? 'Octolapse is enabled, click to disable' : 'Octolapse is disabled, click to enable'))}">
-                            <input type="checkbox" data-bind="checked: Octolapse.Globals.enabled, click: function() {return Octolapse.SettingsMain.toggleOctolapse();}, enable: Octolapse.Globals.is_admin()">
-                            <span class="fa-slider"><i class="fa icon-off"></i></span>
-                        </label>
+                        <span class="toggle-switch-fa octolapse-enabled-toggle" data-bind="visible: (!is_timelapse_active() && Octolapse.Globals.is_admin), attr: {title: (!Octolapse.Globals.enabled() && is_timelapse_active() ? 'Octolapse will remain active until the current timelapse ends' : (Octolapse.Globals.enabled() ? 'Octolapse is enabled, click to disable' : 'Octolapse is disabled, click to enable'))}">
+                            <input id="octolapse-enabled-toggle" type="checkbox" data-bind="checked: Octolapse.Globals.enabled, enable: Octolapse.Globals.is_admin(), click: function() {return Octolapse.SettingsMain.toggleOctolapse();};" style="display:none;"/>
+                            <label for="octolapse-enabled-toggle">
+                                <span class="fa-slider"><i class="fa icon-off"></i></span>
+                            </label>
+                        </span>
+
+                    </div>
+                    <div class="span1 no-space-col">
                         <a class="ol-button" title="Open Octolapse Main Settings" data-bind="click: function() {openOctolapseSettings('main-settings');}">
                             <span class="fa-stack fa-lg">
                                 <i class="fa fa-square fa-stack-2x"></i>
@@ -152,7 +157,7 @@
                             </div>
 
                             <div class="octolapse-snapshot-text">
-                                <span data-bind="visible:!current_camera_enabled()">Disabled</span>
+                                <span data-bind="visible:!current_camera_enabled()">Camera Disabled</span>
                             </div>
 
                         </div>

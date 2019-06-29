@@ -182,7 +182,7 @@ $(function () {
 
         // Update all octolapse settings
         self.updateSettings = function (settings) {
-            console.log("Settings Received:");
+            //console.log("Settings Received:");
             //console.log(settings);
             // GlobalOptions
             Octolapse.SettingsImport.update(settings);
@@ -229,7 +229,7 @@ $(function () {
             Octolapse.Cameras.profiles([]);
             Octolapse.Cameras.default_profile(settings.profiles.defaults.camera);
             Octolapse.Cameras.profileOptions = settings.profiles.options.camera;
-            console.log("Creating initial camera profiles.");
+            //console.log("Creating initial camera profiles.");
             Object.keys(settings.profiles.cameras).forEach(function(key) {
                 Octolapse.Cameras.profiles.push(new Octolapse.CameraProfileViewModel(settings.profiles.cameras[key]));
             });
@@ -383,7 +383,7 @@ $(function () {
 
         self.updateProfilesFromServer = function() {
 
-            console.log("Updating Octolapse profiles from the server.");
+            //console.log("Updating Octolapse profiles from the server.");
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             var data = {
                 'client_id': Octolapse.Globals.client_id
@@ -394,13 +394,22 @@ $(function () {
                 data: JSON.stringify(data),
                 contentType: "application/json",
                 dataType: "json",
-                success: function (newSettings) {
-                    console.log("Octolapse profiles updated from the server.");
-                    self.updateSettings(newSettings);
-                    Octolapse.Globals.loadState();
-                    var message = "Your Octolapse profiles are up-to-date.";
+                success: function (values) {
+                    var message;
+                    //console.log("Octolapse profiles updated from the server.");
+                    var num_updated = values.num_updated;
+                    if (num_updated > 0) {
+                        var settings = JSON.parse(values.settings);
+                        self.updateSettings(settings);
+                        Octolapse.Globals.loadState();
+                        message = num_updated.toString() + " Octolapse profiles were updated.";
+                    }
+                    else
+                    {
+                        message = "No new updates found.  Your Octolapse profiles are up-to-date."
+                    }
                     var options = {
-                        title: 'Profiles Updated',
+                        title: 'Octolapse Updates',
                         text: message,
                         type: 'success',
                         hide: true,
@@ -412,8 +421,9 @@ $(function () {
                     Octolapse.displayPopupForKey(options, 'update-profile-from-server','update-profile-from-server');
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    console.log("Error updating octolapse profiles from the server.");
+
                     var message = "Octolapse was unable to update your profiles to the most recent version the current settings.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    console.error(message);
                     var options = {
                         title: 'Profile Update Error',
                         text: message,
@@ -425,6 +435,51 @@ $(function () {
                         }
                     };
                     Octolapse.displayPopupForKey(options, 'update-profile-from-server','update-profile-from-server');
+                }
+            });
+        };
+
+        self.suppressServerUpdates = function() {
+            var data = {
+                'client_id': Octolapse.Globals.client_id
+            };
+            $.ajax({
+                url: "./plugin/octolapse/suppressServerUpdates",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (newSettings) {
+                    self.updateSettings(newSettings);
+                    Octolapse.Globals.loadState();
+                    var message = "Update notifications have been suppressed.  You can force an update at any time within the main settings page..";
+                    var options = {
+                        title: 'Updates Suppressed',
+                        text: message,
+                        type: 'info',
+                        hide: true,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopupForKey(options, 'updates-suppressed','updates-suppressed');
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                    var message = "Octolapse was unable to supress update notifications.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    console.error(message);
+                    var options = {
+                        title: 'Octolapse Update Error',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopupForKey(options, 'updates-suppressed','updates-suppressed');
                 }
             });
         };

@@ -190,17 +190,7 @@ class StabilizationPreprocessingThread(Thread):
                 0,  # gcodes_processed
                 0  # lines_processed
             )
-        elif trigger_type == TriggerProfile.TRIGGER_TYPE_SNAP_TO_PRINT:
-            options = {
-                'disable_z_lift': self.trigger_profile.snap_to_print_disable_z_lift
-            }
-
-            # run lock_to_print stabilization
-            results = GcodePositionProcessor.GetSnapshotPlans_SnapToPrint(
-                self.cpp_position_args,
-                stabilization_args
-            )
-        elif trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER:
+        if trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER:
             # run smart layer trigger
             smart_layer_args = {
                 'trigger_type': int(self.trigger_profile.smart_layer_trigger_type),

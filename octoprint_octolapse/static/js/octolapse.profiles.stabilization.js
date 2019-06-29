@@ -98,7 +98,7 @@ $(function () {
         };
 
         self.automatic_configuration.is_confirming.subscribe(function(value){
-            console.log("IsClickable" + value.toString());
+            //console.log("IsClickable" + value.toString());
             Octolapse.Stabilizations.setIsClickable(!value);
         });
     };

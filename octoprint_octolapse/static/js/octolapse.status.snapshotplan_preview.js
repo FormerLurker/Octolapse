@@ -24,7 +24,8 @@
 $(function() {
     Octolapse.SnapshotPlanPreviewPopupViewModel = function (values) {
         var self = this;
-        
+        self.on_closed_callback = values.on_closed;
+
         self.openDialog = function()
         {
 
@@ -81,11 +82,12 @@ $(function() {
 
         self.closeSnapshotPlanPreviewDialog = function() {
             $("#octolapse_snapshot_plan_preview_dialog").modal("hide");
+            if(self.on_closed_callback)
+                self.on_closed_callback();
         };
 
         self.cancelPreview = function(){
             Octolapse.Globals.cancelPreprocessing();
-
         };
 
         self.acceptPreview = function() {

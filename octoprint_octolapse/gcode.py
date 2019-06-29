@@ -870,14 +870,19 @@ class SnapshotGcodeGenerator(object):
                 if snapshot_plan.triggering_command.cmd not in ["G0", "G1"]:
                     # if this isn't a g0 or g1, I don't know what's up!
                     return None
-            gcode_1, gcode_2 = self.split_extrusion_gcode_at_point(
-                snapshot_plan.triggering_command, current_position, parsed_command_position, parsed_command_position.in_path_position)
-            snapshot_plan.start_command = gcode_1
-            # calculate the initial position
-            position.update(gcode_1)
-            snapshot_plan.initial_position = position.current_pos
-            # undo the update to the position processor
+            gcode_command_1, gcode_command_2 = self.split_extrusion_gcode_at_point(
+                snapshot_plan.triggering_command,
+                current_position,
+                parsed_command_position,
+                parsed_command_position.in_path_position["intersection"])
+            snapshot_plan.start_command = gcode_command_1
+
+            # undo the previous update to the position processor
             position.undo_update()
+            # calculate the initial position
+            position.update(gcode_command_1.gcode)
+            snapshot_plan.initial_position = position.current_pos
+
             snapshot_position = self.get_snapshot_position(
                 snapshot_plan.initial_position.x, snapshot_plan.initial_position.y)
             travel_step = SnapshotPlanStep(SnapshotPlan.TRAVEL_ACTION, x=snapshot_position["x"],
@@ -886,7 +891,7 @@ class SnapshotGcodeGenerator(object):
             snapshot_plan.steps.append(travel_step)
             snapshot_plan.steps.append(snapshot_step)
             snapshot_plan.return_position = position.current_pos
-            snapshot_plan.end_command = gcode_2
+            snapshot_plan.end_command = gcode_command_2
         else:
             return None
 
@@ -899,14 +904,14 @@ class SnapshotGcodeGenerator(object):
         start_y_offset = start_position.offset_y()
         start_e_offset = start_position.offset_e()
         # intersection offset coordinates
-        intersection_x_offset = intersection["x"] - start_position.x_offset
-        intersection_y_offset = intersection["y"] - start_position.y_offset
+        intersection_x_offset = intersection[0] - start_position.x_offset
+        intersection_y_offset = intersection[1] - start_position.y_offset
         # end offset coordinates
         end_x_offset = end_position.offset_x()
         end_y_offset = end_position.offset_y()
         end_e_offset = end_position.offset_e()
         # the feedrate won't change, but record it to make this obvious
-        feedrate = end_position.f()
+        feedrate = end_position.f
 
         # get the extrusion length
         extrusion_length = end_e_offset - start_e_offset
@@ -927,7 +932,7 @@ class SnapshotGcodeGenerator(object):
         e2_offset = end_e_offset - first_extrusion_length
 
         # create the start and end gcode x and y in relative or offset x coordinates
-        if start_position.is_relative_current:
+        if start_position.is_relative:
             gcode1_x = intersection_x_offset - start_x_offset
             gcode1_y = intersection_y_offset - start_y_offset
             gcode2_x = end_x_offset - intersection_x_offset
@@ -939,7 +944,7 @@ class SnapshotGcodeGenerator(object):
             gcode2_y = end_y_offset
 
         # create the start and end gcode e value in relative or absolute
-        if start_position.is_extruder_relative_current:
+        if start_position.is_extruder_relative:
             gcode1_e = e1_offset - start_e_offset
             gcode2_e = end_e_offset - e1_offset
         else:

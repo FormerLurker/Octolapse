@@ -81,12 +81,12 @@ $(function() {
         });
 
         self.removeLogger = function(logger) {
-            console.log("removing logger.");
+            //console.log("removing logger.");
             self.enabled_loggers.remove(logger);
         };
 
         self.addLogger = function() {
-            console.log("Adding logger");
+            //console.log("Adding logger");
             var index = self.get_enabled_logger_index_by_name(self.logger_name_add());
             if (index === -1) {
                 self.enabled_loggers.push({'name':self.logger_name_add(),'log_level':self.logger_level_add()});
@@ -141,7 +141,7 @@ $(function() {
         };
 
         self.automatic_configuration.is_confirming.subscribe(function(value){
-            console.log("IsClickable" + value.toString());
+            //console.log("IsClickable" + value.toString());
             Octolapse.DebugProfiles.setIsClickable(!value);
         });
         

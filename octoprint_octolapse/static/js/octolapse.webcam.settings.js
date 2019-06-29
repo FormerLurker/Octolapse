@@ -276,7 +276,7 @@ $(function() {
         self.stream_url = ko.computed(function(){
             if(!self.camera_stream_visible())
                 return '';
-            console.log("Calculating stream url.");
+            //console.log("Calculating stream url.");
             var url = self.stream_template();
             if (url != "")
                 url = url.replace("{camera_address}", self.address());
@@ -311,7 +311,7 @@ $(function() {
         };
 
         self.unsubscribe_to_settings_changes = function() {
-            console.log("Unsubscribing to camera settings changes");
+            //console.log("Unsubscribing to camera settings changes");
             for(var i in self.subscriptions)
             {
                 self.subscriptions[i].dispose();
@@ -320,7 +320,7 @@ $(function() {
         };
 
         self.subscribe_to_settings_changes = function(){
-            console.log("Subscribing to camera settings changes");
+            //console.log("Subscribing to camera settings changes");
             self.subscriptions.push(self.white_balance_auto.subscribe(function (val) {
                 self.applyWebcamSetting('white_balance_auto', val);
             }, self));
@@ -391,7 +391,7 @@ $(function() {
         self.cancelWebcamChanges = function(){
             if (self.guid() == null || self.guid() == "")
                 return;
-            console.log("Undoing webcam changes.");
+            //console.log("Undoing webcam changes.");
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
 
             var data = {
@@ -433,7 +433,7 @@ $(function() {
 
         self.restoreWebcamDefaults = function(){
 
-            console.log("Loading default webcam values.");
+            //console.log("Loading default webcam values.");
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             var data = {
                 'guid': self.guid()
@@ -555,7 +555,7 @@ $(function() {
 
         self.applyWebcamSetting = function (setting_name, value) {
 
-            console.log("Changing Camera Setting " + setting_name + " to " + value.toString() + ".");
+            //console.log("Changing Camera Setting " + setting_name + " to " + value.toString() + ".");
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
 
             var data = {

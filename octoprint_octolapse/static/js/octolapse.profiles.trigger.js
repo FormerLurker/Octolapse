@@ -136,7 +136,7 @@ $(function () {
         };
 
         self.removePositionRestriction = function (index) {
-            console.log("Removing restriction at index: " + index);
+            //console.log("Removing restriction at index: " + index);
             self.position_restrictions.splice(index, 1);
         };
         
@@ -197,7 +197,7 @@ $(function () {
         };
 
         self.automatic_configuration.is_confirming.subscribe(function(value){
-            console.log("IsClickable" + value.toString());
+            //console.log("IsClickable" + value.toString());
             Octolapse.Triggers.setIsClickable(!value);
         });
     };

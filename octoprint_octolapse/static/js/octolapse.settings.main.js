@@ -62,7 +62,7 @@ $(function () {
         };
 
         self.update = function (settings) {
-            console.log("Updating Main Settings")
+            //console.log("Updating Main Settings")
             self.is_octolapse_enabled(settings.is_octolapse_enabled);
             self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot);
             self.auto_reload_frames(settings.auto_reload_frames);

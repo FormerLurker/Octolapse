@@ -267,7 +267,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 }
                 if (self.canvas_context == null)
                 {
-                    console.log("Octolapse - Unable to create canvas context!");
+                    console.error("Octolapse - Unable to create canvas context!");
                     return;
                 }
                 self.canvas_erase_print_bed_and_axis();

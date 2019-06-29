@@ -25,7 +25,7 @@ $(function() {
 
     Octolapse.CameraProfileViewModel = function (values) {
         var self = this;
-        console.log("Creating camera profile settings viewmodel");
+        //console.log("Creating camera profile settings viewmodel");
         self.profileTypeName = ko.observable("Camera");
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
@@ -264,13 +264,13 @@ $(function() {
         };
 
         self.on_closed = function(){
-            console.log("Closing camera profile");
+            //console.log("Closing camera profile");
             self.webcam_settings.stream_template("");
             self.automatic_configuration.on_closed();
         };
 
         self.on_cancelled = function(){
-            console.log("Cancelling camera profile");
+            //console.log("Cancelling camera profile");
             if(
                 self.camera_type() == "webcam" &&
                 (self.apply_settings_at_startup() || self.apply_settings_before_print())
@@ -318,7 +318,7 @@ $(function() {
         };
 
         self.automatic_configuration.is_confirming.subscribe(function(value){
-            console.log("IsClickable" + value.toString());
+            //console.log("IsClickable" + value.toString());
             Octolapse.Cameras.setIsClickable(!value);
         });
     };

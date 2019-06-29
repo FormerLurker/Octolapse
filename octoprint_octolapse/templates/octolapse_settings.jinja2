@@ -192,7 +192,7 @@
         <input type="hidden" id="platform" data-bind="value:platform" />
         <div style="display:none">{% include "octolapse_profile_dialog_add_edit.jinja2" %}</div>
         <div class="row-fluid">
-            <a class="btn btn-default span4"
+            <a class="btn btn-default span3"
                data-bind="attr: {href: '{{ url_for('plugin.octolapse.download_settings_request', apikey='') }}' + UI_API_KEY}"
                download="">
                 <i class="fa fa-download"></i> Download Settings
@@ -202,9 +202,14 @@
                 <i class="fa fa-refresh"></i>
                 Import Settings
             </a>
-            <a class="span5 btn btn-default" data-bind="click: Octolapse.Settings.restoreDefaultSettings">
+            <a class="span3 btn btn-default" data-bind="click: Octolapse.Settings.restoreDefaultSettings">
                 <i class="fa fa-refresh"></i>
-                Restore All Default Settings
+                Restore Defaults
+            </a>
+            <a class="span3 btn btn-default"
+               data-bind="click: function(){Octolapse.Settings.updateProfilesFromServer();};">
+                <i class="fa fa-refresh"></i>
+                Update Profiles
             </a>
         </div>
     </div>

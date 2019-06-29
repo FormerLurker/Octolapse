@@ -383,16 +383,18 @@ $(function () {
                 }
             })
         ).get().on('pnotify.confirm', function(){
-            onConfirm();
+            if(onConfirm)
+                onConfirm();
             if(onComplete)
             {
                 onComplete();
             }
         }).on('pnotify.cancel', function() {
-          onCancel();
-          if(onComplete) {
+            if (onCancel)
+                onCancel();
+            if(onComplete) {
               onComplete();
-          }
+            }
         });
     };
 
@@ -420,7 +422,7 @@ $(function () {
     }, 'Please enter a list of strings separated by commas.');
 
     $.validator.addMethod("uploadFileRequired", function (value, element, callback) {
-        console.log("Validating upload file.");
+        //console.log("Validating upload file.");
         if (callback != null)
             return callback[0]();
         return element.files.length > 0 && element.files[0].size > 0;
@@ -568,7 +570,7 @@ $(function () {
     // selectors values are also not null
     $.validator.addMethod('ifCheckedEnsureNonNull',
         function (value, element, param) {
-            console.log("ifCheckedEnsureNonNull");
+            //console.log("ifCheckedEnsureNonNull");
             if (value === "on")
                 for (var index = 0; index < param.length; index++)
                 {
@@ -718,7 +720,7 @@ $(function () {
 
     ko.bindingHandlers.streamLoading = {
         update: function(element, valueAccessor) {
-            console.log("Binding element to streamLoading");
+            //console.log("Binding element to streamLoading");
             var self = this;
             var options = valueAccessor();
             var error_selector = ko.unwrap(options.error_selector);
@@ -732,13 +734,13 @@ $(function () {
             MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
             new MutationObserver(function onSrcChange(e){
                 if ($(element).attr('src') === '') {
-                    console.log("The src has changed to nothing, hide the elementand return.");
+                    //console.log("The src has changed to nothing, hide the elementand return.");
                     $(element).hide();
                     return;
                 }
-                else{
-                    console.log("Stream src changed");
-                }
+                //else{
+                    //console.log("Stream src changed");
+                //}
 
                 // src attribute just changed
                 // First, remove any existing load or error events
@@ -750,7 +752,7 @@ $(function () {
 
                 // Create a handler to handle load and error
                 $(element).one('load', function() {
-                    console.log("Stream Loaded.");
+                    //console.log("Stream Loaded.");
                     $(error_selector).hide();
                     $(loading_selector).hide();
                     $(element).fadeIn(1000);
@@ -1184,7 +1186,7 @@ $(function () {
         };
 
         self.loadState = function () {
-            console.log("octolapse.js - Loading State");
+            //console.log("octolapse.js - Loading State");
             $.ajax({
                 url: "./plugin/octolapse/loadState",
                 type: "POST",
@@ -1221,8 +1223,7 @@ $(function () {
             Octolapse.Settings.clearSettings();
         };
 
-        self.onEventPrinterStateChanged = function(payload)
-        {
+        self.onEventPrinterStateChanged = function(payload){
             //console.log("Octolapse.js - Received print state change.");
             if (payload.state_id == "CANCELLING") {
                 //console.log("Octolapse.js - Printer is cancelling.");
@@ -1231,16 +1232,16 @@ $(function () {
                     self.pre_processing_progress.close();
                 }
             }
-        }
+        };
 
         self.updateState = function (data) {
-            console.log("octolapse.js - updateState");
+            //console.log("octolapse.js - updateState");
             if (data.state != null) {
 
                 Octolapse.Status.updateState(data.state)
             }
             if (data.main_settings != null) {
-                console.log('octolapse.js - Main settings changed');
+                //console.log('octolapse.js - Main settings changed');
                 // detect changes to auto_reload_latest_snapshot
                 var cur_auto_reload_latest_snapshot = Octolapse.Globals.auto_reload_latest_snapshot();
 
@@ -1253,7 +1254,7 @@ $(function () {
 
             }
             if (data.status != null) {
-                console.log("octolapse.js - Updating Status");
+                //console.log("octolapse.js - Updating Status");
                 Octolapse.Status.update(data.status);
             }
             /*
@@ -1266,7 +1267,7 @@ $(function () {
         };
 
         self.update = function (settings) {
-            console.log("octolapse.js - Globals - Updating main_settings globals")
+            //console.log("octolapse.js - Globals - Updating main_settings globals")
             // enabled
             if (ko.isObservable(settings.is_octolapse_enabled))
                 self.enabled(settings.is_octolapse_enabled());
@@ -1347,9 +1348,8 @@ $(function () {
 
         };
 
-        self.acceptSnapshotPlanPreview = function()
-        {
-            console.log("Accepting snapshot plan preview.");
+        self.acceptSnapshotPlanPreview = function(){
+            //console.log("Accepting snapshot plan preview.");
             var data = {"preprocessing_job_guid":self.preprocessing_job_guid};
             $.ajax({
                 url: "./plugin/octolapse/acceptSnapshotPlanPreview",
@@ -1397,8 +1397,7 @@ $(function () {
             });
         };
 
-        self.cancelPreprocessing = function()
-        {
+        self.cancelPreprocessing = function(){
             //console.log("Cancelling preprocessing")
             var data = {"cancel":true, "preprocessing_job_guid":self.preprocessing_job_guid};
             $.ajax({
@@ -1441,18 +1440,18 @@ $(function () {
             //console.log(data);
             switch (data.type) {
                 case "snapshot-plan-preview":
-                    console.log("Previewing snapshot plans.");
+                    //console.log("Previewing snapshot plans.");
                     self.preprocessing_job_guid = data.preprocessing_job_guid;
                     Octolapse.Status.previewSnapshotPlans(data.snapshot_plans);
                     break;
                 case "snapshot-plan-preview-complete":
                     // create the cancel popup
-                    console.log("The snapshot preview is complete.  Closing the preview dialog.");
+                    //console.log("The snapshot preview is complete.  Closing the preview dialog.");
                     Octolapse.Status.SnapshotPlanPreview.closeSnapshotPlanPreviewDialog();
                     break;
                 case "gcode-preprocessing-start":
                     // create the cancel popup
-                    console.log("Creating a progress bar.");
+                    //console.log("Creating a progress bar.");
                     self.preprocessing_job_guid = data.preprocessing_job_guid;
                     self.pre_processing_progress =  Octolapse.progressBar(self.cancelPreprocessing, "Initializing...");
                     break;
@@ -1469,7 +1468,7 @@ $(function () {
                     if (self.pre_processing_progress == null)
                     {
                         //console.log("The pre-processing progress bar is missing, creating the progress bar.");
-                        console.log("Creating progress bar");
+                        //console.log("Creating progress bar");
                         self.pre_processing_progress =  Octolapse.progressBar(self.cancelPreprocessing);
                     }
                     if (self.pre_processing_progress != null) {
@@ -1477,7 +1476,7 @@ $(function () {
                             "Remaining:" + Octolapse.ToTimer(seconds_to_complete)
                             + " Elapsed:" + Octolapse.ToTimer(seconds_elapsed)
                         + " Line:" + lines_processed.toString();
-                        console.log("Receiving Progress - Percent Complete:" + percent_finished + " " + progress_text);
+                        //console.log("Receiving Progress - Percent Complete:" + percent_finished + " " + progress_text);
                         self.pre_processing_progress = self.pre_processing_progress.update(
                             percent_finished, progress_text
                         );
@@ -1486,7 +1485,7 @@ $(function () {
                     break;
                 case "gcode-preprocessing-failed":
                     // clear the job guid
-                    console.log("Gcode preprocessing failed.");
+                    //console.log("Gcode preprocessing failed.");
                     self.preprocessing_job_guid = null;
                     // report the issue
                     var options = {
@@ -1524,6 +1523,9 @@ $(function () {
                             message,
                             function(){
                                 Octolapse.Settings.updateProfilesFromServer();
+                            },
+                            function() {
+                                Octolapse.Settings.suppressServerUpdates();
                             }
                         );
                     }
@@ -1550,7 +1552,7 @@ $(function () {
                     break;
                 case "slicer_settings_detected":
                     if(data.saved) {
-                        console.log("Slicer settings detected and saved.");
+                        //console.log("Slicer settings detected and saved.");
                         if(data.printer_profile_json != null)
                         {
                             var new_profile = JSON.parse(data.printer_profile_json);
@@ -1561,24 +1563,24 @@ $(function () {
                             }
                             else
                             {
-                                console.log("Octolapse.js - Unable to find the updated printer profile from the current profiles!");
+                                console.error("Octolapse.js - Unable to find the updated printer profile from the current profiles!");
                             }
                             //Octolapse.Printers.replace(currentProfile, newProfile);
                         }
 
                     }
-                    else
-                        console.log("Slicer settings detected but not saved.");
+                    //else
+                    //    console.log("Slicer settings detected but not saved.");
                     // Disable the error notification for profiles that haven't been configured
                 case "state-loaded":
                     {
-                        console.log('octolapse.js - state-loaded');
+                        //console.log('octolapse.js - state-loaded');
                         self.updateState(data);
                     }
                     break;
                 case "state-changed":
                     {
-                        console.log('octolapse.js - state-changed');
+                        //console.log('octolapse.js - state-changed');
                         //console.log(data);
                         self.updateState(data);
                     }
@@ -1618,7 +1620,7 @@ $(function () {
                     }
                 case "print-start-error":
                     {
-                        console.log('octolapse.js - print-start-error');
+                        //console.log('octolapse.js - print-start-error');
                         self.updateState(data);
                         var options = {
                             title: 'Octolapse Startup Failed',
@@ -1729,7 +1731,7 @@ $(function () {
                     break;
                 case "render-start":
                     {
-                        console.log('octolapse.js - render-start');
+                        //console.log('octolapse.js - render-start');
                         self.updateState(data);
                         Octolapse.Status.snapshot_error(false);
 
@@ -1747,7 +1749,7 @@ $(function () {
                     }
                     break;
                 case "render-failed":{
-                        console.log('octolapse.js - render-failed');
+                        //console.log('octolapse.js - render-failed');
                         self.updateState(data);
                         var options = {
                             title: 'Octolapse Rendering Failed',
@@ -1763,7 +1765,7 @@ $(function () {
                         break;
                 }
                 case "post-render-failed":{
-                        console.log('octolapse.js - post-render-failed');
+                        //console.log('octolapse.js - post-render-failed');
                         self.updateState(data);
                         var options = {
                             title: 'Octolapse Post-Rendering Failed',
@@ -1780,7 +1782,7 @@ $(function () {
                 }
                 case "render-complete":
                     self.updateState(data);
-                    console.log('octolapse.js - render-complete');
+                    //console.log('octolapse.js - render-complete');
                     self.OctoprintTimelapse.requestData();
 
                     // Make sure we aren't synchronized, else there's no reason to display a popup
@@ -1798,13 +1800,13 @@ $(function () {
                     break;
                 case "render-end":
                     {
-                        console.log('octolapse.js - render-end');
+                        //console.log('octolapse.js - render-end');
                         self.updateState(data);
                     }
                     break;
                 case "synchronize-failed":
                     {
-                        console.log('octolapse.js - synchronize-failed');
+                        //console.log('octolapse.js - synchronize-failed');
                         var options = {
                             title: 'Octolapse Synchronization Failed',
                             text: data.msg,

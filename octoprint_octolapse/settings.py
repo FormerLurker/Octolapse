@@ -28,6 +28,7 @@ import os
 import uuid
 import tempfile
 import sys
+from distutils.version import LooseVersion
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.log as log
 import math
@@ -190,6 +191,17 @@ class AutomaticConfiguration(Settings):
             'key_values': self.key_values
         }
 
+    def suppress_updates(self, available_profile):
+        if LooseVersion(self.version) < LooseVersion(available_profile["version"]):
+            self.suppress_update_notification_version = available_profile["version"]
+
+    def try_convert_value(cls, destination, value, key):
+        if key == 'suppress_update_notification_version':
+            if not value:
+                return False
+            else:
+                return value
+        return super(AutomaticConfiguration, cls).try_convert_value(destination, value, key)
 
 class PrinterProfileSlicers(Settings):
     def __init__(self):
@@ -237,8 +249,11 @@ class AutomaticConfigurationProfile(ProfileSettings):
         identifiers["guid"] = self.guid
         return identifiers
 
+    def suppress_updates(self, available_profile):
+        self.automatic_configuration.suppress_updates(available_profile)
 
-class PrinterProfile(ProfileSettings):
+
+class PrinterProfile(AutomaticConfigurationProfile):
     minimum_height_increment = 0.05
     bed_type_rectangular = 'rectangular'
     bed_type_circular = 'circular'
@@ -649,6 +664,7 @@ class PrinterProfile(ProfileSettings):
         # merge the overridable settings
         position_args.update(overridable_profile_settings)
         return position_args
+
 
 class StabilizationPath(Settings):
     def __init__(self):

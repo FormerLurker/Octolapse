@@ -58,7 +58,11 @@ $(function () {
             self.TriggerState = new Octolapse.TriggersStateViewModel();
             self.SnapshotPlanState = new Octolapse.snapshotPlanStateViewModel();
             self.WebcamSettings = new Octolapse.WebcamSettingsPopupViewModel();
-            self.SnapshotPlanPreview = new Octolapse.SnapshotPlanPreviewPopupViewModel();
+            self.SnapshotPlanPreview = new Octolapse.SnapshotPlanPreviewPopupViewModel({
+                on_closed: function(){
+                    self.SnapshotPlanState.is_preview = false;
+                }
+            });
             self.IsTabShowing = false;
             self.IsLatestSnapshotDialogShowing = false;
             self.current_print_volume = null;
@@ -245,57 +249,60 @@ $(function () {
                 if (targetId in self.IsAnimating && self.IsAnimating[targetId]) {
                     return;
                 }
-                console.log("Starting Snapshot Animation for" + targetId);
+                //console.log("Starting Snapshot Animation for" + targetId);
                 // Hide and show the play/refresh button
                 if (Octolapse.Globals.auto_reload_latest_snapshot()) {
                     var $startAnimationButton = $('#' + targetId + ' .snapshot_refresh_container a.start-animation');
-
+                    self.IsAnimating[targetId] = true;
                     $startAnimationButton.fadeOut({
                         start: function () {
-                            self.IsAnimating[targetId] = true;
-                            var $images = $('#' + targetId + ' .snapshot-container .previous-snapshots img');
-                            var $current = $('#' + targetId + ' .snapshot-container .latest-snapshot img');
-                            i = 0;
-                            // hide all previous images
-                            if ($images)
-                            {
-                                $images.each(function (index, element) {
-                                    $(element).css("display","none");
-                                });
-                            }
-                            else
-                            {
-                                $startAnimationButton.fadeIn();
-                                self.IsAnimating[targetId] = false;
-                                return;
-                            }
-                            // fade out the current image
-                            $current.css("display","none");
-                            animate_snapshots($images);
-                            function animate_snapshots(images) {
-                                if (images && i < images.length) {
-                                    $(images).eq(i).css("display","block");
-                                    i++;
-                                    setTimeout(function () {
-                                        animate_snapshots(images)
-                                    }, 80);
+                            setTimeout( function() {
+                                var $images = $('#' + targetId + ' .snapshot-container .previous-snapshots img');
+                                var $current = $('#' + targetId + ' .snapshot-container .latest-snapshot img');
+                                // Hide all images in reverse order
+                                if ($images.length > 0)
+                                {
+                                    $current.css("opacity","0");
+                                    animate_snapshots($images, $current, $images.length-1, -1, 0, 25)
+
                                 }
                                 else
                                 {
-                                    if($current) {
-                                        $current.css("display","block");
-                                        if (images)
-                                        {
-                                            images.each(function (index, element) {
-                                                $(element).css("display","block");
-                                            });
-                                        }
-                                        $startAnimationButton.fadeIn();
-                                        self.IsAnimating[targetId] = false;
-                                    }
+                                    $current.css("opacity","1");
+                                    $startAnimationButton.fadeIn();
+                                    self.IsAnimating[targetId] = false;
+                                    return;
                                 }
 
-                            }
+
+                                function animate_snapshots($images, $current, index, step, opacity, delay) {
+                                    if (
+                                        (step > 0 && index < $images.length) ||
+                                        (step < 0 && index > 0)
+                                    )
+                                    {
+                                        setTimeout(function () {
+                                            $images.eq(index).css("opacity",opacity.toString());
+                                            animate_snapshots($images, $current, index+step, step, opacity, delay)
+                                        }, delay);
+                                    }
+                                    else if(step > 0)
+                                    {
+                                        if($current) {
+                                            $current.css("opacity","1");
+                                            $startAnimationButton.fadeIn();
+                                            self.IsAnimating[targetId] = false;
+                                        }
+                                    }
+                                    else
+                                    {
+                                                // fade out the current image
+                                        animate_snapshots($images, $current, 0, 1, 1, 100);
+                                    }
+
+                                }
+                            }, 100);
+
                         }
                     });
                 }
@@ -305,7 +312,7 @@ $(function () {
                 if (!updateIfDisabled && !self.current_camera_enabled())
                     return;
                 force = force || false;
-                console.log("Trying to update the latest snapshot thumbnail.");
+                //console.log("Trying to update the latest snapshot thumbnail.");
                 if (!force) {
                     if (!self.IsTabShowing) {
                         //console.log("The tab is not showing, not updating the thumbnail.  Clearing the image history.");
@@ -317,7 +324,7 @@ $(function () {
                     }
                 }
                 if (self.current_camera_guid() === null || self.current_camera_guid() === "")
-                    console.log("Current camera guid requested, but it is null.");
+                    console.error("Current camera guid requested, but it is null.");
                 else
                     self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl(self.current_camera_guid())
                     + "&time=" + new Date().getTime());
@@ -340,7 +347,7 @@ $(function () {
             self.IsAnimating = {};
 
             self.updateSnapshotAnimation = function (targetId, newSnapshotAddress) {
-                console.log("Updating animation for target id: " + targetId);
+                //console.log("Updating animation for target id: " + targetId);
                 // Get the snapshot-container within the target
                 var $target = $('#' + targetId + ' .snapshot-container');
                 // Get the latest image
@@ -446,9 +453,7 @@ $(function () {
                     }
                 }
                 //console.log("Requesting image for camera:" + Octolapse.Status.current_camera_guid())
-                if(Octolapse.Status.current_camera_guid() == null || Octolapse.Status.current_camera_guid() == "")
-                    console.log("The current camera guid was requested, but it was null or empty.");
-                else
+                if(!(Octolapse.Status.current_camera_guid() == null || Octolapse.Status.current_camera_guid() == ""))
                     self.updateSnapshotAnimation('octolapse_snapshot_image_container', getLatestSnapshotUrl(Octolapse.Status.current_camera_guid()) + "&time=" + new Date().getTime());
 
             };
@@ -567,14 +572,13 @@ $(function () {
                     self.TriggerState.update(state.trigger_state);
                 }
                 if (state.snapshot_plan != null) {
-                    self.SnapshotPlanState.is_preview = false;
                     self.SnapshotPlanState.update(state.snapshot_plan);
                 }
 
             };
             self.previewSnapshotPlans = function(data)
             {
-                console.log("Updating snapshot plan state with a preview of the snapshot plans");
+                //console.log("Updating snapshot plan state with a preview of the snapshot plans");
                 self.SnapshotPlanState.is_preview = true;
                 self.SnapshotPlanState.update(data);
                 self.SnapshotPlanPreview.openDialog();
@@ -582,7 +586,7 @@ $(function () {
             };
 
             self.update = function (settings) {
-                console.log("octolapse.status.js - Updating main settings.");
+                //console.log("octolapse.status.js - Updating main settings.");
                 self.is_timelapse_active(settings.is_timelapse_active);
                 self.snapshot_count(settings.snapshot_count);
                 self.is_taking_snapshot(settings.is_taking_snapshot);
@@ -796,7 +800,7 @@ $(function () {
                 self.set_current_camera_enabled();
                 // Update the current camera profile
                 var guid = self.current_camera_guid();
-                console.log("Updating the latest snapshot from: " + Octolapse.Status.current_camera_guid() + " to " + guid);
+                //console.log("Updating the latest snapshot from: " + Octolapse.Status.current_camera_guid() + " to " + guid);
                 self.erasePreviousSnapshotImages('octolapse_snapshot_image_container',true);
                 self.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container',true);
                 self.updateLatestSnapshotThumbnail(true, true);

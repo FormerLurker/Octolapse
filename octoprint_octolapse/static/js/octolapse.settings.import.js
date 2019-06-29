@@ -51,7 +51,7 @@ $(function () {
         self.importSettings = function(){
 
             if (self.import_method() == 'text') {
-                console.log("Importing Settings from Text");
+                //console.log("Importing Settings from Text");
                 var data = {
                     'import_method': self.import_method(),
                     'import_text' : self.import_text(),
@@ -101,7 +101,7 @@ $(function () {
             }
             else
             {
-                console.log("Importing Settings from File");
+                //console.log("Importing Settings from File");
                 if (self.current_upload_data != null) {
                     self.current_upload_data.submit();
                     self.current_upload_data = null;
@@ -131,7 +131,7 @@ $(function () {
                 formData: {client_id: Octolapse.Globals.client_id},
                 dropZone: "#octolapse_settings_import_dialog .octolapse_dropzone",
                 add: function(e, data) {
-                    console.log("Adding file");
+                    //console.log("Adding file");
                     self.$progressBar.text("");
                     self.$progressBar.removeClass('failed').animate({'width': '0%'}, {'queue':false});
                     self.current_upload_data = data;
@@ -144,14 +144,14 @@ $(function () {
                 },
                 progressall: function (e, data) {
                     // TODO: Get a better progress bar implementation.
-                    console.log("Uploading Progress");
+                    //console.log("Uploading Progress");
                     var progress = parseInt(data.loaded / data.total * 100, 10);
                     self.$progressBar.text(progress + "%");
                     self.$progressBar.animate({'width': progress + '%'}, {'queue':false});
                 },
 
                 done: function(e, data) {
-                    console.log("Upload Done");
+                    //console.log("Upload Done");
                     settings = JSON.parse(data.result.settings);
                     message = data.result.msg;
                     Octolapse.Settings.updateSettings(settings);
@@ -173,12 +173,12 @@ $(function () {
                     Octolapse.displayPopup(options);
                 },
                 fail: function(e, data) {
-                    console.log("Upload Failed");
+                    //console.log("Upload Failed");
                     self.$progressBar.text("Failed...").addClass('failed');
                     self.$progressBar.animate({'width': '100%'}, {'queue':false});
                 },
                 complete: function(e){
-                    console.log("Upload Complete");
+                    //console.log("Upload Complete");
                     self.import_file_path("");
                 }
              });
@@ -250,7 +250,7 @@ $(function () {
                 }
             });
             self.$dialog.$editDialog.on("shown.bs.modal", function () {
-                console.log("Octolapse import dialog is shown.");
+                //console.log("Octolapse import dialog is shown.");
                 Octolapse.Help.bindHelpLinks("#octolapse_settings_import_dialog");
                 // Create all of the validation rules
 
@@ -268,9 +268,9 @@ $(function () {
                 // Called when a user clicks the save button on any add/update dialog.
 
                 self.$dialog.$saveButton.bind("click", function () {
-                    console.log("Save button clicked.");
+                    //console.log("Save button clicked.");
                     if (self.$dialog.$editForm.valid()) {
-                        console.log("Importing Settings.");
+                        //console.log("Importing Settings.");
                         // the form is valid, add or update the profile
                         self.importSettings();
                     }
@@ -322,7 +322,7 @@ $(function () {
         };
 
         self.on_opened = function(){
-            console.log("Opening settings import dialog.")
+            //console.log("Opening settings import dialog.")
             if(self.$importFileUploadElement === null)
                 return;
             self.$importFileUploadElement.empty();
