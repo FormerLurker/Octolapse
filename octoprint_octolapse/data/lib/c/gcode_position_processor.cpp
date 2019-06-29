@@ -21,7 +21,10 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "gcode_position_processor.h"
+#include <iomanip>
+#include <sstream>
 #include <iostream>
+#include "utilities.h"
 #include "stabilization_snap_to_print.h"
 #include "stabilization_smart_layer.h"
 #include "stabilization.h"
@@ -64,8 +67,8 @@ int main(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
 #ifdef _DEBUG
-	//run_tests(argc, argv);
-	//return 0;
+	run_tests(argc, argv);
+	return 0;
 #endif
 	// I use this sometimes to test performance in release mode
 	//run_tests(argc, argv);
@@ -100,7 +103,6 @@ static PyMethodDef GcodePositionProcessorMethods[] = {
 	{ "GetCurrentPositionDict",  (PyCFunction)GetCurrentPositionDict,  METH_VARARGS  ,"Returns the current position of the global GcodePosition tracker in a slower but easier to deal with dict form." },
 	{ "GetPreviousPositionTuple",  (PyCFunction)GetPreviousPositionTuple,  METH_VARARGS  ,"Returns the previous position of the global GcodePosition tracker in a faster but harder to handle tuple form." },
 	{ "GetPreviousPositionDict",  (PyCFunction)GetPreviousPositionDict,  METH_VARARGS  ,"Returns the previous position of the global GcodePosition tracker in a slower but easier to deal with dict form." },
-	{ "GetSnapshotPlans_SnapToPrint", (PyCFunction)GetSnapshotPlans_SnapToPrint, METH_VARARGS, "Parses a gcode file and returns snapshot plans for a 'SnapToPrint' stabilization." },
 	{ "GetSnapshotPlans_SmartLayer", (PyCFunction)GetSnapshotPlans_SmartLayer, METH_VARARGS, "Parses a gcode file and returns snapshot plans for a 'SmartLayer' stabilization." },
 	{ NULL, NULL, 0, NULL }
 };
@@ -184,74 +186,9 @@ extern "C"
 		std::cout << "complete\r\n";
 	}
 	*/
-	static PyObject * GetSnapshotPlans_SnapToPrint(PyObject *self, PyObject *args)
-	{
-		// TODO:  add error reporting and logging
-		PyObject *py_position_args;
-		PyObject *py_stabilization_args;
-		
-		if (!PyArg_ParseTuple(
-			args,
-			"OO",
-			&py_position_args,
-			&py_stabilization_args)
-		)
-		{
-			PyErr_SetString(PyExc_ValueError, "Error parsing parameters for GcodePositionProcessor.GetSnapshotPlans_LockToPrint.");
-			return NULL;
-		}
-		
-		gcode_position_args p_args;
-		if (!ParsePositionArgs(py_position_args, &p_args))
-		{
-			return NULL;
-		}
-
-		// Extract the stabilization args
-		stabilization_args s_args;
-		if (!ParseStabilizationArgs(py_stabilization_args, &s_args))
-		{
-			return NULL;
-		}
-		
-		// Create our stabilization object
-		stabilization_snap_to_print stabilization(
-			&p_args, 
-			&s_args,
-			pythonGetCoordinatesCallback(ExecuteGetSnapshotPositionCallback),
-			pythonProgressCallback(ExecuteStabilizationProgressCallback)
-		);
-
-		stabilization_results results;
-		stabilization.process_file(&results);
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Building snapshot plans.");
-
-		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results.snapshot_plans_);
-		if (py_snapshot_plans == NULL)
-		{
-			return NULL;
-		}
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Creating return values.");
-		PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l)", results.success_, results.errors_.c_str(), py_snapshot_plans, results.seconds_elapsed_, results.gcodes_processed_, results.lines_processed_);
-		if (py_results == NULL)
-		{
-			octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to create a Tuple from the snapshot plan list.");
-			PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Error building callback arguments - Terminating");
-			return NULL;
-		}
-		// Bring the snapshot plan refcount to 1
-		//Py_DECREF(py_snapshot_plans);
-		//Py_DECREF(py_position_args);
-		//Py_DECREF(py_stabilization_args);
-		//Py_DECREF(py_stabilization_type_args);
-		//std::cout << "py_progress_callback refcount = " << py_progress_callback->ob_refcnt << "\r\n";
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Snapshot plan creation complete, returning plans.");
-		//std::cout << "py_results refcount = " << py_results->ob_refcnt << "\r\n";
-		return py_results;
-	}
-
 	static PyObject * GetSnapshotPlans_SmartLayer(PyObject *self, PyObject *args)
 	{
+		set_internal_log_levels(true);
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Running smart layer stabilization preprocessing.");
 		// TODO:  add error reporting and logging
 		PyObject *py_position_args;
@@ -296,6 +233,7 @@ extern "C"
 		}
 		//std::cout << "Creating Stabilization.\r\n";
 		// Create our stabilization object
+		set_internal_log_levels(false);
 		stabilization_smart_layer stabilization(
 			&p_args,
 			&s_args,
@@ -303,10 +241,11 @@ extern "C"
 			pythonGetCoordinatesCallback(ExecuteGetSnapshotPositionCallback),
 			pythonProgressCallback(ExecuteStabilizationProgressCallback)
 		);
-
+		
 		stabilization_results results;
 		//std::cout << "Processing gcode file.\r\n";
 		stabilization.process_file(&results);
+		set_internal_log_levels(true);
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Building snapshot plans.");
 
 		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results.snapshot_plans_);
@@ -337,8 +276,9 @@ extern "C"
 
 	static PyObject* Initialize(PyObject* self, PyObject *args)
 	{
+		set_internal_log_levels(true);
 		// Create the gcode position object 
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Initializing gcode position processor.");
+		octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::INFO, "Initializing gcode position processor.");
 		const char * pKey;
 		PyObject* py_position_args;
 		if (!PyArg_ParseTuple(
@@ -392,6 +332,11 @@ extern "C"
 
 	static PyObject* Undo(PyObject* self, PyObject *args)
 	{
+		set_internal_log_levels(true);
+		octolapse_log(
+			octolapse_log::GCODE_POSITION, octolapse_log::VERBOSE,
+			"Undoing the last gcode position update."
+		);
 		const char * key;
 		if (!PyArg_ParseTuple(args, "s", &key))
 		{
@@ -413,6 +358,11 @@ extern "C"
 
 	static PyObject* Update(PyObject* self, PyObject *args)
 	{
+		set_internal_log_levels(true);
+		octolapse_log(
+			octolapse_log::GCODE_POSITION, octolapse_log::VERBOSE,
+			"Updating current position from gcode."
+		);
 		const char* key;
 		const char* gcode;
 		if (!PyArg_ParseTuple(args, "ss", &key, &gcode))
@@ -451,6 +401,11 @@ extern "C"
 
 	static PyObject* UpdatePosition(PyObject* self, PyObject *args)
 	{
+		set_internal_log_levels(true);
+		octolapse_log(
+			octolapse_log::GCODE_POSITION, octolapse_log::VERBOSE,
+			"Manually updating current position."
+		);
 		char* key;
 		double x;
 		long update_x;
@@ -521,6 +476,11 @@ extern "C"
 
 	static PyObject* Parse(PyObject* self, PyObject *args)
 	{
+		set_internal_log_levels(true);
+		octolapse_log(
+			octolapse_log::GCODE_PARSER, octolapse_log::INFO,
+			"Parsing gcode."
+		);
 		const char* gcode;
 		if (!PyArg_ParseTuple(args, "s", &gcode))
 		{
@@ -543,6 +503,11 @@ extern "C"
 
 	static PyObject* GetCurrentPositionTuple(PyObject* self, PyObject *args)
 	{
+		set_internal_log_levels(true);
+		octolapse_log(
+			octolapse_log::GCODE_POSITION, octolapse_log::VERBOSE,
+			"Getting current position tuple."
+		);
 		const char * key;
 		if (!PyArg_ParseTuple(args, "s", &key))
 		{
@@ -567,6 +532,11 @@ extern "C"
 
 	static PyObject* GetCurrentPositionDict(PyObject* self, PyObject *args)
 	{
+		set_internal_log_levels(true);
+		octolapse_log(
+			octolapse_log::GCODE_POSITION, octolapse_log::VERBOSE,
+			"Getting current position dict."
+		);
 		char* key;
 		if (!PyArg_ParseTuple(args, "s", &key))
 		{
@@ -590,6 +560,11 @@ extern "C"
 
 	static PyObject* GetPreviousPositionTuple(PyObject* self, PyObject *args)
 	{
+		set_internal_log_levels(true);
+		octolapse_log(
+			octolapse_log::GCODE_POSITION, octolapse_log::VERBOSE,
+			"Getting previous position tuple."
+		);
 		const char * key;
 		if (!PyArg_ParseTuple(args, "s", &key))
 		{
@@ -614,6 +589,11 @@ extern "C"
 
 	static PyObject* GetPreviousPositionDict(PyObject* self, PyObject *args)
 	{
+		set_internal_log_levels(true);
+		octolapse_log(
+			octolapse_log::GCODE_POSITION, octolapse_log::VERBOSE,
+			"Getting previous position dict."
+		);
 		char* key;
 		if (!PyArg_ParseTuple(args, "s", &key))
 		{
@@ -731,6 +711,10 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 /// Argument Parsing
 static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 {
+	octolapse_log(
+		octolapse_log::GCODE_POSITION, octolapse_log::INFO,
+		"Parsing Position Args."
+	);
 	// Here is the full structure of the position args:
 	// get the volume py object
 	PyObject * py_volume = PyDict_GetItemString(py_args, "volume");
@@ -752,13 +736,26 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	}
 	// Extract the bed type string
 	args->is_circular_bed = strcmp(PyUnicode_SafeAsString(py_bed_type), "circular") == 0;
-	
+	if (args->is_circular_bed)
+	{
+		octolapse_log(
+			octolapse_log::GCODE_PARSER, octolapse_log::INFO,
+			"Circular bed set."
+		);
+	}
+	else
+	{
+		octolapse_log(
+			octolapse_log::GCODE_PARSER, octolapse_log::INFO,
+			"Rectangular bed set"
+		);
+	}
 	// Get Build Plate Area
 	PyObject * py_x_min = PyDict_GetItemString(py_volume, "min_x");
 	if (py_x_min == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_x from the bounds dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_x from the volume dict.");
 		return false;
 	}
 	args->x_min = PyFloatOrInt_AsDouble(py_x_min);
@@ -767,7 +764,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	if (py_x_max == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_x from the bounds dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_x from the volume dict.");
 		return false;
 	}
 	args->x_max = PyFloatOrInt_AsDouble(py_x_max);
@@ -776,7 +773,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	if (py_y_min == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_y from the bounds dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_y from the volume dict.");
 		return false;
 	}
 	args->y_min = PyFloatOrInt_AsDouble(py_y_min);
@@ -785,7 +782,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	if (py_y_max == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_y from the bounds dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_y from the volume dict.");
 		return false;
 	}
 	args->y_max = PyFloatOrInt_AsDouble(py_y_max);
@@ -794,7 +791,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	if (py_z_min == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_z from the bounds dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_z from the volume dict.");
 		return false;
 	}
 	args->z_min = PyFloatOrInt_AsDouble(py_z_min);
@@ -803,7 +800,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	if (py_z_max == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_z from the bounds dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_z from the volume dict.");
 		return false;
 	}
 	args->z_max = PyFloatOrInt_AsDouble(py_z_max);
@@ -817,13 +814,22 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		return false;
 	}
 	// If py_bounds is a dict, we have no snapshot boundaries other than the printer volume
-	if (!PyDict_Check(py_bounds))
+	if (PyDict_Check(py_bounds)<1)
 	{
+		octolapse_log(
+			octolapse_log::GCODE_PARSER, octolapse_log::INFO,
+			"No snapshot restrictions set."
+		);
 		args->is_bound_ = false;
 	}
 	else
 	{
-		
+		args->is_bound_ = true;
+		octolapse_log(
+			octolapse_log::GCODE_PARSER, octolapse_log::INFO, 
+			"Snapshot restrictions set."
+		);
+
 		PyObject * py_snapshot_x_min = PyDict_GetItemString(py_bounds, "min_x");
 		if (py_snapshot_x_min == NULL)
 		{
@@ -877,6 +883,14 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 			return false;
 		}
 		args->snapshot_z_max = PyFloatOrInt_AsDouble(py_snapshot_z_max);
+
+		std::stringstream stream;
+
+		stream << "Bounds - " <<
+			"X:(" << utilities::to_string(args->snapshot_x_min) << "," << utilities::to_string(args->snapshot_x_max) << ") " <<
+			"Y:(" << utilities::to_string(args->snapshot_y_min) << "," << utilities::to_string(args->snapshot_y_max) << ") " <<
+			"Z:(" << utilities::to_string(args->snapshot_z_min) << "," << utilities::to_string(args->snapshot_z_max) << ") ";
+		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::INFO, stream.str());
 	}
 
 	// Get LocationDetection Commands
@@ -1087,6 +1101,10 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 
 static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 {
+	octolapse_log(
+		octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO,
+		"Parsing Stabilization Args."
+	);
 	//std::cout << "Parsing Stabilization Args.\r\n";
 	// gcode_generator
 	PyObject * py_gcode_generator = PyDict_GetItemString(py_args, "gcode_generator");
@@ -1183,6 +1201,10 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 
 static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_args* args)
 {
+	octolapse_log(
+		octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO,
+		"Parsing Stabilization Args."
+	);
 	//std::cout << "Parsing smart layer args.\r\n";
 	// Extract trigger_on_extrude
 	PyObject * py_trigger_type = PyDict_GetItemString(py_args, "trigger_type");

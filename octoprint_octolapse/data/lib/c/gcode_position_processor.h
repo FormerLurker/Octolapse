@@ -56,8 +56,7 @@ extern "C"
 	static PyObject* GetCurrentPositionDict(PyObject* self, PyObject *args);
 	static PyObject* GetPreviousPositionTuple(PyObject* self, PyObject *args);
 	static PyObject* GetPreviousPositionDict(PyObject* self, PyObject *args);
-	static PyObject * GetSnapshotPlans_SnapToPrint(PyObject *self, PyObject *args);
-	static PyObject * GetSnapshotPlans_SmartLayer(PyObject *self, PyObject *args);
+	static PyObject* GetSnapshotPlans_SmartLayer(PyObject *self, PyObject *args);
 }
 static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args);
 static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args);

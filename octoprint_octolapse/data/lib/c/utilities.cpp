@@ -1,6 +1,6 @@
 #include "utilities.h"
 #include <math.h>
-
+#include <sstream>
 // Had to increase the zero tolerance because prusa slicer doesn't always retract enough while wiping.
 const double ZERO_TOLERANCE = 0.00005;
 
@@ -47,4 +47,11 @@ double utilities::get_cartesian_distance(double x1, double y1, double x2, double
 	double ydif = y1 - y2;
 	double dist_squared = xdif * xdif + ydif * ydif;
 	return sqrt(xdif*xdif + ydif * ydif);
+}
+
+std::string utilities::to_string(double value)
+{
+	std::ostringstream os;
+	os << value;
+	return os.str();
 }
