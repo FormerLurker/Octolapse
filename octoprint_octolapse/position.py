@@ -98,7 +98,7 @@ class Pos(object):
             self.is_deretracting = copy_from_pos.is_deretracting
             self.is_deretracted = copy_from_pos.is_deretracted
             self.is_in_position = copy_from_pos.is_in_position
-            self.in_path_position = copy_from_pos.in_path_position
+
             self.is_zhop = copy_from_pos.is_zhop
             self.file_line_number = copy_from_pos.file_line_number
             self.gcode_number = copy_from_pos.gcode_number
@@ -114,6 +114,7 @@ class Pos(object):
                 self.has_state_changed = False
                 self.has_received_home_command = False
                 self.is_in_bounds = True
+                self.in_path_position = False
             else:
                 # Copy or default states
                 self.is_layer_change = copy_from_pos.is_layer_change
@@ -125,6 +126,7 @@ class Pos(object):
                 self.has_state_changed = copy_from_pos.has_state_changed
                 self.has_received_home_command = copy_from_pos.has_received_home_command
                 self.is_in_bounds = copy_from_pos.is_in_bounds
+                self.in_path_position = copy_from_pos.in_path_position
 
         else:
             self.parsed_command = None
@@ -607,39 +609,35 @@ class Position(object):
         cpp_pos = GcodePositionProcessor.Update(self.key, gcode)
         current = Pos.copy_from_cpp_pos(cpp_pos, current)
 
-        # apply the cmd to the position tracker
-        # cmd = current.parsed_command.cmd
-        cmd = current.parsed_command.cmd
-
-        # Update Extruder States - Note that e_relative must be rounded and non-null
-        if current.has_xy_position_changed:
-            # Calcluate position restructions
-            if self._has_restricted_position:
-                # If we have a homed for the current and previous position, and either the exturder or position has
-                # # changed
-                if (
-                    current.x is None or
-                    current.y is None or
-                    previous.x is None or
-                    previous.y is None
-                ):
-                    current.is_in_position = False
-                else:
-                    # If we're using restricted positions, calculate intersections and determine if we are in position
-                    can_calculate_intersections = current.parsed_command.cmd in ["G0", "G1"]
-                    _is_in_position, _intersections = self.calculate_path_intersections(
-                        self._position_restrictions,
-                        current.x,
-                        current.y,
-                        previous.x,
-                        previous.y,
-                        can_calculate_intersections
-                    )
-                    current.is_in_position = _is_in_position
-                    if not _is_in_position:
-                        current.in_path_position = _intersections
+        # reset the position restriction in_path_position state since it only works
+        # for one gcode at a time.
+        current.in_path_position = False
+        if not self._has_restricted_position:
+            # If we don't have restricted positions, we are always in position!
+            current.is_in_position = True
+        elif current.has_xy_position_changed:
+            # calculate position restrictions
+            if (
+                current.x is None or
+                current.y is None or
+                previous.x is None or
+                previous.y is None
+            ):
+                current.is_in_position = False
             else:
-                current.is_in_position = True
+                # If we're using restricted positions, calculate intersections and determine if we are in position
+                can_calculate_intersections = current.parsed_command.cmd in ["G0", "G1"]
+                _is_in_position, _intersections = self.calculate_path_intersections(
+                    self._position_restrictions,
+                    current.x,
+                    current.y,
+                    previous.x,
+                    previous.y,
+                    can_calculate_intersections
+                )
+                current.is_in_position = _is_in_position
+                if not _is_in_position:
+                    current.in_path_position = _intersections
 
     #def process_g2_g3(self, cmd):
     #    parameters = self.current_pos.parsed_command.parameters

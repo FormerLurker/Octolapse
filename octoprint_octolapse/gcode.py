@@ -875,6 +875,10 @@ class SnapshotGcodeGenerator(object):
                 current_position,
                 parsed_command_position,
                 parsed_command_position.in_path_position["intersection"])
+
+            if gcode_command_1 is None or gcode_command_2 is None:
+                return None
+
             snapshot_plan.start_command = gcode_command_1
 
             # undo the previous update to the position processor
@@ -927,6 +931,9 @@ class SnapshotGcodeGenerator(object):
             math.pow(start_y_offset - end_y_offset, 2)
         )
 
+        if total_distance == 0:
+            logger.error("Position restrictions indicated that a gcode should be split, but no travel was involved.")
+            return None, None
         first_extrusion_length = (distance_to_intersection / total_distance) * extrusion_length
         e1_offset = start_e_offset + first_extrusion_length
         e2_offset = end_e_offset - first_extrusion_length

@@ -81,7 +81,7 @@ $(function () {
             }
             self.resize_timer = setTimeout(resize_help_popup, 100);
             function resize_help_popup (){
-                console.log("Resizing octolapse help.");
+                //console.log("Resizing octolapse help.");
                 var width = self.popup_width.toString();
 
                 if (document.body.clientWidth < self.popup_width_with_margin) {
