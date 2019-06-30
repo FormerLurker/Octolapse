@@ -59,27 +59,47 @@ $(function () {
                     notice.remove();
                 });
                 //console.log("Adding resize handler.");
-                $(window).on("resize",self.resize_handler);
+                self.resize_handler(null, null);
+                window.addEventListener('resize', self.resize_handler)
             },
             after_close: function(notice){
                 var $parentDiv = $(notice.elem).parent();
                 $parentDiv.remove();
+                Octolapse.removeKeyForClosedPopup('octolapse-help');
                 //console.log("Removing resize handler.");
-                $(window).off("resize", self.resize_handler);
+                window.removeEventListener('resize', self.resize_handler)
             }
         };
 
-        self.resize_handler = function(event) {
-            //console.log("Resizing octolapse help.");
-            var width = self.popup_width.toString() + "px";
-            if (document.body.clientWidth < self.popup_width_with_margin) {
-                self.stack_center.firstpos2 = self.popup_margin;
-                width = (document.body.clientWidth - (self.popup_margin * 2)).toString() + "px";
+        self.resize_timer = null;
+        self.resize_handler = function(event, elem) {
+
+            if(self.resize_timer)
+            {
+                clearTimeout(self.resize_timer);
+                self.resize_timer = null;
             }
-            else {
-                self.stack_center.firstpos2 = (document.body.clientWidth / 2) - (self.popup_width / 2);
+            self.resize_timer = setTimeout(resize_help_popup, 100);
+            function resize_help_popup (){
+                console.log("Resizing octolapse help.");
+                var width = self.popup_width.toString();
+
+                if (document.body.clientWidth < self.popup_width_with_margin) {
+                    self.stack_center.firstpos2 = self.popup_margin;
+                    width = (document.body.clientWidth - (self.popup_margin * 2)).toString();
+                }
+                else {
+                    self.stack_center.firstpos2 = (document.body.clientWidth / 2) - (self.popup_width / 2);
+                }
+                // get the left position
+                var left = (document.body.clientWidth - width)/2;
+                // set width
+                $(".octolapse-pnotify-help").css("width", width);
+                // set left (center popup)
+                $(".octolapse-pnotify-help").css("left", left);
+
             }
-            $(".octolapse-pnotify-help").css("width", width);
+
         };
 
         self.converter = new showdown.Converter({
@@ -104,7 +124,7 @@ $(function () {
                     self.options.text = Octolapse.replaceAll(self.converter.makeHtml(results), '\n','');
                     self.options.title = title;
 
-                    Octolapse.displayPopupForKey(self.options, "help", ["help"]);
+                    Octolapse.displayPopupForKey(self.options, "octolapse-help", ["octolapse-help"]);
                     $(".octolapse-pnotify-help div.ui-pnotify-container")
                         .css("background-color", body_background_color)
                         .css("border-color", "#000000")
@@ -124,7 +144,7 @@ $(function () {
                         self.options.text = self.converter.makeHtml(missing_file_text);
                         self.options.title = "Help Could Not Be Found";
 
-                        Octolapse.displayPopupForKey(self.options, "help", ["help"]);
+                        Octolapse.displayPopupForKey(self.options, "octolapse-help", ["octolapse-help"]);
                         $(".octolapse-pnotify-help div.ui-pnotify-container")
                             .css("background-color", body_background_color)
                             .css("border-color", "#000000")
@@ -140,7 +160,7 @@ $(function () {
                             hide: true,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options, "help", ["help"]);
+                        Octolapse.displayPopupForKey(options, "octolapse-help", ["octolapse-help"]);
                     }
                 }
             });

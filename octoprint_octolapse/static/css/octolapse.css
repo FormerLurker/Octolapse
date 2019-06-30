@@ -248,6 +248,10 @@ disabled, .octolapse select:disabled, .octolapse .disabled{
     width: 100%;
     height:400px;
 }
+.octolapse-pnotify-container .alert
+{
+    text-shadow:none;
+}
 
 .octolapse-pnotify-help
 {

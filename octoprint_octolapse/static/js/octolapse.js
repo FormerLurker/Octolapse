@@ -344,7 +344,13 @@ $(function () {
                 delete Octolapse.Popups[key];
             }
         }
-    }
+    };
+
+    Octolapse.removeKeyForClosedPopup = function(key){
+            if (key in Octolapse.Popups) {
+                delete Octolapse.Popups[key];
+            }
+    };
 
     Octolapse.ConfirmDialogs = {};
     Octolapse.closeConfirmDialogsForKeys = function(remove_keys) {
