@@ -33,7 +33,6 @@
 #include "gcode_position.h"
 #include "gcode_parser.h"
 #include "stabilization.h"
-#include "stabilization_snap_to_print.h"
 #include "stabilization_smart_layer.h"
 namespace gpp {
 	static std::map<std::string, gcode_position*> gcode_positions;

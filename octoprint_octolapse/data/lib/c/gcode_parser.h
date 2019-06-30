@@ -41,12 +41,12 @@ private:
 	std::set<std::string> text_only_functions_;
 	std::set<std::string> parsable_commands_;
 	// Functions
-	bool try_extract_double(char ** p, double * p_double);
-	bool try_extract_gcode_command(char ** p_p_gcode, std::string * command);
-	bool try_extract_text_parameter(char ** p_p_gcode, std::string * p_parameter);
-	bool try_extract_parameter(char ** p_p_gcode, parsed_command_parameter * parameter);
-	bool try_extract_t_parameter(char ** p_p_gcode, parsed_command_parameter * parameter);
-	bool try_extract_unsigned_long(char ** p_p_gcode, unsigned long * p_value);
+	bool try_extract_double(char ** p_p_gcode, double * p_double) const;
+	static bool try_extract_gcode_command(char ** p_p_gcode, std::string * p_command);
+	static bool try_extract_text_parameter(char ** p_p_gcode, std::string * p_parameter);
+	bool try_extract_parameter(char ** p_p_gcode, parsed_command_parameter * parameter) const;
+	static bool try_extract_t_parameter(char ** p_p_gcode, parsed_command_parameter * parameter);
+	static bool try_extract_unsigned_long(char ** p_p_gcode, unsigned long * p_value);
 
 };
 #endif

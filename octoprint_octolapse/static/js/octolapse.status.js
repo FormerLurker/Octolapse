@@ -323,6 +323,7 @@ $(function () {
                         return
                     }
                 }
+
                 if (self.current_camera_guid() === null || self.current_camera_guid() === "")
                     console.error("Current camera guid requested, but it is null.");
                 else
@@ -413,19 +414,31 @@ $(function () {
                 else {
                     $newSnapshot.one('load', function () {
                         // Hide the latest image
-                        $latestSnapshot.fadeOut(250, function () {
-                            // Remove the latest image
-                            $latestSnapshot.remove();
+
+                        if ($latestSnapshot.length == 1)
+                        {
+                            $latestSnapshot.fadeOut(250, function () {
+                                // Remove the latest image
+                                if($latestSnapshot.length)
+                                    $latestSnapshot.remove();
+                                // Set the new snapshot to hidden initially
+                                $newSnapshot.css('display', 'none');
+                                // Add the new snapshot to the container
+                                $newSnapshot.appendTo($latestSnapshotContainer);
+                                // fade it in.  Ahhh..
+                                $newSnapshot.fadeIn(250);
+                            });
+                        }
+                        else
+                        {
                             // Set the new snapshot to hidden initially
                             $newSnapshot.css('display', 'none');
                             // Add the new snapshot to the container
                             $newSnapshot.appendTo($latestSnapshotContainer);
                             // fade it in.  Ahhh..
                             $newSnapshot.fadeIn(250);
-                        });
+                        }
                     });
-
-
                 }
                 $newSnapshot.one('error', function () {
                     //console.log("An error occurred loading the newest image, reverting to previous image.");

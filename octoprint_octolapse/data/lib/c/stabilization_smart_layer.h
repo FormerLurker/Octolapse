@@ -7,8 +7,6 @@
 #undef _DEBUG
 #include <Python.h>
 #define _DEBUG
-#else
-#include <Python.h>
 #endif
 static const char* SMART_LAYER_STABILIZATION = "smart_layer";
 

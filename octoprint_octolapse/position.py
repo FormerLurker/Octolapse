@@ -612,17 +612,19 @@ class Position(object):
         cmd = current.parsed_command.cmd
 
         # Update Extruder States - Note that e_relative must be rounded and non-null
-        if current.has_position_changed:
+        if current.has_xy_position_changed:
             # Calcluate position restructions
             if self._has_restricted_position:
                 # If we have a homed for the current and previous position, and either the exturder or position has
                 # # changed
                 if (
-                    current.x is not None and
-                    current.y is not None and
-                    previous.x is not None and
-                    previous.y is not None
+                    current.x is None or
+                    current.y is None or
+                    previous.x is None or
+                    previous.y is None
                 ):
+                    current.is_in_position = False
+                else:
                     # If we're using restricted positions, calculate intersections and determine if we are in position
                     can_calculate_intersections = current.parsed_command.cmd in ["G0", "G1"]
                     _is_in_position, _intersections = self.calculate_path_intersections(
@@ -633,10 +635,8 @@ class Position(object):
                         previous.y,
                         can_calculate_intersections
                     )
-                    if _is_in_position:
-                        current.is_in_position = _is_in_position
-
-                    else:
+                    current.is_in_position = _is_in_position
+                    if not _is_in_position:
                         current.in_path_position = _intersections
             else:
                 current.is_in_position = True

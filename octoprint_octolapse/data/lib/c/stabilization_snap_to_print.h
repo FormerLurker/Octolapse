@@ -29,8 +29,6 @@
 #undef _DEBUG
 #include <Python.h>
 #define _DEBUG
-#else
-#include <Python.h>
 #endif
 static const char* LOCK_TO_PRINT_CORNER_STABILIZATION = "lock-to-print-corner";
 class stabilization_snap_to_print :

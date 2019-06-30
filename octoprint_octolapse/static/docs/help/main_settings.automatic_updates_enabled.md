@@ -1,6 +1,3 @@
-Enable or disable automatic profile updates.  Currently only printer profiles have automatic capabilities.  When this setting is enabled, printer profiles will be updated when they meet the following criteria:
+Octolapse can automatically update any profiles that have been imported from the profile repository.  Customized profiles cannot be updated.
 
-1.  Make and model needs to be selected.  Selecting 'Other' will prevent automatic updates.
-2.  The printer profile needs to have automatic updates enabled as well.
-
-Automatic printer profile updates will not affect your slicer settings.
+When this setting is enabled, Octolapse will periodically check for profile updates form the repository.  You will be notified when there are new updates available.  Alternatively, you can check for updates manually in the main settings page (gear icon in the octolapse tab).

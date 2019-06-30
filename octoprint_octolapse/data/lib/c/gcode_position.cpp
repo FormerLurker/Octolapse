@@ -21,7 +21,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "gcode_position.h"
 #include "utilities.h"
-#include <iostream>
 #include "logging.h"
 
 gcode_position::gcode_position()
@@ -102,7 +101,7 @@ gcode_position::gcode_position(gcode_position_args* args)
 
 	is_circular_bed_ = args->is_circular_bed;
 
-	p_previous_pos_ = new position(xyz_axis_default_mode_,e_axis_default_mode_, units_default_);
+	p_previous_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 	p_current_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 	p_undo_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
 
@@ -168,7 +167,7 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 	p_current_pos_->gcode_number_ = gcode_number;
 	// Does our function exist in our functions map?
 	gcode_functions_iterator_ = gcode_functions_.find(command->cmd_);
-	
+
 	if (gcode_functions_iterator_ != gcode_functions_.end())
 	{
 		p_current_pos_->gcode_ignored_ = false;
@@ -179,11 +178,11 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 		p_current_pos_->e_relative_ = (p_current_pos_->e_ - p_previous_pos_->e_);
 		p_current_pos_->z_relative_ = (p_current_pos_->z_ - p_previous_pos_->z_);
 		// Have the XYZ positions changed after processing a command ?
-		
+
 		p_current_pos_->has_xy_position_changed_ = (
 			!utilities::is_equal(p_current_pos_->x_, p_previous_pos_->x_) ||
 			!utilities::is_equal(p_current_pos_->y_, p_previous_pos_->y_)
-		);
+			);
 		p_current_pos_->has_position_changed_ = (
 			p_current_pos_->has_xy_position_changed_ ||
 			!utilities::is_equal(p_current_pos_->z_, p_previous_pos_->z_) ||
@@ -221,7 +220,7 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 		}
 		else
 		{
-			
+
 			// Update retraction_length and extrusion_length
 			p_current_pos_->retraction_length_ = p_current_pos_->retraction_length_ - p_current_pos_->e_relative_;
 			if (utilities::less_than_or_equal(p_current_pos_->retraction_length_, 0))
@@ -241,7 +240,7 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 			}
 			else
 				p_current_pos_->deretraction_length_ = 0;
-			
+
 			// *************Calculate extruder state*************
 			// rounding should all be done by now
 			p_current_pos_->is_extruding_start_ = utilities::greater_than(p_current_pos_->extrusion_length_, 0) && !p_previous_pos_->is_extruding_;
@@ -253,7 +252,7 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 			p_current_pos_->is_retracted_ = utilities::greater_than_or_equal(p_current_pos_->retraction_length_, retraction_length_);
 			p_current_pos_->is_deretracting_start_ = utilities::greater_than(p_current_pos_->deretraction_length_, 0) && !p_previous_pos_->is_deretracting_;
 			p_current_pos_->is_deretracting_ = utilities::greater_than(p_current_pos_->deretraction_length_, p_previous_pos_->deretraction_length_);
-			p_current_pos_->is_deretracted_ = utilities::greater_than(p_previous_pos_->retraction_length_,0) && utilities::is_zero(p_current_pos_->retraction_length_);
+			p_current_pos_->is_deretracted_ = utilities::greater_than(p_previous_pos_->retraction_length_, 0) && utilities::is_zero(p_current_pos_->retraction_length_);
 			// *************End Calculate extruder state*************
 		}
 		// calculate last_extrusion_height and height
@@ -282,7 +281,7 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 							p_current_pos_->is_printer_primed_ = true;
 					}
 
-					if(p_current_pos_->is_printer_primed_)
+					if (p_current_pos_->is_printer_primed_)
 					{
 						// Calculate current height
 						if (utilities::greater_than_or_equal(p_current_pos_->z_, p_previous_pos_->height_ + minimum_layer_height_))
@@ -308,27 +307,30 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 		// Set is_in_bounds_ to false if we're not in bounds, it will be true at this point
 		if (is_bound_)
 		{
+			bool is_in_bounds = true;
 			if (!is_circular_bed_)
 			{
-				if (
+				is_in_bounds = !(
 					p_current_pos_->x_ < snapshot_x_min_ ||
 					p_current_pos_->x_ > snapshot_x_max_ ||
 					p_current_pos_->y_ < snapshot_y_min_ ||
 					p_current_pos_->y_ > snapshot_y_max_ ||
 					p_current_pos_->z_ < snapshot_z_min_ ||
-					p_current_pos_->z_ > snapshot_z_max_)
-				{
-					//std::cout << " - IsCloser Complete, out of bounds.\r\n";
-					p_current_pos_->is_in_bounds_ = false;
-				}
+					p_current_pos_->z_ > snapshot_z_max_
+					);
+
 			}
 			else
 			{
-				const double r = x_max_; // good stand in for radius
+				double r;
+				r = snapshot_x_max_; // good stand in for radius
 				const double dist = sqrt(p_current_pos_->x_*p_current_pos_->x_ + p_current_pos_->y_*p_current_pos_->y_);
-				p_current_pos_->is_in_bounds_ = utilities::greater_than(dist, r);
+				is_in_bounds = utilities::less_than_or_equal(dist, r);
+
 			}
+			p_current_pos_->is_in_bounds_ = is_in_bounds;
 		}
+
 	}
 }
 
@@ -367,7 +369,7 @@ void gcode_position::update_position(position* pos, double x, bool update_x, dou
 {
 	if (is_g1_g0)
 	{
-		if(!update_e)
+		if (!update_e)
 		{
 			if (update_z)
 			{
@@ -378,7 +380,7 @@ void gcode_position::update_position(position* pos, double x, bool update_x, dou
 				pos->is_xy_travel_ = (update_x || update_y);
 			}
 		}
-		
+
 	}
 	if (update_f)
 	{
@@ -414,7 +416,7 @@ void gcode_position::update_position(position* pos, double x, bool update_x, dou
 		if (pos->is_relative_) {
 			if (update_x)
 			{
-				if(!pos->x_null_)
+				if (!pos->x_null_)
 					pos->x_ = x + pos->x_;
 				else
 				{
@@ -423,7 +425,7 @@ void gcode_position::update_position(position* pos, double x, bool update_x, dou
 			}
 			if (update_y)
 			{
-				if(!pos->y_null_)
+				if (!pos->y_null_)
 					pos->y_ = y + pos->y_;
 				else
 				{
@@ -432,7 +434,7 @@ void gcode_position::update_position(position* pos, double x, bool update_x, dou
 			}
 			if (update_z)
 			{
-				if(!pos->z_null_)
+				if (!pos->z_null_)
 					pos->z_ = z + pos->z_;
 				else
 				{
@@ -484,7 +486,7 @@ void gcode_position::update_position(position* pos, double x, bool update_x, dou
 			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, message);
 		}
 	}
-	
+
 }
 
 void gcode_position::process_g0_g1(position* posPtr, parsed_command* parsedCommandPtr)
@@ -499,7 +501,7 @@ void gcode_position::process_g0_g1(position* posPtr, parsed_command* parsedComma
 	double z = 0;
 	double e = 0;
 	double f = 0;
-	
+
 	for (unsigned int index = 0; index < parsedCommandPtr->parameters_.size(); index++)
 	{
 		parsed_command_parameter * p_cur_param = parsedCommandPtr->parameters_[index];

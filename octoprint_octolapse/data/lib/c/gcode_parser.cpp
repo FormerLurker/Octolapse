@@ -102,7 +102,7 @@ gcode_parser::~gcode_parser()
 bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 {
 	// Create a command
-	//std::cout << "GcodeParser.try_parse_gcode - Parsing " << gcode << "\r\n";
+	//octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::VERBOSE, gcode);
 	char * p = const_cast<char *>(gcode);
 	if(!try_extract_gcode_command(&p, &(command->cmd_)))
 	{
@@ -249,7 +249,7 @@ bool gcode_parser::try_extract_unsigned_long(char ** p_p_gcode, unsigned long * 
 		if (*p != ' ')
 		{
 			found_numbers = true;
-			r = (unsigned int)((r*10.0) + (*p - '0'));
+			r = static_cast<unsigned int>((r * 10.0) + (*p - '0'));
 		}
 		++p;
 	}
@@ -262,7 +262,8 @@ bool gcode_parser::try_extract_unsigned_long(char ** p_p_gcode, unsigned long * 
 	return found_numbers;
 }
 
-bool gcode_parser::try_extract_double(char ** p_p_gcode, double * p_double) {
+bool gcode_parser::try_extract_double(char ** p_p_gcode, double * p_double) const
+{
 	char * p = *p_p_gcode;
 	bool neg = false;
 	double r = 0;
@@ -343,7 +344,7 @@ bool gcode_parser::try_extract_text_parameter(char ** p_p_gcode, std::string * p
 
 }
 
-bool gcode_parser::try_extract_parameter(char ** p_p_gcode, parsed_command_parameter * parameter)
+bool gcode_parser::try_extract_parameter(char ** p_p_gcode, parsed_command_parameter * parameter) const
 {
 	//std::cout << "GcodeParser.try_extract_parameter - Trying to extract a parameter from  " << *p_p_gcode << "\r\n";
 	char * p = *p_p_gcode;

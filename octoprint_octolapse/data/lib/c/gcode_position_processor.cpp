@@ -25,11 +25,9 @@
 #include <sstream>
 #include <iostream>
 #include "utilities.h"
-#include "stabilization_snap_to_print.h"
 #include "stabilization_smart_layer.h"
 #include "stabilization.h"
 #include "logging.h"
-#include "bytesobject.h"
 #include "python_helpers.h"
 #ifdef _DEBUG
 #include "test.h"

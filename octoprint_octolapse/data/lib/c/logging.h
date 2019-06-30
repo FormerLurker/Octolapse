@@ -1,5 +1,4 @@
 #pragma once
-#include<stdarg.h>
 #include <string>
 #include <map>
 

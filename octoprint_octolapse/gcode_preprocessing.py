@@ -106,15 +106,10 @@ class GcodeFileProcessor(object):
                 # get the current file position
                 self.current_file_position = f.tell()
 
-                has_incomplete_processor = False
                 for processor in processors:
                     processor.process_line(line, line_number, 'forward')
-                    if not processor.is_complete(u'forward'):
-                        has_incomplete_processor = True
-
-                # previously we wanted to remove any completed processors
-                if not has_incomplete_processor:
-                    return
+                    if processor.is_complete(u'forward'):
+                        return
 
                 self.notify_progress()
 
@@ -136,15 +131,12 @@ class GcodeFileProcessor(object):
                 # with the reverse processor.  Need to write one that works for this purpose.
                 #self.current_file_position = f.tell()
 
-                has_incomplete_processor = False
                 for processor in processors:
                     processor.process_line(line, line_number, u'reverse')
-                    if not processor.is_complete(u'reverse'):
-                        has_incomplete_processor = True
+                    if processor.is_complete(u'reverse'):
+                        # one processor is complete, return
+                        return
 
-                # previously we wanted to remove any completed processors
-                if not has_incomplete_processor:
-                    return
 
     def notify_progress(self, end_progress=False):
         if self.update_progress_callback is None:

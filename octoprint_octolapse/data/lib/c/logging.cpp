@@ -8,8 +8,6 @@
 #endif
 #include "logging.h"
 #include <string>
-#include <iostream>
-#include <climits>
 #include "python_helpers.h"
 
 static bool octolapse_loggers_created = false;

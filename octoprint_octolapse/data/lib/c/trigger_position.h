@@ -1,6 +1,5 @@
 #pragma once
 #include "position.h"
-#include <map>
 
 /**
  * \brief A struct to hold the closest position, which  is used by the stabilization preprocessors.
