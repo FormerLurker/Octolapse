@@ -291,6 +291,7 @@ a.disabled {
 #snapshot_plan_canvas {
     border: 2px solid black;
     margin-top: 2px;
+    max-width:100%;
 }
 span.octolapse-icon-text {
     font-family: Helvetica Neue,Helvetica,Arial,sans-serif;

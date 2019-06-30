@@ -57,10 +57,12 @@ $(function() {
             });
 
             dialog.$snapshotPlanPreviewDialog.on("show.bs.modal", function () {
+                Octolapse.Status.SnapshotPlanState.is_confirmation_popup(true);
             });
 
             dialog.$snapshotPlanPreviewDialog.on("shown.bs.modal", function () {
                 Octolapse.Help.bindHelpLinks("#octolapse_snapshot_plan_preview_dialog");
+
                 dialog.$snapshotPlanPreviewDialog.css({
                     width: '940px',
                     'margin-left': function () {
@@ -82,6 +84,7 @@ $(function() {
 
         self.closeSnapshotPlanPreviewDialog = function() {
             $("#octolapse_snapshot_plan_preview_dialog").modal("hide");
+            Octolapse.Status.SnapshotPlanState.is_confirmation_popup(false);
             if(self.on_closed_callback)
                 self.on_closed_callback();
         };

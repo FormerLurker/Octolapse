@@ -48,6 +48,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.printer_volume = null;
             self.axes = null;
             self.is_preview = false;
+            self.is_confirmation_popup = ko.observable(false);
 
             self.update = function (state) {
                 if (state.snapshot_plans != null)
