@@ -47,9 +47,9 @@ class TestPosition(unittest.TestCase):
         self.Printer.auto_detect_position = False
         # since we've set auto_detect_position to false, we need to set
         # an origin, else X,Y and Z will still be None after a home command
-        self.Printer.origin_x = 0
-        self.Printer.origin_y = 0
-        self.Printer.origin_z = 0
+        self.Printer.home_x = 0
+        self.Printer.home_y = 0
+        self.Printer.home_z = 0
         assert(isinstance(self.Printer, PrinterProfile))
         self.Printer.slicer_type = SlicerSettings.SlicerTypeSlic3rPe
         slicer_settings = self.Printer.get_current_slicer_settings()

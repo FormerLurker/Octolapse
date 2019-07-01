@@ -974,63 +974,63 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 
 	// Here is the full structure of the position args:
 	// get the volume py object
-	PyObject * py_origin = PyDict_GetItemString(py_args, "origin");
-	if (py_origin == NULL)
+	PyObject * py_home = PyDict_GetItemString(py_args, "home_position");
+	if (py_home == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve py_origin from the position args dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve py_home from the position args dict.");
 		return false;
 	}
 
-	// origin_x
-	PyObject * py_origin_x = PyDict_GetItemString(py_origin, "origin_x");
-	if (py_origin_x == NULL)
+	// home_x
+	PyObject * py_home_x = PyDict_GetItemString(py_home, "home_x");
+	if (py_home_x == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve origin_x from the position dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve home_x from the position dict.");
 		return false;
 	}
-	if (py_origin_x == Py_None)
+	if (py_home_x == Py_None)
 	{
-		args->origin_x_none = true;
+		args->home_x_none = true;
 	}
 	else
 	{
-		args->origin_x = PyFloatOrInt_AsDouble(py_origin_x);
+		args->home_x = PyFloatOrInt_AsDouble(py_home_x);
 	}
 	
-	// origin_y
-	PyObject * py_origin_y = PyDict_GetItemString(py_origin, "origin_y");
-	if (py_origin_y == NULL)
+	// home_y
+	PyObject * py_home_y = PyDict_GetItemString(py_home, "home_y");
+	if (py_home_y == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve origin_y from the position dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve home_y from the position dict.");
 		return false;
 	}
-	if (py_origin_y == Py_None)
+	if (py_home_y == Py_None)
 	{
-		args->origin_y_none = true;
+		args->home_y_none = true;
 	}
 	else
 	{
-		args->origin_y = PyFloatOrInt_AsDouble(py_origin_y);
+		args->home_y = PyFloatOrInt_AsDouble(py_home_y);
 	}
 
-	// origin_z
-	PyObject * py_origin_z = PyDict_GetItemString(py_origin, "origin_z");
-	if (py_origin_z == NULL)
+	// home_z
+	PyObject * py_home_z = PyDict_GetItemString(py_home, "home_z");
+	if (py_home_z == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve origin_z from the position dict.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve home_z from the position dict.");
 		return false;
 	}
-	if (py_origin_z == Py_None)
+	if (py_home_z == Py_None)
 	{
-		args->origin_z_none = true;
+		args->home_z_none = true;
 	}
 	else
 	{
-		args->origin_z = PyFloatOrInt_AsDouble(py_origin_z);
+		args->home_z = PyFloatOrInt_AsDouble(py_home_z);
 	}
 	// get the slicer settings dictionary
 

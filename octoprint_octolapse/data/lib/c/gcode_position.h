@@ -31,12 +31,12 @@ struct gcode_position_args {
 		// Wipe Variables
 		autodetect_position = true;
 		is_circular_bed = false;
-		origin_x = 0;
-		origin_y = 0;
-		origin_z = 0;
-		origin_x_none = false;
-		origin_y_none = false;
-		origin_z_none = false;
+		home_x = 0;
+		home_y = 0;
+		home_z = 0;
+		home_x_none = false;
+		home_y_none = false;
+		home_z_none = false;
 		retraction_length = 0;
 		z_lift_height = 0;
 		priming_height = 0;
@@ -63,12 +63,12 @@ struct gcode_position_args {
 	bool autodetect_position;
 	bool is_circular_bed;
 	// Wipe variables
-	double origin_x;
-	double origin_y;
-	double origin_z;
-	bool origin_x_none;
-	bool origin_y_none;
-	bool origin_z_none;
+	double home_x;
+	double home_y;
+	double home_z;
+	bool home_x_none;
+	bool home_y_none;
+	bool home_z_none;
 	double retraction_length;
 	double z_lift_height;
 	double priming_height;
@@ -114,12 +114,12 @@ private:
 	position* p_undo_pos_;
 	bool autodetect_position_;
 	double priming_height_;
-	double origin_x_;
-	double origin_y_;
-	double origin_z_;
-	bool origin_x_none_;
-	bool origin_y_none_;
-	bool origin_z_none_;
+	double home_x_;
+	double home_y_;
+	double home_z_;
+	bool home_x_none_;
+	bool home_y_none_;
+	bool home_z_none_;
 	double retraction_length_;
 	double z_lift_height_;
 	double minimum_layer_height_;

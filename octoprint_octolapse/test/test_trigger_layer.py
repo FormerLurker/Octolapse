@@ -36,9 +36,9 @@ class TestLayerTrigger(unittest.TestCase):
         self.Settings.profiles.current_printer().e_axis_default_mode = 'relative'
         self.Settings.profiles.current_printer().xyz_axes_default_mode = 'absolute'
         self.Settings.profiles.current_printer().auto_detect_position = False
-        self.Settings.profiles.current_printer().origin_x = 0
-        self.Settings.profiles.current_printer().origin_y = 0
-        self.Settings.profiles.current_printer().origin_z = 0
+        self.Settings.profiles.current_printer().home_x = 0
+        self.Settings.profiles.current_printer().home_y = 0
+        self.Settings.profiles.current_printer().home_z = 0
         self.OctoprintPrinterProfile = self.create_octoprint_printer_profile()
 
     def tearDown(self):

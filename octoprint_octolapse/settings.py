@@ -259,7 +259,6 @@ class PrinterProfile(AutomaticConfigurationProfile):
     bed_type_circular = 'circular'
     origin_type_front_left = 'front_left'
     origin_type_center = 'center'
-    origin_type_custom = 'custom'
     
     def __init__(self, name="New Printer Profile"):
         super(PrinterProfile, self).__init__(name)
@@ -275,13 +274,17 @@ class PrinterProfile(AutomaticConfigurationProfile):
         self.suppress_snapshot_command_always = True
         self.auto_detect_position = True
         self.origin_type = PrinterProfile.origin_type_front_left
-        self.origin_x = None
-        self.origin_y = None
-        self.origin_z = None
+        self.home_x = None
+        self.home_y = None
+        self.home_z = None
         self.abort_out_of_bounds = True
         self.override_octoprint_profile_settings = False
         self.bed_type = PrinterProfile.bed_type_rectangular
         self.diameter_xy = 0.0
+        self.width = 0.0
+        self.depth = 0.0
+        self.height = 0.0
+        self.custom_bounding_box = False
         self.min_x = 0.0
         self.max_x = 0.0
         self.min_y = 0.0
@@ -353,20 +356,29 @@ class PrinterProfile(AutomaticConfigurationProfile):
         settings_dict = {}
         volume_dict = {}
         volume_dict["bed_type"] = self.bed_type
-        if self.bed_type == "rectangular":
+        if self.custom_bounding_box:
+            # set the bounds to the custom box
             volume_dict["min_x"] = float(self.min_x)
             volume_dict["max_x"] = float(self.max_x)
             volume_dict["min_y"] = float(self.min_y)
             volume_dict["max_y"] = float(self.max_y)
+            volume_dict["min_z"] = float(self.min_z)
+            volume_dict["max_z"] = float(self.max_z)
         else:
-            radius_xy = float(self.diameter_xy) / 2.0
-            volume_dict["min_x"] = -1.0 * radius_xy
-            volume_dict["max_x"] = radius_xy
-            volume_dict["min_y"] = -1.0 * radius_xy
-            volume_dict["max_y"] = radius_xy
-
-        volume_dict["min_z"] = float(self.min_z)
-        volume_dict["max_z"] = float(self.max_z)
+            if self.bed_type == "circular":
+                radius_xy = float(self.diameter_xy) / 2.0
+                volume_dict["min_x"] = -1.0 * radius_xy
+                volume_dict["max_x"] = radius_xy
+                volume_dict["min_y"] = -1.0 * radius_xy
+                volume_dict["max_y"] = radius_xy
+            else:
+                # see if we have a custom bounding box
+                volume_dict["min_x"] = 0.0
+                volume_dict["max_x"] = float(self.width)
+                volume_dict["min_y"] = 0.0
+                volume_dict["max_y"] = float(self.depth)
+            volume_dict["min_z"] = 0.0
+            volume_dict["max_z"] = float(self.height)
 
         if not self.restrict_snapshot_area:
             volume_dict["bounds"] = False
@@ -390,29 +402,6 @@ class PrinterProfile(AutomaticConfigurationProfile):
             volume_dict["bounds"]["max_z"] = float(self.snapshot_max_z)
 
         settings_dict["volume"] = volume_dict
-
-        origin_dict = {}
-        if self.origin_type == PrinterProfile.origin_type_custom:
-            origin_dict['origin_x'] = float(self.origin_x)
-            origin_dict["origin_y"] = float(self.origin_y)
-            origin_dict["origin_z"] = float(self.origin_z)
-        else:
-            if self.bed_type == 'rectangular':
-                if self.origin_type == PrinterProfile.origin_type_front_left:
-                    origin_dict["origin_x"] = volume_dict["min_x"]
-                    origin_dict["origin_y"] = volume_dict["min_y"]
-                else:
-                    origin_dict["origin_x"] = volume_dict["min_x"] + (volume_dict["max_x"] - volume_dict["min_x"])/2.0
-                    origin_dict["origin_y"] = volume_dict["min_y"] + (volume_dict["max_y"] - volume_dict["min_y"])/2.0
-            else:
-                # circular bed origin is always at 0,0
-                origin_dict["origin_x"] = 0
-                origin_dict["origin_y"] = 0
-
-            origin_dict["origin_z"] = volume_dict["min_z"]
-
-        settings_dict["origin"] = origin_dict
-
         return settings_dict
 
     @staticmethod
@@ -456,21 +445,6 @@ class PrinterProfile(AutomaticConfigurationProfile):
         volume_dict["bounds"] = False
 
         settings_dict["volume"] = volume_dict
-        origin_dict = {}
-        # get the origin from the octoprint settings
-        if volume_dict["bed_type"] == 'circular':
-            origin_dict["origin_x"] = 0.0
-            origin_dict["origin_y"] = 0.0
-        elif octoprint_printer_profile["volume"]["origin"] == 'center':
-            origin_dict["origin_x"] = volume_dict["min_x"] + (volume_dict["max_x"] - volume_dict["min_x"])/2.0
-            origin_dict["origin_y"] = volume_dict["min_y"] + (volume_dict["max_y"] - volume_dict["min_y"])/2.0
-        else:
-            origin_dict["origin_x"] = volume_dict["min_x"]
-            origin_dict["origin_y"] = volume_dict["min_y"]
-
-        origin_dict["origin_z"] = volume_dict["min_z"]
-
-        settings_dict["origin"] = origin_dict
         return settings_dict
 
     # Gets a bounding box or circle for the current printer profile
@@ -496,8 +470,7 @@ class PrinterProfile(AutomaticConfigurationProfile):
         return {
             'origin_type_options': [
                 dict(value=PrinterProfile.origin_type_front_left, name='Front Left'),
-                dict(value=PrinterProfile.origin_type_center, name='Center'),
-                dict(value=PrinterProfile.origin_type_custom, name='Custom')
+                dict(value=PrinterProfile.origin_type_center, name='Center')
             ],
             'bed_type_options': [
                 dict(value=PrinterProfile.bed_type_rectangular, name='Rectangular'),
@@ -644,7 +617,7 @@ class PrinterProfile(AutomaticConfigurationProfile):
         return []
 
     def try_convert_value(cls, destination, value, key):
-        if key in ['origin_x','origin_y','origin_z']:
+        if key in ['home_x','home_y','home_z']:
             if value is not None:
                 return float(value)
         return super(PrinterProfile, cls).try_convert_value(destination, value, key)
@@ -660,6 +633,11 @@ class PrinterProfile(AutomaticConfigurationProfile):
             "slicer_settings": self.gcode_generation_settings.to_dict(),
             "priming_height": self.priming_height,
             "minimum_layer_height": self.minimum_layer_height,
+            "home_position": {
+                "home_x": None if self.home_x is None else float(self.home_x),
+                "home_y": None if self.home_y is None else float(self.home_y),
+                "home_z": None if self.home_z is None else float(self.home_z),
+            }
         }
         # merge the overridable settings
         position_args.update(overridable_profile_settings)

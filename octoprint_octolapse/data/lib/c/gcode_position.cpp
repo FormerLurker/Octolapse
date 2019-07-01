@@ -26,12 +26,12 @@
 gcode_position::gcode_position()
 {
 	autodetect_position_ = false;
-	origin_x_ = 0;
-	origin_y_ = 0;
-	origin_z_ = 0;
-	origin_x_none_ = true;
-	origin_y_none_ = true;
-	origin_z_none_ = true;
+	home_x_ = 0;
+	home_y_ = 0;
+	home_z_ = 0;
+	home_x_none_ = true;
+	home_y_none_ = true;
+	home_z_none_ = true;
 
 	retraction_length_ = 0;
 	z_lift_height_ = 0;
@@ -67,12 +67,12 @@ gcode_position::gcode_position()
 gcode_position::gcode_position(gcode_position_args* args)
 {
 	autodetect_position_ = args->autodetect_position;
-	origin_x_ = args->origin_x;
-	origin_y_ = args->origin_y;
-	origin_z_ = args->origin_z;
-	origin_x_none_ = args->origin_x_none;
-	origin_y_none_ = args->origin_y_none;
-	origin_z_none_ = args->origin_z_none;
+	home_x_ = args->home_x;
+	home_y_ = args->home_y;
+	home_z_ = args->home_z;
+	home_x_none_ = args->home_x_none;
+	home_y_none_ = args->home_y_none;
+	home_z_none_ = args->home_z_none;
 
 	retraction_length_ = args->retraction_length;
 	z_lift_height_ = args->z_lift_height;
@@ -570,9 +570,9 @@ void gcode_position::process_g28(position* p_position, parsed_command* p_parsed_
 	bool has_x = false;
 	bool has_y = false;
 	bool has_z = false;
-	bool set_x_origin = false;
-	bool set_y_origin = false;
-	bool set_z_origin = false;
+	bool set_x_home = false;
+	bool set_y_home = false;
+	bool set_z_home = false;
 
 	for (unsigned int index = 0; index < p_parsed_command->parameters_.size(); index++)
 	{
@@ -587,49 +587,43 @@ void gcode_position::process_g28(position* p_position, parsed_command* p_parsed_
 	if (has_x)
 	{
 		p_position->x_homed_ = true;
-		if (autodetect_position_)
-			set_x_origin = true;
+		set_x_home = true;
 	}
 	if (has_y)
 	{
 		p_position->y_homed_ = true;
-		if (!autodetect_position_)
-			set_y_origin = true;
+		set_y_home = true;
 	}
 	if (has_z)
 	{
 		p_position->z_homed_ = true;
-		if (!autodetect_position_)
-			set_z_origin = true;
+		set_z_home = true;
 	}
 	if (!has_x && !has_y && !has_z)
 	{
 		p_position->x_homed_ = true;
 		p_position->y_homed_ = true;
 		p_position->z_homed_ = true;
-		if (!autodetect_position_)
-		{
-			set_x_origin = true;
-			set_y_origin = true;
-			set_z_origin = true;
-		}
+		set_x_home = true;
+		set_y_home = true;
+		set_z_home = true;
 	}
 
-	if (set_x_origin && !origin_x_none_)
+	if (set_x_home && !home_x_none_)
 	{
-		p_position->x_ = origin_x_;
+		p_position->x_ = home_x_;
 		p_position->x_null_ = false;
 	}
 	// todo: set error flag on else
-	if (set_y_origin && !origin_y_none_)
+	if (set_y_home && !home_y_none_)
 	{
-		p_position->y_ = origin_y_;
+		p_position->y_ = home_y_;
 		p_position->y_null_ = false;
 	}
 	// todo: set error flag on else
-	if (set_z_origin && !origin_z_none_)
+	if (set_z_home && !home_z_none_)
 	{
-		p_position->z_ = origin_z_;
+		p_position->z_ = home_z_;
 		p_position->z_null_ = false;
 	}
 	// todo: set error flag on else

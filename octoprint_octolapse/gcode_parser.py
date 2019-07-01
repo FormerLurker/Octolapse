@@ -356,8 +356,8 @@ class Commands(object):
 
     G28 = Command(
         "G28",
-        "Go to origin",
-        "G28 - Go to origin X={X}, Y={Y}, Z={Z}, W={W}",
+        "Home Axis",
+        "G28 - Home axis X={X}, Y={Y}, Z={Z}, W={W}",
         parameters={
             "X": CommandParameter("X", CommandParameter.parse_float, 1),
             "Y": CommandParameter("Y", CommandParameter.parse_float, 2),

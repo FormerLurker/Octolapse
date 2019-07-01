@@ -5,8 +5,8 @@ def get_printer_profile():
           "e_axis_default_mode": "require-explicit",
           "g90_influences_extruder": "use-octoprint-settings",
           "movement_speed": 10800.0,
-          "origin_y": 0,
-          "origin_x": 0,
+          "home_y": 0,
+          "home_x": 0,
           "priming_height": 0.75,
           "min_x": 0.0,
           "guid": "42d2f5ec-7cc8-4d65-aec8-9015ecff7db6",
@@ -30,6 +30,6 @@ def get_printer_profile():
           "max_z": 0.0,
           "auto_detect_position": False,
           "max_x": 0.0,
-          "origin_z": 0
+          "home_z": 0
     }
 

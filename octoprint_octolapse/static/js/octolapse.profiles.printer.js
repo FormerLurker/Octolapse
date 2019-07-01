@@ -121,13 +121,19 @@ $(function() {
         self.auto_detect_position = ko.observable(values.auto_detect_position);
         self.auto_position_detection_commands = ko.observable(values.auto_position_detection_commands);
         self.origin_type = ko.observable(values.origin_type);
-        self.origin_x = ko.observable(values.origin_x);
-        self.origin_y = ko.observable(values.origin_y);
-        self.origin_z = ko.observable(values.origin_z);
+        self.home_x = ko.observable(values.home_x);
+        self.home_y = ko.observable(values.home_y);
+        self.home_z = ko.observable(values.home_z);
         self.abort_out_of_bounds = ko.observable(values.abort_out_of_bounds);
         self.override_octoprint_profile_settings = ko.observable(values.override_octoprint_profile_settings);
         self.bed_type = ko.observable(values.bed_type);
         self.diameter_xy = ko.observable(values.diameter_xy);
+
+        self.width = ko.observable(values.width);
+        self.depth= ko.observable(values.depth);
+        self.height = ko.observable(values.height);
+        self.custom_bounding_box = ko.observable(values.custom_bounding_box);
+
         self.min_x = ko.observable(values.min_x);
         self.max_x = ko.observable(values.max_x);
         self.min_y = ko.observable(values.min_y);
@@ -183,13 +189,17 @@ $(function() {
             self.auto_detect_position(server_profile.auto_detect_position);
             self.auto_position_detection_commands(server_profile.auto_position_detection_commands);
             self.origin_type(server_profile.origin_type);
-            self.origin_x(server_profile.origin_x);
-            self.origin_y(server_profile.origin_y);
-            self.origin_z(server_profile.origin_z);
+            self.home_x(server_profile.home_x);
+            self.home_y(server_profile.home_y);
+            self.home_z(server_profile.home_z);
             self.abort_out_of_bounds(server_profile.abort_out_of_bounds);
             self.override_octoprint_profile_settings(server_profile.override_octoprint_profile_settings);
             self.bed_type(server_profile.bed_type);
             self.diameter_xy(server_profile.diameter_xy);
+            self.width(server_profile.width);
+            self.depth(server_profile.depth);
+            self.height(server_profile.height);
+            self.custom_bounding_box(server_profile.custom_bounding_box);
             self.min_x(server_profile.min_x);
             self.max_x(server_profile.max_x);
             self.min_y(server_profile.min_y);
