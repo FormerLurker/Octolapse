@@ -155,6 +155,25 @@ $(function() {
         self.gocde_axis_compatibility_mode_enabled = ko.observable(values.gocde_axis_compatibility_mode_enabled);
         self.home_axis_gcode = ko.observable(values.home_axis_gcode);
 
+        self.origin_type_options = ko.pureComputed(function(){
+            var options = [];
+            if (self.bed_type() == 'circular')
+            {
+               for (var index in Octolapse.Printers.profileOptions.origin_type_options)
+               {
+                   var option = Octolapse.Printers.profileOptions.origin_type_options[index];
+                   if (option.value == 'center')
+                   {
+                       options.push(option);
+                   }
+               }
+            }
+            else
+            {
+                options = Octolapse.Printers.profileOptions.origin_type_options;
+            }
+           return Octolapse.nameSort(options);
+        });
         // Update the current profile from server profile values
         self.updateFromServer = function(server_profile){
             self.name(server_profile.name);

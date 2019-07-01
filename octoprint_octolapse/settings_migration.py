@@ -333,7 +333,7 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
         'is_octolapse_enabled': settings_dict.get('is_octolapse_enabled',default_main_settings["is_octolapse_enabled"]),
         'auto_reload_latest_snapshot': settings_dict.get('auto_reload_latest_snapshot',default_main_settings["auto_reload_latest_snapshot"]),
         'auto_reload_frames': settings_dict.get('auto_reload_frames',default_main_settings["auto_reload_frames"]),
-        'show_position_state_changes': settings_dict.get('show_position_state_changes',default_main_settings["show_position_state_changes"]),
+        'show_printer_state_changes': settings_dict.get('show_position_state_changes',default_main_settings["show_printer_state_changes"]),
         'show_position_changes': settings_dict.get('show_position_changes',default_main_settings["show_position_changes"]),
         'show_extruder_state_changes': settings_dict.get('show_extruder_state_changes',default_main_settings["show_extruder_state_changes"]),
         'show_trigger_state_changes': settings_dict.get('show_trigger_state_changes',default_main_settings["show_trigger_state_changes"]),

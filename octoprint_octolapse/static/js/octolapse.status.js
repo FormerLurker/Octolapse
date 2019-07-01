@@ -52,7 +52,7 @@ $(function () {
             });
             self.is_real_time = ko.observable(true);
             self.current_camera_guid = ko.observable(null);
-            self.PositionState = new Octolapse.positionStateViewModel();
+            self.PrinterState = new Octolapse.printerStateViewModel();
             self.Position = new Octolapse.positionViewModel();
             self.ExtruderState = new Octolapse.extruderStateViewModel();
             self.TriggerState = new Octolapse.TriggersStateViewModel();
@@ -525,9 +525,9 @@ $(function () {
                     return 'Octolapse is disabled.';
                 if(Octolapse.Status.is_real_time())
                 {
-                    if(! self.PositionState.is_initialized())
+                    if(! self.PrinterState.is_initialized())
                         return 'Octolapse is waiting for more information from the server.';
-                    if( self.PositionState.hasPositionStateErrors())
+                    if( self.PrinterState.hasPrinterStateErrors())
                         return 'Octolapse is waiting to initialize.';
                 }
                 if( self.is_taking_snapshot())
@@ -540,9 +540,9 @@ $(function () {
                 //console.log("GettingTimelapseStateText")
                 if(!self.is_timelapse_active())
                     return 'Octolapse is not running';
-                if(!self.PositionState.is_initialized())
+                if(!self.PrinterState.is_initialized())
                     return 'Waiting for update from server.  You may have to turn on the "Position State Info Panel" from the "Current Settings" below to receive an update.';
-                if( self.PositionState.hasPositionStateErrors())
+                if( self.PrinterState.hasPrinterStateErrors())
                     return 'Waiting to initialize';
                 return 'Octolapse is initialized and running';
             }, self);
@@ -550,7 +550,7 @@ $(function () {
             self.getTimelapseStateColor =  ko.pureComputed(function () {
                 if(!self.is_timelapse_active())
                     return '';
-                if(self.is_real_time() && (!self.PositionState.is_initialized() || self.PositionState.hasPositionStateErrors()))
+                if(self.is_real_time() && (!self.PrinterState.is_initialized() || self.PrinterState.hasPrinterStateErrors()))
                     return 'orange';
                 return 'greenyellow';
             }, self);
@@ -575,8 +575,8 @@ $(function () {
                 if (state.position != null) {
                     self.Position.update(state.position);
                 }
-                if (state.position_state != null) {
-                    self.PositionState.update(state.position_state);
+                if (state.printer_state != null) {
+                    self.PrinterState.update(state.printer_state);
                 }
                 if (state.extruder != null) {
                     self.ExtruderState.update(state.extruder);
@@ -629,7 +629,7 @@ $(function () {
 
             self.onTimelapseStart = function () {
                 self.TriggerState.removeAll();
-                self.PositionState.is_initialized(false);
+                self.PrinterState.is_initialized(false);
             };
 
             self.onTimelapseStop = function () {
@@ -842,7 +842,7 @@ $(function () {
         /*
             Status Tab viewmodels
         */
-        Octolapse.positionStateViewModel = function () {
+        Octolapse.printerStateViewModel = function () {
             var self = this;
             self.gcode = ko.observable("");
             self.x_homed = ko.observable(false);
@@ -911,7 +911,7 @@ $(function () {
                 });
             };
 
-            self.hasPositionStateErrors = ko.pureComputed(function(){
+            self.hasPrinterStateErrors = ko.pureComputed(function(){
                 if (Octolapse.Status.is_timelapse_active() && self.is_initialized())
 
                     if (!(self.x_homed() && self.y_homed() && self.z_homed())
@@ -942,7 +942,7 @@ $(function () {
                     return "Not a zhop";
             }, self);
 
-            self.getis_in_positionStateText = ko.pureComputed(function () {
+            self.getis_in_printerStateText = ko.pureComputed(function () {
                 if (self.is_in_position())
                     return "In position";
                 else if (self.in_path_position())

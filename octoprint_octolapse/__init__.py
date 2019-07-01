@@ -334,8 +334,8 @@ class OctolapsePlugin(
         self._octolapse_settings.main_settings.show_navbar_when_not_printing = (
             request_values["show_navbar_when_not_printing"]
         )
-        self._octolapse_settings.main_settings.show_position_state_changes = (
-            request_values["show_position_state_changes"]
+        self._octolapse_settings.main_settings.show_printer_state_changes = (
+            request_values["show_printer_state_changes"]
         )
         self._octolapse_settings.main_settings.show_position_changes = request_values["show_position_changes"]
         self._octolapse_settings.main_settings.show_extruder_state_changes = (
@@ -396,9 +396,9 @@ class OctolapsePlugin(
         request_values = flask.request.get_json()
         panel_type = request_values["panel_type"]
 
-        if panel_type == "show_position_state_changes":
-            self._octolapse_settings.main_settings.show_position_state_changes = (
-                not self._octolapse_settings.main_settings.show_position_state_changes
+        if panel_type == "show_printer_state_changes":
+            self._octolapse_settings.main_settings.show_printer_state_changes = (
+                not self._octolapse_settings.main_settings.show_printer_state_changes
             )
         elif panel_type == "show_position_changes":
             self._octolapse_settings.main_settings.show_position_changes = (

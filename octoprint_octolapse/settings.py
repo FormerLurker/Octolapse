@@ -1372,7 +1372,7 @@ class MainSettings(Settings):
         self.is_octolapse_enabled = True
         self.auto_reload_latest_snapshot = True
         self.auto_reload_frames = 5
-        self.show_position_state_changes = False
+        self.show_printer_state_changes = False
         self.show_position_changes = False
         self.show_extruder_state_changes = False
         self.show_trigger_state_changes = False

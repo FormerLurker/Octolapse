@@ -303,13 +303,13 @@
                     <hr />
                     <div>
                         <h4>Origin</h4>
-                        <p>In order to take snapshots, Octolapse needs to know the location of each axis.  Providing a home position, either manually or through auto-discovery, will allow Octolapse to start taking snapshots immediately after a home command is sent to the printer.  If <i>Auto-Detect Home Position</i> is not enabled, and an absolute home position is not supplied, Octolapse will monitor the GCode in order to to discover the current absolute position.</p>
+                        <p>Choose your origin location below.</p>
                     </div>
                     <div>
                         <div class="control-group">
                             <label class="control-label" for="printer_profile_origin_type">Origin Type</label>
                             <div class="controls">
-                                <select id="printer_profile_origin_type" data-bind="options: Octolapse.Printers.profileOptions.origin_type_options,
+                                <select id="printer_profile_origin_type" data-bind="options: origin_type_options,
                                                optionsText: 'name',
                                                optionsValue: 'value',
                                                value: origin_type"></select>

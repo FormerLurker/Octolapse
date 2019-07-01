@@ -36,5 +36,8 @@
         <div data-bind="fadeVisible: automatic_changed_to_custom">
             <p><span class="label label-important">Attention</span>&nbsp;This profile is now a custom profile, which will not be updated automatically from the server.</p>
         </div>
+        <div data-bind="fadeVisible: !automatic_changed_to_custom() && is_custom()">
+            <p><span class="label label-important">Attention</span>&nbsp;This profile a custom profile, which will not be updated automatically from the server.</p>
+        </div>
     </div>
 </script>

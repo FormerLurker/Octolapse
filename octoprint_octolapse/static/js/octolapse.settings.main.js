@@ -39,7 +39,7 @@ $(function () {
         self.show_navbar_icon = ko.observable();
         self.show_navbar_when_not_printing = ko.observable();
         self.cancel_print_on_startup_error = ko.observable();
-        self.show_position_state_changes = ko.observable();
+        self.show_printer_state_changes = ko.observable();
         self.show_position_changes = ko.observable();
         self.show_extruder_state_changes = ko.observable();
         self.show_trigger_state_changes = ko.observable();
@@ -68,7 +68,7 @@ $(function () {
             self.auto_reload_frames(settings.auto_reload_frames);
             self.show_navbar_icon(settings.show_navbar_icon);
             self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing);
-            self.show_position_state_changes(settings.show_position_state_changes);
+            self.show_printer_state_changes(settings.show_printer_state_changes);
             self.show_position_changes(settings.show_position_changes);
             self.show_extruder_state_changes(settings.show_extruder_state_changes);
             self.show_trigger_state_changes(settings.show_trigger_state_changes);
@@ -125,7 +125,7 @@ $(function () {
             self.auto_reload_frames(Octolapse.Globals.auto_reload_frames());
             self.show_navbar_icon(Octolapse.Globals.navbar_enabled());
             self.show_navbar_when_not_printing(Octolapse.Globals.show_navbar_when_not_printing());
-            self.show_position_state_changes(Octolapse.Globals.show_position_state_changes());
+            self.show_printer_state_changes(Octolapse.Globals.show_printer_state_changes());
             self.show_position_changes(Octolapse.Globals.show_position_changes());
             self.show_extruder_state_changes(Octolapse.Globals.show_extruder_state_changes());
             self.show_trigger_state_changes(Octolapse.Globals.show_trigger_state_changes());
@@ -224,7 +224,7 @@ $(function () {
                     self.auto_reload_frames(5);
                     self.show_navbar_icon(true);
                     self.show_navbar_when_not_printing(false);
-                    self.show_position_state_changes(false);
+                    self.show_printer_state_changes(false);
                     self.show_position_changes(false);
                     self.show_extruder_state_changes(false);
                     self.show_trigger_state_changes(false);
@@ -248,7 +248,7 @@ $(function () {
                             , "auto_reload_frames": self.auto_reload_frames()
                             , "show_navbar_icon": self.show_navbar_icon()
                             , "show_navbar_when_not_printing": self.show_navbar_when_not_printing()
-                            , "show_position_state_changes": self.show_position_state_changes()
+                            , "show_printer_state_changes": self.show_printer_state_changes()
                             , "show_position_changes": self.show_position_changes()
                             , "show_extruder_state_changes": self.show_extruder_state_changes()
                             , "show_trigger_state_changes": self.show_trigger_state_changes()

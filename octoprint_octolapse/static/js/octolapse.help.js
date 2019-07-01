@@ -97,6 +97,7 @@ $(function () {
                 $(".octolapse-pnotify-help").css("width", width);
                 // set left (center popup)
                 $(".octolapse-pnotify-help").css("left", left);
+                $(".octolapse-pnotify-help").css("top", "15px");
 
             }
 

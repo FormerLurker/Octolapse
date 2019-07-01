@@ -415,7 +415,7 @@ class Timelapse(object):
     def to_state_dict(self, include_timelapse_start_data=False):
         try:
             position_dict = None
-            position_state_dict = None
+            printer_state_dict = None
             extruder_dict = None
             trigger_state = None
             snapshot_plan = None
@@ -424,7 +424,7 @@ class Timelapse(object):
                 if self.is_realtime:
                     if self._position is not None:
                         position_dict = self._position.to_position_dict()
-                        position_state_dict = self._position.to_state_dict()
+                        printer_state_dict = self._position.to_state_dict()
                         extruder_dict = self._position.current_pos.to_extruder_state_dict()
                     if self._triggers is not None:
                         trigger_state = {
@@ -433,7 +433,6 @@ class Timelapse(object):
                         }
                 else:
                     snapshot_plans = None
-                    printer_volume = None
                     total_travel_distance = 0.0
                     total_saved_travel_distance = 0.0
                     if include_timelapse_start_data:
@@ -456,7 +455,7 @@ class Timelapse(object):
             state_dict = {
                 "extruder": extruder_dict,
                 "position": position_dict,
-                "position_state": position_state_dict,
+                "printer_state": printer_state_dict,
                 "trigger_state": trigger_state,
                 "trigger_type": "real-time" if self.is_realtime else "pre-calculated",
                 "snapshot_plan": snapshot_plan
@@ -471,7 +470,7 @@ class Timelapse(object):
         return {
             "extruder": None,
             "position": None,
-            "position_state": None,
+            "printer_state": None,
             "trigger_state": None
         }
 
@@ -1130,10 +1129,10 @@ class Timelapse(object):
             # Notify any callbacks
             if self._state_changed_callback is not None:
 
-                def send_real_time_change_message(has_position_state_error):
+                def send_real_time_change_message(has_printer_state_error):
                     trigger_change_list = None
                     position_change_dict = None
-                    position_state_change_dict = None
+                    printer_state_change_dict = None
                     extruder_change_dict = None
                     trigger_changes_dict = None
 
@@ -1143,20 +1142,20 @@ class Timelapse(object):
                     if self._settings.main_settings.show_position_changes:
                         position_change_dict = self._position.to_position_dict()
 
-                    update_position_state = (
-                        self._settings.main_settings.show_position_state_changes
-                        or has_position_state_error
+                    update_printer_state = (
+                        self._settings.main_settings.show_printer_state_changes
+                        or has_printer_state_error
                     )
 
-                    if update_position_state:
-                        position_state_change_dict = self._position.to_state_dict()
+                    if update_printer_state:
+                        printer_state_change_dict = self._position.to_state_dict()
                     if self._settings.main_settings.show_extruder_state_changes:
                         extruder_change_dict = self._position.current_pos.to_extruder_state_dict()
 
                     # if there are any state changes, send them
                     if (
                         position_change_dict is not None
-                        or position_state_change_dict is not None
+                        or printer_state_change_dict is not None
                         or extruder_change_dict is not None
                         or trigger_change_list is not None
                     ):
@@ -1170,14 +1169,14 @@ class Timelapse(object):
                         "trigger_type": "real-time",
                         "extruder": extruder_change_dict,
                         "position": position_change_dict,
-                        "position_state": position_state_change_dict,
+                        "printer_state": printer_state_change_dict,
                         "trigger_state": trigger_changes_dict
                     }
 
                     if (
                         change_dict["extruder"] is not None
                         or change_dict["position"] is not None
-                        or change_dict["position_state"] is not None
+                        or change_dict["printer_state"] is not None
                         or change_dict["trigger_state"] is not None
                     ):
                         self._state_changed_callback(change_dict)

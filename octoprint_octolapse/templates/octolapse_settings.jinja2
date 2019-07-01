@@ -195,11 +195,11 @@
             <a class="btn btn-default span3"
                data-bind="attr: {href: '{{ url_for('plugin.octolapse.download_settings_request', apikey='') }}' + UI_API_KEY}"
                download="">
-                <i class="fa fa-download"></i> Download Settings
+                <i class="fa fa-download"></i> Export Settings
             </a>
             <div data-bind="template:'octolapse-import-dialog-template'"></div>
             <a class="span3 btn btn-default" data-bind="click: Octolapse.SettingsImport.showSettingsImportPopup">
-                <i class="fa fa-refresh"></i>
+                <i class="fa fa-upload"></i>
                 Import Settings
             </a>
             <a class="span3 btn btn-default" data-bind="click: Octolapse.Settings.restoreDefaultSettings">
@@ -208,7 +208,7 @@
             </a>
             <a class="span3 btn btn-default"
                data-bind="click: function(){Octolapse.Settings.updateProfilesFromServer();};">
-                <i class="fa fa-refresh"></i>
+                <i class="fa satellite-dish"></i>
                 Update Profiles
             </a>
         </div>

@@ -1132,7 +1132,7 @@ $(function () {
         Octolapse.PrinterStatus = parameters[1];
         self.OctoprintTimelapse = parameters[2]
         // Global Values
-        self.show_position_state_changes = ko.observable(false);
+        self.show_printer_state_changes = ko.observable(false);
         self.show_position_changes = ko.observable(false);
         self.show_extruder_state_changes = ko.observable(false);
         self.show_trigger_state_changes = ko.observable(false);
@@ -1307,10 +1307,10 @@ $(function () {
                 self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing);
 
 
-            if (ko.isObservable(settings.show_position_state_changes))
-                self.show_position_state_changes(settings.show_position_state_changes());
+            if (ko.isObservable(settings.show_printer_state_changes))
+                self.show_printer_state_changes(settings.show_printer_state_changes());
             else
-                self.show_position_state_changes(settings.show_position_state_changes);
+                self.show_printer_state_changes(settings.show_printer_state_changes);
 
             if (ko.isObservable(settings.show_position_changes))
                 self.show_position_changes(settings.show_position_changes());

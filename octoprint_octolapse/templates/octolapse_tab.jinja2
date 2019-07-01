@@ -195,7 +195,7 @@
             </div>
             <div data-bind="visible: Octolapse.Globals.show_extruder_state_changes, template:'extruder-status-template'">
             </div>
-            <div data-bind="visible: Octolapse.Globals.show_position_state_changes() || (Octolapse.Status.is_timelapse_active() && Octolapse.Status.PositionState.hasPositionStateErrors()), template:'position-state-status-template'">
+            <div data-bind="visible: Octolapse.Globals.show_printer_state_changes() || (Octolapse.Status.is_timelapse_active() && Octolapse.Status.PrinterState.hasPrinterStateErrors()), template:'position-state-status-template'">
             </div>
             <div data-bind="visible: Octolapse.Globals.show_position_changes, template:'position-status-template'">
             </div>
@@ -227,7 +227,7 @@
     {% include "octolapse_status_triggers.jinja2" %}
     {% include "octolapse_status_extruder.jinja2" %}
     {% include "octolapse_status_position.jinja2" %}
-    {% include "octolapse_status_position_state.jinja2" %}
+    {% include "octolapse_status_printer_state.jinja2" %}
     {% include "octolapse_status_snapshot_plan.jinja2" %}
     {% include "octolapse_tab_latest_snapshot.jinja2" %}
     {% include "octolapse_tab_settings_current.jinja2" %}
