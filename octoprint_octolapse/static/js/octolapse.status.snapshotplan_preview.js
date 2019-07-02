@@ -28,22 +28,19 @@ $(function() {
 
         self.openDialog = function()
         {
-
             var dialog = this;
             dialog.$snapshotPlanPreviewDialog = $("#octolapse_snapshot_plan_preview_dialog");
             dialog.$snapshotPlanPreviewForm = dialog.$snapshotPlanPreviewDialog.find("#octolapse_snapshot_plan_preview_form");
             dialog.$cancelButton = $(".cancel", dialog.$snapshotPlanPreviewDialog);
+            dialog.$closeIcon = $("a.close", dialog.$snapshotPlanPreviewDialog);
             dialog.$continueButton = $(".continue", dialog.$snapshotPlanPreviewDialog);
             dialog.$modalBody = dialog.$snapshotPlanPreviewDialog.find(".modal-body");
             dialog.$modalHeader = dialog.$snapshotPlanPreviewDialog.find(".modal-header");
             dialog.$modalFooter = dialog.$snapshotPlanPreviewDialog.find(".modal-footer");
             dialog.$cancelButton.unbind("click");
             // Called when the user clicks the cancel button in any add/update dialog
-            dialog.$cancelButton.bind("click", function () {
-                // Hide the dialog
-                Octolapse.Globals.cancelPreprocessing();
-                self.closeSnapshotPlanPreviewDialog();
-            });
+            dialog.$cancelButton.bind("click", self.rejectSnapshotPlan);
+            dialog.$closeIcon.bind("click", self.rejectSnapshotPlan);
 
             dialog.$continueButton.unbind("click");
             // Called when the user clicks the cancel button in any add/update dialog
@@ -51,6 +48,11 @@ $(function() {
                 // Save the settings.
                 Octolapse.Globals.acceptSnapshotPlanPreview();
                 self.closeSnapshotPlanPreviewDialog();
+            });
+
+            // Prevent hiding unless the event was initiated by the hideAddEditDialog function
+            dialog.$snapshotPlanPreviewDialog.on("hide.bs.modal", function () {
+                return self.can_hide;
             });
 
             dialog.$snapshotPlanPreviewDialog.on("hidden.bs.modal", function () {
@@ -82,7 +84,16 @@ $(function() {
             });
         };
 
+        self.rejectSnapshotPlan = function(){
+            // reject the plan and close the popup.
+            Octolapse.Globals.cancelPreprocessing();
+            self.closeSnapshotPlanPreviewDialog();
+        };
+
+        // hide the modal dialog
+        self.can_hide = false;
         self.closeSnapshotPlanPreviewDialog = function() {
+            self.can_hide = true;
             $("#octolapse_snapshot_plan_preview_dialog").modal("hide");
             Octolapse.Status.SnapshotPlanState.is_confirmation_popup(false);
             if(self.on_closed_callback)

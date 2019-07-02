@@ -118,6 +118,13 @@ $(function () {
             return true;
         };
 
+        // hide the modal dialog
+        self.can_hide = false;
+        self.hideDialog = function () {
+            self.can_hide = true;
+            $("#octolapse_edit_settings_main_dialog").modal("hide");
+        };
+
         self.showEditMainSettingsPopup = function () {
             //console.log("showing main settings")
             self.is_octolapse_enabled(Octolapse.Globals.enabled());
@@ -139,13 +146,16 @@ $(function () {
             var dialog = this;
             dialog.$editDialog = $("#octolapse_edit_settings_main_dialog");
             dialog.$editForm = $("#octolapse_edit_main_settings_form");
-            dialog.$cancelButton = $(".cancel", dialog.$addEditDialog);
-            dialog.$saveButton = $(".save", dialog.$addEditDialog);
-            dialog.$defaultButton = $(".set-defaults", dialog.$addEditDialog);
+            dialog.$cancelButton = $(".cancel", dialog.$editDialog);
+            dialog.$closeIcon = $("a.close", dialog.$editDialog);
+            dialog.$saveButton = $(".save", dialog.$editDialog);
+            dialog.$defaultButton = $(".set-defaults", dialog.$editDialog);
             dialog.$summary = dialog.$editForm.find("#edit_validation_summary");
             dialog.$errorCount = dialog.$summary.find(".error-count");
             dialog.$errorList = dialog.$summary.find("ul.error-list");
             dialog.$modalBody = dialog.$editDialog.find(".modal-body");
+            dialog.$modalHeader = dialog.$editDialog.find(".modal-header");
+            dialog.$modalFooter = dialog.$editDialog.find(".modal-footer");
             dialog.rules = {
                 rules: Octolapse.MainSettingsValidationRules.rules,
                 messages: Octolapse.MainSettingsValidationRules.messages,
@@ -184,11 +194,19 @@ $(function () {
                     $(label).parent().parent().parent().removeClass('error');
                 },
                 onfocusout: function (element, event) {
-                    dialog.validator.form();
+                    setTimeout(() => dialog.validator.form(), 250);
+                },
+                onclick: function (element, event) {
+                    setTimeout(() => dialog.validator.form(), 250);
                 }
             };
             dialog.validator = null;
-            //console.log("Adding validator to main setting dialog.")
+
+            // Prevent hiding unless the event was initiated by the hideAddEditDialog function
+            dialog.$editDialog.on("hide.bs.modal", function () {
+                return self.can_hide;
+            });
+
             dialog.$editDialog.on("hidden.bs.modal", function () {
                 // Clear out error summary
                 dialog.$errorCount.empty();
@@ -201,6 +219,7 @@ $(function () {
                 }
             });
             dialog.$editDialog.on("shown.bs.modal", function () {
+                self.can_hide = false;
                 // bind any help links
                 Octolapse.Help.bindHelpLinks("#octolapse_edit_settings_main_dialog");
                 // Create all of the validation rules
@@ -209,11 +228,10 @@ $(function () {
 
                 // Remove any click event bindings from the cancel button
                 dialog.$cancelButton.unbind("click");
+                dialog.$closeIcon.unbind("click");
                 // Called when the user clicks the cancel button in any add/update dialog
-                dialog.$cancelButton.bind("click", function () {
-                    // Hide the dialog
-                    self.$editDialog.modal("hide");
-                });
+                dialog.$cancelButton.bind("click", self.hideDialog);
+                dialog.$closeIcon.bind("click", self.hideDialog);
 
                 // remove any click event bindings from the defaults button
                 dialog.$defaultButton.unbind("click");
@@ -267,7 +285,7 @@ $(function () {
                             contentType: "application/json",
                             dataType: "json",
                             success: function () {
-                                self.$editDialog.modal("hide");
+                                self.hideDialog();
                             },
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
                                 var message = "Unable to save the main settings.  Status: " + textStatus + ".  Error: " + errorThrown;
@@ -315,9 +333,15 @@ $(function () {
 
                 });
             });
-
-
-            dialog.$editDialog.modal();
+            dialog.$editDialog.modal({
+                backdrop: 'static',
+                maxHeight: function() {
+                    return Math.max(
+                      window.innerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-25,
+                      200
+                    );
+                }
+            });
         };
 
         Octolapse.MainSettingsValidationRules = {

@@ -530,7 +530,7 @@ $(function () {
         */
         // hide the modal dialog
         self.can_hide = false;
-        self.hideAddEditDialog = function (sender, event) {
+        self.hideAddEditDialog = function () {
             self.can_hide = true;
             $("#octolapse_add_edit_profile_dialog").modal("hide");
         };
@@ -565,6 +565,8 @@ $(function () {
             dialog.$errorCount = dialog.$summary.find(".error-count");
             dialog.$errorList = dialog.$summary.find("ul.error-list");
             dialog.$modalBody = dialog.$addEditDialog.find(".modal-body");
+            dialog.$modalHeader = dialog.$addEditDialog.find(".modal-header");
+            dialog.$modalFooter = dialog.$addEditDialog.find(".modal-footer");
 
             // Create all of the validation rules
             var rules = {
@@ -612,9 +614,10 @@ $(function () {
                 }
             };
             dialog.validator = null;
+
+            // Prevent hiding unless the event was initiated by the hideAddEditDialog function
             dialog.$addEditDialog.on("hide.bs.modal", function () {
                 return self.can_hide;
-
             });
             // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
             dialog.$addEditDialog.on("hidden.bs.modal", function () {
@@ -672,6 +675,7 @@ $(function () {
             });
             // Configure the shown event
             dialog.$addEditDialog.on("shown.bs.modal", function () {
+                self.can_hide = false;
                 // Unbind all click events
                 dialog.$addEditDialog.unbind('click');
                 // bind any help links
@@ -747,14 +751,17 @@ $(function () {
                     self.profileObservable().on_opened();
                 }
 
-                dialog.resize_handler = function() {
-                    //Todo: write resize routine for settings handler
-                };
-
-                $(window).bind("resize", dialog.resize_handler);
             });
             // Open the add/edit profile dialog
-            dialog.$addEditDialog.modal();
+            dialog.$addEditDialog.modal({
+                backdrop: 'static',
+                maxHeight: function() {
+                    return Math.max(
+                      window.innerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-25,
+                      200
+                    );
+                }
+            });
         };
 
     };

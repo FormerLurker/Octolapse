@@ -24,17 +24,23 @@
 $(function() {
     Octolapse.WebcamSettingsPopupViewModel = function (values) {
         var self = this;
-        self.webcam_settings = new Octolapse.WebcamSettingsViewModel(null, null);
+        self.closeWebcamSettingsDialog = function() {
+            self.can_hide = true;
+            $("#octolapse_webcam_settings_dialog").modal("hide");
+        };
 
-        self.openWebcamSettingsDialog = function(form_id)
-        {
+        self.webcam_settings = new Octolapse.WebcamSettingsViewModel(null, null, self.closeWebcamSettingsDialog);
 
+        self.can_hide = false;
+
+        self.openWebcamSettingsDialog = function(form_id){
             var dialog = this;
             // Show the settings dialog
             dialog.$webcamSettingsDialog = $("#octolapse_webcam_settings_dialog");
             dialog.$webcamSettingsForm = dialog.$webcamSettingsDialog.find("#octolapse_webcam_settings_popup_form");
             dialog.$webcamStreamImg = dialog.$webcamSettingsDialog.find("#octolapse_webcam_settings_stream");
             dialog.$cancelButton = $(".cancel", dialog.$webcamSettingsDialog);
+            dialog.$closeIcon = $("a.close", dialog.$webcamSettingsDialog);
             dialog.$saveButton = $(".save", dialog.$webcamSettingsDialog);
             dialog.$defaultButton = $(".set-defaults", dialog.$webcamSettingsDialog);
             dialog.$modalBody = dialog.$webcamSettingsDialog.find(".modal-body");
@@ -42,10 +48,8 @@ $(function() {
             dialog.$modalFooter = dialog.$webcamSettingsDialog.find(".modal-footer");
             dialog.$cancelButton.unbind("click");
             // Called when the user clicks the cancel button in any add/update dialog
-            dialog.$cancelButton.bind("click", function () {
-                // Hide the dialog
-                self.webcam_settings.cancelWebcamChanges();
-            });
+            dialog.$cancelButton.bind("click", self.webcam_settings.cancelWebcamChanges);
+            dialog.$closeIcon.bind("click", self.webcam_settings.cancelWebcamChanges);
 
             dialog.$saveButton.unbind("click");
             // Called when the user clicks the cancel button in any add/update dialog
@@ -61,6 +65,11 @@ $(function() {
                 self.webcam_settings.restoreWebcamDefaults();
             });
 
+            // Prevent hiding unless the event was initiated by the hideAddEditDialog function
+            dialog.$webcamSettingsDialog.on("hide.bs.modal", function () {
+                return self.can_hide;
+            });
+
             dialog.$webcamSettingsDialog.on("hidden.bs.modal", function () {
                 // Clear out error summary
                 dialog.$webcamStreamImg.attr("src","");
@@ -71,6 +80,7 @@ $(function() {
             });
 
             dialog.$webcamSettingsDialog.on("shown.bs.modal", function () {
+                self.can_hide = false;
                 Octolapse.Help.bindHelpLinks("#octolapse_webcam_settings_dialog");
                 dialog.$webcamSettingsDialog.css({
                     width: '940px',
@@ -81,6 +91,7 @@ $(function() {
 
             });
             dialog.$webcamSettingsDialog.modal({
+                backdrop: 'static',
                 maxHeight: function() {
                     return Math.max(
                       window.innerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-25,
@@ -205,8 +216,9 @@ $(function() {
         };
     };
 
-    Octolapse.WebcamSettingsViewModel = function (values, camera_stream_visible_observable) {
+    Octolapse.WebcamSettingsViewModel = function (values, camera_stream_visible_observable, close_callback) {
         var self = this;
+        self.close_callback = close_callback;
         if (camera_stream_visible_observable == null)
             self.camera_stream_visible = ko.observable(true);
         else
@@ -414,8 +426,11 @@ $(function() {
                             hide: false,
                             addclass: "octolapse"
                         };
+
                         Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
                     }
+                    if(self.close_callback)
+                        self.close_callback();
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     var options = {
@@ -426,9 +441,10 @@ $(function() {
                         addclass: "octolapse"
                     };
                     Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
+                    if(self.close_callback)
+                        self.close_callback();
                 }
             });
-            self.closeWebcamSettingsDialog();
         };
 
         self.restoreWebcamDefaults = function(){
@@ -478,10 +494,6 @@ $(function() {
                     Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
                 }
             });
-        };
-
-        self.closeWebcamSettingsDialog = function() {
-            $("#octolapse_webcam_settings_dialog").modal("hide");
         };
 
         self.updateWebcamSettings = function(values) {

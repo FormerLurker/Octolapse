@@ -26,7 +26,6 @@ $(function () {
     Octolapse.SettingsImportViewModel = function () {
         // Create a reference to this object
         var self = this;
-
         self.options = {};
         // variables
         self.import_method = ko.observable();
@@ -49,7 +48,6 @@ $(function () {
         };
 
         self.importSettings = function(){
-
             if (self.import_method() == 'text') {
                 //console.log("Importing Settings from Text");
                 var data = {
@@ -65,8 +63,8 @@ $(function () {
                     dataType: "json",
                     success: function (data) {
                         self.import_text("");
-                        settings = JSON.parse(data.settings);
-                        message = data.msg;
+                        var settings = JSON.parse(data.settings);
+                        var message = data.msg;
                         Octolapse.Settings.updateSettings(settings);
                         Octolapse.Globals.update(settings.main_settings);
                         // maybe add a success popup?
@@ -186,16 +184,18 @@ $(function () {
 
         self.showSettingsImportPopup = function () {
             //console.log("showing import settings")
-
             self.$dialog = this;
             self.$dialog.$editDialog = $("#octolapse_settings_import_dialog");
             self.$dialog.$editForm = $("#octolapse_settings_import_form");
             self.$dialog.$cancelButton = self.$dialog.$editDialog.find("a.cancel");
+            self.$dialog.$closeIcon = $("a.close", self.$dialog.$editDialog);
             self.$dialog.$saveButton = self.$dialog.$editDialog.find("button.save");
             self.$dialog.$summary = self.$dialog.$editForm.find("#settings_import_validation_summary");
             self.$dialog.$errorCount = self.$dialog.$summary.find(".error-count");
             self.$dialog.$errorList = self.$dialog.$summary.find("ul.error-list");
             self.$dialog.$modalBody = self.$dialog.$editDialog.find(".modal-body");
+            self.$dialog.$modalHeader = self.$dialog.$editDialog.find(".modal-header");
+            self.$dialog.$modalFooter = self.$dialog.$editDialog.find(".modal-footer");
             self.$dialog.rules = {
                 rules: Octolapse.SettingsImportValidationRules.rules,
                 messages: Octolapse.SettingsImportValidationRules.messages,
@@ -249,6 +249,12 @@ $(function () {
                     self.$dialog.validator = null;
                 }
             });
+
+            // Prevent hiding unless the event was initiated by the hideAddEditDialog function
+            self.$dialog.$editDialog.on("hide.bs.modal", function () {
+                return self.can_hide;
+            });
+
             self.$dialog.$editDialog.on("shown.bs.modal", function () {
                 //console.log("Octolapse import dialog is shown.");
                 Octolapse.Help.bindHelpLinks("#octolapse_settings_import_dialog");
@@ -259,10 +265,8 @@ $(function () {
                 // Remove any click event bindings from the cancel button
                 self.$dialog.$cancelButton.unbind("click");
                 // Called when the user clicks the cancel button in any add/update dialog
-                self.$dialog.$cancelButton.bind("click", function () {
-                    // Hide the dialog
-                    self.$dialog.$editDialog.modal("hide");
-                });
+                self.$dialog.$cancelButton.bind("click", self.closeSettingsImportPopup);
+                self.$dialog.$closeIcon.bind("click", self.closeSettingsImportPopup);
                 // Remove any click event bindings from the save button
                 self.$dialog.$saveButton.unbind("click");
                 // Called when a user clicks the save button on any add/update dialog.
@@ -312,11 +316,21 @@ $(function () {
                     self.on_opened();
                 }
             });
-            self.$dialog.$editDialog.modal();
+            self.$dialog.$editDialog.modal({
+                    backdrop: 'static',
+                    maxHeight: function () {
+                        return Math.max(
+                            window.innerHeight - self.$dialog.$modalHeader.outerHeight() - self.$dialog.$modalFooter.outerHeight() - 25,
+                            200
+                        );
+                    }
+                }
+            );
         };
-
+        self.can_hide = false;
         self.closeSettingsImportPopup = function() {
             if (self.$dialog != null) {
+                self.can_hide = true;
                 self.$dialog.$editDialog.modal("hide");
             }
         };
