@@ -15,14 +15,14 @@
             <div class="error_label_container text-error" data-error-for="printer_profile_make"></div>
         </div>
     </div>
-    <div class="control-group" data-bind="fadeVisible: make() == 'other'">
+    <div class="control-group" data-bind="slideVisible: make() == 'other'">
         <label class="control-label" for="printer_profile_other_make">Other Make:</label>
         <div class="controls">
             <input id="printer_profile_other_make" name="name" type="text" class="form-input ignore_hidden_errors" data-bind="value: other_make" required />
             <div class="error_label_container text-error" data-error-for="printer_profile_other_make"></div>
         </div>
     </div>
-    <div class="control-group" data-bind="fadeVisible:make()">
+    <div class="control-group" data-bind="slideVisible:make()">
         <label class="control-label" for="printer_profile_model">Model</label>
         <div class="controls">
             <select id="printer_profile_model" data-bind="options: models,
@@ -34,14 +34,14 @@
             <div class="error_label_container text-error" data-error-for="printer_profile_model"></div>
         </div>
     </div>
-    <div class="control-group" data-bind="fadeVisible: make() && model() == 'other'">
+    <div class="control-group" data-bind="slideVisible: make() && model() == 'other'">
         <label class="control-label" for="printer_profile_other_model">Other Model:</label>
         <div class="controls">
             <input id="printer_profile_other_make" name="name" type="text" class="form-input ignore_hidden_errors" data-bind="value: other_model" required />
             <div class="error_label_container text-error" data-error-for="printer_profile_other_model"></div>
         </div>
     </div>
-    <div data-bind="fadeVisible:can_update_from_repo">
+    <div data-bind="slideVisible:can_update_from_repo">
         <div class="control-group">
             <label class="control-label" for="printer_profile_is_custom">Customize Server Profile</label>
             <div class="controls">
@@ -55,7 +55,7 @@
             </div>
         </div>
     </div>
-    <div data-bind="fadeVisible: automatic_changed_to_custom">
+    <div data-bind="slideVisible: automatic_changed_to_custom">
         <p><span class="label label-important">Attention</span>&nbsp;This profile is now a custom profile, which will not be updated automatically from the server.</p>
     </div>
 </script>

@@ -813,7 +813,7 @@ $(function () {
 
     // Got this cool snippit from the knockoutjs.com site!
     // I added some jquery to disable elements so that no clicking can be done during the fade out
-    ko.bindingHandlers.fadeVisible = {
+    ko.bindingHandlers.slideVisible = {
         init: function(element, valueAccessor) {
             // Initially set the element to be instantly visible/hidden depending on the value
             var value = valueAccessor();
@@ -824,11 +824,12 @@ $(function () {
             var value = valueAccessor();
             if(ko.unwrap(value))
             {
-                $(element).removeClass("octolapse_unclickable").stop( true, true ).fadeIn();
+                $(element).removeClass("octolapse_unclickable").stop( true, true ).slideDown();
+
             }
             else
             {
-                $(element).addClass("octolapse_unclickable").stop( true, true ).fadeOut();
+                $(element).addClass("octolapse_unclickable").stop( true, true ).slideUp();
             }
         }
     };

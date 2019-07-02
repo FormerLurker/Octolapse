@@ -462,7 +462,7 @@ $(function() {
                     // Update the parent data
                     self.update_callback(updated_profile);
 
-                    var message = "Your " + self.profile_type + "settings have been updated.  Click 'save' to apply the changes.";
+                    var message = "Your " + self.profile_type.toLowerCase() + " settings have been updated.  Click 'save' to apply the changes.";
                     var options = {
                         title: 'Profile Updated',
                         text: message,

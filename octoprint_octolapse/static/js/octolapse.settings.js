@@ -529,20 +529,33 @@ $(function () {
             Modal Dialog Functions
         */
         // hide the modal dialog
+        self.can_hide = false;
         self.hideAddEditDialog = function (sender, event) {
+            self.can_hide = true;
             $("#octolapse_add_edit_profile_dialog").modal("hide");
+        };
+        self.cancelAddEditDialog = function () {
+            // Hide the dialog
+            self.hideAddEditDialog();
+            // see if the current viewmodel has an on_canceled function
+            if (typeof self.profileObservable().on_cancelled === 'function') {
+                // call the function
+                self.profileObservable().on_cancelled();
+            }
         };
         // show the modal dialog
         self.showAddEditDialog = function (options, sender) {
             // Create all the variables we want to store for callbacks
             //console.log("octolapse.settings.js - Showing add edit dialog.");
             var dialog = this;
+            dialog.can_hide = false;
             dialog.sender = sender;
             dialog.profileObservable = options.profileObservable;
             dialog.templateName = options.templateName;
             dialog.$addEditDialog = $("#octolapse_add_edit_profile_dialog");
             dialog.$addEditForm = dialog.$addEditDialog.find("#octolapse_add_edit_profile_form");
             dialog.$cancelButton = $("button.cancel", dialog.$addEditDialog);
+            dialog.$closeIcon = $("a.close", dialog.$addEditDialog);
             dialog.$saveButton = $("button.save", dialog.$addEditDialog);
             dialog.$defaultButton = $("button.set-defaults", dialog.$addEditDialog);
             dialog.$dialogTitle = $("h3.modal-title", dialog.$addEditDialog);
@@ -592,11 +605,17 @@ $(function () {
                     $(label).parent().parent().parent().removeClass('error');
                 },
                 onfocusout: function (element, event) {
-                    dialog.validator.form();
+                    setTimeout(() => dialog.validator.form(), 250);
+                },
+                onclick: function (element, event) {
+                    setTimeout(() => dialog.validator.form(), 250);
                 }
-
             };
             dialog.validator = null;
+            dialog.$addEditDialog.on("hide.bs.modal", function () {
+                return self.can_hide;
+
+            });
             // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
             dialog.$addEditDialog.on("hidden.bs.modal", function () {
                 // Clear out error summary
@@ -653,6 +672,8 @@ $(function () {
             });
             // Configure the shown event
             dialog.$addEditDialog.on("shown.bs.modal", function () {
+                // Unbind all click events
+                dialog.$addEditDialog.unbind('click');
                 // bind any help links
                 Octolapse.Help.bindHelpLinks("#octolapse_add_edit_profile_dialog");
                 dialog.validator = dialog.$addEditForm.validate(rules);
@@ -665,17 +686,10 @@ $(function () {
                 dialog.validator.form();
                 // Remove any click event bindings from the cancel button
                 dialog.$cancelButton.unbind("click");
+                dialog.$closeIcon.unbind("click");
                 // Called when the user clicks the cancel button in any add/update dialog
-                dialog.$cancelButton.bind("click", function () {
-                    // Hide the dialog
-                    self.hideAddEditDialog();
-                    // see if the current viewmodel has an on_canceled function
-                    if (typeof self.profileObservable().on_cancelled === 'function')
-                    {
-                        // call the function
-                        self.profileObservable().on_cancelled();
-                    }
-                });
+                dialog.$cancelButton.bind("click", self.cancelAddEditDialog);
+                dialog.$closeIcon.bind("click", self.cancelAddEditDialog);
 
                 // remove any click event bindings from the defaults button
                 dialog.$defaultButton.unbind("click");
@@ -686,9 +700,12 @@ $(function () {
                 });
 
                 // Remove any click event bindings from the save button
+                dialog.$addEditDialog.off('hidden.bs.modal');
                 dialog.$saveButton.unbind("click");
                 // Called when a user clicks the save button on any add/update dialog.
                 dialog.$saveButton.bind("click", function () {
+                    console.log("Save button clicked on add/edit profile");
+                    // now see if the form is valid
                     if (dialog.$addEditForm.valid()) {
                         // the form is valid, add or update the profile
                         self.addUpdateProfile(Octolapse.Settings.AddEditProfile());

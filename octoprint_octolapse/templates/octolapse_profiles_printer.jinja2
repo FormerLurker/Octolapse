@@ -61,17 +61,17 @@
                     <div class="error_label_container text-error" data-error-for="printer_profile_slicer_type"></div>
                 </div>
             </div>
-            <div data-bind="fadeVisible: !has_been_saved_by_user() && slicer_type() != 'automatic'" class="text-warning">
+            <div data-bind="slideVisible: !has_been_saved_by_user() && slicer_type() != 'automatic'" class="text-warning">
                 <p>You have not yet configured this slicer profile.  Either copy your slicer settings into this profile or select <i>Automatic Configuration</i> above before using Octolapse.</p>
             </div>
             <!-- Other Slicer Type -->
-            <div data-bind="fadeVisible: slicer_type() == 'other', template:'printer-slicer-other-template'"></div>
-            <div data-bind="fadeVisible: slicer_type() == 'slic3r-pe', template:'printer-slicer-slic3r-pe-template'"></div>
-            <div data-bind="fadeVisible: slicer_type() == 'cura', template:'printer-slicer-cura-template'"></div>
-            <div data-bind="fadeVisible: slicer_type() == 'simplify-3d', template:'printer-slicer-simplify-3d-template'"></div>
-            <div data-bind="fadeVisible: slicer_type() == 'automatic', template:'printer-slicer-automatic-template'"></div>
+            <div data-bind="slideVisible: slicer_type() == 'other', template:'printer-slicer-other-template'"></div>
+            <div data-bind="slideVisible: slicer_type() == 'slic3r-pe', template:'printer-slicer-slic3r-pe-template'"></div>
+            <div data-bind="slideVisible: slicer_type() == 'cura', template:'printer-slicer-cura-template'"></div>
+            <div data-bind="slideVisible: slicer_type() == 'simplify-3d', template:'printer-slicer-simplify-3d-template'"></div>
+            <div data-bind="slideVisible: slicer_type() == 'automatic', template:'printer-slicer-automatic-template'"></div>
         </div>
-        <div data-bind="fadeVisible: !(automatic_configuration.updating_from_server())">
+        <div data-bind="slideVisible: !(automatic_configuration.updating_from_server())">
             <hr />
             <div>
                 <h3>Build Volume and Origin</h3>
@@ -89,7 +89,7 @@
                         </span>
                     </div>
                 </div>
-                <div data-bind="fadeVisible:override_octoprint_profile_settings">
+                <div data-bind="slideVisible:override_octoprint_profile_settings">
                     <div>
                         <h5>Bed</h5>
                     </div>
@@ -118,8 +118,8 @@
                                 </label>
                             </div>
                         </div>
-                        <div data-bind="visible: !custom_bounding_box()">
-                            <div data-bind="fadeVisible: bed_type() == 'rectangular'">
+                        <div data-bind="slideVisible: !custom_bounding_box()">
+                            <div data-bind="visible: bed_type() == 'rectangular'">
                                 <label class="control-label" for="octolapse_printer_width">Width (X)</label>
 
                                 <div class="control-group">
@@ -143,7 +143,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div data-bind="fadeVisible: bed_type() == 'circular'">
+                            <div data-bind="visible: bed_type() == 'circular'">
                                 <div class="control-group">
                                     <label class="control-label" for="octolapse_printer_diameter_xy">Diameter XY</label>
                                     <div class="controls">
@@ -170,7 +170,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div data-bind="fadeVisible: custom_bounding_box">
+                        <div data-bind="visible: custom_bounding_box">
                             <div class="control-group">
                                 <label class="control-label" for="octolapse_printer_min_x">X - Width</label>
                                 <div class="controls">
@@ -276,8 +276,8 @@
                         </label>
                     </div>
                 </div>
-                <div data-bind="fadeVisible:restrict_snapshot_area">
-                    <div data-bind="fadeVisible: bed_type() == 'circular'">
+                <div data-bind="slideVisible:restrict_snapshot_area">
+                    <div data-bind="visible: bed_type() == 'circular'">
                         <div class="control-group">
                             <label class="control-label" for="octolapse_printer_snapshot_diameter_xy">Diameter XY</label>
                             <div class="controls">
@@ -293,7 +293,7 @@
                         </div>
 
                     </div>
-                    <div data-bind="fadeVisible: bed_type() == 'rectangular'">
+                    <div data-bind="visible: bed_type() == 'rectangular'">
                         <div class="control-group">
                             <label class="control-label" for="octolapse_printer_snapshot_min_x">Snapshot Boundary - X</label>
                             <div class="controls">
@@ -417,7 +417,7 @@
                         </span>
                     </div>
                 </div>
-                <div data-bind="fadeVisible:auto_detect_position">
+                <div data-bind="slideVisible:auto_detect_position">
                     <div class="control-group">
                         <label class="control-label" for="printer_profile_auto_position_detection_commands">Additional location detection commands</label>
                         <div class="controls">

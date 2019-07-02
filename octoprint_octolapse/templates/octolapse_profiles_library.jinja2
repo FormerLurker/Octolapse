@@ -18,7 +18,7 @@
                 </div>
             </div>
         </div>
-        <div data-bind="fadeVisible:can_update_from_server">
+        <div data-bind="slideVisible:can_update_from_server">
             <div class="control-group">
                 <label class="control-label" for="library_profile_is_custom">Customize Profile</label>
                 <div class="controls">
@@ -33,10 +33,10 @@
             </div>
 
         </div>
-        <div data-bind="fadeVisible: automatic_changed_to_custom">
+        <div data-bind="slideVisible: automatic_changed_to_custom">
             <p><span class="label label-important">Attention</span>&nbsp;This profile is now a custom profile, which will not be updated automatically from the server.</p>
         </div>
-        <div data-bind="fadeVisible: !automatic_changed_to_custom() && is_custom()">
+        <div data-bind="slideVisible: !automatic_changed_to_custom() && is_custom()">
             <p><span class="label label-important">Attention</span>&nbsp;This profile a custom profile, which will not be updated automatically from the server.</p>
         </div>
     </div>
