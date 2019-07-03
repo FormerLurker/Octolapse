@@ -197,22 +197,23 @@ $(function () {
                     setTimeout(() => dialog.validator.form(), 250);
                     setTimeout(function() {
                         dialog.validator.form();
-                        dialog.$editDialog.css(
-                            'margin-top',
-                            Math.max(0 - dialog.$editDialog.height() / 2, 0)
-                        );
+                        dialog.resize();
                     }, 250);
                 },
                 onclick: function (element, event) {
                     setTimeout(() => dialog.validator.form(), 250);
                     setTimeout(function() {
                         dialog.validator.form();
-                        dialog.$editDialog.css(
-                            'margin-top',
-                            Math.max(0 - dialog.$editDialog.height() / 2, 0)
-                        );
+                        dialog.resize();
                     }, 250);
                 }
+            };
+            dialog.resize = function(){
+                /*
+                dialog.$editDialog.css("top","0px").css(
+                    'margin-top',
+                    Math.max(0 - dialog.$editDialog.height() / 2, 0)
+                );*/
             };
             dialog.validator = null;
 
@@ -346,6 +347,8 @@ $(function () {
                     }
 
                 });
+                // Resize the dialog
+                dialog.resize();
             });
             dialog.$editDialog.modal({
                 backdrop: 'static',
@@ -356,6 +359,7 @@ $(function () {
                     );
                 }
             });
+
         };
 
         Octolapse.MainSettingsValidationRules = {

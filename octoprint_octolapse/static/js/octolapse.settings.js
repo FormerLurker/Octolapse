@@ -609,21 +609,21 @@ $(function () {
                 onfocusout: function (element, event) {
                     setTimeout(function() {
                         dialog.validator.form();
-                        dialog.$addEditDialog.css(
-                            'margin-top',
-                            Math.max(0 - dialog.$addEditDialog.height() / 2,0)
-                        );
+                        dialog.resize();
                     }, 250);
                 },
                 onclick: function (element, event) {
                     setTimeout(function(){
                         dialog.validator.form();
-                        dialog.$addEditDialog.css(
-                            'margin-top',
-                            Math.max(0 - dialog.$addEditDialog.height() / 2,0)
-                        );
+                        dialog.resize();
                     }, 250);
                 }
+            };
+            dialog.resize = function(){
+                /*dialog.$addEditDialog.css("top","0px").css(
+                    'margin-top',
+                    Math.max(0 - dialog.$addEditDialog.height() / 2,0)
+                );*/
             };
             dialog.validator = null;
 
@@ -757,6 +757,8 @@ $(function () {
 
                 });
 
+                // Resize the dialog
+                dialog.resize();
                 // see if the current viewmodel has an on_opened function
                 if (typeof self.profileObservable().on_opened === 'function'){
                     // call the function
@@ -774,6 +776,7 @@ $(function () {
                     );
                 }
             });
+
         };
 
     };

@@ -235,21 +235,21 @@ $(function () {
                 onfocusout: function (element, event) {
                     setTimeout(function() {
                         self.$dialog.validator.form();
-                        self.$dialog.$editDialog.css(
-                            'margin-top',
-                            Math.max(0 - self.$dialog.$editDialog.height() / 2, 0)
-                        );
+                        self.resize();
                     }, 250);
                 },
                 onclick: function (element, event) {
                     setTimeout(function() {
                         self.$dialog.validator.form();
-                        self.$dialog.$editDialog.css(
-                            'margin-top',
-                            Math.max(0 - self.$dialog.$editDialog.height() / 2, 0)
-                        );
+                        self.resize();
                     }, 250);
                 }
+            };
+            self.resize = function(){
+                /*self.$dialog.$editDialog.css("top","0px").css(
+                    'margin-top',
+                    Math.max(0 - self.$dialog.$editDialog.height() / 2, 0)
+                );*/
             };
             self.$dialog.validator = null;
             //console.log("Adding validator to main setting dialog.")
@@ -333,6 +333,7 @@ $(function () {
             });
             self.$dialog.$editDialog.modal({
                     backdrop: 'static',
+
                     maxHeight: function () {
                         return Math.max(
                           window.innerHeight -
