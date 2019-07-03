@@ -572,7 +572,7 @@ $(function () {
             var rules = {
                 rules: options.validationRules.rules,
                 messages: options.validationRules.messages,
-                ignore: ".ignore_hidden_errors:hidden",
+                ignore: ".ignore_hidden_errors:hidden, .ignore_hidden_errors.hiding",
                 errorPlacement: function (error, element) {
                     var error_id = $(element).attr("id");
                     var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
@@ -607,10 +607,22 @@ $(function () {
                     $(label).parent().parent().parent().removeClass('error');
                 },
                 onfocusout: function (element, event) {
-                    setTimeout(() => dialog.validator.form(), 250);
+                    setTimeout(function() {
+                        dialog.validator.form();
+                        dialog.$addEditDialog.css(
+                            'margin-top',
+                            Math.max(0 - dialog.$addEditDialog.height() / 2,0)
+                        );
+                    }, 250);
                 },
                 onclick: function (element, event) {
-                    setTimeout(() => dialog.validator.form(), 250);
+                    setTimeout(function(){
+                        dialog.validator.form();
+                        dialog.$addEditDialog.css(
+                            'margin-top',
+                            Math.max(0 - dialog.$addEditDialog.height() / 2,0)
+                        );
+                    }, 250);
                 }
             };
             dialog.validator = null;
@@ -757,7 +769,7 @@ $(function () {
                 backdrop: 'static',
                 maxHeight: function() {
                     return Math.max(
-                      window.innerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-25,
+                      window.innerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-66,
                       200
                     );
                 }

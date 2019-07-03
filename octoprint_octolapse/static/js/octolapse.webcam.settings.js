@@ -94,7 +94,7 @@ $(function() {
                 backdrop: 'static',
                 maxHeight: function() {
                     return Math.max(
-                      window.innerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-25,
+                      window.innerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-66,
                       200
                     );
                 }

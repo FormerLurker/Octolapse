@@ -159,7 +159,7 @@ $(function () {
             dialog.rules = {
                 rules: Octolapse.MainSettingsValidationRules.rules,
                 messages: Octolapse.MainSettingsValidationRules.messages,
-                ignore: ".ignore_hidden_errors:hidden",
+                ignore: ".ignore_hidden_errors:hidden, .ignore_hidden_errors.hiding",
                 errorPlacement: function (error, element) {
                     var $field_error = $(element).parent().parent().find(".error_label_container");
                     $field_error.html(error);
@@ -195,9 +195,23 @@ $(function () {
                 },
                 onfocusout: function (element, event) {
                     setTimeout(() => dialog.validator.form(), 250);
+                    setTimeout(function() {
+                        dialog.validator.form();
+                        dialog.$editDialog.css(
+                            'margin-top',
+                            Math.max(0 - dialog.$editDialog.height() / 2, 0)
+                        );
+                    }, 250);
                 },
                 onclick: function (element, event) {
                     setTimeout(() => dialog.validator.form(), 250);
+                    setTimeout(function() {
+                        dialog.validator.form();
+                        dialog.$editDialog.css(
+                            'margin-top',
+                            Math.max(0 - dialog.$editDialog.height() / 2, 0)
+                        );
+                    }, 250);
                 }
             };
             dialog.validator = null;
@@ -337,7 +351,7 @@ $(function () {
                 backdrop: 'static',
                 maxHeight: function() {
                     return Math.max(
-                      window.innerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-25,
+                      window.innerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-66,
                       200
                     );
                 }

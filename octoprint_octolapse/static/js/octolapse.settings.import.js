@@ -199,7 +199,7 @@ $(function () {
             self.$dialog.rules = {
                 rules: Octolapse.SettingsImportValidationRules.rules,
                 messages: Octolapse.SettingsImportValidationRules.messages,
-                ignore: ".ignore_hidden_errors:hidden",
+                ignore: ".ignore_hidden_errors:hidden, .ignore_hidden_errors.hiding",
                 errorPlacement: function (error, element) {
                     var error_id = $(element).attr("id");
                     var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
@@ -233,7 +233,22 @@ $(function () {
                     $(label).parent().parent().parent().removeClass('error');
                 },
                 onfocusout: function (element, event) {
-                    self.$dialog.validator.form();
+                    setTimeout(function() {
+                        self.$dialog.validator.form();
+                        self.$dialog.$editDialog.css(
+                            'margin-top',
+                            Math.max(0 - self.$dialog.$editDialog.height() / 2, 0)
+                        );
+                    }, 250);
+                },
+                onclick: function (element, event) {
+                    setTimeout(function() {
+                        self.$dialog.validator.form();
+                        self.$dialog.$editDialog.css(
+                            'margin-top',
+                            Math.max(0 - self.$dialog.$editDialog.height() / 2, 0)
+                        );
+                    }, 250);
                 }
             };
             self.$dialog.validator = null;
@@ -320,8 +335,10 @@ $(function () {
                     backdrop: 'static',
                     maxHeight: function () {
                         return Math.max(
-                            window.innerHeight - self.$dialog.$modalHeader.outerHeight() - self.$dialog.$modalFooter.outerHeight() - 25,
-                            200
+                          window.innerHeight -
+                            self.$dialog.$modalHeader.outerHeight() -
+                            self.$dialog.$modalFooter.outerHeight() - 66,
+                          200
                         );
                     }
                 }

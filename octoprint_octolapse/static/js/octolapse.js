@@ -824,11 +824,12 @@ $(function () {
             var value = valueAccessor();
             if(ko.unwrap(value))
             {
+                $(element).find(".ignore_hidden_errors").removeClass("hiding");
                 $(element).removeClass("octolapse_unclickable").stop( true, true ).slideDown();
-
             }
             else
             {
+                $(element).find(".ignore_hidden_errors").addClass("hiding");
                 $(element).addClass("octolapse_unclickable").stop( true, true ).slideUp();
             }
         }
