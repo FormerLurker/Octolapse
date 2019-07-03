@@ -769,6 +769,7 @@ $(function () {
             // Open the add/edit profile dialog
             dialog.$addEditDialog.modal({
                 backdrop: 'static',
+                resize: true,
                 maxHeight: function() {
                     return Math.max(
                       window.innerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-66,

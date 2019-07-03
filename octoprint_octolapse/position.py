@@ -48,6 +48,8 @@ class Pos(object):
         'is_deretracting', 'is_deretracted', 'file_line_number', 'gcode_number', "is_in_bounds"
     ]
 
+    min_length_to_retract = 0.0001
+
     def __init__(self, copy_from_pos=None, reset_state=False):
 
         if copy_from_pos is not None:
@@ -384,6 +386,10 @@ class Pos(object):
             retract_length = 0
         elif retract_length > amount_to_retract:
             retract_length = amount_to_retract
+        elif retract_length < Pos.min_length_to_retract:
+            # we don't want to retract less than the min_length_to_retract,
+            # else we might have quality issues!
+            retract_length = 0
         # return the calculated retraction length
         return retract_length
 
