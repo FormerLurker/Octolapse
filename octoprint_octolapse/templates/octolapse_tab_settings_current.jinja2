@@ -53,8 +53,11 @@
                            event: {change: Octolapse.Status.defaultPrinterChanged},
                            optionsCaption: 'Please select...'"></select>
                 <div data-bind="visible: !hasPrinterSelected()" class="text-error">
-                    <p>
-                        No printer is selected.  You can add a new printer profile by clicking the plus sign to the right.
+                    <p data-bind="visible: hasPrinters()" class="text-error">
+                        No printer is selected.  Either select a printer from the drop down box, or add a new printer profile by clicking the plus sign to the right.
+                    </p>
+                    <p data-bind="visible: !hasPrinters()" class="text-error">
+                        No printer profiles are available.  You can add a new printer profile by clicking the plus sign to the right.
                     </p>
                 </div>
                 <div data-bind="visible: !has_configured_printer_profile()" class="text-error">

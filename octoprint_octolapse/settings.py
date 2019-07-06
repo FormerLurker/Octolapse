@@ -55,6 +55,13 @@ class SettingsJsonEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
+class NonstaticSettingsJsonEncoder(SettingsJsonEncoder):
+   def default(self, obj):
+        if isinstance(obj, StaticSettings):
+            return None
+        return super(NonstaticSettingsJsonEncoder, self).default(obj)
+
+
 class SettingsJsonDecoder(json.JSONDecoder):
     # noinspection PyCallByClass
     def default(self, obj):
@@ -132,7 +139,7 @@ class Settings(object):
         # use a temporary file so that if there is an error creating the json the
         temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
         try:
-            json.dump(self.to_dict(), temp_file, cls=SettingsJsonEncoder)
+            json.dump(self.to_dict(), temp_file, cls=NonstaticSettingsJsonEncoder)
             temp_file.flush()
             shutil.copy(temp_file.name, output_file_path)
         finally:
@@ -1822,13 +1829,24 @@ class OctolapseSettings(Settings):
 
     @classmethod
     def load(
-        cls, file_path, plugin_version, default_settings_folder, default_settings_filename, available_profiles=None
+        cls,
+        file_path,
+        plugin_version,
+        default_settings_folder,
+        default_settings_filename,
+        data_directory,
+        available_profiles=None
      ):
+        # always create a new settings object when loading settings, since
+        # it will contain static values that are NOT saved, and load settings might be missing values
+        #settings = OctolapseSettings()
+
         # try to load the file path if it exists
         if file_path is not None:
             load_defualt_settings = not os.path.isfile(file_path)
         else:
             load_defualt_settings = True
+
         if not load_defualt_settings:
             logger.info("Loading existing settings file from: %s.", file_path)
             with open(file_path, 'r') as settings_file:
@@ -1837,7 +1855,7 @@ class OctolapseSettings(Settings):
                     data = json.load(settings_file)
                     original_version = settings_migration.get_version(data)
                     data = settings_migration.migrate_settings(
-                        plugin_version, data, default_settings_folder
+                        plugin_version, data, default_settings_folder, data_directory
                     )
 
                     # if a settings file does not exist, create one ??
@@ -1866,7 +1884,7 @@ class OctolapseSettings(Settings):
                 try:
                     data = json.load(settings_file)
                     data = settings_migration.migrate_settings(
-                        plugin_version, data, default_settings_folder
+                        plugin_version, data, default_settings_folder, data_directory
                     )
                     # if a settings file does not exist, create one ??
                     new_settings = OctolapseSettings.create_from_iterable(
@@ -1882,6 +1900,10 @@ class OctolapseSettings(Settings):
         if available_profiles:
             # update the profile options within the octolapse settings
             new_settings.profiles.options.update_server_options(available_profiles)
+
+        # update the settings object with the loaded settings so that we will have all of our static settings
+        # Note that this will not contain any static settings that
+        #settings.update(new_settings)
         return new_settings, load_defualt_settings
 
     def get_profile_export_json(self, profile_type, guid):
@@ -1894,7 +1916,12 @@ class OctolapseSettings(Settings):
         return json.dumps(export_dict, cls=SettingsJsonEncoder)
 
     def import_settings_from_file(
-        self, settings_path, plugin_version, default_settings_folder,
+        self,
+        settings_path,
+        plugin_version,
+        default_settings_folder,
+        data_directory,
+        available_server_profiles,
         update_existing=False
     ):
         with open(settings_path, 'r') as settings_file:
@@ -1909,18 +1936,27 @@ class OctolapseSettings(Settings):
                 )
             else:
                 self.profiles.import_profile(settings["type"], settings["profile"], update_existing=update_existing)
-                return self
+                settings = self
         else:
             # this is a regular settings file.  Try to migrate
             migrated_settings = settings_migration.migrate_settings(
-                plugin_version, settings, default_settings_folder
+                plugin_version, settings, default_settings_folder, data_directory
             )
             new_settings = OctolapseSettings(plugin_version)
             new_settings.update(migrated_settings)
-            return new_settings
+            settings = new_settings
+
+        settings.profiles.options.update_server_options(available_server_profiles)
+        return settings
 
     def import_settings_from_text(
-        self, settings_text, plugin_version, default_settings_folder, update_existing=False
+        self,
+        settings_text,
+        plugin_version,
+        default_settings_folder,
+        data_directory,
+        available_server_profiles,
+        update_existing=False
     ):
         logger.info("Importing python settings object.  Checking settings version.")
         settings = json.loads(settings_text)
@@ -1933,15 +1969,18 @@ class OctolapseSettings(Settings):
                 )
             else:
                 self.profiles.import_profile(settings["type"], settings["profile"], update_existing=update_existing)
-                return self
+                settings = self
         else:
             # this is a regular settings file.  Try to migrate
             migrated_settings = settings_migration.migrate_settings(
-                plugin_version, settings, default_settings_folder
+                plugin_version, settings, default_settings_folder, data_directory
             )
             new_settings = OctolapseSettings(plugin_version)
             new_settings.update(migrated_settings)
-            return new_settings
+            settings = new_settings
+
+        settings.profiles.options.update_server_options(available_server_profiles)
+        return settings
 
     @staticmethod
     def get_unique_profile_name(profiles, name):

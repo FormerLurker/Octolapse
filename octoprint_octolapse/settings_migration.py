@@ -17,20 +17,37 @@ def get_version(settings_dict):
         version = settings_dict["main_settings"]["version"]
     return version
 
-def migrate_settings(current_version, settings_dict, default_settings_directory):
+def migrate_settings(current_version, settings_dict, default_settings_directory, data_directory):
     # extract the settings version
     # note that the version moved from settings.version to settings.main_settings.version
     version = get_version(settings_dict)
     if version == 'unknown':
         raise Exception("Could not find the settings version.")
 
+    # create a copy of the settings
+    original_settings_copy = copy.deepcopy(settings_dict)
+
+    # create a flag to indicate that we've updated settings
+    has_updated = False
+
     if LooseVersion(version) <= LooseVersion("0.3.3rc3.dev0"):
+        has_updated = True
         settings_dict = migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.3.3rc3.dev0.json'))
+
     if LooseVersion(version) < LooseVersion("0.3.5rc1.dev0"):
+        has_updated = True
         settings_dict = migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.3.5rc1.dev0.json'))
+
+    # If we've updated the settings, save a backup of the old settings
+    if has_updated:
+        with open(get_settings_backup_name(version, data_directory), "w+") as f:
+            json.dump(original_settings_copy, f)
 
     return settings_dict
 
+
+def get_settings_backup_name(version, default_settings_directory):
+    return os.path.join(default_settings_directory, "settings_backup_{0}.json".format(version))
 
 def migrate_post_0_3_5(current_version, settings_dict, log_file_path, default_settings_path):
     # This  is a reminder that the 'version' setting moved to Settings.main_settings.version
@@ -185,6 +202,8 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
             printer['slicer_type'] = 'automatic'
             printer['slicers']['slic3r_pe'] = slic3rpe
 
+        printer["custom_bounding_box"] = True
+        printer["override_octoprint_profile_settings"] = printer["override_octoprint_print_volume"]
         profiles['printers'][printer['guid']] = printer
 
     # set the current printer profile guid

@@ -1,7 +1,7 @@
 {
   "main_settings": {
     "show_extruder_state_changes": true,
-    "show_position_state_changes": true,
+    "show_printer_state_changes": true,
     "auto_reload_latest_snapshot": true,
     "auto_reload_frames": 15,
     "show_trigger_state_changes": true,

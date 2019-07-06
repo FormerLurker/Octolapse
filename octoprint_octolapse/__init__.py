@@ -661,6 +661,8 @@ class OctolapsePlugin(
                 settings_path,
                 self._plugin_version,
                 self.get_default_settings_folder(),
+                self.get_plugin_data_folder(),
+                self.available_profiles
             )
             message = "Your settings have been updated from the supplied file."
 
@@ -671,11 +673,14 @@ class OctolapsePlugin(
                 import_text,
                 self._plugin_version,
                 self.get_default_settings_folder(),
+                self.get_plugin_data_folder(),
+                self.available_profiles
             )
             message = "Your settings have been updated from the uploaded text."
 
         # if we're this far we need to save the settings.
         self.save_settings()
+
         # send a state changed message
         self.send_settings_changed_message(client_id)
 
@@ -1244,6 +1249,7 @@ class OctolapsePlugin(
                 self._plugin_version,
                 self.get_default_settings_folder(),
                 self.get_default_settings_filename(),
+                self.get_plugin_data_folder(),
                 available_profiles=self.available_profiles
             )
         self._octolapse_settings = new_settings

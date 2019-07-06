@@ -185,6 +185,10 @@ $(function () {
 
             },this);
 
+            self.hasPrinters = ko.pureComputed(function() {
+                return self.profiles().printers().length > 0;
+            });
+
             self.hasPrinterSelected = ko.pureComputed(function(){
                 return ! (Octolapse.Status.current_printer_profile_guid() == null || Octolapse.Status.current_printer_profile_guid()=="");
             },this);
