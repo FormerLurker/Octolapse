@@ -194,10 +194,11 @@ $(function () {
                     $(label).parent().parent().parent().removeClass('error');
                 },
                 onfocusout: function (element, event) {
-                    setTimeout(() => dialog.validator.form(), 250);
-                    setTimeout(function() {
-                        dialog.validator.form();
-                        dialog.resize();
+                      setTimeout(function() {
+                        if (dialog.validator)
+                        {
+                            dialog.validator.form();
+                        }
                     }, 250);
                 },
                 onclick: function (element, event) {
@@ -217,12 +218,9 @@ $(function () {
             };
             dialog.validator = null;
 
-            // Prevent hiding unless the event was initiated by the hideAddEditDialog function
             dialog.$editDialog.on("hide.bs.modal", function () {
-                return self.can_hide;
-            });
-
-            dialog.$editDialog.on("hidden.bs.modal", function () {
+                if (!self.can_hide)
+                    return false;
                 // Clear out error summary
                 dialog.$errorCount.empty();
                 dialog.$errorList.empty();

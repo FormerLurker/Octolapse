@@ -22,6 +22,24 @@
 ##################################################################################
 */
 $(function() {
+    ko.subscribable.fn.subscribeWithTarget = function (handler, target) {
+        var self = this;
+        var _oldValue;
+        self.before_change_subscription = this.subscribe(function (oldValue) {
+          _oldValue = oldValue;
+        }, null, 'beforeChange');
+
+       self.change_subscription = this.subscribe(function (newValue) {
+         handler(target, _oldValue, newValue);
+       });
+
+       self.dispose = function(){
+           self.before_change_subscription.dispose();
+           self.change_subscription.dispose();
+       };
+       return self;
+    };
+
     Octolapse.WebcamSettingsPopupViewModel = function (values) {
         var self = this;
         self.closeWebcamSettingsDialog = function() {
@@ -29,11 +47,12 @@ $(function() {
             $("#octolapse_webcam_settings_dialog").modal("hide");
         };
 
-        self.webcam_settings = new Octolapse.WebcamSettingsViewModel(null, null, self.closeWebcamSettingsDialog);
+        // variable to hold the custom webcam image preferences
+        self.webcam_settings = new Octolapse.WebcamSettingsViewModel(self.closeWebcamSettingsDialog);
 
         self.can_hide = false;
 
-        self.openWebcamSettingsDialog = function(form_id){
+        self.openWebcamSettingsDialog = function(){
             var dialog = this;
             // Show the settings dialog
             dialog.$webcamSettingsDialog = $("#octolapse_webcam_settings_dialog");
@@ -49,6 +68,7 @@ $(function() {
             dialog.$cancelButton.unbind("click");
             // Called when the user clicks the cancel button in any add/update dialog
             dialog.$cancelButton.bind("click", self.webcam_settings.cancelWebcamChanges);
+            dialog.$closeIcon.unbind("click");
             dialog.$closeIcon.bind("click", self.webcam_settings.cancelWebcamChanges);
 
             dialog.$saveButton.unbind("click");
@@ -66,30 +86,30 @@ $(function() {
             });
 
             // Prevent hiding unless the event was initiated by the hideAddEditDialog function
-            dialog.$webcamSettingsDialog.on("hide.bs.modal", function () {
-                return self.can_hide;
-            });
 
-            dialog.$webcamSettingsDialog.on("hidden.bs.modal", function () {
+            dialog.$webcamSettingsDialog.on("hide.bs.modal", function () {
+                console.log("Hiding webcam settings dialog");
+                if (!self.can_hide)
+                    return false;
                 // Clear out error summary
-                dialog.$webcamStreamImg.attr("src","");
+                self.webcam_settings.setStreamVisibility(false);
             });
 
             dialog.$webcamSettingsDialog.on("show.bs.modal", function () {
-                dialog.$webcamStreamImg.attr("src",self.webcam_settings.stream_url());
+
             });
 
             dialog.$webcamSettingsDialog.on("shown.bs.modal", function () {
                 self.can_hide = false;
-                Octolapse.Help.bindHelpLinks("#octolapse_webcam_settings_dialog");
+                self.webcam_settings.setStreamVisibility(true);
                 dialog.$webcamSettingsDialog.css({
                     width: '940px',
                     'margin-left': function () {
                         return -($(this).width() / 2);
                     }
                 });
-
             });
+
             dialog.$webcamSettingsDialog.modal({
                 backdrop: 'static',
                 maxHeight: function() {
@@ -106,7 +126,7 @@ $(function() {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             var data = {
                 'guid': self.webcam_settings.guid(),
-                'webcam_settings': self.webcam_settings.getSettingsFromUI()
+                'webcam_settings': ko.toJS(self.webcam_settings)
             };
             $.ajax({
                 url: "./plugin/octolapse/saveWebcamSettings",
@@ -127,7 +147,7 @@ $(function() {
                     }
                     else
                     {
-                        self.webcam_settings.closeWebcamSettingsDialog();
+                        self.closeWebcamSettingsDialog();
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -144,89 +164,48 @@ $(function() {
         };
 
         self.showWebcamSettings = function() {
-                // Load the current webcam settings
-                // On success, show the dialog
-                 // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
-                var data = {
-                    'guid': Octolapse.Status.current_camera_guid()
-                };
-
-                $.ajax({
-                    url: "./plugin/octolapse/getWebcamImagePreferences",
-                    type: "POST",
-                    data: JSON.stringify(data),
-                    contentType: "application/json",
-                    dataType: "json",
-                    success: function (results) {
-                        if(results.success) {
-                            // Update the current settings that we just received
-                            values = results.camera_profile;
-                            self.webcam_settings.updateWebcamSettings(values);
-                            self.openWebcamSettingsDialog();
-                        }
-                        else
-                        {
-                            var options = {
-                                title: 'Error Loading Webcam Settings',
-                                text: results.error,
-                                type: 'error',
-                                hide: false,
-                                addclass: "octolapse"
-                            };
-                            Octolapse.displayPopupForKey(options,"camera_settings_failure",["camera_settings_failure"]);
-                        }
-                    },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        var options = {
-                            title: 'Error Loading Webcam Settings',
-                            text: "Status: " + textStatus + ".  Error: " + errorThrown,
-                            type: 'error',
-                            hide: false,
-                            addclass: "octolapse"
-                        };
-                        Octolapse.displayPopupForKey(options,"camera_settings_failure",["camera_settings_failure"]);
-                    }
-                });
+            // Load the current webcam settings
+            // On success, show the dialog
+            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            var data = {
+                'guid': Octolapse.Status.current_camera_guid(),
+                'replace': false
             };
+            self.webcam_settings.getImagePreferences(data, function (results) {
+                // Update the current settings that we just received
+                self.webcam_settings.updateWebcamSettings(results.settings);
+                self.openWebcamSettingsDialog();
+                if (results.settings.new_preferences_available) {
+                    // If new settings are available, offer to update them, but don't do it automatically
+                    var message = "Octolapse has detected new camera preferences from your " +
+                        "streaming server.  Do you want to overwrite your current image preferences?";
+                    Octolapse.showConfirmDialog(
+                        "replace-image-preferences",
+                        "New Image Preferences Available",
+                        message,
+                        function () {
+                            data = {
+                                'guid': Octolapse.Status.current_camera_guid(),
+                                'replace': true
+                            };
+                            self.webcam_settings.getImagePreferences(data, function (results) {
+                                self.webcam_settings.updateWebcamSettings(results.settings);
+                            });
+                        }
+                    );
+                }
+            });
+        }
 
-        if (values != null)
-            self.webcam_settings.updateWebcamSettings(values);
     };
-    Octolapse.MjpegStreamerOptionsViewModel = function ()
-    {
-        var self = this;
-        self.camera_powerline_frequency_options = ko.observable();
-        self.camera_exposure_type_options = ko.observable();
-        self.camera_led_1_mode_options = ko.observable();
 
-        self.update = function(values){
-            self.camera_powerline_frequency_options(values.camera_powerline_frequency_options);
-            self.camera_exposure_type_options(values.camera_exposure_type_options);
-            self.camera_led_1_mode_options(values.camera_led_1_mode_options);
-        };
-    };
-
-    Octolapse.MjpegStreamerViewModel = function ()
-    {
-        var self = this;
-        self.options = new Octolapse.MjpegStreamerOptionsViewModel();
-        self.update = function(values)
-        {
-            self.options.update(values.options);
-        };
-    };
-
-    Octolapse.WebcamSettingsViewModel = function (values, camera_stream_visible_observable, close_callback) {
+    Octolapse.WebcamSettingsViewModel = function (close_callback) {
         var self = this;
         self.close_callback = close_callback;
-        if (camera_stream_visible_observable == null)
-            self.camera_stream_visible = ko.observable(true);
-        else
-            self.camera_stream_visible = camera_stream_visible_observable;
+        self.camera_stream_visible = ko.observable(false);
         self.throttle_ms = 250;
         self.guid = ko.observable('');
         self.name = ko.observable('unknown');
-        self.visible = ko.observable(false);
         self.stream_template = ko.observable('');
         self.snapshot_request_template = ko.observable();
         self.address = ko.observable('');
@@ -234,93 +213,133 @@ $(function() {
         self.password = ko.observable();
         self.ignore_ssl_error = ko.observable();
         self.timeout_ms = ko.observable();
-        // Need to subscribe to changes for these camera settings observables
-        self.white_balance_auto = ko.observable(0);
-        self.powerline_frequency = ko.observable('');
-        self.backlight_compensation_enabled = ko.observable(false);
-        self.exposure_type = ko.observable(0);
-        self.exposure_auto_priority_enabled = ko.observable(0);
-        self.autofocus_enabled = ko.observable(0);
-        self.led1_mode = ko.observable(0);
+        self.server_type = ko.observable();
+        self.mjpg_streamer = new Octolapse.MjpgStreamerViewModel();
 
-        // Need to throttle our slider controls
-        // Brightness
-        self.brightness = ko.observable(0);
-        self.throttled_brightness = ko.computed(self.brightness).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-        // Contrast
-        self.contrast = ko.observable(0);
-        self.throttled_contrast = ko.computed(self.contrast).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-        // Saturation
-        self.saturation = ko.observable(0);
-        self.throttled_saturation = ko.computed(self.saturation).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-        // Gain
-        self.gain = ko.observable(0);
-        self.throttled_gain = ko.computed(self.gain).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-        // Sharpness
-        self.sharpness = ko.observable(0);
-        self.throttled_sharpness = ko.computed(self.sharpness).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-        // White Balance Temperature
-        self.white_balance_temperature = ko.observable(0);
-        self.throttled_white_balance_temperature = ko.computed(self.white_balance_temperature).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-        // Exposure
-        self.exposure = ko.observable(0);
-        self.throttled_exposure = ko.computed(self.exposure).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-        // Pan
-        self.pan = ko.observable(0);
-        self.throttled_pan = ko.computed(self.pan).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-        // Tilt
-        self.tilt = ko.observable(0);
-        self.throttled_tilt = ko.computed(self.tilt).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-        // Zoom
-        self.zoom = ko.observable(0);
-        self.throttled_zoom = ko.computed(self.zoom).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-        // Focus
-        self.focus = ko.observable(0);
-        self.throttled_focus = ko.computed(self.focus).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-        // Led 1 frequency
-        self.led1_frequency = ko.observable(0);
-        self.throttled_led1_frequency = ko.computed(self.led1_frequency).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-        // JPEG Quality
-        self.jpeg_quality = ko.observable(0);
-        self.throttled_jpeg_quality = ko.computed(self.jpeg_quality).extend({ rateLimit: { timeout: self.throttle_ms, method: "notifyWhenChangesStop" } });
-        // MJpegStreamer
-        self.mjpegstreamer = new Octolapse.MjpegStreamerViewModel()
-        self.stream_url = ko.computed(function(){
+        self.getImagePreferences = function(data, success_callback){
+            $.ajax({
+                url: "./plugin/octolapse/getWebcamImagePreferences",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    if(results.success) {
+                        success_callback(results);
+                    }
+                    else
+                    {
+                        var options = {
+                            title: 'Error Loading Webcam Settings',
+                            text: results.error,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(options,"camera_settings_failure",["camera_settings_failure"]);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    var options = {
+                        title: 'Error Loading Webcam Settings',
+                        text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options,"camera_settings_failure",["camera_settings_failure"]);
+                }
+            });
+        };
+
+        self.getMjpgStreamerControls = function(replace, success_callback){
+            // fetch control settings from the server
+            if (!self.server_type() || !self.address())
+                return;
+            var data = {
+                "guid": self.guid(),
+                "server_type": self.server_type(),
+                "camera_name": self.name() ? self.name() : "unknown",
+                "address": self.address(),
+                "username": self.username() ? self.username() : "",
+                "password": self.password() ? self.password() : "",
+                "ignore_ssl_error": self.ignore_ssl_error() ? self.ignore_ssl_error() : false,
+                "replace": replace
+            };
+
+            $.ajax({
+                url: "./plugin/octolapse/getMjpgStreamerControls",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    if(!results.success) {
+                        var options = {
+                            title: 'Webcam Server Error',
+                            text: results.error,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+
+                        Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
+                        return;
+                    }
+                    else
+                    {
+                        success_callback(results);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    var options = {
+                        title: 'Webcam Server Error',
+                        text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
+                    if(self.close_callback)
+                        self.close_callback();
+                }
+            });
+        };
+
+        self.get_webcam_settings_template = ko.pureComputed(function(){
+            if(self.server_type())
+                return 'webcam-' + self.server_type() + "-template";
+            return 'webcam-other-template'
+        });
+
+        self.get_webcam_data = ko.pureComputed(function(){
+            switch(self.server_type())
+            {
+                case "mjpg-streamer":
+                    return self.mjpg_streamer;
+                default:
+                    return null;
+            }
+        });
+
+        self.stream_url = ko.pureComputed(function(){
             if(!self.camera_stream_visible())
                 return '';
-            //console.log("Calculating stream url.");
+            console.log("Calculating stream url.");
             var url = self.stream_template();
             if (url != "")
                 url = url.replace("{camera_address}", self.address());
             return url;
         },this);
 
-        self.subscriptions = [];
-
-        self.getSettingsFromUI = function() {
-            return {
-                    'brightness': self.brightness(),
-                    'contrast': self.contrast(),
-                    'saturation': self.saturation(),
-                    'white_balance_auto': self.white_balance_auto(),
-                    'gain': self.gain(),
-                    'powerline_frequency': self.powerline_frequency(),
-                    'white_balance_temperature':  self.white_balance_temperature(),
-                    'sharpness': self.sharpness(),
-                    'backlight_compensation_enabled': self.backlight_compensation_enabled(),
-                    'exposure_type': self.exposure_type(),
-                    'exposure': self.exposure(),
-                    'exposure_auto_priority_enabled': self.exposure_auto_priority_enabled(),
-                    'pan': self.pan(),
-                    'tilt': self.tilt(),
-                    'autofocus_enabled': self.autofocus_enabled(),
-                    'focus': self.focus(),
-                    'zoom': self.zoom(),
-                    'led1_mode': self.led1_mode(),
-                    'led1_frequency': self.led1_frequency(),
-                    'jpeg_quality': self.jpeg_quality(),
-                };
+        self.setStreamVisibility = function(value)
+        {
+            console.log("Attempting to stop the camera stream");
+            self.camera_stream_visible(value);
+            self.stream_url();
         };
+
+        self.subscriptions = [];
 
         self.unsubscribe_to_settings_changes = function() {
             //console.log("Unsubscribing to camera settings changes");
@@ -331,78 +350,31 @@ $(function() {
             self.subscriptions = [];
         };
 
+        self.subscribe_to_mjpg_streamer_changes = function() {
+            for(var index = 0; index < self.mjpg_streamer.controls().length; index++)
+            {
+                var control = self.mjpg_streamer.controls()[index];
+                self.subscriptions.push(control.value.subscribeWithTarget(function (target, oldValue, newValue) {
+                    if (oldValue !== newValue)
+                    {
+                        self.applyWebcamSetting(ko.toJS(target));
+                    }
+                }, control));
+            }
+        };
+
         self.subscribe_to_settings_changes = function(){
-            //console.log("Subscribing to camera settings changes");
-            self.subscriptions.push(self.white_balance_auto.subscribe(function (val) {
-                self.applyWebcamSetting('white_balance_auto', val);
-            }, self));
-            self.subscriptions.push(self.powerline_frequency.subscribe(function (val) {
-                self.applyWebcamSetting('powerline_frequency', val);
-            }, self));
-            self.subscriptions.push(self.backlight_compensation_enabled.subscribe(function (val) {
-                self.applyWebcamSetting('backlight_compensation_enabled', val);
-            }, self));
-            self.subscriptions.push(self.exposure_type.subscribe(function (val) {
-                self.applyWebcamSetting('exposure_type', val);
-            }, self));
-            self.subscriptions.push(self.exposure_auto_priority_enabled.subscribe(function (val) {
-                self.applyWebcamSetting('exposure_auto_priority_enabled', val);
-            }, self));
-            self.subscriptions.push(self.autofocus_enabled.subscribe(function (val) {
-                self.applyWebcamSetting('autofocus_enabled', val);
-            }, self));
-            self.subscriptions.push(self.led1_mode.subscribe(function (val) {
-                self.applyWebcamSetting('led1_mode', val);
-            }, self));
-            self.subscriptions.push(self.throttled_brightness.subscribe(function (val) {
-                self.applyWebcamSetting('brightness', val);
-            }, self));
-            self.subscriptions.push(self.throttled_contrast.subscribe(function (val) {
-                self.applyWebcamSetting('contrast', val);
-            }, self));
-            self.subscriptions.push(self.throttled_saturation.subscribe(function (val) {
-                self.applyWebcamSetting('saturation', val);
-            }, self));
-            self.subscriptions.push(self.throttled_gain.subscribe(function (val) {
-                self.applyWebcamSetting('gain', val);
-            }, self));
-            self.subscriptions.push(self.throttled_sharpness.subscribe(function (val) {
-                self.applyWebcamSetting('sharpness', val);
-            }, self));
-            self.subscriptions.push(self.throttled_white_balance_temperature.subscribe(function (val) {
-                self.applyWebcamSetting('white_balance_temperature', val);
-            }, self));
-            self.subscriptions.push(self.throttled_exposure.subscribe(function (val) {
-                self.applyWebcamSetting('exposure', val);
-            }, self));
-            self.subscriptions.push(self.throttled_pan.subscribe(function (val) {
-                self.applyWebcamSetting('pan', val);
-            }, self));
-            self.subscriptions.push(self.throttled_tilt.subscribe(function (val) {
-                self.applyWebcamSetting('tilt', val);
-            }, self));
-
-            self.subscriptions.push(self.throttled_zoom.subscribe(function (val) {
-                self.applyWebcamSetting('zoom', val);
-            }, self));
-
-            self.subscriptions.push(self.throttled_focus.subscribe(function (val) {
-                self.applyWebcamSetting('focus', val);
-            }, self));
-
-            self.subscriptions.push(self.throttled_led1_frequency.subscribe(function (val) {
-                self.applyWebcamSetting('led1_frequency', val);
-            }, self));
-
-            self.subscriptions.push(self.throttled_jpeg_quality.subscribe(function (val) {
-                self.applyWebcamSetting('jpeg_quality', val);
-            }, self));
+            switch(self.server_type()) {
+                case "mjpg-streamer":
+                    self.subscribe_to_mjpg_streamer_changes();
+                    break;
+            }
         };
         // I found this awesome binding handler created by Michael Rouse, available at https://codepen.io/mwrouse/pen/wWwvmN
 
         self.cancelWebcamChanges = function(){
             if (self.guid() == null || self.guid() == "")
-                return;
+                self.close_callback();
             //console.log("Undoing webcam changes.");
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
 
@@ -452,8 +424,15 @@ $(function() {
             //console.log("Loading default webcam values.");
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             var data = {
-                'guid': self.guid()
+                "guid": self.guid(),
+                "server_type": self.server_type(),
+                "camera_name": self.name() ? self.name() : "unknown",
+                "address": self.address(),
+                "username": self.username() ? self.username() : "",
+                "password": self.password() ? self.password() : "",
+                "ignore_ssl_error": self.ignore_ssl_error() ? self.ignore_ssl_error() : false
             };
+
             $.ajax({
                 url: "./plugin/octolapse/loadWebcamDefaults",
                 type: "POST",
@@ -497,89 +476,61 @@ $(function() {
         };
 
         self.updateWebcamSettings = function(values) {
-            self.unsubscribe_to_settings_changes();
-            if ("mjpegstreamer" in values.webcam_settings)
+            //self.unsubscribe_to_settings_changes();
+
+            var webcam_settings = null;
+            if ("webcam_settings" in values)
             {
-                self.mjpegstreamer.update(values.webcam_settings.mjpegstreamer);
+                webcam_settings = values["webcam_settings"];
             }
+            if ("server_type" in webcam_settings)
+            {
+                self.server_type(webcam_settings.server_type);
+            }
+
+            if ("mjpg_streamer" in webcam_settings)
+            {
+                self.mjpg_streamer.update(webcam_settings.mjpg_streamer);
+            }
+
             if ("guid" in values)
                 self.guid(values.guid);
             if ("name" in values)
                 self.name(values.name);
-            if ("address" in values.webcam_settings)
-                self.address(values.webcam_settings.address);
-            if ('snapshot_request_template' in values.webcam_settings)
-                self.snapshot_request_template(values.webcam_settings.snapshot_request_template);
-            if ("username" in values.webcam_settings)
-                self.username(values.webcam_settings.username);
-            if ("password" in values.webcam_settings)
-                self.password(values.webcam_settings.password);
-            if ("ignore_ssl_error" in values.webcam_settings)
-                self.ignore_ssl_error(values.webcam_settings.ignore_ssl_error);
+            if ("address" in webcam_settings)
+                self.address(webcam_settings.address);
+            if ('snapshot_request_template' in webcam_settings)
+                self.snapshot_request_template(webcam_settings.snapshot_request_template);
+            if ("username" in webcam_settings)
+                self.username(webcam_settings.username);
+            if ("password" in webcam_settings)
+                self.password(webcam_settings.password);
+            if ("ignore_ssl_error" in webcam_settings)
+                self.ignore_ssl_error(webcam_settings.ignore_ssl_error);
             if ("timeout_ms" in values)
                 self.timeout_ms(values.timeout_ms);
-            if ("stream_template" in values.webcam_settings)
-                self.stream_template(values.webcam_settings.stream_template);
-            if ("brightness" in values.webcam_settings)
-                self.brightness(values.webcam_settings.brightness);
-            if ("contrast" in values.webcam_settings)
-                self.contrast(values.webcam_settings.contrast);
-            if ("saturation" in values.webcam_settings)
-                self.saturation(values.webcam_settings.saturation);
-            if ("white_balance_auto" in values.webcam_settings)
-                self.white_balance_auto(values.webcam_settings.white_balance_auto);
-            if ("powerline_frequency" in values.webcam_settings)
-                self.gain(values.webcam_settings.gain);
-            if ("powerline_frequency" in values.webcam_settings)
-                self.powerline_frequency(values.webcam_settings.powerline_frequency);
-            if ("white_balance_temperature" in values.webcam_settings)
-                self.white_balance_temperature(values.webcam_settings.white_balance_temperature);
-            if ("sharpness" in values.webcam_settings)
-                self.sharpness(values.webcam_settings.sharpness);
-            if ("backlight_compensation_enabled" in values.webcam_settings)
-                self.backlight_compensation_enabled(values.webcam_settings.backlight_compensation_enabled);
-            if ("exposure_type" in values.webcam_settings)
-                self.exposure_type(values.webcam_settings.exposure_type);
-            if ("exposure" in values.webcam_settings)
-                self.exposure(values.webcam_settings.exposure);
-            if ("exposure_auto_priority_enabled" in values.webcam_settings)
-                self.exposure_auto_priority_enabled(values.webcam_settings.exposure_auto_priority_enabled);
-            if ("pan" in values.webcam_settings)
-                self.pan(values.webcam_settings.pan);
-            if ("tilt" in values.webcam_settings)
-                self.tilt(values.webcam_settings.tilt);
-            if ("autofocus_enabled" in values.webcam_settings)
-                self.autofocus_enabled(values.webcam_settings.autofocus_enabled);
-            if ("focus" in values.webcam_settings)
-                self.focus(values.webcam_settings.focus);
-            if ("zoom" in values.webcam_settings)
-                self.zoom(values.webcam_settings.zoom);
-            if ("led1_mode" in values.webcam_settings)
-                self.led1_mode(values.webcam_settings.led1_mode);
-            if ("led1_frequency" in values.webcam_settings)
-                self.led1_frequency(values.webcam_settings.led1_frequency);
-            if ("jpeg_quality" in values.webcam_settings)
-                self.jpeg_quality(values.webcam_settings.jpeg_quality);
+            if ("stream_template" in webcam_settings)
+                self.stream_template(webcam_settings.stream_template);
 
+            // notify subscribers of a possible stream url change.
+            self.stream_url.notifySubscribers();
+            Octolapse.Help.bindHelpLinks(".octolapse .webcam_settings");
             setTimeout(function(){ self.subscribe_to_settings_changes(); }, self.throttle_ms * 2);
 
         };
 
-        self.applyWebcamSetting = function (setting_name, value) {
-
+        self.applyWebcamSetting = function (setting) {
             //console.log("Changing Camera Setting " + setting_name + " to " + value.toString() + ".");
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
 
             var data = {
-                'server_type': 'MJPG-Streamer',
-                'name': self.name(),
+                'server_type': self.server_type(),
+                'camera_name': self.name(),
                 'address': self.address(),
                 'username': self.username(),
                 'password': self.password(),
                 'ignore_ssl_error': self.ignore_ssl_error(),
-                'timeout_ms': self.timeout_ms(),
-                'setting_name':setting_name,
-                'value':value
+                'setting': setting
             };
 
             $.ajax({
@@ -614,13 +565,11 @@ $(function() {
         };
 
         self.applyWebcamSettings = function(){
-            var webcam_settings = self.getSettingsFromUI();
-
+            // Get the current webcam settings
             var data = {
-                'type': 'new_webcam_settings_by_guid',
-                'guid': self.guid(),
-                'webcam_settings':webcam_settings,
-                'settings_type': 'web-request'
+                'type': 'ui-settings-update',
+                'settings_type': 'web-request',
+                'settings': ko.toJS(self),
             };
 
             $.ajax({
@@ -689,6 +638,7 @@ $(function() {
                 }); // end ajax call
             },null);
         };
+
 
     }
 });

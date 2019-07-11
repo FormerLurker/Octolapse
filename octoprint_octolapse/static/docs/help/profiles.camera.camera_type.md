@@ -2,7 +2,7 @@ Three types of cameras are supported in Octolapse:  Webcams, external (script/DS
 
 
 ### Webcams
-Webcams must be accessible via http or https and must deliver jpg images (currently).  Octolapse supports mjpegstreamer, yawcam, or any other streaming server or camera that can provide an image via a browser link.
+Webcams must be accessible via http or https and must deliver jpg images (currently).  Octolapse supports mjpg_streamer, yawcam, or any other streaming server or camera that can provide an image via a browser link.
 
 This camera type can be used to call a script when a snapshot needs to be taken.  The primary use here is for DSLR cameras that support triggering, though there are lots of interesting things you could probably do here.  I haven't done it yet, but I believe you could also use this to trigger a camera via GPIO.
 

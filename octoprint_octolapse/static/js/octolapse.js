@@ -725,54 +725,49 @@ $(function () {
     };
 
     ko.bindingHandlers.streamLoading = {
-        update: function(element, valueAccessor) {
-            //console.log("Binding element to streamLoading");
+        init:  function(element, valueAccessor) {
+
+        },update: function(element, valueAccessor) {
+            // close the stream if one exists
+            $(element).attr('src', "");
+            console.log("Binding element to streamLoading");
             var self = this;
             var options = valueAccessor();
+            self.src = ko.unwrap(options.src);
             var error_selector = ko.unwrap(options.error_selector);
             var loading_selector = ko.unwrap(options.loading_selector);
-            self.src = ko.unwrap(options.src);
+
             $(element).hide();
             $(error_selector).hide();
             $(loading_selector).html("<div><p>Loading webcam stream at: " + self.src + "</p></div>").show();
+            $(element).unbind('load').unbind('error');
 
-            // ensures this works for some older browsers
-            MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
-            new MutationObserver(function onSrcChange(e){
-                if ($(element).attr('src') === '') {
-                    //console.log("The src has changed to nothing, hide the elementand return.");
-                    $(element).hide();
-                    return;
-                }
-                //else{
-                    //console.log("Stream src changed");
-                //}
-
-                // src attribute just changed
-                // First, remove any existing load or error events
-                $(element).off('load').off('error');
-                // Hide the element, the error element, and show the loading element
-                $(element).hide();
+            // Create a handler to handle load and error
+            self.on_loaded = function(){
+                console.log("Stream Loaded.");
                 $(error_selector).hide();
-                $(loading_selector).html("<div><p>Loading webcam stream at: " + self.src + "</p></div>").show();
+                $(loading_selector).hide();
+                $(element).show();
+            };
+            $(element).off('load', self.on_loaded);
+            $(element).one('load', self.on_loaded);
 
-                // Create a handler to handle load and error
-                $(element).one('load', function() {
-                    //console.log("Stream Loaded.");
-                    $(error_selector).hide();
-                    $(loading_selector).hide();
-                    $(element).fadeIn(1000);
-                    //$(element).attr('src', src);
-                }).one('error', function(event_data) {
+            self.on_error = function(){
+                $(element).hide();
+                $(loading_selector).hide();
+                if (src !== "") {
                     console.log("Stream Error.");
-                    $(element).hide();
-                    $(loading_selector).hide();
-                    $(error_selector).html("<div><p>Error loading the stream at: " + src + "</p><p>Check the 'Stream Address Template' setting in your camera profile.</p></div>").fadeIn(1000);
-                    $(element).attr('src', '');
-                });
-            }).observe(element,{attributes:true,attributeFilter:["src"]});
+                    $(error_selector).html("<div><p>Error loading the stream at: <a href='" + src + "' target='_blank'>" + src + "</a></p><p>Check the 'Stream Address Template' setting in your camera profile.</p></div>").fadeIn(1000);
+                }
+                else{
+                    console.log("Stream Closing.");
+                    $(error_selector).html("<div><p>No stream url was provided.  Check the 'Stream Address Template' setting.</p></div>").fadeIn(1000);
+                }
+            };
+            $(element).off('error', self.on_error);
+            $(element).one('error', self.on_error);
+            // set the source for the stream
             $(element).attr('src', self.src);
-
         }
     };
 

@@ -887,7 +887,7 @@
           "led1_mode": "auto",
           "ignore_ssl_error": true,
           "tilt": 36000,
-          "mjpegstreamer": {
+          "mjpg_streamer": {
             "exposure_request_template": "{camera_address}?action=command&dest=0&plugin=0&id=10094850&group=1&value={value}",
             "jpeg_quality_request_template": "{camera_address}?action=command&dest=0&plugin=0&id=1&group=3&value={value}",
             "brightness_request_template": "{camera_address}?action=command&dest=0&plugin=0&id=9963776&group=1&value={value}",
@@ -1408,7 +1408,7 @@
           "led1_mode": "auto",
           "ignore_ssl_error": false,
           "tilt": 0,
-          "mjpegstreamer": {
+          "mjpg_streamer": {
             "exposure_request_template": "{camera_address}?action=command&dest=0&plugin=0&id=10094850&group=1&value={value}",
             "jpeg_quality_request_template": "{camera_address}?action=command&dest=0&plugin=0&id=1&group=3&value={value}",
             "brightness_request_template": "{camera_address}?action=command&dest=0&plugin=0&id=9963776&group=1&value={value}",

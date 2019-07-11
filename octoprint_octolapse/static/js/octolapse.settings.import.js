@@ -234,8 +234,10 @@ $(function () {
                 },
                 onfocusout: function (element, event) {
                     setTimeout(function() {
-                        self.$dialog.validator.form();
-                        self.resize();
+                        if(self.$dialog.validator)
+                        {
+                            self.$dialog.validator.form();
+                        }
                     }, 250);
                 },
                 onclick: function (element, event) {
@@ -253,7 +255,9 @@ $(function () {
             };
             self.$dialog.validator = null;
             //console.log("Adding validator to main setting dialog.")
-            self.$dialog.$editDialog.on("hidden.bs.modal", function () {
+            self.$dialog.$editDialog.on("hide.bs.modal", function () {
+                if (!self.can_hide)
+                    return false;
                 // Clear out error summary
                 self.$dialog.$errorCount.empty();
                 self.$dialog.$errorList.empty();
@@ -263,11 +267,6 @@ $(function () {
                     self.$dialog.validator.destroy();
                     self.$dialog.validator = null;
                 }
-            });
-
-            // Prevent hiding unless the event was initiated by the hideAddEditDialog function
-            self.$dialog.$editDialog.on("hide.bs.modal", function () {
-                return self.can_hide;
             });
 
             self.$dialog.$editDialog.on("shown.bs.modal", function () {

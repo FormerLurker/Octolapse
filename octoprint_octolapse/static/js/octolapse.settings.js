@@ -531,10 +531,12 @@ $(function () {
         // hide the modal dialog
         self.can_hide = false;
         self.hideAddEditDialog = function () {
+            console.log("Add update dialog will be closed.");
             self.can_hide = true;
             $("#octolapse_add_edit_profile_dialog").modal("hide");
         };
         self.cancelAddEditDialog = function () {
+            console.log("Add update dialog cancelled.");
             // Hide the dialog
             self.hideAddEditDialog();
             // see if the current viewmodel has an on_canceled function
@@ -608,8 +610,11 @@ $(function () {
                 },
                 onfocusout: function (element, event) {
                     setTimeout(function() {
-                        dialog.validator.form();
-                        dialog.resize();
+                        if (dialog.validator)
+                        {
+                            dialog.validator.form();
+                        }
+
                     }, 250);
                 },
                 onclick: function (element, event) {
@@ -629,10 +634,10 @@ $(function () {
 
             // Prevent hiding unless the event was initiated by the hideAddEditDialog function
             dialog.$addEditDialog.on("hide.bs.modal", function () {
-                return self.can_hide;
-            });
-            // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
-            dialog.$addEditDialog.on("hidden.bs.modal", function () {
+                console.log("About to hide add edit dialog");
+                if (!self.can_hide)
+                    return false;
+                //return self.can_hide;
                 // Clear out error summary
                 dialog.$errorCount.empty();
                 dialog.$errorList.empty();
@@ -646,11 +651,12 @@ $(function () {
                 if (typeof self.profileObservable().on_closed === 'function')
                 {
                     // call the function
+                    console.log("Closing the profile dialog");
                     self.profileObservable().on_closed();
                 }
-
-
             });
+            // configure the modal hidden event.  Isn't it funny that bootstrap's own shortenting of their name is BS?
+
             // configure the dialog show event
             dialog.$addEditDialog.on("show.bs.modal", function () {
                 Octolapse.Settings.AddEditProfile({
@@ -687,6 +693,7 @@ $(function () {
             });
             // Configure the shown event
             dialog.$addEditDialog.on("shown.bs.modal", function () {
+                console.log("Showing profile settings dialog.");
                 self.can_hide = false;
                 // Unbind all click events
                 dialog.$addEditDialog.unbind('click');
@@ -716,7 +723,6 @@ $(function () {
                 });
 
                 // Remove any click event bindings from the save button
-                dialog.$addEditDialog.off('hidden.bs.modal');
                 dialog.$saveButton.unbind("click");
                 // Called when a user clicks the save button on any add/update dialog.
                 dialog.$saveButton.bind("click", function () {

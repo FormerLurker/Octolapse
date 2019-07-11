@@ -540,7 +540,7 @@ class Timelapse(object):
                     if self._render_error_callback is not None:
                         error = RenderError('timelapse_start', "The render_start function returned false")
                         render_end_callback_thread = threading.Thread(
-                            target=self._render_error_callback, args=[error]
+                            target=self._render_error_callback, args=[None, error]
                         )
                         render_end_callback_thread.daemon = True
                         render_end_callback_thread.start()
@@ -1272,23 +1272,24 @@ class Timelapse(object):
 
     def _render_timelapse(self, print_end_state):
         # make sure we have a non null TimelapseSettings object.  We may have terminated the timelapse for some reason
-        if self._rendering_processor is not None and self._settings.profiles.current_rendering().enabled:
-            # If we are still taking snapshots, wait for them all to finish
-            if self.get_is_taking_snapshot():
-                logger.info("Snapshot jobs are running, waiting for them to finish before rendering.")
-                self._snapshot_task_queue.join()
-            logger.info("Snapshot jobs queue has completed, starting to render.")
-            self._current_job_info.PrintEndTime = time.time()
-            self._current_job_info.PrintEndState = print_end_state
-            for camera in self._settings.profiles.active_cameras():
-                rendering_job_info = RenderJobInfo(
-                    self._current_job_info,
-                    self._data_folder,
-                    camera,
-                    self._settings.profiles.current_rendering(),
-                    self._ffmpeg_path
-                )
-                self._rendering_task_queue.put(rendering_job_info)
+        if self._rendering_processor is not None:
+            if self._settings.profiles.current_rendering().enabled:
+                # If we are still taking snapshots, wait for them all to finish
+                if self.get_is_taking_snapshot():
+                    logger.info("Snapshot jobs are running, waiting for them to finish before rendering.")
+                    self._snapshot_task_queue.join()
+                logger.info("Snapshot jobs queue has completed, starting to render.")
+                self._current_job_info.PrintEndTime = time.time()
+                self._current_job_info.PrintEndState = print_end_state
+                for camera in self._settings.profiles.active_cameras():
+                    rendering_job_info = RenderJobInfo(
+                        self._current_job_info,
+                        self._data_folder,
+                        camera,
+                        self._settings.profiles.current_rendering(),
+                        self._ffmpeg_path
+                    )
+                    self._rendering_task_queue.put(rendering_job_info)
             return True
         return False
 

@@ -21,6 +21,20 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 */
+.two-columns{
+    /*-webkit-column-gap: 20px;
+       -moz-column-gap: 20px;
+            column-gap: 20px;*/
+    -webkit-column-count: 2;
+       -moz-column-count: 2;
+            column-count: 2;
+}
+.break-inside-avoid
+{
+    page-break-inside: avoid;
+    break-inside: avoid-column;
+}
+
 #octolapse_tab div.panel-heading.tab-heading
 {
     padding: 5px 5px 0px 5px;

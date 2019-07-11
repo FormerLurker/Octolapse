@@ -210,6 +210,7 @@ class AutomaticConfiguration(Settings):
                 return value
         return super(AutomaticConfiguration, cls).try_convert_value(destination, value, key)
 
+
 class PrinterProfileSlicers(Settings):
     def __init__(self):
         self.cura = CuraSettings()
@@ -1101,104 +1102,193 @@ class RenderingProfile(AutomaticConfigurationProfile):
         }
 
 
+class StreamingServer(Settings):
+    def __init__(self, name, server_type):
+        self.name = name
+        self.server_type = server_type
+
+
+class MjpgStreamer(StreamingServer):
+    server_type = "mjpg-streamer"
+    server_name = "mjpg-streamer"
+
+    def __init__(self):
+        super(MjpgStreamer, self).__init__(MjpgStreamer.server_name, MjpgStreamer.server_type)
+        self.controls = {}
+
+    def update_setting(self, value):
+        if isinstance(value, dict):
+            if value["id"] in self.controls:
+                self.controls[value.id].update(value)
+            else:
+                control = MjpgStreamerControl()
+                control.update(value)
+                self.controls[value["id"]] = control
+        else:
+            if value.id in self.controls:
+                self.controls[value.id].update(value)
+            else:
+                control = MjpgStreamerControl()
+                control.update(value)
+                self.controls[value.id] = control
+
+    def controls_match_server(self, server_settings):
+        # see if all of the existing settings and controls are the same for this camera, except for the value.
+        # loop through each control and see if everything matches except for the value
+
+        # first see if the  number of controls match
+        if len(self.controls) != len(server_settings):
+            return False
+
+        for key, control in six.iteritems(self.controls):
+            # convert the key to a string
+            key = str(key)
+            # if the key is not in the server_settings_dict, they don't match
+            if str(key) not in server_settings:
+                return False
+            # get the server control
+            server_control = server_settings[key]
+
+            # see if it matches
+            if not control.control_matches_server(server_control):
+                return False
+        # if we're here, everything matches!
+        return True
+
+    def update(self, iterable, **kwargs):
+        item_to_iterate = iterable
+        if not isinstance(iterable, collections.Iterable):
+            item_to_iterate = iterable.__dict__
+
+        for key, value in item_to_iterate.items():
+            class_item = getattr(self, key, '{octolapse_no_property_found}')
+            if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                if key == 'controls':
+                    self.controls = {}
+                    if isinstance(value, dict):
+                        for control_key, control in value.items():
+                            self.update_setting(control)
+                    elif isinstance(value, list):
+                        for control in value:
+                            self.update_setting(control)
+
+                elif isinstance(class_item, Settings):
+                    class_item.update(value)
+                elif isinstance(class_item, StaticSettings):
+                    # don't update any static settings, those come from the class itself!
+                    continue
+                else:
+                    self.__dict__[key] = self.try_convert_value(class_item, value, key)
+
+
+class OtherStreamingServer(StreamingServer):
+    server_type = "other"
+    server_name = "Other"
+
+    def __init__(self):
+        super(OtherStreamingServer, self).__init__(OtherStreamingServer.server_name, OtherStreamingServer.server_type)
+
+    def update_setting(self, value):
+        return
+
+
+class MjpgStreamerControl(Settings):
+    def __init__(self):
+        self.name = None
+        self.id = None
+        self.type = None
+        self.min = None
+        self.max = None
+        self.step = None
+        self.default = None
+        self.value = None
+        self.dest = None
+        self.flags = None
+        self.group = None
+        self.menu = {}
+
+    def control_matches_server(self, server_control):
+        matches = True
+        # get all of the control properties in such a way that if we add more members we won't have to change anything
+        members = [
+            attr
+            for attr
+            in dir(self) if not callable(getattr(self, attr)) and not attr.startswith("__")
+        ]
+        # loop through all of the members and make sure the server control values are the same
+        # but ignore the self.value and self.flags members
+        for attr_name in members:
+            if attr_name in ["value", "flags"] and attr_name in dir(server_control):
+                # ignore the value
+                continue
+
+            if (
+                attr_name not in dir(server_control) or
+                str(self.__dict__[attr_name]) != str(server_control.__dict__[attr_name])
+             ):
+                return False
+        # if we're here, it matches!
+        return True
+
+
 class WebcamSettings(Settings):
+
     def __init__(self):
         self.address = "http://127.0.0.1/webcam/"
         self.snapshot_request_template = "{camera_address}?action=snapshot"
         self.stream_template = "/webcam/?action=stream"
         self.ignore_ssl_error = False
+        self.server_type = MjpgStreamer.server_type
         self.username = ""
         self.password = ""
-        self.brightness = 128
-        self.contrast = 128
-        self.saturation = 128
-        self.white_balance_auto = True
-        self.gain = 100
-        self.powerline_frequency = 60
-        self.white_balance_temperature = 4000
-        self.sharpness = 128
-        self.backlight_compensation_enabled = False
-        self.exposure_type = 1
-        self.exposure = 250
-        self.exposure_auto_priority_enabled = True
-        self.pan = 0
-        self.tilt = 0
-        self.autofocus_enabled = True
-        self.focus = 28
-        self.zoom = 100
-        self.led1_mode = 'auto'
-        self.led1_frequency = 0        
-        self.jpeg_quality = 90
-        self.mjpegstreamer = MjpegStreamerStaticSettings()
+        self.mjpg_streamer = MjpgStreamer()
 
-
-class MjpegStreamerStaticSettings(StaticSettings):
-    
-    def template_to_string(self, destination, plugin, setting_id, group):
-        return (
-            "{}?action=command&dest={}&plugin={}&id={}&group={}&value={}".format(
-                "{camera_address}", destination, plugin, setting_id, group, "{value}"
-            )
-        )
-
-    def format_request_template(camera_address, template, value):
-        return template.format(camera_address=camera_address, value=value)
-    
-    def __init__(self):
+    def update(self, iterable, **kwargs):
         try:
-            self.brightness_request_template = self.template_to_string(0, 0, 9963776, 1)
-            self.contrast_request_template = self.template_to_string(0, 0, 9963777, 1)
-            self.saturation_request_template = self.template_to_string(0, 0, 9963778, 1)
-            self.white_balance_auto_request_template = self.template_to_string(0, 0, 9963788, 1)
-            self.gain_request_template = self.template_to_string(0, 0, 9963795, 1)
-            self.powerline_frequency_request_template = self.template_to_string(0, 0, 9963800, 1)
-            self.white_balance_temperature_request_template = self.template_to_string(0, 0, 9963802, 1)
-            self.sharpness_request_template = self.template_to_string(0, 0, 9963803, 1)
-            self.backlight_compensation_enabled_request_template = self.template_to_string(0, 0, 9963804, 1)
-            self.exposure_type_request_template = self.template_to_string(0, 0, 10094849, 1)
-            self.exposure_request_template = self.template_to_string(0, 0, 10094850, 1)
-            self.exposure_auto_priority_enabled_request_template = self.template_to_string(0, 0, 10094851, 1)
-            self.pan_request_template = self.template_to_string(0, 0, 10094856, 1)
-            self.tilt_request_template = self.template_to_string(0, 0, 10094857, 1)
-            self.autofocus_enabled_request_template = self.template_to_string(0, 0, 10094860, 1)
-            self.focus_request_template = self.template_to_string(0, 0, 10094858, 1)
-            self.zoom_request_template = self.template_to_string(0, 0, 10094861, 1)
-            self.led1_mode_request_template = self.template_to_string(0, 0, 168062213, 1)
-            self.led1_frequency_request_template = self.template_to_string(0, 0, 168062214, 1)
-            self.jpeg_quality_request_template = self.template_to_string(0, 0, 1, 3)
-            self.file_request_template = "{camera_address}{value}"
-            self.options = self.get_options()
+            item_to_iterate = iterable
+            if not isinstance(iterable, collections.Iterable):
+                item_to_iterate = iterable.__dict__
+
+            for key, value in item_to_iterate.items():
+                class_item = getattr(self, key, '{octolapse_no_property_found}')
+                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                    if key == 'mjpg_streamer':
+                        self.mjpg_streamer.controls = {}
+                        if "controls" in value:
+                            controls = value["controls"]
+                            # controls might be a dict or a list, iterate appropriately
+                            if isinstance(controls, dict):
+                                for key, control in six.iteritems(value["controls"]):
+                                    if "id" in control:
+                                        self.mjpg_streamer.controls[key] = (
+                                            MjpgStreamerControl.create_from(control)
+                                        )
+                            elif isinstance(controls, list):
+                                for control in value["controls"]:
+                                    if "id" in control:
+                                        self.mjpg_streamer.controls[control["id"]] = (
+                                            MjpgStreamerControl.create_from(control)
+                                        )
+                    elif isinstance(class_item, Settings):
+                        class_item.update(value)
+                    elif isinstance(class_item, StaticSettings):
+                        # don't update any static settings, those come from the class itself!
+                        continue
+                    else:
+                        self.__dict__[key] = self.try_convert_value(class_item, value, key)
         except Exception as e:
-            print (e)
-    
-    @staticmethod
-    def get_options():
-        return {
-            'camera_powerline_frequency_options': [
-                dict(value='0', name='Disabled'),
-                dict(value='1', name='50 HZ (Europe, China, India, etc)'),
-                dict(value='2', name='60 HZ (North/South America, Japan, etc)')
-            ],
-            'camera_exposure_type_options': [
-                dict(value='0', name='Brightness'),
-                dict(value='1', name='Manual Mode'),
-                dict(value='2', name='rast'),
-                dict(value='3', name='Auto - Aperture Priority Mode')
-            ],
-            'camera_led_1_mode_options': [
-                dict(value='on', name='On'),
-                dict(value='off', name='Off'),
-                dict(value='blink', name='Blink'),
-                dict(value='auto', name='Auto')
-            ]
-        }
+            raise e
 
 
 class CameraProfile(AutomaticConfigurationProfile):
+    camera_type_webcam = 'webcam'
+    camera_type_script = 'script'
+    camera_type_gcode = 'gcode'
+
     def __init__(self, name="New Camera Profile"):
         super(CameraProfile, self).__init__(name)
         self.enabled = True
-        self.camera_type = "webcam"
+        self.camera_type = CameraProfile.camera_type_webcam
         self.gcode_camera_script = ""
         self.on_print_start_script = ""
         self.on_before_snapshot_script = ""
@@ -1208,10 +1298,12 @@ class CameraProfile(AutomaticConfigurationProfile):
         self.on_after_render_script = ""
         self.delay = 125
         self.timeout_ms = 5000
-        self.apply_settings_before_print = False
-        self.apply_settings_at_startup = False
+
         self.snapshot_transpose = ""
         self.webcam_settings = WebcamSettings()
+        self.enable_custom_image_preferences = False
+        self.apply_settings_before_print = False
+        self.apply_settings_at_startup = False
 
     def format_snapshot_request_template(self):
         return self.snapshot_request_template.format(camera_address=self.address)
@@ -1257,22 +1349,9 @@ class CameraProfile(AutomaticConfigurationProfile):
     @staticmethod
     def get_options():
         return {
-            'camera_powerline_frequency_options': [
-                dict(value='0', name='Disabled'),
-                dict(value='1', name='50 HZ (Europe, China, India, etc)'),
-                dict(value='2', name='60 HZ (North/South America, Japan, etc)')
-            ],
-            'camera_exposure_type_options': [
-                dict(value='0', name='Brightness'),
-                dict(value='1', name='Manual Mode'),
-                dict(value='2', name='rast'),
-                dict(value='3', name='Auto - Aperture Priority Mode')
-            ],
-            'camera_led_1_mode_options': [
-                dict(value='on', name='On'),
-                dict(value='off', name='Off'),
-                dict(value='blink', name='Blink'),
-                dict(value='auto', name='Auto')
+            'webcam_server_type_options': [
+                dict(value=MjpgStreamer.server_type, name=MjpgStreamer.server_type),
+                dict(value=OtherStreamingServer.server_type, name=OtherStreamingServer.server_type)
             ],
             'snapshot_transpose_options': [
                 dict(value='', name='None'),
@@ -1284,9 +1363,9 @@ class CameraProfile(AutomaticConfigurationProfile):
                 dict(value='transpose', name='Transpose')
             ],
             'camera_type_options': [
-                dict(value='webcam', name='Webcam'),
-                dict(value='external-script', name='External Camera - Script'),
-                dict(value='printer-gcode', name='Gcode Camera (built into printer)')
+                dict(value=CameraProfile.camera_type_webcam, name='Webcam'),
+                dict(value=CameraProfile.camera_type_script, name='External Camera - Script'),
+                dict(value=CameraProfile.camera_type_gcode, name='Gcode Camera (built into printer)')
             ],
         }
 
@@ -1368,6 +1447,7 @@ class MainSettings(Settings):
         self.preview_snapshot_plans = True
         self.automatic_updates_enabled = True
         self.automatic_update_interval_days = 7
+
 
 class ProfileOptions(StaticSettings):
     def __init__(self):
@@ -1519,16 +1599,38 @@ class Profiles(Settings):
                 _active_cameras.append(_current_camera)
         return _active_cameras
 
-    def startup_cameras(self):
+    def after_startup_cameras(self):
         _startup_cameras = []
         for key in self.cameras:
             _current_camera = self.cameras[key]
             if (
                 _current_camera.enabled  and
-                _current_camera.camera_type == 'webcam' and
+                _current_camera.camera_type in [
+                    CameraProfile.camera_type_webcam
+                ] and
                 _current_camera.apply_settings_at_startup
             ):
                 _startup_cameras.append(_current_camera)
+        return _startup_cameras
+
+    def before_print_start_cameras(self):
+        _startup_cameras = []
+        for key in self.cameras:
+            _current_camera = self.cameras[key]
+            if (
+                _current_camera.enabled and (
+                    (
+                        _current_camera.camera_type == CameraProfile.camera_type_webcam and
+                        _current_camera.apply_settings_before_print
+                    ) or
+                    (
+                        _current_camera.camera_type == CameraProfile.camera_type_script and
+                        _current_camera.on_print_start_script
+                    )
+                )
+            ):
+                _startup_cameras.append(_current_camera)
+
         return _startup_cameras
 
     def get_profile(self, profile_type, guid):

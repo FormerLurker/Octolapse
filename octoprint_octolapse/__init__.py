@@ -75,7 +75,7 @@ from octoprint_octolapse.gcode_parser import Commands
 from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, TriggerProfile, \
     CameraProfile, RenderingProfile, DebugProfile, SlicerSettings, CuraSettings, OtherSlicerSettings, \
-    Simplify3dSettings, Slic3rPeSettings, SettingsJsonEncoder
+    Simplify3dSettings, Slic3rPeSettings, SettingsJsonEncoder, MjpgStreamer
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
 from octoprint_octolapse.stabilization_preprocessing import StabilizationPreprocessingThread
 from octoprint_octolapse.messenger_worker import MessengerWorker, PluginMessage
@@ -690,12 +690,87 @@ class OctolapsePlugin(
             }
         ), 200, {'ContentType': 'application/json'}
 
+    @octoprint.plugin.BlueprintPlugin.route("/getMjpgStreamerControls", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def get_mjpg_streamer_controls(self):
+        request_values = flask.request.get_json()
+        server_type = request_values["server_type"]
+        camera_name = request_values["camera_name"]
+        address = request_values["address"]
+        username = request_values["username"]
+        password = request_values["password"]
+        ignore_ssl_error = request_values["ignore_ssl_error"]
+        replace = request_values["replace"]
+        guid = None if "guid" not in request_values else request_values["guid"]
+
+        success, errors, webcam_settings = camera.CameraControl.get_webcam_settings(
+            server_type,
+            camera_name,
+            address,
+            username,
+            password,
+            ignore_ssl_error
+        )
+        if not success:
+            return json.dumps(
+                {'success': False, 'error': errors}, 500,
+                {'ContentType': 'application/json'})
+
+        if guid and guid in self._octolapse_settings.profiles.cameras:
+            # Check to see if we need to update our existing camera image settings.  We only want to do this
+            # if the control set has changed (minus the actual value)
+
+            camera_profile = self._octolapse_settings.profiles.cameras[guid].clone()
+            matches = False
+            if server_type == MjpgStreamer.server_type:
+                if camera_profile.webcam_settings.mjpg_streamer.controls_match_server(
+                    webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]
+                ):
+                    matches = True
+
+            if replace or len(camera_profile.webcam_settings.mjpg_streamer.controls) == 0:
+                # get the existing settings since we don't want to use the defaults
+                camera_profile.webcam_settings.mjpg_streamer.controls = {}
+                camera_profile.webcam_settings.mjpg_streamer.update(
+                    webcam_settings["webcam_settings"]["mjpg_streamer"]
+                )
+
+                # turn the controls into a dict
+                webcam_settings = {
+                    "webcam_settings": {
+                        "mjpg_streamer": {
+                            "controls": camera_profile.webcam_settings.mjpg_streamer.controls
+                        }
+                    },
+                    "new_preferences_available": False
+                }
+            else:
+                webcam_settings = {
+                    "webcam_settings": {
+                        "mjpg_streamer": {
+                            "controls": camera_profile.webcam_settings.mjpg_streamer.controls
+                        }
+                    },
+                    "new_preferences_available": (
+                        not matches and len(webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]) > 0
+                    )
+                }
+
+
+        # if we're here, we should be good, extract and return the camera settings
+        return json.dumps(
+            {
+                'success': True, 'settings': webcam_settings
+            }, cls=SettingsJsonEncoder), 200, {'ContentType': 'application/json'}
+
     @octoprint.plugin.BlueprintPlugin.route("/getWebcamImagePreferences", methods=["POST"])
     @restricted_access
     @admin_permission.require(403)
     def get_webcam_image_preferences(self):
         request_values = flask.request.get_json()
         guid = request_values["guid"]
+        replace = request_values["replace"]
         if guid not in self._octolapse_settings.profiles.cameras:
             return json.dumps({'success': False, 'error': 'The requested camera profile does not exist.  Cannot adjust settings.'}, 404, {'ContentType': 'application/json'})
         profile = self._octolapse_settings.profiles.cameras[guid]
@@ -703,19 +778,64 @@ class OctolapsePlugin(
             return json.dumps({'success': False, 'error': 'The selected camera is not a webcam.  Cannot adjust settings.'}, 500,
                               {'ContentType': 'application/json'})
 
-        camera_profile = self._octolapse_settings.profiles.cameras[guid]
-        try:
-            # make sure the camera is mjpegstreamer
-            camera.test_web_camera_image_preferences(camera_profile)
-        except camera.CameraError as e:
-            return json.dumps({'success': False, 'error': "{}".format(e)}, 200, {'ContentType': 'application/json'})
+        camera_profile = self._octolapse_settings.profiles.cameras[guid].clone()
 
-        # if we're here, we should be good, extract and return the camera settings
-        return json.dumps(
-            {
-                'success': True, 'camera_profile': camera_profile
-            }, 200, {'ContentType': 'application/json'}, cls=SettingsJsonEncoder
+        success, errors, settings = camera.CameraControl.get_webcam_settings(
+            camera_profile.webcam_settings.server_type,
+            camera_profile.name,
+            camera_profile.webcam_settings.address,
+            camera_profile.webcam_settings.username,
+            camera_profile.webcam_settings.password,
+            camera_profile.webcam_settings.ignore_ssl_error
         )
+
+        if not success:
+            return json.dumps(
+                {'success': False, 'error': errors}, 500,
+                {'ContentType': 'application/json'})
+
+        # Check to see if we need to update our existing camera image settings.  We only want to do this
+        # if the control set has changed (minus the actual value)
+
+        if camera_profile.webcam_settings.server_type == MjpgStreamer.server_type:
+            matches = False
+            if camera_profile.webcam_settings.mjpg_streamer.controls_match_server(
+                settings["webcam_settings"]["mjpg_streamer"]["controls"]
+            ):
+                matches = True
+
+            if replace or len(camera_profile.webcam_settings.mjpg_streamer.controls) == 0:
+                # get the existing settings since we don't want to use the defaults
+                camera_profile.webcam_settings.mjpg_streamer.controls = {}
+                camera_profile.webcam_settings.mjpg_streamer.update(
+                    settings["webcam_settings"]["mjpg_streamer"]
+                )
+                settings = {
+                    "name": camera_profile.name,
+                    "guid": camera_profile.guid,
+                    "new_preferences_available": False,
+                    "webcam_settings": camera_profile.webcam_settings
+                }
+            else:
+                settings = {
+                    "name": camera_profile.name,
+                    "guid": camera_profile.guid,
+                    "new_preferences_available": (
+                        not matches and len(settings["webcam_settings"]["mjpg_streamer"]["controls"]) > 0
+                    ),
+                    "webcam_settings": camera_profile.webcam_settings
+                }
+        else:
+            return json.dumps(
+                {
+                    'success': False,
+                    'error': 'The webcam you are using is not streaming via mjpg-streamer, which is the only server supported currently.'
+                }, 500,{'ContentType': 'application/json'}
+            )
+        # if we're here, we should be good, extract and return the camera settings
+        return json.dumps({
+                'success': True, 'settings': settings
+            }, cls=SettingsJsonEncoder), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/testCameraSettingsApply", methods=["POST"])
     @restricted_access
@@ -725,7 +845,7 @@ class OctolapsePlugin(
         profile = request_values["profile"]
         camera_profile = CameraProfile.create_from(profile)
         try:
-            camera.test_web_camera_image_preferences(camera_profile)
+            camera.CameraControl.test_web_camera_image_preferences(camera_profile)
             return json.dumps({'success': True}, 200, {'ContentType': 'application/json'})
         except camera.CameraError as e:
             return json.dumps({'success': False, 'error': "{}".format(e)}, 200, {'ContentType': 'application/json'})
@@ -736,8 +856,6 @@ class OctolapsePlugin(
     def apply_camera_settings_request(self):
         request_values = flask.request.get_json()
         type = request_values["type"]
-        settings_type = request_values["settings_type"]
-
         # Get the settings we need to run applycamerasettings
         if type == "by_guid":
             guid = request_values["guid"]
@@ -745,22 +863,13 @@ class OctolapsePlugin(
             if guid not in self._octolapse_settings.profiles.cameras:
                 return json.dumps({'success': False, 'error': 'The requested camera profile does not exist.  Cannot adjust settings.'}, 404,
                                   {'ContentType': 'application/json'})
-            profile = self._octolapse_settings.profiles.cameras[guid]
             camera_profile = self._octolapse_settings.profiles.cameras[guid]
-        elif type == "from_new_profile":
-            profile = request_values["profile"]
-            camera_profile = CameraProfile.create_from(profile)
-        elif type == "new_webcam_settings_by_guid":
-            guid = request_values["guid"]
-            webcam_settings = request_values["webcam_settings"]
-            # get the current camera profile
-            if guid not in self._octolapse_settings.profiles.cameras:
-                return json.dumps({'success': False,
-                                   'error': 'The requested camera profile does not exist.  Cannot adjust settings.'},
-                                  404,
-                                  {'ContentType': 'application/json'})
-            profile = self._octolapse_settings.profiles.cameras[guid].clone()
-            camera_profile = self._octolapse_settings.profiles.cameras[guid]
+        elif type == "ui-settings-update":
+            # create a new profile from the profile dict
+            webcam_settings = request_values["settings"]
+            camera_profile = CameraProfile()
+            camera_profile.name = webcam_settings["name"]
+            camera_profile.guid = webcam_settings["guid"]
             camera_profile.webcam_settings.update(webcam_settings)
         else:
             return json.dumps(
@@ -775,9 +884,7 @@ class OctolapsePlugin(
 
         # Apply the settings
         try:
-            success, error = self.apply_camera_settings(
-                camera_profiles=[camera_profile], force=True, settings_type=settings_type
-            )
+            success, error = self.apply_camera_settings([camera_profile])
         except camera.CameraError as e:
             logger.exception("Failed to apply webcam settings in /applyCameraSettings.")
             return json.dumps({'success': False, 'error': e.message}, 200, {'ContentType': 'application/json'})
@@ -806,7 +913,7 @@ class OctolapsePlugin(
         self.save_settings()
 
         try:
-            success, error = camera.CameraControl.apply_webcam_settings(camera_profile)
+            success, error = camera.CameraControl.apply_camera_settings([camera_profile])
         except camera.CameraError as e:
             logger.exception("Failed to save webcam settings in /saveWebcamSettings.")
             return json.dumps({'success': False, 'error': e.message}, 200, {'ContentType': 'application/json'})
@@ -818,44 +925,28 @@ class OctolapsePlugin(
     @admin_permission.require(403)
     def load_webcam_defaults(self):
         request_values = flask.request.get_json()
-        name = None
-        address = None
-        username = None
-        password = None
-        ignore_ssl_error = None
-        timeout_ms = None
-
-        camera_profile = None
-        if "guid" in request_values:
-            guid = request_values["guid"]
-            # get the current camera profile
-            if guid not in self._octolapse_settings.profiles.cameras:
-                return json.dumps({'success': False, 'error': 'The requested camera profile does not exist.  Cannot adjust settings.'}, 404,
-                                  {'ContentType': 'application/json'})
-            profile = self._octolapse_settings.profiles.cameras[guid]
-            if not profile.camera_type == 'webcam':
-                return json.dumps({'success': False, 'error': 'The selected camera is not a webcam.  Cannot adjust settings.'}, 500,
-                                  {'ContentType': 'application/json'})
-
-            camera_profile = self._octolapse_settings.profiles.cameras[guid]
-        else:
-            name = request_values["name"]
-            address = request_values["address"]
-            username = request_values["username"]
-            password = request_values["password"]
-            ignore_ssl_error = request_values["ignore_ssl_error"]
-            timeout_ms = request_values["timeout_ms"]
+        server_type = request_values["server_type"]
+        camera_name = request_values["camera_name"]
+        address = request_values["address"]
+        username = request_values["username"]
+        password = request_values["password"]
+        ignore_ssl_error = request_values["ignore_ssl_error"]
         try:
-            defaults = camera.CameraControl.get_settings_from_camera(
-                'MJPG-Streamer', 'defaults', camera_profile=camera_profile, name=name, address=address,
-                username=username, password=password, ignore_ssl_error=ignore_ssl_error, timeout_ms=timeout_ms
+            success, errors, defaults = camera.CameraControl.load_webcam_defaults(
+                server_type,
+                camera_name,
+                address,
+                username,
+                password,
+                ignore_ssl_error
             )
 
-            profile_copy = camera_profile.clone()
-            profile_copy.webcam_settings.update(defaults)
-            camera.CameraControl.apply_webcam_settings(profile_copy)
             ret_val = {
-                'webcam_settings': defaults
+                'webcam_settings': {
+                    'mjpg_streamer': {
+                        'controls': defaults
+                    }
+                }
             }
             return json.dumps({'success': True, 'defaults': ret_val}, 200, {'ContentType': 'application/json'})
 
@@ -869,42 +960,23 @@ class OctolapsePlugin(
     def apply_webcam_setting(self):
         request_values = flask.request.get_json()
         server_type = request_values["server_type"]
-        setting_name = request_values["setting_name"]
-        value = request_values["value"]
-
-        name = None
-        address = None
-        username = None
-        password = None
-        ignore_ssl_error = None
-        timeout_ms = None
-
-        camera_profile = None
-        if "guid" in request_values:
-            guid = request_values["guid"]
-            # get the current camera profile
-            if guid not in self._octolapse_settings.profiles.cameras:
-                return json.dumps({'success': False, 'error': 'The requested camera profile does not exist.  Cannot adjust settings.'}, 404,
-                                  {'ContentType': 'application/json'})
-            profile = self._octolapse_settings.profiles.cameras[guid]
-            if not profile.camera_type == 'webcam':
-                return json.dumps({'success': False, 'error': 'The selected camera is not a webcam.  Cannot adjust settings.'}, 500,
-                                  {'ContentType': 'application/json'})
-
-            camera_profile = self._octolapse_settings.profiles.cameras[guid]
-        else:
-            name = request_values["name"]
-            address = request_values["address"]
-            username = request_values["username"]
-            password = request_values["password"]
-            ignore_ssl_error = request_values["ignore_ssl_error"]
-            timeout_ms = request_values["timeout_ms"]
+        camera_name = request_values["camera_name"]
+        address = request_values["address"]
+        username = request_values["username"]
+        password = request_values["password"]
+        ignore_ssl_error = request_values["ignore_ssl_error"]
+        setting = request_values["setting"]
 
         # apply a single setting to the camera
         try:
             success, error = camera.CameraControl.apply_webcam_setting(
-                server_type, setting_name, value, camera_profile=camera_profile, name=name, address=address
-                , username=username, password=password, ignore_ssl_error=ignore_ssl_error, timeout_ms=timeout_ms
+                server_type,
+                setting,
+                camera_name,
+                address,
+                username,
+                password,
+                ignore_ssl_error,
             )
             if not success:
                 logger.error(error)
@@ -915,6 +987,23 @@ class OctolapsePlugin(
         if not success:
             error_string = error.message
         return json.dumps({'success': success, 'error': error_string}, 200, {'ContentType': 'application/json'})
+
+    @octoprint.plugin.BlueprintPlugin.route("/testCamera", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def test_camera_request(self):
+        request_values = flask.request.get_json()
+        profile = request_values["profile"]
+        camera_profile = CameraProfile.create_from(profile)
+        try:
+            camera.CameraControl.test_web_camera(camera_profile)
+            return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+        except camera.CameraError as e:
+            logger.exception("Test camera request failed at /testCamera.")
+            return json.dumps({'success': False, 'error': "{}".format(e)}), 200, {'ContentType': 'application/json'}
+        except Exception as e:
+            logger.exception("Test camera request failed at /testCamera.")
+            raise e
 
     @octoprint.plugin.BlueprintPlugin.route("/cancelPreprocessing", methods=["POST"])
     @restricted_access
@@ -961,23 +1050,6 @@ class OctolapsePlugin(
         self.start_preprocessed_timelapse()
         self.send_snapshot_preview_complete_message()
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
-
-    @octoprint.plugin.BlueprintPlugin.route("/testCamera", methods=["POST"])
-    @restricted_access
-    @admin_permission.require(403)
-    def test_camera_request(self):
-        request_values = flask.request.get_json()
-        profile = request_values["profile"]
-        camera_profile = CameraProfile.create_from(profile)
-        try:
-            camera.test_web_camera(camera_profile)
-            return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
-        except camera.CameraError as e:
-            logger.exception("Test camera request failed at /testCamera.")
-            return json.dumps({'success': False, 'error': "{}".format(e)}), 200, {'ContentType': 'application/json'}
-        except Exception as e:
-            logger.exception("Test camera request failed at /testCamera.")
-            raise e
 
     @octoprint.plugin.BlueprintPlugin.route("/toggleCamera", methods=["POST"])
     @restricted_access
@@ -1191,14 +1263,12 @@ class OctolapsePlugin(
 
         return json.dumps({'success': False}), 404, {'ContentType': 'application/json'}
 
-    def apply_camera_settings(self, camera_profiles=None, force=False, settings_type=None):
+    def apply_camera_settings(self, camera_profiles):
 
-        if camera_profiles is not None:
-            camera_control = camera.CameraControl(camera_profiles)
-        else:
-            camera_control = camera.CameraControl(self._octolapse_settings.profiles.cameras.values())
+        if camera_profiles is None:
+            camera_profiles = self._octolapse_settings.profiles.active_cameras()
 
-        success, errors = camera_control.apply_settings(force, settings_type)
+        success, errors = camera.CameraControl.apply_camera_settings(camera_profiles)
         if not success:
             error_message = "There were {0} errors while applying custom camera settings/scripts:".format(len(errors))
             error_message += "\n{0}".format(errors[0])
@@ -1518,9 +1588,10 @@ class OctolapsePlugin(
             self._message_worker.start()
 
             # apply camera settings if necessary
-            startup_cameras = self._octolapse_settings.profiles.startup_cameras()
+            startup_cameras = self._octolapse_settings.profiles.after_startup_cameras()
             # note that errors here will ONLY show up in the log.
-            self.apply_camera_settings(camera_profiles=startup_cameras)
+            if len(startup_cameras) > 0:
+                self.apply_camera_settings(camera_profiles=startup_cameras)
 
             self.start_automatic_updates()
             # log the loaded state
@@ -1710,7 +1781,7 @@ class OctolapsePlugin(
                     # test the camera and see if it works.
 
                     try:
-                        camera.test_web_camera(current_camera, is_before_print_test=True)
+                        camera.CameraControl.test_web_camera(current_camera, is_before_print_test=True)
                     except camera.CameraError as e:
                         message = "Octolapse could not contact your camera '{0}'.  Please check your " \
                                   "profile (especially the url) and try again.".format(current_camera.name)
@@ -1729,21 +1800,16 @@ class OctolapsePlugin(
             message = "There are no enabled cameras.  Enable at least one camera profile and try again."
             return {"success": False, "error": "no-cameras-enabled", "error-message": message}
 
-        success, errors = self.apply_camera_settings(settings_type="web-request")
+        success, errors = camera.CameraControl.apply_camera_settings(
+            self._octolapse_settings.profiles.before_print_start_cameras()
+        )
         if not success:
-            message = "Octolapse could not apply custom image perferences to your webcam.  Please see <a " \
+            message = "Octolapse could not apply custom image preferences, or running a camera startup script.  Please see <a " \
                       "href=\"https://github.com/FormerLurker/Octolapse/wiki/Camera-Profiles#custom-image-preferences" \
                       "\" target=\"_blank\">this link</a> for assistance with this error.  Details:" \
                       " {0}".format(errors)
             self.on_print_start_failed(message)
             return {"success": False, "error": "camera-settings-apply-failed", "error-message": message}
-
-        success, errors = self.apply_camera_settings(settings_type="script")
-        if not success:
-            message = "There were some errors running your custom camera initialization script.  Please correct your " \
-                      "script and try again, or remove the initialization script from your camera profile. Error " \
-                      "Details: {0}".format(errors)
-            return {"success": False, "error": "script-camera-initialization-failed", "error-message": message}
 
         # check for version 1.3.7 min
         if not (LooseVersion(octoprint.server.VERSION) > LooseVersion("1.3.8")):
@@ -2451,19 +2517,23 @@ class OctolapsePlugin(
 
     def on_render_error(self, payload, error):
         """Called after all rendering and synchronization attempts are complete."""
-        assert (isinstance(payload, RenderingCallbackArgs))
-        if payload.BeforeRenderError or payload.AfterRenderError:
-            pre_post_render_message = "There were problems running the before/after rendering script: "
-            if payload.BeforeRenderError:
-                pre_post_render_message += " The before script failed with the following error:" \
-                                 "  {0}".format(payload.BeforeRenderError)
-            if payload.AfterRenderError:
-                pre_post_render_message += " The after script failed with the following error:" \
-                                           "  {0}".format(payload.AfterRenderError)
-            self.send_render_failed_message(pre_post_render_message)
+        if payload:
+            assert (isinstance(payload, RenderingCallbackArgs))
+            if payload.BeforeRenderError or payload.AfterRenderError:
+                pre_post_render_message = "There were problems running the before/after rendering script: "
+                if payload.BeforeRenderError:
+                    pre_post_render_message += " The before script failed with the following error:" \
+                                     "  {0}".format(payload.BeforeRenderError)
+                if payload.AfterRenderError:
+                    pre_post_render_message += " The after script failed with the following error:" \
+                                               "  {0}".format(payload.AfterRenderError)
+                self.send_render_failed_message(pre_post_render_message)
 
-        if error != None:
-            message = "Rendering failed for camera '{0}'.  {1}".format(payload.CameraName, error)
+            if error != None:
+                message = "Rendering failed for camera '{0}'.  {1}".format(payload.CameraName, error)
+                self.send_render_failed_message(message)
+        else:
+            message = "Rendering failed.  {0}".format(error)
             self.send_render_failed_message(message)
 
     def on_render_end(self):
@@ -2493,11 +2563,12 @@ class OctolapsePlugin(
                 "js/octolapse.profiles.trigger.js",
                 "js/octolapse.profiles.rendering.js",
                 "js/octolapse.profiles.camera.js",
+                "js/octolapse.profiles.camera.webcam.js",
+                "js/octolapse.profiles.camera.webcam.mjpg_streamer.js",
                 "js/octolapse.profiles.debug.js",
                 "js/octolapse.status.js",
                 "js/octolapse.status.snapshotplan.js",
                 "js/octolapse.status.snapshotplan_preview.js",
-                "js/octolapse.webcam.settings.js",
                 "js/octolapse.help.js",
                 "js/octolapse.profiles.library.js"
             ],

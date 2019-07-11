@@ -41,17 +41,21 @@ $(function() {
         self.on_after_render_script = ko.observable(values.on_after_render_script);
         self.delay = ko.observable(values.delay);
         self.timeout_ms = ko.observable(values.timeout_ms);
+        self.enable_custom_image_preferences = ko.observable(values.enable_custom_image_preferences);
         self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
         self.apply_settings_at_startup = ko.observable(values.apply_settings_at_startup);
         self.snapshot_transpose = ko.observable(values.snapshot_transpose);
+        self.camera_stream_closed = false;
         self.camera_stream_visible = ko.pureComputed(function(){
-            return self.camera_type() === 'webcam' && (
-                self.apply_settings_before_print() || self.apply_settings_at_startup()
-            )
-
-        },this);
-        self.webcam_settings = new Octolapse.WebcamSettingsViewModel(values, self.camera_stream_visible);
-        self.webcam_settings.updateWebcamSettings(values);
+            var visible = (
+                self.camera_type() === 'webcam' &&
+                self.enable_custom_image_preferences() &&
+                !self.camera_stream_closed
+            );
+            self.webcam_settings.setStreamVisibility(visible);
+            return visible;
+        });
+        self.webcam_settings = new Octolapse.WebcamSettingsViewModel(null);
         self.is_testing_custom_image_preferences = ko.observable(false);
 
         self.applySettingsToCamera = function (settings_type) {
@@ -187,36 +191,21 @@ $(function() {
             });
         };
 
-        self.toggleApplySettingsAtStartup = function () {
-            var id = 'camera_profile_apply_settings_at_startup';
-            if(self.apply_settings_at_startup())
-            {
-                self.apply_settings_at_startup(false);
-                return;
-            }
-            if (self.camera_stream_visible()) {
-                self.apply_settings_at_startup(true);
-                $('#'+ id).prop("checked",true);
-                return;
-            }
-            self.testCustomImagePreferences(self.apply_settings_at_startup,id);
-        };
-
-        self.toggleApplySettingsBeforePrint = function () {
+        self.toggleCustomImagePreferences = function () {
             var id = 'camera_profile_apply_settings_before_print';
 
-            if (self.apply_settings_before_print()) {
-                self.apply_settings_before_print(false);
+            if (self.enable_custom_image_preferences()) {
+                self.enable_custom_image_preferences(false);
                 return;
             }
 
             if (self.camera_stream_visible()) {
-                self.apply_settings_before_print(true);
+                self.enable_custom_image_preferences(true);
                 $('#'+ id).prop("checked",true);
                 return;
             }
 
-            self.testCustomImagePreferences(self.apply_settings_before_print,id);
+            self.testCustomImagePreferences(self.enable_custom_image_preferences,id);
         };
 
         self.testCustomImagePreferences = function(bool_observable, id){
@@ -265,7 +254,7 @@ $(function() {
 
         self.on_closed = function(){
             //console.log("Closing camera profile");
-            self.webcam_settings.stream_template("");
+            self.webcam_settings.setStreamVisibility(false);
             self.automatic_configuration.on_closed();
         };
 
@@ -274,28 +263,31 @@ $(function() {
             if(
                 self.camera_type() == "webcam" &&
                 (self.apply_settings_at_startup() || self.apply_settings_before_print())
-            )
+            ) {
                 self.webcam_settings.cancelWebcamChanges();
+            }
+
         };
 
         self.updateFromServer = function(values) {
-            self.guid = ko.observable(values.guid);
-            self.name = ko.observable(values.name);
-            self.enabled = ko.observable(values.enabled);
-            self.description = ko.observable(values.description);
-            self.camera_type = ko.observable(values.camera_type);
+            self.guid(values.guid);
+            self.name(values.name);
+            self.enabled(values.enabled);
+            self.description(values.description);
+            self.camera_type(values.camera_type);
             //self.gcode_camera_script = ko.observable(values.gcode_camera_script);
-            //self.on_print_start_script = ko.observable(values.on_print_start_script);
-            //self.on_before_snapshot_script = ko.observable(values.on_before_snapshot_script);
+            self.enable_custom_image_preferences(values.enable_custom_image_preferences);
+            self.on_print_start_script(values.on_print_start_script);
+            self.on_before_snapshot_script(values.on_before_snapshot_script);
             //self.external_camera_snapshot_script = ko.observable(values.external_camera_snapshot_script);
             //self.on_after_snapshot_script = ko.observable(values.on_after_snapshot_script);
             //self.on_before_render_script = ko.observable(values.on_before_render_script);
             //self.on_after_render_script = ko.observable(values.on_after_render_script);
-            self.delay = ko.observable(values.delay);
-            self.timeout_ms = ko.observable(values.timeout_ms);
-            self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
-            self.apply_settings_at_startup = ko.observable(values.apply_settings_at_startup);
-            self.snapshot_transpose = ko.observable(values.snapshot_transpose);
+            self.delay(values.delay);
+            self.timeout_ms(values.timeout_ms);
+            self.apply_settings_before_print(values.apply_settings_before_print);
+            self.apply_settings_at_startup(values.apply_settings_at_startup);
+            self.snapshot_transpose(values.snapshot_transpose);
             self.webcam_settings.updateWebcamSettings(values);
         };
 
@@ -320,6 +312,42 @@ $(function() {
         self.automatic_configuration.is_confirming.subscribe(function(value){
             //console.log("IsClickable" + value.toString());
             Octolapse.Cameras.setIsClickable(!value);
+        });
+
+        self.updateImagePreferencesFromServer = function(replace) {
+            self.webcam_settings.getMjpgStreamerControls(replace, function (results) {
+                // Update the current settings that we just received
+                self.webcam_settings.updateWebcamSettings(results.settings);
+                if (results.settings.new_preferences_available) {
+                    // If new settings are available, offer to update them, but don't do it automatically
+                    var message = "Octolapse has detected new camera preferences from your " +
+                        "streaming server.  Do you want to overwrite your current image preferences?";
+                    Octolapse.showConfirmDialog(
+                        "replace-image-preferences",
+                        "New Image Preferences Available",
+                        message,
+                        function () {
+                            self.updateImagePreferencesFromServer(true, function (results) {
+                                self.webcam_settings.updateWebcamSettings(results.settings);
+                            });
+                        }
+                    );
+                }
+            });
+        };
+
+        self.on_opened = function() {
+            console.log("Opening camera profile");
+            self.updateImagePreferencesFromServer(false);
+        };
+
+        // update the webcam settings
+        self.webcam_settings.updateWebcamSettings(values);
+
+        // Now that the webcam settings are updated, subscribe to address changes
+        // so we can update the streaming server controls
+        self.webcam_settings.address.subscribe(function(newValue){
+            self.updateImagePreferencesFromServer(true);
         });
     };
 

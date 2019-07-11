@@ -246,33 +246,48 @@
                 <p>It is highly recommended that you take the time to configure these settings since they can make a big difference in the quality of your timelapse, and reduce the required snapshot delay.</p>
             </div>
             <div class="text-warning" data-bind="visible: camera_type()!='webcam'">
-                <p>Custom image preferences are only available for webcams running on mjpegstreamer.  Consider using a custom 'Before Print Start Script' or try using a web camera running on mjpegstreamer.</p>
+                <p>Custom image preferences are only available for USB web-cameras running on mjpg_streamer (the raspberry pi camera module is not currently supported).  Consider using a custom 'Before Print Start Script' or try using a web camera running on mjpg_streamer.</p>
             </div>
         </div>
         <div>
             <div data-bind="visible: camera_type()=='webcam'">
                 <div class="control-group">
+                    <label class="control-label">Custom Image Preferences</label>
                     <div class="controls">
                         <label class="checkbox">
-                            <a data-bind="click: toggleApplySettingsAtStartup" id="camera_profile_apply_settings_at_startup"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_at_startup , 'fa-square-o': !apply_settings_at_startup() } "></i></a>
-                            <span data-bind="click: toggleApplySettingsAtStartup">Enable And Apply Preferences at Startup</span>
-                            <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.apply_settings_at_startup.md" data-help-title="Apply webcam preferences at startup" />
+                            <a data-bind="click: toggleCustomImagePreferences" ><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': enable_custom_image_preferences , 'fa-square-o': !enable_custom_image_preferences() } "></i></a>
+                            <span data-bind="click: toggleCustomImagePreferences">Enabled</span>
+                            <a class="octolapse_help" data-help-url="profiles.camera.webcam.enable_custom_image_preferences.md" data-help-title="Custom Image Preferences" />
                         </label>
-                        <label class="checkbox">
-                            <a data-bind="click: toggleApplySettingsBeforePrint" id="camera_profile_apply_settings_before_print"><i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': apply_settings_before_print , 'fa-square-o': !apply_settings_before_print() } "></i></a>
-                            <span data-bind="click: toggleApplySettingsBeforePrint">Enable And Apply Preferences Before Print</span>
-                            <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.apply_settings_before_print.md" data-help-title="Apply webcam preferences before print" />
-                        </label>
-                        <p class="text-warning" data-bind="visible:is_testing_custom_image_preferences">Your camera is being tested to see if it supports custom image preferences.</p>
+                        <span class="help-inline">Enable webcam image adjustments.  Currently this only works with mjpg-streamer.</span>
                     </div>
                 </div>
+                <div data-bind="visible: enable_custom_image_preferences">
+                    <div class="control-group">
+                        <div class="controls">
+                            <label class="checkbox">
+                                <input type="checkbox" data-bind="checked: apply_settings_at_startup" />Apply Preferences at Startup
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.apply_settings_at_startup.md" data-help-title="Apply webcam preferences at startup" />
+                            </label>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Enabled</label>
+                        <div class="controls">
+                            <label class="checkbox">
+                                <input type="checkbox" data-bind="checked: apply_settings_before_print" />Apply Preferences Before Print Start
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <div data-bind="visible: camera_stream_visible">
                     <div class="webcam_settings_preview">
-                        <img class="webcam_stream_preview" data-bind="streamLoading:{src: webcam_settings.stream_url, loading_selector: '#octolapse_camera_profile_stream_loading', error_selector: '#octolapse_camera_profile_stream_error'}" style="display:none;">
-                        <div id="octolapse_camera_profile_stream_error" class="alert webcam_stream_preview" style="display:none;">
+                        <img class="octolapse_webcam_stream_preview" data-bind="streamLoading:{src: webcam_settings.stream_url, loading_selector: '#octolapse_camera_profile_stream_loading', error_selector: '#octolapse_camera_profile_stream_error'}" style="display:none;">
+                        <div id="octolapse_camera_profile_stream_error" class="alert octolapse_webcam_stream_preview" style="display:none;">
                             Unable to load the webcam stream
                         </div>
-                        <div id="octolapse_camera_profile_stream_loading" class="webcam_stream_preview" style="display:none;">
+                        <div id="octolapse_camera_profile_stream_loading" class="octolapse_webcam_stream_preview" style="display:none;">
                             Unable to load the webcam stream
                         </div>
                     </div>
@@ -337,4 +352,4 @@
         </div>
     </div>
 </script>
-{% include "octolapse_webcam_settings.jinja2" %}
+{% include "octolapse_profiles_camera_webcam.jinja2" %}
