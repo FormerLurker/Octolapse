@@ -333,12 +333,27 @@ $(function() {
                         }
                     );
                 }
+            }, function(results){
+                 self.enable_custom_image_preferences(false);
+                 var message = "There was a problem retrieving webcam settings from the server.";
+                 if (results && results.error)
+                     message = message + " Details: " + results.error;
+                 var options = {
+                    title: 'Webcam Settings Error',
+                    text: message,
+                    type: 'error',
+                    hide: false,
+                    addclass: "octolapse"
+                };
+
+                Octolapse.displayPopupForKey(options, "webcam_settings_error",["webcam_settings_error"]);
             });
         };
 
         self.on_opened = function() {
             console.log("Opening camera profile");
-            self.updateImagePreferencesFromServer(false);
+            if (self.enable_custom_image_preferences())
+                self.updateImagePreferencesFromServer(false);
         };
 
         // update the webcam settings
@@ -347,7 +362,8 @@ $(function() {
         // Now that the webcam settings are updated, subscribe to address changes
         // so we can update the streaming server controls
         self.webcam_settings.address.subscribe(function(newValue){
-            self.updateImagePreferencesFromServer(true);
+            if(self.enable_custom_image_preferences)
+                self.updateImagePreferencesFromServer(true);
         });
     };
 

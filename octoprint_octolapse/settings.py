@@ -1581,7 +1581,8 @@ class Profiles(Settings):
             profiles_dict["cameras"].append({
                 "name": camera.name,
                 "guid": camera.guid,
-                "enabled": camera.enabled
+                "enabled": camera.enabled,
+                "enable_custom_image_preferences": camera.enable_custom_image_preferences
             })
 
         for key, debugProfile in self.debug.items():

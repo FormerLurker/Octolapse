@@ -163,6 +163,16 @@ $(function() {
             });
         };
 
+        self.canEditSettings = ko.pureComputed(function(){
+            // Get the current camera profile
+            var current_camera = Octolapse.Status.getCurrentProfileByGuid(Octolapse.Status.profiles().cameras(),Octolapse.Status.current_camera_guid());
+                if (current_camera != null)
+                {
+                    return current_camera.enable_custom_image_preferences;
+                }
+            return false;
+        });
+
         self.showWebcamSettings = function() {
             // Load the current webcam settings
             // On success, show the dialog
@@ -194,9 +204,20 @@ $(function() {
                         }
                     );
                 }
+            }, function(results){
+                var message = "There was a problem retrieving webcam settings from the server.";
+                 if (results && results.error)
+                     message = message + " Details: " + results.error;
+                var options = {
+                    title: 'Error Loading Webcam Settings',
+                    text: message,
+                    type: 'error',
+                    hide: false,
+                    addclass: "octolapse"
+                };
+                Octolapse.displayPopupForKey(options,"webcam_settings_error",["webcam_settings_error"]);
             });
         }
-
     };
 
     Octolapse.WebcamSettingsViewModel = function (close_callback) {
@@ -226,7 +247,7 @@ $(function() {
             Octolapse.setLocalStorage("webcam_two_column_view", two_column_view);
         };
 
-        self.getImagePreferences = function(data, success_callback){
+        self.getImagePreferences = function(data, success_callback, error_callback){
             $.ajax({
                 url: "./plugin/octolapse/getWebcamImagePreferences",
                 type: "POST",
@@ -239,30 +260,16 @@ $(function() {
                     }
                     else
                     {
-                        var options = {
-                            title: 'Error Loading Webcam Settings',
-                            text: results.error,
-                            type: 'error',
-                            hide: false,
-                            addclass: "octolapse"
-                        };
-                        Octolapse.displayPopupForKey(options,"camera_settings_failure",["camera_settings_failure"]);
+                        error_callback(results);
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    var options = {
-                        title: 'Error Loading Webcam Settings',
-                        text: "Status: " + textStatus + ".  Error: " + errorThrown,
-                        type: 'error',
-                        hide: false,
-                        addclass: "octolapse"
-                    };
-                    Octolapse.displayPopupForKey(options,"camera_settings_failure",["camera_settings_failure"]);
+                    error_callback(null);
                 }
             });
         };
 
-        self.getMjpgStreamerControls = function(replace, success_callback){
+        self.getMjpgStreamerControls = function(replace, success_callback, error_callback){
             // fetch control settings from the server
             if (!self.server_type() || !self.address())
                 return;
@@ -285,16 +292,8 @@ $(function() {
                 dataType: "json",
                 success: function (results) {
                     if(!results.success) {
-                        var options = {
-                            title: 'Webcam Server Error',
-                            text: results.error,
-                            type: 'error',
-                            hide: false,
-                            addclass: "octolapse"
-                        };
 
-                        Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
-                        return;
+                        error_callback(results);
                     }
                     else
                     {
@@ -302,16 +301,10 @@ $(function() {
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    var options = {
-                        title: 'Webcam Server Error',
-                        text: "Status: " + textStatus + ".  Error: " + errorThrown,
-                        type: 'error',
-                        hide: false,
-                        addclass: "octolapse"
-                    };
-                    Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
-                    if(self.close_callback)
-                        self.close_callback();
+
+                    //if(self.close_callback)
+                    //    self.close_callback();
+                    error_callback();
                 }
             });
         };
