@@ -214,7 +214,17 @@ $(function() {
         self.ignore_ssl_error = ko.observable();
         self.timeout_ms = ko.observable();
         self.server_type = ko.observable();
+        self.type = ko.observable();
         self.mjpg_streamer = new Octolapse.MjpgStreamerViewModel();
+        self.use_custom_webcam_settings_page = ko.observable();
+        self.webcam_two_column_view = ko.observable(Octolapse.getLocalStorage("webcam_two_column_view") || false);
+
+        self.toggleColumns = function(){
+            var two_column_view = !self.webcam_two_column_view();
+            self.webcam_two_column_view(two_column_view);
+            console.log("Setting two column view.");
+            Octolapse.setLocalStorage("webcam_two_column_view", two_column_view);
+        };
 
         self.getImagePreferences = function(data, success_callback){
             $.ajax({
@@ -305,11 +315,110 @@ $(function() {
                 }
             });
         };
+        self.getToggleCustomCameraSettingsText = ko.pureComputed(function(){
+           if(self.use_custom_webcam_settings_page() && self.type())
+           {
+               return "Switch to Default Page";
+           }
+           else{
+               return "Check for Custom Page";
+           }
+        });
+        self.toggleCustomCameraSettingsPage = function(){
+            // fetch control settings from the server
+            if (!self.server_type() || !self.address())
+            {
+                var message = "Cannot detect the camera type.  Either the server type is not supported, or the camera base address is not correct";
+                var options = {
+                    title: 'Unknown Camera Type',
+                    text: message,
+                    type: 'error',
+                    hide: false,
+                    addclass: "octolapse"
+                };
+
+                Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
+                return;
+            }
+
+            var data = {
+                "server_type": self.server_type(),
+                "camera_name": self.name() ? self.name() : "unknown",
+                "address": self.address(),
+                "username": self.username() ? self.username() : "",
+                "password": self.password() ? self.password() : "",
+                "ignore_ssl_error": self.ignore_ssl_error() ? self.ignore_ssl_error() : false
+            };
+
+            $.ajax({
+                url: "./plugin/octolapse/getWebcamType",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    if(!results.success) {
+                        var options = {
+                            title: 'Unknown Webcam Type',
+                            text: results.error,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        self.type(null);
+                        Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
+                        return;
+                    }
+
+                    // set our camera type info
+                    self.type(results.type);
+                    self.use_custom_webcam_settings_page(!self.use_custom_webcam_settings_page());
+
+                    var message = "A " + results.type.name + " was detected, and Octolapse has an available custom control for this camera!";
+                    var options = {
+                            title: 'Camera Detected',
+                            text: message,
+                            type: 'success',
+                            hide: true,
+                            addclass: "octolapse"
+                        };
+                    Octolapse.displayPopupForKey(options, "camera-detected",["camera-detected"]);
+                    return;
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    var options = {
+                        title: 'Unknown Camera Type',
+                        text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse"
+                    };
+                    self.type(null);
+                    Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
+                }
+            });
+        };
+
+        self.refresh_template_id = ko.observable();
+        self.reset_webcam_settings_template = function(){
+            self.refresh_template_id(true);
+            self.refresh_template_id(null);
+        };
 
         self.get_webcam_settings_template = ko.pureComputed(function(){
-            if(self.server_type())
-                return 'webcam-' + self.server_type() + "-template";
-            return 'webcam-other-template'
+            if (self.refresh_template_id()) {
+                return "webcam-empty-template";
+            }
+            if(self.server_type()) {
+                if (self.type() && self.use_custom_webcam_settings_page())
+                    value = self.type().template;
+                else
+                    value = 'webcam-' + self.server_type() + "-template";
+            }
+            else
+                value = 'webcam-other-template';
+
+            return value
         });
 
         self.get_webcam_data = ko.pureComputed(function(){
@@ -332,8 +441,7 @@ $(function() {
             return url;
         },this);
 
-        self.setStreamVisibility = function(value)
-        {
+        self.setStreamVisibility = function(value){
             console.log("Attempting to stop the camera stream");
             self.camera_stream_visible(value);
             self.stream_url();
@@ -451,7 +559,13 @@ $(function() {
                         Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
                     }
                     else {
+
                         self.updateWebcamSettings(results.defaults);
+                        self.reset_webcam_settings_template();
+                        if (self.type())
+                        {
+                            self.get_webcam_settings_template();
+                        }
                         var options = {
                             title: 'Webcam Settings',
                             text: "Defaults successfully applied to the '" + self.name() + "' profile.",
@@ -511,6 +625,10 @@ $(function() {
                 self.timeout_ms(values.timeout_ms);
             if ("stream_template" in webcam_settings)
                 self.stream_template(webcam_settings.stream_template);
+            if ("type" in webcam_settings)
+                self.type(webcam_settings.type);
+            if("use_custom_webcam_settings_page" in webcam_settings)
+                self.use_custom_webcam_settings_page(webcam_settings.use_custom_webcam_settings_page);
 
             // notify subscribers of a possible stream url change.
             self.stream_url.notifySubscribers();

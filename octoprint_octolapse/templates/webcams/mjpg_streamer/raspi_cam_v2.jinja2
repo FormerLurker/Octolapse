@@ -1,0 +1,436 @@
+<!-- Raspberry Cam Module V2 template -->
+<script type="text/html" id="octolapse-mjpg-streamer-raspi-cam-v2">
+    <div class="row-fluid">
+        <div class="span12 text-center no-min-height">
+            <strong>Raspberry Pi Camera Module V2 or Equivalent Detected</strong>
+        </div>
+    </div>
+    <div class="column">
+        <div class="no-column-break">
+            <fieldset class="octolapse">
+                <legend>General Settings</legend>
+                <div>
+                    <!--Brightness-->
+                    <label data-bind="text: data.control_dict['9963776'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['9963776'].min, max: data.control_dict['9963776'].max, step: data.control_dict['9963776'].step }, octolapseSliderValue: data.control_dict['9963776'].value" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.control_dict['9963776'].value" />
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url': data.control_dict['9963776'].help_url, 'data-help-title':data.control_dict['9963776'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Contrast-->
+                    <label data-bind="text: data.control_dict['9963777'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['9963777'].min, max: data.control_dict['9963777'].max, step: data.control_dict['9963777'].step }, octolapseSliderValue: data.control_dict['9963777'].value" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.control_dict['9963777'].value" />
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['9963777'].help_url, 'data-help-title':data.control_dict['9963777'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Saturation-->
+                    <label data-bind="text: data.control_dict['9963778'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['9963778'].min, max: data.control_dict['9963778'].max, step: data.control_dict['9963778'].step }, octolapseSliderValue: data.control_dict['9963778'].value" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.control_dict['9963778'].value" />
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['9963778'].help_url, 'data-help-title':data.control_dict['9963778'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Sharpness-->
+                    <label data-bind="text: data.control_dict['9963803'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['9963803'].min, max: data.control_dict['9963803'].max, step: data.control_dict['9963803'].step }, octolapseSliderValue: data.control_dict['9963803'].value" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.control_dict['9963803'].value" />
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['9963803'].help_url, 'data-help-title':data.control_dict['9963803'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Color Effects-->
+                    <label data-bind="text: data.control_dict['9963807'].name"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <select class="full-width"
+                                    data-bind="options: data.control_dict['9963807'].get_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: data.control_dict['9963807'].value"></select>
+                        </div>
+                        <div class="span2">
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['9963807'].help_url, 'data-help-title':data.control_dict['9963807'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Color Effects, CbCr-->
+                    <label data-bind="text: data.control_dict['9963818'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['9963818'].min, max: data.control_dict['9963818'].max, step: data.control_dict['9963818'].step }, octolapseSliderValue: data.control_dict['9963818'].value" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.control_dict['9963818'].value" />
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['9963818'].help_url, 'data-help-title':data.control_dict['9963818'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--JPEG Quality-->
+                    <label data-bind="text: data.control_dict['1'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['1'].min, max: data.control_dict['1'].max, step: data.control_dict['1'].step }, octolapseSliderValue: data.control_dict['1'].value" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.control_dict['1'].value" />
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['1'].help_url, 'data-help-title':data.control_dict['1'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--JPEG Compression Quality-->
+                    <label data-bind="text: data.control_dict['10291459'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['10291459'].min, max: data.control_dict['10291459'].max, step: data.control_dict['10291459'].step }, octolapseSliderValue: data.control_dict['10291459'].value" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.control_dict['10291459'].value" />
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10291459'].help_url, 'data-help-title':data.control_dict['10291459'].name}" />
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="no-column-break">
+            <fieldset class="octolapse">
+                <legend>Flip/Rotate Image</legend>
+                <div>
+                    <!--Horizontal Flip-->
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: data.control_dict['9963796'].checkbox_checked, attr: {title: data.control_dict['9963796'].checkbox_title}" title="Enable or disable autofocus" /><span data-bind="text: data.control_dict['9963796'].name"></span>
+                        <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['9963796'].help_url, 'data-help-title':data.control_dict['9963796'].name}" />
+                    </label>
+                </div>
+                <div>
+                    <!--Vertical Flip-->
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: data.control_dict['9963797'].checkbox_checked, attr: {title: data.control_dict['9963797'].checkbox_title" /><span data-bind="text: data.control_dict['9963797'].name"></span>
+                        <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['9963797'].help_url, 'data-help-title':data.control_dict['9963797'].name}" />
+                    </label>
+                </div>
+                <div>
+                    <!--Rotate-->
+                    <label data-bind="text: data.control_dict['9963810'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['9963810'].min, max: data.control_dict['9963810'].max, step: data.control_dict['9963810'].step }, octolapseSliderValue: data.control_dict['9963810'].value" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.control_dict['9963810'].value" />
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['9963810'].help_url, 'data-help-title':data.control_dict['9963810'].name}" />
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="no-column-break">
+            <fieldset class="octolapse">
+                <legend>Balance</legend>
+                <div>
+                    <!--White Balance, Auto & Preset-->
+                    <label data-bind="text: data.control_dict['10094868'].name"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <select class="full-width"
+                                    data-bind="options: data.control_dict['10094868'].get_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: data.control_dict['10094868'].value"></select>
+                        </div>
+                        <div class="span2">
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10094868'].help_url, 'data-help-title':data.control_dict['10094868'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Red Balance-->
+                    <label data-bind="text: data.control_dict['9963790'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['9963790'].min, max: data.control_dict['9963790'].max, step: data.control_dict['9963790'].step }, octolapseSliderValue: data.control_dict['9963790'].value, disable: data.control_dict['10094868'].value() != '0'" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.control_dict['9963790'].value, visible: data.control_dict['10094868'].value() == '0'" />
+                            <span data-bind="visible: data.control_dict['10094868'].value() != '0'">Auto</span>
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['9963790'].help_url, 'data-help-title':data.control_dict['9963790'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Blue Balance-->
+                    <label data-bind="text: data.control_dict['9963791'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['9963791'].min, max: data.control_dict['9963791'].max, step: data.control_dict['9963791'].step }, octolapseSliderValue: data.control_dict['9963791'].value, disable: data.control_dict['10094868'].value() != '0'" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.control_dict['9963791'].value, visible: data.control_dict['10094868'].value() == '0'" />
+                            <span data-bind="visible: data.control_dict['10094868'].value() != '0'">Auto</span>
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['9963791'].help_url, 'data-help-title':data.control_dict['9963791'].name}" />
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="no-column-break">
+            <fieldset class="octolapse">
+                <legend>Codec Controls</legend>
+                <div>
+                    <!--Video Bitrate Mode-->
+                    <label data-bind="text: data.control_dict['10029518'].name"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <select class="full-width"
+                                    data-bind="options: data.control_dict['10029518'].get_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: data.control_dict['10029518'].value"></select>
+                        </div>
+                        <div class="span2">
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10029518'].help_url, 'data-help-title':data.control_dict['10029518'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Video Bitrate-->
+                    <label data-bind="text: data.control_dict['10029519'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span8">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['10029519'].min, max: data.control_dict['10029519'].max, step: data.control_dict['10029519'].step }, octolapseSliderValue: data.control_dict['10029519'].value" />
+                        </div>
+                        <div class="span4">
+                            <span data-bind="text: data.control_dict['10029519'].value" />
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10029519'].help_url, 'data-help-title':data.control_dict['10029519'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Repeat Sequence Header-->
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: data.control_dict['10029538'].checkbox_checked, attr: {title: data.control_dict['10029538'].checkbox_title" /><span data-bind="text: data.control_dict['10029538'].name"></span>
+                        <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10029538'].help_url, 'data-help-title':data.control_dict['10029538'].name}" />
+                    </label>
+                </div>
+                <div>
+                    <!--H264 I-Frame Period-->
+                    <label data-bind="text: data.control_dict['10029670'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span8">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['10029670'].min, max: data.control_dict['10029670'].max, step: data.control_dict['10029670'].step }, octolapseSliderValue: data.control_dict['10029670'].value" />
+                        </div>
+                        <div class="span4">
+                            <span data-bind="text: data.control_dict['10029670'].value" />
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10029670'].help_url, 'data-help-title':data.control_dict['10029670'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--H264 Level-->
+                    <label data-bind="text: data.control_dict['10029671'].name"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <select class="full-width"
+                                    data-bind="options: data.control_dict['10029671'].get_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: data.control_dict['10029671'].value"></select>
+                        </div>
+                        <div class="span2">
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10029671'].help_url, 'data-help-title':data.control_dict['10029671'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--H264 Profile-->
+                    <label data-bind="text: data.control_dict['10029675'].name"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <select class="full-width"
+                                    data-bind="options: data.control_dict['10029675'].get_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: data.control_dict['10029675'].value"></select>
+                        </div>
+                        <div class="span2">
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10029675'].help_url, 'data-help-title':data.control_dict['10029675'].name}" />
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="no-column-break">
+            <fieldset class="octolapse">
+                <legend>Exposure</legend>
+                <div>
+                    <!--Auto Exposure-->
+                    <label data-bind="text: data.control_dict['10094849'].name"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <select class="full-width"
+                                    data-bind="options: data.control_dict['10094849'].get_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: data.control_dict['10094849'].value"></select>
+                        </div>
+                        <div class="span2">
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10094849'].help_url, 'data-help-title':data.control_dict['10094849'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Exposure Time, Absolute-->
+                    <label data-bind="text: data.control_dict['10094850'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['10094850'].min, max: data.control_dict['10094850'].max, step: data.control_dict['10094850'].step }, octolapseSliderValue: data.control_dict['10094850'].value, disable: data.control_dict['10094849'].value() != '1'" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.control_dict['10094850'].value, visible: data.control_dict['10094849'].value() == '1'" />
+                            <span data-bind="visible:data.control_dict['10094849'].value() != '1'">Auto</span>
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10094850'].help_url, 'data-help-title':data.control_dict['10094850'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Exposure, Dynamic Framerate-->
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: data.control_dict['10094851'].checkbox_checked, attr: {title: data.control_dict['10094851'].checkbox_title" /><span data-bind="text: data.control_dict['10094851'].name"></span>
+                        <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10094851'].help_url, 'data-help-title':data.control_dict['10094851'].name}" />
+                    </label>
+                </div>
+                <div>
+                    <!--Auto Exposure, Bias-->
+                    <label data-bind="text: data.control_dict['10094867'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['10094867'].min, max: data.control_dict['10094867'].max, step: data.control_dict['10094867'].step }, octolapseSliderValue: data.control_dict['10094867'].value, disable: data.control_dict['10094849'].value() != '0'" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.control_dict['10094867'].value, visible: data.control_dict['10094849'].value() == '0'" />
+                            <span data-bind="visible:data.control_dict['10094849'].value() != '0'">Disabled</span>
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10094867'].help_url, 'data-help-title':data.control_dict['10094867'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Image Stabilization-->
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: data.control_dict['10094870'].checkbox_checked, attr: {title: data.control_dict['10094870'].checkbox_title" /><span data-bind="text: data.control_dict['10094870'].name"></span>
+                        <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10094870'].help_url, 'data-help-title':data.control_dict['10094870'].name}" />
+                    </label>
+                </div>
+
+                <div>
+                    <!--ISO Sensitivity, Auto-->
+                    <label data-bind="text: data.control_dict['10094872'].name"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <select class="full-width"
+                                    data-bind="options: data.control_dict['10094872'].get_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: data.control_dict['10094872'].value"></select>
+                        </div>
+                        <div class="span2">
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10094872'].help_url, 'data-help-title':data.control_dict['10094872'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--ISO Sensitivity-->
+                    <label data-bind="text: data.control_dict['10094871'].slider_label"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="slider" type="range" data-bind="attr: {min: data.control_dict['10094871'].min, max: data.control_dict['10094871'].max, step: data.control_dict['10094871'].step }, octolapseSliderValue: data.control_dict['10094871'].value, , disable: data.control_dict['10094872'].value() != '0'" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.control_dict['10094871'].value, visible: data.control_dict['10094872'].value() == '0'" />
+                            <span data-bind="visible: data.control_dict['10094872'].value() != '0'">Auto</span>
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10094871'].help_url, 'data-help-title':data.control_dict['10094871'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Exposure, Metering Mode-->
+                    <label data-bind="text: data.control_dict['10094873'].name"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <select class="full-width"
+                                    data-bind="options: data.control_dict['10094873'].get_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: data.control_dict['10094873'].value"></select>
+                        </div>
+                        <div class="span2">
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10094873'].help_url, 'data-help-title':data.control_dict['10094873'].name}" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Scene Mode-->
+                    <label data-bind="text: data.control_dict['10094874'].name"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <select class="full-width"
+                                    data-bind="options: data.control_dict['10094874'].get_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: data.control_dict['10094874'].value"></select>
+                        </div>
+                        <div class="span2">
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['10094874'].help_url, 'data-help-title':data.control_dict['10094874'].name}" />
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="no-column-break">
+            <fieldset class="octolapse">
+                <legend>Misc</legend>
+                <div>
+                    <!--Powerline Frequency-->
+                    <label data-bind="text: data.control_dict['9963800'].name"></label>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <select class="full-width"
+                                    data-bind="options: data.control_dict['9963800'].get_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: data.control_dict['9963800'].value"></select>
+                        </div>
+                        <div class="span2">
+                            <a class="octolapse_help" data-bind="attr: {'data-help-url':data.control_dict['9963800'].help_url, 'data-help-title':data.control_dict['9963800'].name}" />
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+</script>

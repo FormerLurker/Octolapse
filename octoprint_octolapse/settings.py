@@ -1116,22 +1116,6 @@ class MjpgStreamer(StreamingServer):
         super(MjpgStreamer, self).__init__(MjpgStreamer.server_name, MjpgStreamer.server_type)
         self.controls = {}
 
-    def update_setting(self, value):
-        if isinstance(value, dict):
-            if value["id"] in self.controls:
-                self.controls[value.id].update(value)
-            else:
-                control = MjpgStreamerControl()
-                control.update(value)
-                self.controls[value["id"]] = control
-        else:
-            if value.id in self.controls:
-                self.controls[value.id].update(value)
-            else:
-                control = MjpgStreamerControl()
-                control.update(value)
-                self.controls[value.id] = control
-
     def controls_match_server(self, server_settings):
         # see if all of the existing settings and controls are the same for this camera, except for the value.
         # loop through each control and see if everything matches except for the value
@@ -1167,10 +1151,14 @@ class MjpgStreamer(StreamingServer):
                     self.controls = {}
                     if isinstance(value, dict):
                         for control_key, control in value.items():
-                            self.update_setting(control)
+                            new_control = MjpgStreamerControl()
+                            new_control.update(control)
+                            self.controls[control_key] = new_control
                     elif isinstance(value, list):
                         for control in value:
-                            self.update_setting(control)
+                            new_control = MjpgStreamerControl()
+                            new_control.update(control)
+                            self.controls[value["id"]] = new_control
 
                 elif isinstance(class_item, Settings):
                     class_item.update(value)
@@ -1187,9 +1175,6 @@ class OtherStreamingServer(StreamingServer):
 
     def __init__(self):
         super(OtherStreamingServer, self).__init__(OtherStreamingServer.server_name, OtherStreamingServer.server_type)
-
-    def update_setting(self, value):
-        return
 
 
 class MjpgStreamerControl(Settings):
@@ -1230,6 +1215,48 @@ class MjpgStreamerControl(Settings):
         # if we're here, it matches!
         return True
 
+    def update(self, iterable, **kwargs):
+        # first update the item with the super
+        super(MjpgStreamerControl, self).update(iterable)
+
+        control = iterable
+        # make sure update works for both dicts and MjpgStreamerControl objects
+        if isinstance(control, dict):
+            control_id = control["id"]
+            control_min = float(control["min"])
+            control_max = float(control["max"])
+            control_step = float(control["step"])
+            control_value = float(control["value"])
+            control_default = float(control["default"])
+
+        elif isinstance(control, MjpgStreamerControl):
+            control_id = control.id
+            control_min = float(control.min)
+            control_max = float(control.max)
+            control_step = float(control.step)
+            control_value = float(control.value)
+            control_default = float(control.default)
+
+        else:
+            raise Exception("Unknown control type of {0} in MjpgStreamerControl.update".format(type(iterable)))
+
+        def get_bounded_value(control_id, control_value, control_min, control_max, control_step):
+            if control_min > control_value or control_max < control_value:
+                if control_step == 0:
+                    # prevent divide by zero
+                    return control_value
+                control_range = control_max - control_min
+                steps = control_range / 2.0 / control_step
+                control_value = (control_min + (steps * control_step))
+                control_value = utility.round_to_value(control_value, control_step)
+                value_str = str(control_value)
+            else:
+                value_str = str(control_value)
+            return value_str.rstrip('0').rstrip('.')
+
+        self.value = get_bounded_value(control_id, control_value, control_min, control_max, control_step)
+        self.default = get_bounded_value(control_id, control_default, control_min, control_max, control_step)
+
 
 class WebcamSettings(Settings):
 
@@ -1241,6 +1268,8 @@ class WebcamSettings(Settings):
         self.server_type = MjpgStreamer.server_type
         self.username = ""
         self.password = ""
+        self.type = None
+        self.use_custom_webcam_settings_page = True
         self.mjpg_streamer = MjpgStreamer()
 
     def update(self, iterable, **kwargs):
@@ -1277,6 +1306,7 @@ class WebcamSettings(Settings):
                     else:
                         self.__dict__[key] = self.try_convert_value(class_item, value, key)
         except Exception as e:
+            logger.exception(e)
             raise e
 
 

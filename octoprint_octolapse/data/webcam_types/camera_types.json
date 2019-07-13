@@ -1,0 +1,12 @@
+{
+  "server_types": {
+    "mjpg-streamer": {
+      "server": "mjpg_streamer",
+      "directory": "mjpg_streamer",
+      "file_names": [
+        "logitech_C920.json",
+        "raspi_cam_v2.json"
+      ]
+    }
+  }
+}

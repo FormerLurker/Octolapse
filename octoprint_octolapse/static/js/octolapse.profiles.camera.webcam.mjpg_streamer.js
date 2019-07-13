@@ -36,9 +36,7 @@ $(function() {
         self.flags = ko.observable(values.flags);
         self.group = ko.observable(values.group);
         self.menu = ko.observable(values.menu);
-
         self.get_template_id_for_control = function () {
-
             switch (self.type()) {
                 case "1":
                     // Some check boxes are reported as type 2.  So if Max=1 and Min=0 and Step = 1
@@ -53,11 +51,12 @@ $(function() {
                     return "mjpg-streamer-dropdown-control-template";
                 case "6":
                     return "mjpg-streamer-label-control-template";
+                case "9":
+                    return "mjpg-streamer-numeric-control-template";
                 default:
                     return "mjpg-streamer-unknown-control-unknown";
             }
         };
-
         self.get_options = ko.pureComputed(function () {
             var options = [];
             for (var key in self.menu()) {
@@ -85,20 +84,36 @@ $(function() {
             })
         }
 
+        self.help_url = ko.pureComputed(function() {
+            return 'profiles.camera.webcam_settings.mjpg_streamer.options.' + self.id() + '.md';
+        });
+
+        self.slider_label = ko.pureComputed(function() {
+            return self.name() + " - (" + self.min().toString() + "-" + self.max().toString() + ")";
+        });
+
+        self.checkbox_title = ko.pureComputed(function() {
+            return "Enable or disable " + self.name() + ".";
+        })
+
     };
 
     Octolapse.MjpgStreamerViewModel = function (values) {
         var self = this;
         self.controls = ko.observableArray([]);
+        self.data = ko.observable();
+        self.data.control_dict = {};
 
         self.update = function(values) {
             if (!values)
                 return;
             self.controls([]);
+            self.data.control_dict = {};
             for (var key in values.controls) {
-                control = values.controls[key];
+                var control = new Octolapse.MjpgStreamerControlViewModel(values.controls[key]);
                 if ("id" in control) {
-                    self.controls.push(new Octolapse.MjpgStreamerControlViewModel(control));
+                    self.data.control_dict[control.id()] = control;
+                    self.controls.push(control);
                 }
             }
         };

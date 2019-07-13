@@ -1,7 +1,7 @@
 # coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2019  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -28,6 +28,7 @@ from threading import Thread
 # This file is subject to the terms and conditions defined in
 # file called 'LICENSE', which is part of this source code package.
 import requests
+import os
 # Todo:  Do we need to add this to setup.py?
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import SSLError
@@ -44,6 +45,121 @@ def format_request_template(camera_address, template, value):
 
 
 class CameraControl(object):
+
+    camera_types = None
+    camera_types_path = "webcam_types"
+    camera_types_file = "camera_types.json"
+
+    @staticmethod
+    def _load_camera_types(data_path):
+        # load all of the known camera types to allow custom control pages
+        # custom pages aren't necessary, but they are much nicer to use
+        # if they are available
+
+        # we only need to load this once, so see if this is already complete
+        if CameraControl.camera_types is not None:
+            return
+        camera_types = {
+            "server_types": {}
+        }
+        # construct the path to the camera types file.  We'll reuse this later
+        camera_type_path = os.path.join(data_path, "data", CameraControl.camera_types_path)
+        # construct the file path to the camera types json file
+        file_path = os.path.join(camera_type_path, CameraControl.camera_types_file)
+        # load the list of available camera json files
+        with open(file_path, 'r') as camera_files:
+            camera_files = json.load(camera_files)
+
+        server_types = camera_files["server_types"]
+        # loop through each server type
+        for key, server_type in six.iteritems(server_types):
+            camera_types["server_types"][key] = {'cameras': {}}
+            # load all of the individual camera type info files for the current server
+            for file_name in server_type["file_names"]:
+                # construct the file path
+                file_path = os.path.join(camera_type_path, server_type["directory"], file_name)
+                # load the file
+                with open(file_path, 'r') as camera_info_file:
+                    # extract the data from the json file
+                    camera = json.load(camera_info_file)
+                    # if the current server type is mjpgstreamer, convert the controls array to dict
+                    # of MjpgStreamerControl objects
+                    controls = {}
+                    if key == MjpgStreamer.server_type:
+                        for control in camera["controls"]:
+                            control_setting = MjpgStreamerControl()
+                            control_setting.update(control)
+                            controls[control_setting.id] = control_setting
+                        camera["controls"] = controls
+                    # add the camera to our server type dictionary
+                    camera_types["server_types"][key]["cameras"][camera["key"]] = camera
+
+        CameraControl.camera_types = camera_types
+
+    @staticmethod
+    def get_webcam_type(data_path, server_type, data):
+        # attempt to get the current camera type for the given server type and supplied data
+
+        # first make sure our camera types are loaded
+        # This will only happen once since the _load_camera_types function will return if it's already loaded
+        CameraControl._load_camera_types(data_path)
+
+        # return false if there is no data for the given server type
+        if CameraControl.camera_types is None or server_type not in CameraControl.camera_types["server_types"]:
+            return False
+
+        # if the server type is mjpg-streamer, convert the data to a dict of
+        if server_type == MjpgStreamer.server_type:
+            controls = {}
+            if isinstance(data, list):
+                for control in data:
+                    control_setting = MjpgStreamerControl()
+                    control_setting.update(control)
+                    controls[control_setting.id] = control_setting
+            elif isinstance(data, dict):
+                for key, control in six.iteritems(data):
+                    control_setting = MjpgStreamerControl()
+                    control_setting.update(control)
+                    controls[key] = control_setting
+            else:
+                message = "The webcam preferences supplied by the server are of an unknown type: {0}".format(
+                    type(data)
+                )
+                raise(CameraError("unknown-data-type", message))
+            data = controls
+
+        # get the available cameras for the given server type:
+        cameras = CameraControl.camera_types["server_types"][server_type]["cameras"]
+
+        # iterate the cameras dictionary for the given server type if possible
+        for key, camera in six.iteritems(cameras):
+            # see if the current camera type matches the given data
+            if CameraControl._is_webcam_type(server_type, camera, data):
+                return {
+                    "key": camera["key"],
+                    "name": camera["name"],
+                    "make": camera["make"],
+                    "model": camera["model"],
+                    "template": camera["template"],
+                }
+
+        # no hits, the user will have to make due with the universal controls for now
+        return False
+
+    @staticmethod
+    def _is_webcam_type(server_type, camera, data):
+        if server_type == MjpgStreamer.server_type:
+            # get the controls from the camera settings
+            controls = camera["controls"]
+            # create an MJPGStreamer settings object
+            settings = MjpgStreamer()
+            # update the settings from the camera data
+            settings.update(camera)
+            # check for a match
+            if settings.controls_match_server(data):
+                return True
+
+        return False
 
     @staticmethod
     def apply_camera_settings(cameras, timeout_seconds=5):
@@ -137,6 +253,9 @@ class CameraControl(object):
             if thread.errors:
                 errors.append(" - ".join([str(error) for error in thread.errors]))
 
+            if len(errors)>0:
+                return len(errors) == 0, errors
+
             controls = thread.controls
             # clean up default values
             if not controls:
@@ -144,26 +263,6 @@ class CameraControl(object):
                     "no-settings-found",
                     "No image preference controls could be returned from MjpgStreamer."
                 )
-            for control in controls:
-                min = int(control.min)
-                max = int(control.max)
-                step = int(control.step)
-                value = int(control.value)
-                default = int(control.default)
-                id = control.id
-
-                def get_bounded_value(id, value, min, max, step):
-                    if min > value or max < value:
-                        if step == 0:
-                            # prevent divide by zero
-                            return value
-                        range = max - min
-                        steps = round(range/2.0/step)
-                        return str((min + (steps * step)))
-                    return str(value)
-
-                control.value = get_bounded_value(id, value, min, max, step)
-                control.default = get_bounded_value(id, default, min, max, step)
 
             # turn this into a dictionary
             control_dict = {}
@@ -709,6 +808,7 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
             )
             logger.error(message)
             raise CameraError('webcam_settings_apply_error', message, cause=e)
+
 
 class CameraSettingScriptThread(Thread):
     def __init__(self, camera):

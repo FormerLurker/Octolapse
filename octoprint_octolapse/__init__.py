@@ -736,9 +736,16 @@ class OctolapsePlugin(
                     webcam_settings["webcam_settings"]["mjpg_streamer"]
                 )
 
+                # see if we know about the camera type
+                webcam_type = camera.CameraControl.get_webcam_type(
+                    self._basefolder,
+                    MjpgStreamer.server_type,
+                    webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]
+                )
                 # turn the controls into a dict
                 webcam_settings = {
                     "webcam_settings": {
+                        "type": webcam_type,
                         "mjpg_streamer": {
                             "controls": camera_profile.webcam_settings.mjpg_streamer.controls
                         }
@@ -810,6 +817,13 @@ class OctolapsePlugin(
                 camera_profile.webcam_settings.mjpg_streamer.update(
                     settings["webcam_settings"]["mjpg_streamer"]
                 )
+                # see if we know about the camera type
+                webcam_type = camera.CameraControl.get_webcam_type(
+                    self._basefolder,
+                    MjpgStreamer.server_type,
+                    settings["webcam_settings"]["mjpg_streamer"]["controls"]
+                )
+                camera_profile.webcam_settings.type = webcam_type
                 settings = {
                     "name": camera_profile.name,
                     "guid": camera_profile.guid,
@@ -836,6 +850,43 @@ class OctolapsePlugin(
         return json.dumps({
                 'success': True, 'settings': settings
             }, cls=SettingsJsonEncoder), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/getWebcamType", methods=["POST"])
+    @restricted_access
+    @admin_permission.require(403)
+    def get_webcam_type(self):
+        request_values = flask.request.get_json()
+        server_type = request_values["server_type"]
+        camera_name = request_values["camera_name"]
+        address = request_values["address"]
+        username = request_values["username"]
+        password = request_values["password"]
+        ignore_ssl_error = request_values["ignore_ssl_error"]
+        success, errors, webcam_settings = camera.CameraControl.get_webcam_settings(
+            server_type,
+            camera_name,
+            address,
+            username,
+            password,
+            ignore_ssl_error
+        )
+        if not success:
+            return json.dumps(
+                {'success': False, 'error': errors}, 500,
+                {'ContentType': 'application/json'})
+
+        if server_type == MjpgStreamer.server_type:
+
+            webcam_type = camera.CameraControl.get_webcam_type(
+                self._basefolder, server_type, webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]
+            )
+        else:
+            webcam_type = False
+
+        # if we're here, we should be good, extract and return the camera settings
+        return json.dumps({
+            'success': True, 'type': webcam_type
+        }, cls=SettingsJsonEncoder), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/testCameraSettingsApply", methods=["POST"])
     @restricted_access
@@ -957,7 +1008,7 @@ class OctolapsePlugin(
     @octoprint.plugin.BlueprintPlugin.route("/applyWebcamSetting", methods=["POST"])
     @restricted_access
     @admin_permission.require(403)
-    def apply_webcam_setting(self):
+    def apply_webcam_setting_request(self):
         request_values = flask.request.get_json()
         server_type = request_values["server_type"]
         camera_name = request_values["camera_name"]

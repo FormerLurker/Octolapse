@@ -1,38 +1,36 @@
+<!-- Default mjpg-streamer template -->
 <script type="text/html" id="webcam-mjpg-streamer-template">
-    <div class="two-columns">
-        <div data-bind="foreach: controls ">
-            <div data-bind="template: get_template_id_for_control($data)">
-            </div>
+    <div data-bind="foreach: controls" class="column">
+        <div data-bind="template: get_template_id_for_control($data)">
         </div>
     </div>
 </script>
-
+<!-- Default mjpg-streamer control templates -->
 <script type="text/html" id="mjpg-streamer-numeric-control-template">
     <div class="row-fluid">
-        <div class="span4">
+        <div class="span4 text-right">
             <span data-bind="text: name" />
         </div>
         <div class="span7">
             <input class="slider" type="range" data-bind="attr: {max: max, min: min, step: step}, octolapseSliderValue: value" required="true" />
         </div>
         <div class="span1 text-left">
-            <a class="octolapse_help" data-bind="attr: {'data-help-url':('profiles.camera.webcam_settings.mjpg_streamer.options.' + id() + '.md'), 'data-help-title':name}"/>
+            <a class="octolapse_help" data-bind="attr: {'data-help-url':('profiles.camera.webcam_settings.mjpg_streamer.options.' + id() + '.md'), 'data-help-title':name}" />
         </div>
     </div>
 </script>
 
 <script type="text/html" id="mjpg-streamer-checkbox-control-template">
     <div class="row-fluid">
-        <div class="span4">
+        <div class="span4 text-right">
             <label data-bind="text: name" />
         </div>
         <div class="span8">
             <label class="checkbox">
-                <input name="white_balance_auto" type="checkbox" data-bind="checked: checkbox_checked, attr: {title: ('Enable or disable' + name() + '.')}" />Enabled
-                <a class="octolapse_help" data-bind="attr: {'data-help-url':('profiles.camera.webcam_settings.mjpg_streamer.options.' + id() + '.md'), 'data-help-title':name}"/>
+                <input type="checkbox" data-bind="checked: checkbox_checked, attr: {title: ('Enable or disable' + name() + '.')}" />Enabled
+                <a class="octolapse_help" data-bind="attr: {'data-help-url':('profiles.camera.webcam_settings.mjpg_streamer.options.' + id() + '.md'), 'data-help-title':name}" />
             </label>
         </div>
-
     </div>
 </script>
 
@@ -43,9 +41,8 @@
 </script>
 
 <script type="text/html" id="mjpg-streamer-dropdown-control-template">
-
     <div class="row-fluid">
-        <div class="span4">
+        <div class="span4 text-right">
             <label data-bind="text: name" />
         </div>
         <div class="span7">
@@ -53,14 +50,11 @@
                     data-bind="options: get_options,
                                optionsText: 'name',
                                optionsValue: 'value',
-                               value: value">
-            </select>
-
+                               value: value"></select>
         </div>
         <div class="span1 text-left">
-            <a class="octolapse_help" data-bind="attr: {'data-help-url':('profiles.camera.webcam_settings.mjpg_streamer.options.' + id() + '.md'), 'data-help-title':name}"/>
+            <a class="octolapse_help" data-bind="attr: {'data-help-url':('profiles.camera.webcam_settings.mjpg_streamer.options.' + id() + '.md'), 'data-help-title':name}" />
         </div>
-
     </div>
 </script>
 
@@ -70,3 +64,6 @@
         <p>unknown control</p>
     </div>
 </script>
+
+{% include "/webcams/mjpg_streamer/logitech_c920.jinja2" %}
+{% include "/webcams/mjpg_streamer/raspi_cam_v2.jinja2" %}

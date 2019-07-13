@@ -21,13 +21,19 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 */
-.two-columns{
+.two-column .column{
     /*-webkit-column-gap: 20px;
        -moz-column-gap: 20px;
             column-gap: 20px;*/
     -webkit-column-count: 2;
-       -moz-column-count: 2;
-            column-count: 2;
+    -moz-column-count: 2;
+    column-count: 2;
+    padding: 5px;
+}
+.no-column-break {
+    -webkit-column-break-inside: avoid;
+    page-break-inside: avoid;
+    break-inside: avoid;
 }
 .break-inside-avoid
 {
@@ -242,7 +248,7 @@ div#octolapse-current-camera{
     width:500px;
 }
 
-disabled, .octolapse select:disabled, .octolapse .disabled{
+.octolapse select:disabled, .octolapse .disabled{
     cursor: not-allowed;
     text-decoration: none;
 }
@@ -419,6 +425,10 @@ form.octolapse_form .modal-body {
 .octolapse_add_edit_dialog .row-fluid [class*="span"] {
     text-align: left;
 }
+.octolapse .text-center
+{
+    text-align: center;
+}
 
 .octolapse_add_edit_dialog div.checked {
     display: none;
@@ -493,6 +503,11 @@ form.octolapse_form .modal-body {
 
 .ol-heading h1, .ol-heading h2, .ol-heading h3, .ol-heading h4, .ol-heading h5, .ol-heading h6 {
     margin: 0
+}
+
+.no-min-height
+{
+    min-height:unset;
 }
 
 .panel-footer.ol-info-footer {
@@ -711,14 +726,16 @@ a.ol-button i {
 fieldset.octolapse {
     display: block;
     margin: 0px 2px 10px 2px;
-    padding: 0.35em 0.75em 0.625em;
+    padding: 0 0.75em 0.625em 0.75em ;
     border: 2px groove;
 }
 fieldset.octolapse legend
 {
+    line-height: unset;
     width:auto;
     display: block;
     margin-bottom: 0px;
+    margin-top: 5px;
     padding-inline-start: 2px;
     padding-inline-end: 2px;
     border-width: initial;
