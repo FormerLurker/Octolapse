@@ -34,7 +34,7 @@
                             <h3>Camera Settings - <span data-bind="text:Octolapse.Status.WebcamSettings.webcam_settings.name" /></h3>
 
                             <div class="webcam_settings_preview">
-                                <img id="octolapse_webcam_settings_stream" class="octolapse_webcam_stream_preview"  style="display:none;" data-bind="streamLoading:{src: Octolapse.Status.WebcamSettings.webcam_settings.stream_url, loading_selector: '#octolapse_webcam_settings_stream_loading', error_selector: '#octolapse_webcam_settings_stream_error'}">
+                                <img id="octolapse_webcam_settings_stream" class="octolapse_webcam_stream_preview"  style="display:none;" data-bind="streamLoading:{src: Octolapse.Status.WebcamSettings.webcam_settings.stream_url, loading_selector: '#octolapse_webcam_settings_stream_loading', error_selector: '#octolapse_webcam_settings_stream_error', max_width: 900, max_height:333}">
                                 <div id="octolapse_webcam_settings_stream_error" class="alert" style="display:none;">
                                     Unable to load the webcam stream
                                 </div>

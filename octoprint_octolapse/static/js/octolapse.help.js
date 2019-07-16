@@ -110,7 +110,7 @@ $(function () {
 
         self.converter.setFlavor('github');
 
-        self.showHelpForLink = function (doc, title)
+        self.showHelpForLink = function (doc, title, custom_not_found_message)
         {
             url = "/plugin/octolapse/static/docs/help/" + doc + "?nonce=" + Date.now().toString();
             $.ajax({
@@ -142,7 +142,11 @@ $(function () {
                         var missing_file_text = "The requested help file could not be found.  Please report this error\
                             [here](https://github.com/FormerLurker/Octolapse/issues) and visit the\
                             [wiki](https://github.com/FormerLurker/Octolapse/wiki) to find help for this item.";
-                        self.options.text = self.converter.makeHtml(missing_file_text);
+                        if (custom_not_found_message)
+                            self.options.text = self.converter.makeHtml(custom_not_found_message);
+                        else
+                            self.options.text = self.converter.makeHtml(missing_file_text);
+
                         self.options.title = "Help Could Not Be Found";
 
                         Octolapse.displayPopupForKey(self.options, "octolapse-help", ["octolapse-help"]);
@@ -187,9 +191,10 @@ $(function () {
                // get the data group data
                 var url = $(this).data('help-url');
                 var title = $(this).data('help-title');
+                var custom_not_found_error = $(this).data('help-not-found');
                 if (!title)
                     title = "Help";
-                self.showHelpForLink(url,title);
+                self.showHelpForLink(url,title, custom_not_found_error);
                 e.preventDefault();
             });
         };

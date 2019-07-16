@@ -36,6 +36,7 @@ $(function() {
         self.flags = ko.observable(values.flags);
         self.group = ko.observable(values.group);
         self.menu = ko.observable(values.menu);
+        self.order = ko.observable(values.order);
         self.get_template_id_for_control = function () {
             switch (self.type()) {
                 case "1":
@@ -85,11 +86,15 @@ $(function() {
         }
 
         self.help_url = ko.pureComputed(function() {
-            return 'profiles.camera.webcam_settings.mjpg_streamer.options.' + self.id() + '.md';
+            return 'profiles.camera.webcam_settings.mjpg-streamer.options.' + self.id() + '.md';
+        });
+
+        self.help_not_found = ko.pureComputed(function(){
+            return "This is an unknown camera setting control.  Please submit an issue [here](http://github.com/formerlurker/octolapse/issues/new) if you'd like a help file added to support this control.  Please include the make and model of your camera, and include following data - Id:" + self.id() + ", Name:" + self.name();
         });
 
         self.slider_label = ko.pureComputed(function() {
-            return self.name() + " - (" + self.min().toString() + "-" + self.max().toString() + ")";
+            return self.name();// + " (" + self.min().toString() + "-" + self.max().toString() + ")";
         });
 
         self.checkbox_title = ko.pureComputed(function() {
@@ -102,21 +107,70 @@ $(function() {
         var self = this;
         self.controls = ko.observableArray([]);
         self.data = ko.observable();
-        self.data.control_dict = {};
+        self.data.controls_dict = {};
+        self.camera_type_key = ko.observable();
+        self.data.custom_camera_viewmodel = null;
 
-        self.update = function(values) {
+        self.create_viewmodel_for_camera_type_key = function(camera_type_key){
+            switch(camera_type_key)
+            {
+                case "raspi_cam_v2":
+                    self.data.custom_camera_viewmodel = new Octolapse.RaspiCamV2ViewModel(self);
+                    break;
+                default:
+                    self.data.custom_camera_viewmodel = null;
+            }
+        };
+
+        self.bind_viewmodel_for_camera_type = function(){
+            if (self.data.custom_camera_viewmodel)
+                self.data.custom_camera_viewmodel.on_after_binding();
+        };
+
+        self.update = function(values, type, use_custom_webcam_settings_page) {
             if (!values)
                 return;
             self.controls([]);
-            self.data.control_dict = {};
-            for (var key in values.controls) {
-                var control = new Octolapse.MjpgStreamerControlViewModel(values.controls[key]);
+            self.data.controls_dict = {};
+            // return if we have no controls
+            if (!values.controls)
+                return;
+            // set the custom viewmodel, if one is available
+            var key = null;
+            if (type && use_custom_webcam_settings_page)
+                key = type.key;
+
+            self.create_viewmodel_for_camera_type_key(key);
+
+            var sortedControls = self.getSortedControlArray(values.controls);
+            for (var index in sortedControls) {
+                var control = new Octolapse.MjpgStreamerControlViewModel(sortedControls[index]);
                 if ("id" in control) {
-                    self.data.control_dict[control.id()] = control;
+                    self.data.controls_dict[control.id()] = control;
                     self.controls.push(control);
                 }
             }
+
+            self.bind_viewmodel_for_camera_type();
         };
+
+        self.getSortedControlArray = function (control_dict) {
+            // first turn the controlDict into an array
+            var control_array =[];
+            for (var key in control_dict)
+            {
+                var control = control_dict[key];
+                control_array.push(control);
+            }
+            return control_array.sort(
+                function (left, right) {
+                    var leftOrder = left.order || 0;
+                    var rightOrder = right.order || 0;
+                    return leftOrder === rightOrder ? 0 : (leftOrder < rightOrder ? -1 : 1);
+                }
+            );
+        };
+
         self.update(values);
 
     };

@@ -1155,8 +1155,11 @@ class MjpgStreamer(StreamingServer):
                             new_control.update(control)
                             self.controls[control_key] = new_control
                     elif isinstance(value, list):
-                        for control in value:
+
+                        for index in range(len(value)):
+                            control = value[index]
                             new_control = MjpgStreamerControl()
+                            new_control.order = index
                             new_control.update(control)
                             self.controls[value["id"]] = new_control
 
@@ -1190,6 +1193,7 @@ class MjpgStreamerControl(Settings):
         self.dest = None
         self.flags = None
         self.group = None
+        self.order = None
         self.menu = {}
 
     def control_matches_server(self, server_control):
@@ -1205,6 +1209,9 @@ class MjpgStreamerControl(Settings):
         for attr_name in members:
             if attr_name in ["value", "flags"] and attr_name in dir(server_control):
                 # ignore the value
+                continue
+            # skip meta-data fields (these won't be in the server control always)
+            if attr_name in ["order"]:
                 continue
 
             if (

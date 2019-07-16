@@ -1,0 +1,1 @@
+Adding the sequence header to every frame will improve random access while editing/viewing the video, but will increase the size of the video.  I don't believe this setting applies to mjpg-streamer, since it is sending an image frame-by-frame.

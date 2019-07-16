@@ -25,6 +25,7 @@ import json
 import six
 import octoprint_octolapse.utility as utility
 from threading import Thread
+import time
 # This file is subject to the terms and conditions defined in
 # file called 'LICENSE', which is part of this source code package.
 import requests
@@ -86,9 +87,11 @@ class CameraControl(object):
                     # of MjpgStreamerControl objects
                     controls = {}
                     if key == MjpgStreamer.server_type:
-                        for control in camera["controls"]:
+                        for index in range(len(camera["controls"])):
+                            control = camera["controls"][index]
                             control_setting = MjpgStreamerControl()
                             control_setting.update(control)
+                            control_setting.order = index
                             controls[control_setting.id] = control_setting
                         camera["controls"] = controls
                     # add the camera to our server type dictionary
@@ -98,8 +101,8 @@ class CameraControl(object):
 
     @staticmethod
     def get_webcam_type(data_path, server_type, data):
-        # attempt to get the current camera type for the given server type and supplied data
 
+        # attempt to get the current camera type for the given server type and supplied data
         # first make sure our camera types are loaded
         # This will only happen once since the _load_camera_types function will return if it's already loaded
         CameraControl._load_camera_types(data_path)
@@ -125,7 +128,8 @@ class CameraControl(object):
                 message = "The webcam preferences supplied by the server are of an unknown type: {0}".format(
                     type(data)
                 )
-                raise(CameraError("unknown-data-type", message))
+                logger.exception(CameraError("unknown-data-type", message))
+                return False
             data = controls
 
         # get the available cameras for the given server type:
@@ -166,7 +170,7 @@ class CameraControl(object):
         errors = []
 
         # make sure the supplied cameras are enabled and either webcams or script cameras
-        cameras = [x for x in cameras if x.enabled and x.camera_type in [
+        cameras = [x for x in cameras if x.camera_type in [
             CameraProfile.camera_type_webcam,
             CameraProfile.camera_type_script
         ]]
@@ -187,15 +191,38 @@ class CameraControl(object):
         # start the threads
         for thread in threads:
             thread.start()
-
-        # join the threads
+        start_time = time.time()
+        timeout_time = start_time + 5
+        # join the threads, but timeout in a reasonable way
         for thread in threads:
-            thread.join(timeout_seconds)
+            timeout_sec = timeout_time - time.time()
+            if timeout_sec < 0:
+                timeout_sec = 0.001
+            thread.join(timeout_sec)
             if not thread.success:
                 for error in thread.errors:
                     errors.append(error)
 
-        return len(errors) == 0,  errors
+        return len(errors) == 0, CameraControl._get_errors_string(errors)
+
+    @staticmethod
+    def _get_errors_string(errors):
+        if len(errors) == 0:
+            return ""
+        unknown_errors_count = 0
+        safe_errors = []
+        for error in errors:
+            if isinstance(error, CameraError):
+                safe_errors.append(error.message)
+            else:
+                unknown_errors_count += 1
+
+        camera_errors = " - ".join(safe_errors)
+        unknown_errors = ""
+        if unknown_errors_count > 0:
+            unknown_errors = "{} unknown errors, check plugin.octolapse.log for details.".format(unknown_errors_count)
+        return "{}{}".format(camera_errors, unknown_errors)
+
 
     @staticmethod
     def apply_webcam_setting(
@@ -220,11 +247,11 @@ class CameraControl(object):
             )
             thread.start()
             thread.join()
-            return thread.success, " - ".join([str(error) for error in thread.errors])
+            return thread.success, thread.errors
         else:
             message = "Cannot apply camera settings to the server type:{0}".format(server_type)
             logger.error(message)
-            raise CameraError('server_type_not_found', message)
+            return False, [CameraError("unknown-server-type",message)]
 
     @staticmethod
     def get_webcam_settings(
@@ -236,51 +263,57 @@ class CameraControl(object):
         ignore_ssl_error,
         timeout_seconds=5
     ):
-        errors = []
-        controls = None
+        try:
+            errors = []
+            controls = None
 
-        if server_type == 'mjpg-streamer':
-            thread = MjpgStreamerControlThread(
-                address=address,
-                username=username,
-                password=password,
-                ignore_ssl_error=ignore_ssl_error,
-                camera_name=camera_name,
-                timeout_seconds=timeout_seconds
-            )
-            thread.start()
-            thread.join()
-            if thread.errors:
-                errors.append(" - ".join([str(error) for error in thread.errors]))
-
-            if len(errors)>0:
-                return len(errors) == 0, errors
-
-            controls = thread.controls
-            # clean up default values
-            if not controls:
-                raise CameraError(
-                    "no-settings-found",
-                    "No image preference controls could be returned from MjpgStreamer."
+            if server_type == 'mjpg-streamer':
+                thread = MjpgStreamerControlThread(
+                    address=address,
+                    username=username,
+                    password=password,
+                    ignore_ssl_error=ignore_ssl_error,
+                    camera_name=camera_name,
+                    timeout_seconds=timeout_seconds
                 )
+                thread.start()
+                thread.join()
+                if thread.errors:
+                    for error in thread.errors:
+                        errors.append(error)
 
-            # turn this into a dictionary
-            control_dict = {}
-            for control in controls:
-                control_dict[control.id] = control
+                if len(errors)>0:
+                    return len(errors) == 0, CameraControl._get_errors_string(errors), None
 
-            return len(errors) == 0, errors, {
-                "webcam_settings": {
-                    "mjpg_streamer": {
-                        "controls": control_dict
+                controls = thread.controls
+                # clean up default values
+                if not controls:
+                    raise CameraError(
+                        "no-settings-found",
+                        "No image preference controls could be returned from MjpgStreamer."
+                    )
+
+                # turn this into a dictionary
+                control_dict = {}
+                for index in range(len(controls)):
+                    control = controls[index]
+                    control.order = index
+                    control_dict[control.id] = control
+
+                return True, "", {
+                    "webcam_settings": {
+                        "mjpg_streamer": {
+                            "controls": control_dict
+                        }
                     }
                 }
-            }
-        else:
-            raise CameraError(
-                "unknown-server",
-                "The streaming server type does not currently support custom image preferences."
-            )
+            else:
+                raise CameraError(
+                    "unknown-server",
+                    "The streaming server type does not currently support custom image preferences."
+                )
+        except CameraError as e:
+            return False, CameraControl._get_errors_string([e]), None
 
     @staticmethod
     def get_webcam_server_type_from_request(r):
@@ -296,7 +329,7 @@ class CameraControl(object):
         return webcam_server_type
 
     @staticmethod
-    def test_mjpg_streamer_control(camera_profile, timeout_seconds=2):
+    def _test_mjpg_streamer_control(camera_profile, timeout_seconds=2):
         url = camera_profile.webcam_settings.address + "?action=command&id=-1"
         try:
             if len(camera_profile.webcam_settings.username) > 0:
@@ -337,10 +370,6 @@ class CameraControl(object):
             )
             logger.error(message)
             raise CameraError('webcam_settings_ssl_error', message, cause=e)
-        except CameraError as e:
-            # Don't log exceptions that we raised.  They will be logged (hopefully) by the raiser.
-            # re raise the error
-            raise e
         except Exception as e:
             message = (
                 "An unexpected error was raised while testing custom image preferences for the '{0}' camera profile."
@@ -351,6 +380,14 @@ class CameraControl(object):
 
     @staticmethod
     def test_web_camera_image_preferences(camera_profile, timeout_seconds=2):
+        try:
+            CameraControl._test_web_camera_image_preferences(camera_profile, timeout_seconds)
+        except CameraError as e:
+            return False, CameraControl._get_errors_string([e])
+        return True, ""
+
+    @staticmethod
+    def _test_web_camera_image_preferences(camera_profile, timeout_seconds=2):
         assert (isinstance(camera_profile, CameraProfile))
         # first see what kind of server we have
         url = format_request_template(
@@ -386,7 +423,8 @@ class CameraControl(object):
             raise CameraError('unknown-exception', message, cause=e)
 
         if webcam_server_type == "mjpg-streamer":
-            CameraControl.test_mjpg_streamer_control(camera_profile, timeout_seconds)
+
+            CameraControl._test_mjpg_streamer_control(camera_profile, timeout_seconds)
         elif webcam_server_type == "yawcam":
             message = "You cannot use Yawcam with custom image preferences enabled.  Please disable custom image " \
                       "prefences for the  '{0}' camera profile. ".format(webcam_server_type, camera_profile.name)
@@ -402,6 +440,14 @@ class CameraControl(object):
 
     @staticmethod
     def test_web_camera(camera_profile, timeout_seconds=2, is_before_print_test=False):
+        try:
+            CameraControl._test_web_camera(camera_profile, timeout_seconds, is_before_print_test)
+        except CameraError as e:
+            return False, CameraControl._get_errors_string([e])
+        return True, ""
+
+    @staticmethod
+    def _test_web_camera(camera_profile, timeout_seconds=2, is_before_print_test=False):
         url = format_request_template(
             camera_profile.webcam_settings.address, camera_profile.webcam_settings.snapshot_request_template, "")
         try:
@@ -425,7 +471,7 @@ class CameraControl(object):
                     logger.error(message)
                     raise CameraError('not-an-image', message)
                 elif not is_before_print_test or camera_profile.apply_settings_before_print:
-                    CameraControl.test_web_camera_image_preferences(camera_profile, timeout_seconds)
+                    CameraControl._test_web_camera_image_preferences(camera_profile, timeout_seconds)
             else:
                 message = (
                     "An invalid status code or {0} was returned from the '{1}' camera profile."
@@ -501,6 +547,7 @@ class CameraControl(object):
             # set the control values to the defaults
             controls = settings["webcam_settings"]["mjpg_streamer"]["controls"]
             for key, control in six.iteritems(controls):
+
                 control.value = control.default
                 controls[key] = control.to_dict()
 
@@ -517,7 +564,7 @@ class CameraControl(object):
             thread.start()
             thread.join()
 
-            return len(thread.errors) > 0, thread.errors, controls
+            return len(thread.errors) == 0, CameraControl._get_errors_string(thread.errors), controls
 
         else:
             error = "Unable to load default settings for the server type {server_type}.  Currently only mjpg-streamer" \
@@ -551,6 +598,8 @@ class MjpgStreamerThread(Thread):
             self.ignore_ssl_error = ignore_ssl_error
             self.timeout_seconds = timeout_seconds
             self.camera_name = camera_name
+        if isinstance(self.address, six.string_types):
+            self.address = self.address.strip()
 
         self.errors = []
         self.success = False
@@ -582,6 +631,7 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
         try:
             self.controls = self.get_controls_from_server()
         except CameraError as e:
+            logger.exception(e)
             self.errors.append(e)
 
     def get_controls_from_server(self):
@@ -589,9 +639,11 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
         control_settings = []
         if "controls" in input_file:
             # turn the control json into MjpgStreamerSetting
-            for control in input_file["controls"]:
+            for index in range(len(input_file["controls"])):
+                control = input_file["controls"][index]
                 control_setting = MjpgStreamerControl()
                 control_setting.update(control)
+                control_setting.order = index
                 control_settings.append(control_setting)
         return control_settings
 
@@ -608,7 +660,6 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
             if r.status_code == 501:
                 message = "Access was denied to the mjpg-streamer {0} file for the " \
                           "'{1}' camera profile.".format(file_name, self.camera_name)
-                logger.error(message)
                 raise CameraError("mjpg_streamer-control-error", message)
             if r.status_code != requests.codes.ok:
                 message = (
@@ -616,24 +667,30 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
                     "check your 'Base Address' and 'Snapshot Address Template' within your camera profile settings."
                         .format(r.status_code, file_name, self.camera_name)
                 )
-                logger.error(message)
                 raise CameraError('webcam_settings_apply_error', message)
-
-            data = json.loads(r.text)
+            try:
+                data = json.loads(r.text)
+            except ValueError as e:
+                raise CameraError('json_error', "Unable to read the input.json file from mjpg-streamer.  Please chack "
+                                                "your base address and try again.", cause=e)
             return data
         except SSLError as e:
             message = (
                 "An SSL error was raised while retrieving the {0} file for the '{1}' camera profile."
                     .format(file_name, self.camera_name)
             )
-            logger.exception(message)
             raise CameraError('ssl_error', message, cause=e)
+        except requests.ConnectionError as e:
+            message = (
+                "Unable to connect to the camera to '{0}' to retrieve controls for the {1} camera profile."
+                .format(url, self.camera_name)
+            )
+            raise CameraError("connection-error", message, cause=e)
         except Exception as e:
             message = (
                 "An unexpected error was raised while retrieving the {0} file for the '{1}' camera profile."
-                    .format(file_name, self.camera_name)
+                .format(file_name, self.camera_name)
             )
-            logger.exception(message)
             raise CameraError('unexpected-error', message, cause=e)
 
 
@@ -674,8 +731,22 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
         threads = []
         has_started_thread = False
         logger.info("Applying all webcam image settings to the %s camera.", self.camera_name)
-        # create the threads
+
+        controls_list = []
+
+
         for key, control in six.iteritems(self.controls):
+            controls_list.append(control)
+
+        # Sort the controls.  They need to be sent in order.
+        if len(controls_list) > 0:
+            if isinstance(controls_list[0], dict):
+                controls_list.sort(key=lambda x: x["order"], reverse=False)
+            else:
+                controls_list.sort(key=lambda x: x.order, reverse=False)
+
+        for control in controls_list:
+
             thread = MjpgStreamerSettingThread(
                 control,
                 self.address,
@@ -693,15 +764,13 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
             if not has_started_thread:
                 has_started_thread = True
             thread.start()
-
-        for thread in threads:
             thread.join()
             errors = thread.errors
             self.success = thread.success
             if not self.success:
                 for error in errors:
                     self.errors.append(error)
-        self.success = len(self.errors) > 0
+        self.success = len(self.errors) == 0
 
 
 class MjpgStreamerSettingThread(MjpgStreamerThread):
@@ -748,8 +817,7 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
             value = self.control.value
             name = self.control.name
 
-        url = "{address}?action={action}&dest={dest}&plugin={plugin}&id={id}&group={group}&value={value}".format(
-            address=self.address,
+        querystring = "?action={action}&dest={dest}&plugin={plugin}&id={id}&group={group}&value={value}".format(
             action="command",
             dest=0,
             plugin=0,
@@ -757,6 +825,12 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
             group=group,
             value=value
         )
+
+        url = "{address}{querystring}".format(
+            address=self.address,
+            querystring=querystring
+        )
+        logger.debug("Changing %s to %s for %s.  Querystring: %s", name, str(value), self.camera_name, querystring)
         try:
             if len(self.username) > 0:
                 r = requests.get(url, auth=HTTPBasicAuth(self.username, self.password),
@@ -878,4 +952,8 @@ class CameraError(Exception):
     def __str__(self):
         if self.cause is None:
             return "{0}: {1}".format(self.error_type, self.message)
-        return "{0}: {1} - Inner Exception: {2}".format(self.error_type, self.message, "{}".format(self.cause))
+        return "{0}: {1} - Inner Exception: {2}".format(
+            self.error_type,
+            self.message,
+            "{} - {}".format(type(self.cause), self.cause)
+        )

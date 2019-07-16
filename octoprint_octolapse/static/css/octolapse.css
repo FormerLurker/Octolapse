@@ -369,15 +369,12 @@ table.octolapse-profiles td.profile_action {
 }
 
 div.webcam_settings_preview{
-    width:588px;
-    height:auto;
+    width:100%;
     vertical-align: middle;
     text-align:center;
     margin: 0 auto;
 }
 div.webcam_settings_preview img{
-    min-width: 100%;
-    height: auto;
     border:1px solid;
     padding-bottom: 1px;
 }
@@ -722,7 +719,9 @@ a.ol-button i {
 #octolapse_tab i.fa-no-shadow, #octolapse_tab span.fa-no-shadow {
     text-shadow:none;
 }
-
+.webcam_settings select {
+    margin: 2px 0 10px;
+}
 fieldset.octolapse {
     display: block;
     margin: 0px 2px 10px 2px;
@@ -734,7 +733,7 @@ fieldset.octolapse legend
     line-height: unset;
     width:auto;
     display: block;
-    margin-bottom: 0px;
+    margin-bottom: 5px;
     margin-top: 5px;
     padding-inline-start: 2px;
     padding-inline-end: 2px;

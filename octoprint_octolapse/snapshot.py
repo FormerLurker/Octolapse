@@ -23,6 +23,7 @@
 from subprocess import CalledProcessError
 import os as os
 import shutil
+import six
 from csv import DictWriter
 from io import open as i_open
 from time import sleep
@@ -548,6 +549,8 @@ class WebcamSnapshotJob(SnapshotThread):
             on_new_thumbnail_available_callback=on_new_thumbnail_available_callback
         )
         self.Address = self.snapshot_job_info.camera.webcam_settings.address
+        if isinstance(self.Address, six.string_types):
+            self.Address = self.Address.strip()
         self.Username = self.snapshot_job_info.camera.webcam_settings.username
         self.Password = self.snapshot_job_info.camera.webcam_settings.password
         self.IgnoreSslError = self.snapshot_job_info.camera.webcam_settings.ignore_ssl_error

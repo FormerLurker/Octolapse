@@ -283,7 +283,7 @@
 
                 <div data-bind="visible: camera_stream_visible">
                     <div class="webcam_settings_preview">
-                        <img class="octolapse_webcam_stream_preview" data-bind="streamLoading:{src: webcam_settings.stream_url, loading_selector: '#octolapse_camera_profile_stream_loading', error_selector: '#octolapse_camera_profile_stream_error'}" style="display:none;">
+                        <img class="octolapse_webcam_stream_preview" data-bind="streamLoading:{src: webcam_settings.stream_url, loading_selector: '#octolapse_camera_profile_stream_loading', error_selector: '#octolapse_camera_profile_stream_error', max_width: 900, max_height:333}" style="display:none;">
                         <div id="octolapse_camera_profile_stream_error" class="alert octolapse_webcam_stream_preview" style="display:none;">
                             Unable to load the webcam stream
                         </div>

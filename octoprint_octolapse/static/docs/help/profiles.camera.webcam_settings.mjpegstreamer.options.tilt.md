@@ -1,1 +1,0 @@
-Tilt will move your webcam image up and down if tilt is supported.  0 is centered.  Some cameras have digital tilt, and require that your image is zoomed in for tilt to work, since it's just cropping out a section of your image to simulate tilt.

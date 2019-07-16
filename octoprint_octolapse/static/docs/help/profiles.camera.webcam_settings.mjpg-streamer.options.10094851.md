@@ -1,0 +1,1 @@
+The Auto-Exposure Priority Control (Also called Exposure Dynamic Framerate) is used to specify constraints on the exposure time when the Auto-Exposure Mode Control is set to Auto Mode or Shutter Priority Mode. When disabled, the frame rate will remain constant. When enabled, the frame rate may be dynamically varied by the device.

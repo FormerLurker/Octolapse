@@ -1,0 +1,1 @@
+Pan will move your webcam image from left to right.  Some cameras have digital (non-mechanical) pan, and require that your image is zoomed in for pan to work, since it's just cropping out a section of your image to simulate pan.  If this setting has no effect, and your camera has a 'zoom' option, try increasing the zoom and try the pan setting again.

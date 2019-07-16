@@ -7,29 +7,28 @@
 </script>
 <!-- Default mjpg-streamer control templates -->
 <script type="text/html" id="mjpg-streamer-numeric-control-template">
-    <div class="row-fluid">
-        <div class="span4 text-right">
-            <span data-bind="text: name" />
-        </div>
-        <div class="span7">
-            <input class="slider" type="range" data-bind="attr: {max: max, min: min, step: step}, octolapseSliderValue: value" required="true" />
-        </div>
-        <div class="span1 text-left">
-            <a class="octolapse_help" data-bind="attr: {'data-help-url':('profiles.camera.webcam_settings.mjpg_streamer.options.' + id() + '.md'), 'data-help-title':name}" />
+    <div class="no-column-break">
+        <span data-bind="text: slider_label"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title':name, 'data-help-not-found': help_not_found}"/>
+        <div class="row-fluid">
+            <div class="span10">
+                <input type="range" class="slider" data-bind="attr: {min: min, max: max, step: step }, octolapseSliderValue: value" />
+            </div>
+            <div class="span2">
+                <span data-bind="text: value" />
+            </div>
         </div>
     </div>
 </script>
 
 <script type="text/html" id="mjpg-streamer-checkbox-control-template">
-    <div class="row-fluid">
-        <div class="span4 text-right">
-            <label data-bind="text: name" />
-        </div>
-        <div class="span8">
-            <label class="checkbox">
-                <input type="checkbox" data-bind="checked: checkbox_checked, attr: {title: ('Enable or disable' + name() + '.')}" />Enabled
-                <a class="octolapse_help" data-bind="attr: {'data-help-url':('profiles.camera.webcam_settings.mjpg_streamer.options.' + id() + '.md'), 'data-help-title':name}" />
-            </label>
+    <div class="no-column-break">
+        <div class="row-fluid">
+            <div class="span12">
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="attr: {title: checkbox_title}, checked: checkbox_checked" /><span data-bind="text: name"></span>&nbsp;&nbsp;
+                    <a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title': name, 'data-help-not-found': help_not_found}" />
+                </label>
+            </div>
         </div>
     </div>
 </script>
@@ -42,18 +41,17 @@
 
 <script type="text/html" id="mjpg-streamer-dropdown-control-template">
     <div class="row-fluid">
-        <div class="span4 text-right">
-            <label data-bind="text: name" />
-        </div>
-        <div class="span7">
-            <select class="full-width"
-                    data-bind="options: get_options,
-                               optionsText: 'name',
-                               optionsValue: 'value',
-                               value: value"></select>
-        </div>
-        <div class="span1 text-left">
-            <a class="octolapse_help" data-bind="attr: {'data-help-url':('profiles.camera.webcam_settings.mjpg_streamer.options.' + id() + '.md'), 'data-help-title':name}" />
+        <div class="no-column-break">
+            <span data-bind="text: name"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title': name, 'data-help-not-found': help_not_found}" />
+            <div class="row-fluid">
+                <div class="span10">
+                    <select class="full-width"
+                            data-bind="options: get_options,
+                                   optionsText: 'name',
+                                   optionsValue: 'value',
+                                   value: value"></select>
+                </div>
+            </div>
         </div>
     </div>
 </script>
@@ -61,7 +59,7 @@
 <script type="text/html" id="mjpg-streamer-unknown-control-unknown">
     <div>
         <label data-bind="text: name" />
-        <p>unknown control</p>
+        <p class="text-error">Unknown Control - Name: <span data-bind="text:name"/>, ID: <span data-bind="text:id"/>, Type: <span data-bind="text:type"/></p>
     </div>
 </script>
 

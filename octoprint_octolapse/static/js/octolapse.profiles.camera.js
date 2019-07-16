@@ -206,6 +206,7 @@ $(function() {
             }
 
             self.testCustomImagePreferences(self.enable_custom_image_preferences,id);
+
         };
 
         self.testCustomImagePreferences = function(bool_observable, id){
@@ -223,6 +224,7 @@ $(function() {
                     if (results.success){
                         bool_observable(true);
                         $('#'+ id).prop("checked",true);
+                        self.updateImagePreferencesFromServer(true);
                     }
                     else {
                         var options = {
@@ -260,13 +262,9 @@ $(function() {
 
         self.on_cancelled = function(){
             //console.log("Cancelling camera profile");
-            if(
-                self.camera_type() == "webcam" &&
-                (self.apply_settings_at_startup() || self.apply_settings_before_print())
-            ) {
+            if(self.camera_type() == "webcam" && self.enable_custom_image_preferences()) {
                 self.webcam_settings.cancelWebcamChanges();
             }
-
         };
 
         self.updateFromServer = function(values) {

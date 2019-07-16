@@ -114,7 +114,7 @@ $(function() {
                 backdrop: 'static',
                 maxHeight: function() {
                     return Math.max(
-                      window.innerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-66,
+                      window.innerHeight - dialog.$modalHeader.innerHeight()-dialog.$modalFooter.innerHeight()-30,
                       200
                     );
                 }
@@ -308,6 +308,7 @@ $(function() {
                 }
             });
         };
+
         self.getToggleCustomCameraSettingsText = ko.pureComputed(function(){
            if(self.use_custom_webcam_settings_page() && self.type())
            {
@@ -317,6 +318,7 @@ $(function() {
                return "Check for Custom Page";
            }
         });
+
         self.toggleCustomCameraSettingsPage = function(){
             // fetch control settings from the server
             if (!self.server_type() || !self.address())
@@ -351,6 +353,16 @@ $(function() {
                 dataType: "json",
                 success: function (results) {
                     if(!results.success) {
+                        data = {
+                            "webcam_settings": {
+                                "type": null,
+                                "use_custom_webcam_settings_page": false,
+                                "mjpg_streamer": {
+                                    "controls": ko.toJS(self.mjpg_streamer.controls())
+                                }
+                            }
+                        };
+                        self.updateWebcamSettings(data);
                         var options = {
                             title: 'Unknown Webcam Type',
                             text: results.error,
@@ -362,16 +374,38 @@ $(function() {
                         Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
                         return;
                     }
-
                     // set our camera type info
-                    self.type(results.type);
-                    self.use_custom_webcam_settings_page(!self.use_custom_webcam_settings_page());
-
-                    var message = "A " + results.type.name + " was detected, and Octolapse has an available custom control for this camera!";
+                    var use_custom_webcam_settings_page = !self.use_custom_webcam_settings_page();
+                    if(!results.type)
+                        use_custom_webcam_settings_page = false;
+                    data = {
+                        "webcam_settings": {
+                            "type": results.type,
+                            "use_custom_webcam_settings_page": use_custom_webcam_settings_page,
+                            "mjpg_streamer": {
+                                "controls": ko.toJS(self.mjpg_streamer.controls())
+                            }
+                        }
+                    };
+                    self.updateWebcamSettings(data);
+                    // We meed to rebind the help links here, else they will not show up.
+                    Octolapse.Help.bindHelpLinks(".octolapse .webcam_settings");
+                    var message;
+                    var title = "Webcam type found!";
+                    var type = "success";
+                    if (!results.type) {
+                        message = "This webcam does not currently support a custom camera control page.";
+                        title = 'Unknown webcam';
+                        type = "error";
+                    }
+                    else if (!use_custom_webcam_settings_page)
+                    {
+                        message = "Successfully switched to the default mjpg-streamer control page.";
+                    }
                     var options = {
-                            title: 'Camera Detected',
+                            title: title,
                             text: message,
-                            type: 'success',
+                            type: type,
                             hide: true,
                             addclass: "octolapse"
                         };
@@ -393,8 +427,12 @@ $(function() {
         };
 
         self.refresh_template_id = ko.observable();
-        self.reset_webcam_settings_template = function(){
+
+        self.clear_webcam_settings_template = function(){
             self.refresh_template_id(true);
+        };
+
+        self.restore_webcam_settings_template = function(){
             self.refresh_template_id(null);
         };
 
@@ -521,7 +559,6 @@ $(function() {
         };
 
         self.restoreWebcamDefaults = function(){
-
             //console.log("Loading default webcam values.");
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             var data = {
@@ -554,7 +591,6 @@ $(function() {
                     else {
 
                         self.updateWebcamSettings(results.defaults);
-                        self.reset_webcam_settings_template();
                         if (self.type())
                         {
                             self.get_webcam_settings_template();
@@ -583,9 +619,9 @@ $(function() {
         };
 
         self.updateWebcamSettings = function(values) {
-            //self.unsubscribe_to_settings_changes();
-
-            var webcam_settings = null;
+            // clear the webcam settings template to prevent binding errors if the template changes
+            self.clear_webcam_settings_template();
+            var webcam_settings = {};
             if ("webcam_settings" in values)
             {
                 webcam_settings = values["webcam_settings"];
@@ -593,11 +629,6 @@ $(function() {
             if ("server_type" in webcam_settings)
             {
                 self.server_type(webcam_settings.server_type);
-            }
-
-            if ("mjpg_streamer" in webcam_settings)
-            {
-                self.mjpg_streamer.update(webcam_settings.mjpg_streamer);
             }
 
             if ("guid" in values)
@@ -618,15 +649,28 @@ $(function() {
                 self.timeout_ms(values.timeout_ms);
             if ("stream_template" in webcam_settings)
                 self.stream_template(webcam_settings.stream_template);
-            if ("type" in webcam_settings)
-                self.type(webcam_settings.type);
-            if("use_custom_webcam_settings_page" in webcam_settings)
-                self.use_custom_webcam_settings_page(webcam_settings.use_custom_webcam_settings_page);
 
+            if ("type" in webcam_settings) {
+                self.type(webcam_settings.type);
+            }
+
+            if("use_custom_webcam_settings_page" in webcam_settings)
+            {
+                self.use_custom_webcam_settings_page(webcam_settings.use_custom_webcam_settings_page);
+            }
+
+            if ("mjpg_streamer" in webcam_settings)
+            {
+                self.mjpg_streamer.update(webcam_settings.mjpg_streamer, self.type(), self.use_custom_webcam_settings_page());
+            }
             // notify subscribers of a possible stream url change.
             self.stream_url.notifySubscribers();
-            Octolapse.Help.bindHelpLinks(".octolapse .webcam_settings");
-            setTimeout(function(){ self.subscribe_to_settings_changes(); }, self.throttle_ms * 2);
+            // restore the webcam settings template so that the custom controls show
+            self.restore_webcam_settings_template();
+            setTimeout(function(){
+                self.subscribe_to_settings_changes();
+                Octolapse.Help.bindHelpLinks(".octolapse .webcam_settings");
+            }, self.throttle_ms * 2);
 
         };
 
@@ -749,7 +793,6 @@ $(function() {
                 }); // end ajax call
             },null);
         };
-
 
     }
 });

@@ -1,0 +1,1 @@
+Increasing the video bitrate will dramatically improve the quality of your stream.  However, it will also have a big impact on video size/bandwidth.  I recommend increasing this only up the point where you are satisfied with the quality, as you can quickly run out of bandwidth on a raspberry pi, or when using wireless.

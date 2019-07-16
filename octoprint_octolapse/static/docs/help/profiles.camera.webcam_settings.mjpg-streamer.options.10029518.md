@@ -1,0 +1,1 @@
+When using variable bitrate, your camera will be able to reduce or increase the bitrate automatically, up to the video bitrate.  This is intended to reduce bandwidth (slightly) while retaining most of your video quality.

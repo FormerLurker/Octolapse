@@ -733,6 +733,8 @@ $(function () {
             console.log("Binding element to streamLoading");
             var self = this;
             var options = valueAccessor();
+            self.max_height = ko.unwrap(options.max_height) || 333;
+            self.max_width = ko.unwrap(options.max_width) || 588;
             self.src = ko.unwrap(options.src);
             var error_selector = ko.unwrap(options.error_selector);
             var loading_selector = ko.unwrap(options.loading_selector);
@@ -744,7 +746,27 @@ $(function () {
 
             // Create a handler to handle load and error
             self.on_loaded = function(){
+                $(element).width('auto').height('auto');
                 console.log("Stream Loaded.");
+                // get the width and height of the stream element
+                var stream_width = $(element).width();
+                var stream_height = $(element).height();
+                // See if the image is greater than the max
+                if (stream_width > self.max_width || stream_height > self.max_height)
+                {
+                    console.log("Resizing Stream.");
+                    var ratioX = self.max_width / stream_width;
+                    var ratioY = self.max_height / stream_height;
+                    var ratio = Math.min(ratioX, ratioY);
+                    var newWidth = stream_width * ratio;
+                    var newHeight = stream_height * ratio;
+
+                    $(element).width(newWidth).height(newHeight);
+                }
+
+
+
+
                 $(error_selector).hide();
                 $(loading_selector).hide();
                 $(element).show();

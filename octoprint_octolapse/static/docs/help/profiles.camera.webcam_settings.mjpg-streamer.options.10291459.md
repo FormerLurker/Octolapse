@@ -1,0 +1,1 @@
+Compression Quality in theory controls the jpg compression, but I've not noticed any difference, at least for the raspberry pi camera module v2 + mjpg-streamer.  If you are using a raspberry pi camera, see the 'Video Bitrate' setting, which does seem to affect the compression.
