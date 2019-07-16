@@ -34,9 +34,9 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
         has_updated = True
         settings_dict = migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.3.3rc3.dev0.json'))
 
-    if LooseVersion(version) < LooseVersion("0.3.5rc1.dev0"):
+    if LooseVersion(version) < LooseVersion("0.4.0rc1.dev0"):
         has_updated = True
-        settings_dict = migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.3.5rc1.dev0.json'))
+        settings_dict = migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev0.json'))
 
     # If we've updated the settings, save a backup of the old settings
     if has_updated:
@@ -131,7 +131,7 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
 
     # Create new settings areas
     profiles = {
-        'current_printer_profile_guid': settings_dict['current_printer_profile_guid'],
+        'current_printer_profile_guid': settings_dict.get('current_printer_profile_guid',None),
         'current_stabilization_profile_guid': None,
         'current_trigger_profile_guid': None,
         'current_rendering_profile_guid': settings_dict['current_rendering_profile_guid'],

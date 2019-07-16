@@ -150,8 +150,8 @@ $(function () {
 
                 done: function(e, data) {
                     //console.log("Upload Done");
-                    settings = JSON.parse(data.result.settings);
-                    message = data.result.msg;
+                    var settings = JSON.parse(data.result.settings);
+                    var message = data.result.msg;
                     Octolapse.Settings.updateSettings(settings);
                     Octolapse.Globals.update(settings.main_settings);
                     self.$progressBar.text("");

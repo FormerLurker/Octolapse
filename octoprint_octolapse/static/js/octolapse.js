@@ -763,14 +763,11 @@ $(function () {
 
                     $(element).width(newWidth).height(newHeight);
                 }
-
-
-
-
                 $(error_selector).hide();
                 $(loading_selector).hide();
                 $(element).show();
             };
+
             $(element).off('load', self.on_loaded);
             $(element).one('load', self.on_loaded);
 

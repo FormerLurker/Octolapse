@@ -902,7 +902,6 @@ class OctolapsePlugin(
         success, errors = camera.CameraControl.test_web_camera_image_preferences(camera_profile)
         return json.dumps({'success': success, 'error': errors}, 200, {'ContentType': 'application/json'})
 
-
     @octoprint.plugin.BlueprintPlugin.route("/applyCameraSettings", methods=["POST"])
     @restricted_access
     @admin_permission.require(403)

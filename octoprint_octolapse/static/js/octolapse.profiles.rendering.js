@@ -156,7 +156,7 @@ $(function() {
         });
 
         self.can_synchronize_format = ko.pureComputed(function() {
-           return ['mp4','h264'].indexOf(self.output_format()) > -1;
+            return ['mp4','h264'].indexOf(self.output_format()) > -1;
         });
 
         // This function is called when the Edit Profile dialog shows.

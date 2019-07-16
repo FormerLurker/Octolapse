@@ -437,11 +437,12 @@ $(function() {
         };
 
         self.get_webcam_settings_template = ko.pureComputed(function(){
+            var value = "webcam-empty-template";
             if (self.refresh_template_id()) {
                 return "webcam-empty-template";
             }
             if(self.server_type()) {
-                if (self.type() && self.use_custom_webcam_settings_page())
+                if (self.type() && self.type().template && self.use_custom_webcam_settings_page())
                     value = self.type().template;
                 else
                     value = 'webcam-' + self.server_type() + "-template";

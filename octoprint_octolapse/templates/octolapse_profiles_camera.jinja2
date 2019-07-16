@@ -276,19 +276,20 @@
                         <div class="controls">
                             <label class="checkbox">
                                 <input type="checkbox" data-bind="checked: apply_settings_before_print" />Apply Preferences Before Print Start
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.apply_settings_before_print.md" data-help-title="Apply webcam preferences at startup" />
                             </label>
                         </div>
                     </div>
                 </div>
 
                 <div data-bind="visible: camera_stream_visible">
-                    <div class="webcam_settings_preview">
-                        <img class="octolapse_webcam_stream_preview" data-bind="streamLoading:{src: webcam_settings.stream_url, loading_selector: '#octolapse_camera_profile_stream_loading', error_selector: '#octolapse_camera_profile_stream_error', max_width: 900, max_height:333}" style="display:none;">
-                        <div id="octolapse_camera_profile_stream_error" class="alert octolapse_webcam_stream_preview" style="display:none;">
+                    <div id="octolapse_webcam_settings_stream" class="webcam_settings_preview">
+                        <img class="preview" data-bind="streamLoading:{src: webcam_settings.stream_url, loading_selector: '#octolapse_webcam_settings_stream .loading', error_selector: '#octolapse_webcam_settings_stream .error', max_width: 900, max_height:333}" style="display:none;">
+                        <div class="alert error" style="display:none;">
                             Unable to load the webcam stream
                         </div>
-                        <div id="octolapse_camera_profile_stream_loading" class="octolapse_webcam_stream_preview" style="display:none;">
-                            Unable to load the webcam stream
+                        <div class="alert loading">
+                            Loading the webcam stream...<i class="fa fa-spinner fa-spin"></i>
                         </div>
                     </div>
                     <div data-bind="template:{name:'webcam-settings-template', data:webcam_settings}"></div>

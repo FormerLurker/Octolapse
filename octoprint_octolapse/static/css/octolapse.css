@@ -21,6 +21,20 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 */
+.octolapse-pnotify-help .alert {
+    text-shadow: none;
+}
+.octolapse-pnotify-help pre code {
+    background-color: unset!important;
+}
+.octolapse-pnotify-help code {
+    color: unset;
+}
+
+.octolapse-pnotify-help div.ui-pnotify-text {
+    min-height: 100px;
+}
+
 .two-column .column{
     /*-webkit-column-gap: 20px;
        -moz-column-gap: 20px;
@@ -370,23 +384,23 @@ table.octolapse-profiles td.profile_action {
 
 div.webcam_settings_preview{
     width:100%;
+    display:table;
     vertical-align: middle;
     text-align:center;
     margin: 0 auto;
+    height:333px;
 }
 div.webcam_settings_preview img{
     border:1px solid;
     padding-bottom: 1px;
 }
-div.webcam_settings_preview div{
-    height:333px;
-    width:100%;
-    display:table;
-}
-div.webcam_settings_preview div div{
+
+div.webcam_settings_preview .loading, div.webcam_settings_preview .error{
     display:table-cell;
     vertical-align:middle;
 }
+
+
 
 #octolapse_add_edit_profile_dialog.modal,
 #octolapse_edit_settings_main_dialog.modal,

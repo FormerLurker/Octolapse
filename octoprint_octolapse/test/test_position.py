@@ -35,7 +35,7 @@ class TestPosition(unittest.TestCase):
 
         new_settings, defaults_loaded = OctolapseSettings.load(
             "C:\\Users\\Brad\\AppData\\Roaming\\OctoPrint\\data\\octolapse\\settings.json",
-            "0.3.5rc1.dev0",
+            "0.4.0rc1.dev0",
             "C:\\Users\\Brad\\AppData\\Roaming\\OctoPrint\\data\\octolapse\\",
             "settings.json"
         )
