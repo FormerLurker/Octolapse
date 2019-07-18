@@ -24,6 +24,7 @@ from subprocess import CalledProcessError
 import os as os
 import shutil
 import six
+import os
 from csv import DictWriter
 from io import open as i_open
 from time import sleep
@@ -32,7 +33,7 @@ from PIL import ImageFile
 import sys
 # PIL is in fact in setup.py.
 from requests.auth import HTTPBasicAuth
-from threading import Thread, Timer
+from threading import Thread, Timer, Event
 from tempfile import mkdtemp
 from uuid import uuid4
 from time import time
@@ -99,6 +100,9 @@ class CaptureSnapshot(object):
         self.OnNewThumbnailAvailableCallback = on_new_thumbnail_available_callback
 
     def take_snapshots(self):
+        logger.info("Starting snapshot acquisition")
+        start_time = time()
+
         before_snapshot_threads = []
         snapshot_threads = []
         after_snapshot_threads = []
@@ -120,22 +124,22 @@ class CaptureSnapshot(object):
                 self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_count, current_camera
             )
             if current_camera.camera_type == "external-script":
-                snapshot_threads.append(
-                    ExternalScriptSnapshotJob(
-                        snapshot_job_info,
-                        self.Settings,
-                        'snapshot',
-                        on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback
-                    )
+                thread = ExternalScriptSnapshotJob(
+                    snapshot_job_info,
+                    self.Settings,
+                    'snapshot',
+                    on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback
                 )
+                snapshot_threads.append((thread, snapshot_job_info, None))
             elif current_camera.camera_type == "webcam":
-                snapshot_threads.append(
-                    WebcamSnapshotJob(
-                        snapshot_job_info,
-                        self.Settings,
-                        on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback
-                    )
+                download_started_event = Event()
+                thread = WebcamSnapshotJob(
+                    snapshot_job_info,
+                    self.Settings,
+                    download_started_event,
+                    on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback
                 )
+                snapshot_threads.append((thread, snapshot_job_info, download_started_event))
 
             after_snapshot_job_info = SnapshotJobInfo(
                 self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_count, current_camera
@@ -145,6 +149,9 @@ class CaptureSnapshot(object):
                 after_snapshot_threads.append(
                     ExternalScriptSnapshotJob(after_snapshot_job_info, self.Settings, 'after-snapshot')
                 )
+
+        if len(before_snapshot_threads) > 0:
+            logger.info("Starting %d before snapshot threads", len(before_snapshot_threads))
 
         # start the pre-snapshot threads
         for t in before_snapshot_threads:
@@ -160,36 +167,55 @@ class CaptureSnapshot(object):
                 self.ErrorsTotal += 1
             results.append(result)
 
+        if len(before_snapshot_threads) > 0:
+            logger.info("Before snapshot threads finished.")
+
+        if len(snapshot_threads) > 0:
+            logger.info("Starting %d snapshot threads.", len(snapshot_threads))
         # start the snapshot threads, then wait for all threads to signal before continuing
         for t in snapshot_threads:
-            t.start()
+            t[0].start()
 
         # now send any gcode for gcode cameras
         for current_camera in self.Cameras:
             if current_camera.camera_type == "printer-gcode":
+                logger.info("Sending snapshot gcode array to %s.", current_camera.name)
                 # just send the gcode now so it all goes in order
                 self.SendGcodeArrayCallback(
                     Commands.string_to_gcode_array(current_camera.gcode_camera_script), current_camera.timeout_ms/1000.0
                 )
 
-        for t in snapshot_threads:
-            result = t.join()
-            assert (isinstance(result, SnapshotJobInfo))
-            info = self.CameraInfos[result.camera_guid]
-            if result.success:
+        for t, snapshot_job_info, event in snapshot_threads:
+            if event:
+                event.wait()
+                if t.download_error:
+                    snapshot_job_info.success = False
+                    snapshot_job_info.error = t.download_error
+                else:
+                    snapshot_job_info.success = True
+            else:
+                snapshot_job_info = t.join()
+            info = self.CameraInfos[snapshot_job_info.camera_guid]
+            if snapshot_job_info.success:
                 info.snapshot_count += 1
                 self.SnapshotsTotal += 1
             else:
                 info.errors_count += 1
                 self.ErrorsTotal += 1
 
-            results.append(result)
+            results.append(snapshot_job_info)
+
+        if len(snapshot_threads) > 0:
+            logger.info("Snapshot threads complete, but may be post-processing.")
+
+        if len(after_snapshot_threads) > 0:
+            logger.info("Starting %d after snapshot threads.", len(after_snapshot_threads))
 
         # start the after-snapshot threads
         for t in after_snapshot_threads:
             t.start()
 
-        # join the pre-snapshot threads
+        # join the after-snapshot threads
         for t in after_snapshot_threads:
             result = t.join()
             assert (isinstance(result, SnapshotJobInfo))
@@ -198,6 +224,11 @@ class CaptureSnapshot(object):
                 info.errors_count += 1
                 self.ErrorsTotal += 1
             results.append(result)
+
+        if len(after_snapshot_threads) > 0:
+            logger.info("After snapshot threads complete.")
+
+        logger.info("Snapshot acquisition completed in %.3f seconds.", time()-start_time)
 
         return results
 
@@ -262,47 +293,30 @@ class ImagePostProcessing(object):
 
     def process(self):
         try:
+            logger.debug("Post-processing snapshot for %s.", self.snapshot_job_info.camera.name)
             if self.request is not None:
-                self.save_image_from_request(self.request)
-            logger.info("Post-processing snapshot")
+                self.save_image_from_request()
+                self.request.close()
             # Post Processing and Meta Data Creation
             self.write_metadata()
             self.transpose_image()
             self.create_thumbnail()
             if self.on_new_thumbnail_available_callback is not None:
                 self.on_new_thumbnail_available_callback(self.snapshot_job_info.camera.guid)
-        except SnapshotError as e:
-            logger.exception("Post-processing failed with errors.")
         finally:
-            logger.info("Post-processing completed")
+            logger.debug("Post-processing snapshot for %s complete.", self.snapshot_job_info.camera.name)
 
-    def save_image_from_request(self, r):
-        if r.status_code == requests.codes.ok:
-            try:
-                # make the directory
-                if not os.path.exists(self.snapshot_job_info.directory):
-                    os.makedirs(self.snapshot_job_info.directory)
-                # try to download the file.
-            except Exception as e:
-                raise SnapshotError(
-                    'snapshot-download-error',
-                    "An unexpected exception occurred.",
-                    cause=e
-                )
-        else:
-            raise SnapshotError(
-                'snapshot-download-error',
-                "failed with status code:{0}".format(r.status_code)
-            )
-
+    def save_image_from_request(self):
         try:
-            with i_open(self.snapshot_job_info.full_path, 'wb') as snapshot_file:
-                for chunk in r.iter_content(1024):
+            if not os.path.exists(self.snapshot_job_info.directory):
+                os.makedirs(self.snapshot_job_info.directory)
+            with open(self.snapshot_job_info.full_path, 'wb+') as snapshot_file:
+                for chunk in self.request.iter_content(chunk_size=512 * 1024):
                     if chunk:
                         snapshot_file.write(chunk)
-                logger.info("Snapshot - Snapshot saved to disk at %s", self.snapshot_job_info.full_path)
+
+                logger.debug("Snapshot - Snapshot saved to disk at %s", self.snapshot_job_info.full_path)
         except Exception as e:
-            logger.exception("Failed to save snapshot to disk.")
             raise SnapshotError(
                 'snapshot-save-error',
                 "An unexpected exception occurred.",
@@ -383,13 +397,12 @@ class ImagePostProcessing(object):
                 "JPEG"
             )
 
-
-
             #img = img.resize((basewidth, hsize), Image.ANTIALIAS)
             #img.save(utility.get_latest_snapshot_thumbnail_download_path(
             #    self.snapshot_job_info.DataDirectory, self.snapshot_job_info.camera.guid), "JPEG"
             #)
         except Exception as e:
+
             # If we can't create the thumbnail, just log
             raise SnapshotError(
                 'snapshot-thumbnail-create-error',
@@ -405,6 +418,8 @@ class SnapshotThread(Thread):
         self.snapshot_job_info = snapshot_job_info
         self.Settings = settings
         self.on_new_thumbnail_available_callback = on_new_thumbnail_available_callback
+        self.post_processing_errors = None
+        self.download_error = None
 
     def join(self, timeout=None):
         super(SnapshotThread, self).join(timeout=timeout)
@@ -420,8 +435,8 @@ class SnapshotThread(Thread):
         delay_seconds = self.snapshot_job_info.DelaySeconds - (time() - t0)
 
         logger.info(
-            "Snapshot Delay - Waiting %s second(s) after executing the snapshot script."
-            ,self.snapshot_job_info.DelaySeconds
+            "Snapshot Delay - Waiting %s second(s) after executing the snapshot script.",
+            self.snapshot_job_info.DelaySeconds
         )
 
         while delay_seconds >= 0.001:
@@ -433,15 +448,25 @@ class SnapshotThread(Thread):
         # make sure the snapshot exists before attempting post-processing
         # since it's possible the image isn't on the pi.
         # for example it could be on a DSLR's SD memory
-        if request is not None or os.path.isfile(self.snapshot_job_info.full_path):
-            def post_process(post_processor):
-                post_processor.process()
-            post_processor = ImagePostProcessing(self.snapshot_job_info, self.on_new_thumbnail_available_callback, request=request)
-            if not block:
-                Timer(0.5,post_process,[post_processor]).start()
-            else:
-                post_processor.process()
-
+        try:
+            if request is not None or os.path.isfile(self.snapshot_job_info.full_path):
+                def post_process(post_processor):
+                    post_processor.process()
+                image_post_processor = ImagePostProcessing(self.snapshot_job_info, self.on_new_thumbnail_available_callback, request=request)
+                if not block and not request:
+                    processing_thread = Thread(target=post_process, args=[image_post_processor])
+                    processing_thread.start()
+                else:
+                    image_post_processor.process()
+        except SnapshotError as e:
+            self.post_processing_errors = e
+        except Exception as e:
+            logger.exception(e)
+            message = "An unexpected exception occurred while post-processing images.  See plugin.octolapse.log for details"
+            raise SnapshotError('post-processing-error', message, cause=e)
+        finally:
+            if request:
+                request.close()
 
 
 class ExternalScriptSnapshotJob(SnapshotThread):
@@ -542,7 +567,7 @@ class ExternalScriptSnapshotJob(SnapshotThread):
 
 class WebcamSnapshotJob(SnapshotThread):
 
-    def __init__(self, snapshot_job_info, settings, on_new_thumbnail_available_callback=None):
+    def __init__(self, snapshot_job_info, settings, download_started_event, on_new_thumbnail_available_callback=None):
         super(WebcamSnapshotJob, self).__init__(
             snapshot_job_info,
             settings,
@@ -555,52 +580,78 @@ class WebcamSnapshotJob(SnapshotThread):
         self.Password = self.snapshot_job_info.camera.webcam_settings.password
         self.IgnoreSslError = self.snapshot_job_info.camera.webcam_settings.ignore_ssl_error
         url = camera.format_request_template(
-            self.snapshot_job_info.camera.webcam_settings.address, self.snapshot_job_info.camera.webcam_settings.snapshot_request_template, ""
+            self.snapshot_job_info.camera.webcam_settings.address,
+            self.snapshot_job_info.camera.webcam_settings.snapshot_request_template,
+            ""
         )
+        self.download_started_event = download_started_event
+        self.download_started_event.clear()
         self.Url = url
 
     def run(self):
         try:
             if self.snapshot_job_info.DelaySeconds < 0.001:
-                logger.info("Starting Snapshot Download Job Immediately.")
+                logger.debug("Starting Snapshot Download Job Immediately.")
             else:
                 # Pre-Snapshot Delay
                 self.apply_camera_delay()
+        except Exception as e:
+            logger.exception(e)
+            message="An error occurred while applying the snapshot delay.  See plugin.octolapse.log for details."
+            self.download_error = SnapshotError("snapshot-delay-error", message, e)
+            self.download_started_event.set()
+            return
 
-            r = None
-            try:
-                if len(self.Username) > 0:
-                    message = (
-                        "Snapshot Download - Authenticating and "
-                        "downloading from {0:s}."
-                    ).format(self.Url, self.snapshot_job_info.directory)
-                    logger.info(message)
-                    r = requests.get(
-                        self.Url,
-                        auth=HTTPBasicAuth(self.Username, self.Password),
-                        verify=not self.IgnoreSslError,
-                        timeout=float(self.snapshot_job_info.TimeoutSeconds)
-                    )
-                else:
-                    logger.info("Snapshot - downloading from %s.", self.Url)
-                    r = requests.get(
-                        self.Url, verify=not self.IgnoreSslError,
-                        timeout=float(self.snapshot_job_info.TimeoutSeconds)
-                    )
-            except Exception as e:
-                raise SnapshotError(
-                    'snapshot-download-error',
-                    "An unexpected exception occurred.",
-                    cause=e
+        r = None
+        start_time = time()
+        try:
+            download_start_time = time()
+            if len(self.Username) > 0:
+                logger.debug("Snapshot Download - Authenticating and downloading from %s.", self.Url)
+
+                r = requests.get(
+                    self.Url,
+                    auth=HTTPBasicAuth(self.Username, self.Password),
+                    verify=not self.IgnoreSslError,
+                    timeout=float(self.snapshot_job_info.TimeoutSeconds),
+                    stream=True
                 )
-            # start post processing
+            else:
+                logger.debug("Snapshot - downloading from %s.", self.Url)
+
+                r = requests.get(
+                    self.Url,
+                    verify=not self.IgnoreSslError,
+                    #timeout=float(self.snapshot_job_info.TimeoutSeconds),
+                    timeout=float(self.snapshot_job_info.TimeoutSeconds),
+                    stream=True
+                )
+            r.raise_for_status()
+            logger.debug("Snapshot - downloaded started in %.3f seconds.", time() - download_start_time)
+        except Exception as e:
+            message = "An error occurred downloading a snapshot for the {0} camera.".format(
+                self.snapshot_job_info.camera.name
+            )
+            try:
+                if r:
+                    r.close()
+            except Exception as c:
+                logger.exception(c)
+            self.download_error = SnapshotError(
+                'snapshot-download-error',
+                message,
+                cause=e
+            )
+            return
+        finally:
+            self.download_started_event.set()
+
+        # start post processing
+        try:
             self.post_process(request=r, block=self.on_new_thumbnail_available_callback is None)
             self.snapshot_job_info.success = True
-        except SnapshotError as e:
-            logger.exception("Snapshot download job failed.")
-            self.snapshot_job_info.error = "{}".format(e)
         finally:
-            logger.info("Snapshot Download Job completed.")
+            logger.info("Snapshot Download Job completed in %.3f seconds.", time()-start_time)
 
 
 class SnapshotError(Exception):

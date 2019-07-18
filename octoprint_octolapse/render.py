@@ -343,8 +343,8 @@ class TimelapseRenderJob(object):
 
     def _pre_render(self):
 
+        self._count_snapshots()
         self._read_snapshot_metadata()
-
 
         if self._imageCount == 0:
             raise RenderError(
@@ -488,6 +488,20 @@ class TimelapseRenderJob(object):
         except RenderError as e:
             self.after_render_error = e
 
+    def _count_snapshots(self):
+        self._imageCount = 0
+        if os.path.exists(self.render_job_info.snapshot_directory):
+            for file in os.listdir(
+                os.path.dirname(os.path.join(
+                    self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format)
+                )
+            ):
+                if file.endswith(".jpg"):
+                    self._imageCount += 1
+
+        self.render_job_info.output_tokens["SNAPSHOTCOUNT"] = "{0}".format(self._imageCount)
+        logger.info("Found %s images via a manual search.", self._imageCount)
+
     def _read_snapshot_metadata(self):
         metadata_path = os.path.join(self.render_job_info.snapshot_directory, SnapshotMetadata.METADATA_FILE_NAME)
         logger.info('Reading snapshot metadata from %s', metadata_path)
@@ -495,9 +509,6 @@ class TimelapseRenderJob(object):
             with open(metadata_path, 'r') as metadata_file:
                 dictreader = DictReader(metadata_file, SnapshotMetadata.METADATA_FIELDS)
                 self._snapshot_metadata = list(dictreader)
-                """Get the number of frames."""
-                self._imageCount = len(self._snapshot_metadata)
-                logger.info("Found %s images with metadata.", self._imageCount)
                 # add the snapshot count to the output tokens
                 self.render_job_info.output_tokens["SNAPSHOTCOUNT"] = "{0}".format(self._imageCount)
                 return
@@ -505,20 +516,6 @@ class TimelapseRenderJob(object):
             # If we fail to read the metadata, it could be that no snapshots were taken.
             # Let's not throw an error and just render without the metadata
             pass
-
-        # alternative method of counting images without metadata
-
-        if os.path.exists(self.render_job_info.snapshot_directory):
-            self._imageCount = len(
-                os.listdir(
-                    os.path.dirname(
-                        os.path.join(
-                            self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format))))
-        else:
-            self._imageCount = 0
-
-        self.render_job_info.output_tokens["SNAPSHOTCOUNT"] = "{0}".format(self._imageCount)
-        logger.info("Found %s images via a manual search.", self._imageCount)
 
     def _calculate_fps(self):
         self._fps = self._rendering.fps
@@ -617,7 +614,6 @@ class TimelapseRenderJob(object):
 
         )
 
-
     def _render(self):
         """Rendering runnable."""
         # set an error variable to None, we will return None if there are no problems
@@ -672,6 +668,10 @@ class TimelapseRenderJob(object):
 
             # Do image preprocessing.
             self._preprocess_images(self.temp_rendering_dir)
+
+            # rename the images
+            self._rename_images(self.temp_rendering_dir)
+
             # Add pre and post roll.
             self._apply_pre_post_roll(self.temp_rendering_dir)
 
@@ -750,13 +750,15 @@ class TimelapseRenderJob(object):
             for i in range(self._imageCount):
                 file_path = os.path.join(
                     self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format % i)
-                output_path = os.path.join(preprocessed_directory, self.render_job_info.snapshot_filename_format % i)
-                output_dir = os.path.dirname(output_path)
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir)
-                shutil.move(file_path, output_path)
+                if os.exists(file_path):
+                    output_path = os.path.join(preprocessed_directory, self.render_job_info.snapshot_filename_format % i)
+                    output_dir = os.path.dirname(output_path)
+                    if not os.path.exists(output_dir):
+                        os.makedirs(output_dir)
+                    shutil.move(file_path, output_path)
+                else:
+                    logger.error("The snapshot at %s does not exist.  Skipping.", file_path)
             return
-
         first_timestamp = float(self._snapshot_metadata[0]['time_taken'])
         for i, data in enumerate(self._snapshot_metadata):
             # TODO:  MAKE SURE THIS WORKS IF THERE ARE ANY ERRORS
@@ -765,20 +767,15 @@ class TimelapseRenderJob(object):
 
             # Extra metadata according to SnapshotMetadata.METADATA_FIELDS.
             format_vars['snapshot_number'] = snapshot_number = int(data['snapshot_number'])
-            if i == snapshot_number:
-                assert (i == snapshot_number)
+            format_vars['file_name'] = data['file_name']
+            format_vars['time_taken_s'] = time_taken = float(data['time_taken'])
 
-                format_vars['file_name'] = data['file_name']
-                format_vars['time_taken_s'] = time_taken = float(data['time_taken'])
-
-                # Verify that the file actually exists.
-                file_path = os.path.join(
-                    self.render_job_info.snapshot_directory,
-                    self.render_job_info.snapshot_filename_format % snapshot_number
-                )
-                if not os.path.isfile(file_path):
-                    raise IOError("Cannot find file {0}.".format(file_path))
-
+            # Verify that the file actually exists.
+            file_path = os.path.join(
+                self.render_job_info.snapshot_directory,
+                self.render_job_info.snapshot_filename_format % snapshot_number
+            )
+            if os.path.exists(file_path):
                 # Calculate time elapsed since the beginning of the print.
                 format_vars['current_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time_taken))
                 format_vars['time_elapsed'] = "{}".format(
@@ -806,13 +803,23 @@ class TimelapseRenderJob(object):
             else:
                 file_path = os.path.join(
                     self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format % i)
-                output_path = os.path.join(preprocessed_directory, self.render_job_info.snapshot_filename_format % i)
-                output_dir = os.path.dirname(output_path)
-                if not os.path.exists(output_dir):
-                    os.makedirs(output_dir)
-                shutil.move(file_path, output_path)
+                if os.path.exists(file_path):
+                    output_path = os.path.join(preprocessed_directory, self.render_job_info.snapshot_filename_format % i)
+                    output_dir = os.path.dirname(output_path)
+                    if not os.path.exists(output_dir):
+                        os.makedirs(output_dir)
+                    shutil.move(file_path, output_path)
+                else:
+                    logger.error("The snapshot at %s does not exist.  Skipping.", file_path)
 
         logger.info("Preprocessing success!")
+
+    def _rename_images(self, preprocessed_directory):
+        for index, filename in enumerate(sorted(os.listdir(preprocessed_directory))):
+            output_path = os.path.join(preprocessed_directory, self.render_job_info.snapshot_filename_format % index)
+            file_path = os.path.join(preprocessed_directory, filename)
+            shutil.move(file_path, output_path)
+
 
     @staticmethod
     def add_overlay(image, text_template, format_vars, font_path, font_size, overlay_location, overlay_text_alignment,

@@ -32,7 +32,7 @@ from octoprint_octolapse.gcode_parser import Commands, ParsedCommand, Response
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.render import RenderError, RenderingProcessor, RenderingCallbackArgs, RenderJobInfo, TimelapseRenderJob
 from octoprint_octolapse.settings import PrinterProfile, OctolapseSettings
-from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotJobInfo
+from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotJobInfo, SnapshotError
 from octoprint_octolapse.trigger import Triggers
 import octoprint_octolapse.stabilization_preprocessing as preprocessing
 import GcodePositionProcessor
@@ -306,7 +306,6 @@ class Timelapse(object):
             self._snapshot_task_queue.task_done()
         # todo - notify client here
         # todo - maintain snapshot number separately for each camera!
-
         succeeded = len(results) > 0
         errors = []
         for result in results:
@@ -319,13 +318,17 @@ class Timelapse(object):
 
         error_message = ""
         if len(errors) == 1:
-            error_message = errors[0]
-        if len(errors) > 1:
-            error_message = "There were {0} snapshot errors:".format(len(errors))
-            for num, error in enumerate(errors):
-                error_message += "\n\nError {0} - {1}".format(num+1, error)
+            if isinstance(errors[0], SnapshotError):
+                error_message = errors[0].message
+            else:
+                error_message = "An unexpected error occurred while taking snapshots.  See plugin_octolapse.log for details."
+        elif len(errors) > 1:
+            error_message = "{0} errors occurred while taking snapshots. See plugin_octolapse.log for details.".format(len(errors))
 
         snapshot_payload["error"] = error_message
+
+        if len(error_message) > 0:
+            self._snapshot_success = False
 
         return snapshot_payload
 
@@ -389,7 +392,7 @@ class Timelapse(object):
                     # TODO:  ALLOW MULTIPLE PAYLOADS
                     timelapse_snapshot_payload["snapshot_position"] = snapshot_position
                     # take a snapshot
-                    snapshot_payload = self._take_snapshots()
+                    timelapse_snapshot_payload["snapshot_payload"] = self._take_snapshots()
                 else:
                     gcodes_to_send.append(gcode)
 
@@ -624,7 +627,7 @@ class Timelapse(object):
         self.check_current_line_number(tags)
 
         if tags is not None and "plugin:octolapse" in tags:
-            self.log_octolapse_gcode(logger.verbose, "queuing", command_string, tags)
+            self.log_octolapse_gcode(logger.debug, "queuing", command_string, tags)
         else:
             logger.verbose("Queuing Command: %s", command_string)
 
@@ -1023,44 +1026,6 @@ class Timelapse(object):
             # set the next snapshot plan
             if not self.is_realtime:
                 self.set_next_snapshot_plan()
-            self._octoprint_printer.set_job_on_hold(False)
-            self.job_on_hold = False
-
-    def acquire_snapshot_realtime(self, parsed_command, trigger):
-        try:
-            logger.info("About to take a snapshot.  Triggering Command: %s", parsed_command.gcode)
-            if self._snapshot_start_callback is not None:
-                snapshot_callback_thread = threading.Thread(target=self._snapshot_start_callback)
-                snapshot_callback_thread.daemon = True
-                snapshot_callback_thread.start()
-
-            # take the snapshot
-            # Todo:  We probably don't need the payload here.
-            self._most_recent_snapshot_payload = self._take_timelapse_snapshot_realtime(
-                parsed_command, trigger
-            )
-
-            if self._most_recent_snapshot_payload is None:
-                logger.error("acquire_snapshot received a null payload.")
-            else:
-                logger.info("The snapshot has completed")
-
-        finally:
-
-            # set the state
-            if self._state == TimelapseState.TakingSnapshot:
-                self._state = TimelapseState.WaitingForTrigger
-
-            self._triggers.resume()
-
-            # notify that we're finished, but only if we haven't just stopped the timelapse.
-            if self._most_recent_snapshot_payload is not None:
-                logger.info("Sending on_snapshot_complete payload.")
-                # send a copy of the dict in case it gets changed by threads.
-                new_payload = self._most_recent_snapshot_payload.copy()
-                self._on_trigger_snapshot_complete(new_payload)
-                self._most_recent_snapshot_payload = None
-
             self._octoprint_printer.set_job_on_hold(False)
             self.job_on_hold = False
 

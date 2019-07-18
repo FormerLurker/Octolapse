@@ -1068,7 +1068,7 @@ class SnapshotGcodeGenerator(object):
 
     @staticmethod
     def get_gcode_travel(x, y, f=None):
-        return "G1 X{0:.3f} Y{1:.3f}{2}".format(
+        return "G0 X{0:.3f} Y{1:.3f}{2}".format(
             x,
             y,
             "" if f is None else " F{0:.3f}".format(f)
