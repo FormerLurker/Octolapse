@@ -103,6 +103,8 @@ def preview_overlay(rendering_profile, image=None):
     overlay_text_color = [255, 255, 255, 255]
     if isinstance(rendering_profile.overlay_text_color, six.string_types):
         overlay_text_color = json.loads(rendering_profile.overlay_text_color)
+    elif isinstance(rendering_profile.overlay_text_color, list):
+        overlay_text_color = rendering_profile.overlay_text_color
 
     if image is None:
         image_color = (0,0,0,255)
@@ -128,8 +130,12 @@ def preview_overlay(rendering_profile, image=None):
                fill=tuple(overlay_text_color), font=font)
         return Image.alpha_composite(i.convert('RGBA'), text_image).convert('RGB')
 
-    image = draw_center(image, "Preview", overlay_text_color, dy=-20)
-    image = draw_center(image, "Click to refresh", overlay_text_color, dy=20)
+    # copy the overlay text color list
+    image_text_color = list(overlay_text_color)
+    # set image text color to opaque
+    image_text_color[3] = 255
+    image = draw_center(image, "Preview", image_text_color, dy=-20)
+    image = draw_center(image, "Click to refresh", image_text_color, dy=20)
 
     format_vars = {'snapshot_number': 1234,
                    'file_name': 'image.jpg',
