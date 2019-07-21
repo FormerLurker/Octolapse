@@ -79,7 +79,7 @@
                                  value: output_format"></select>
                         <a class="octolapse_help" data-help-url="profiles.rendering.output_format.md" data-help-title="Output Format (Codec)" />
                         <div class="error_label_container text-error" data-error-for="rendering_profile_output_format"></div>
-                        <span class="help-inline" data-bind="visible: !can_synchronize_format()">
+                        <span class="help-inline" data-bind="visible: !data.can_synchronize_format()">
                             <span class="label label-important">Attention</span>&nbsp;Your video may not appear within the Timelapse plugin when using the selected video format unless you are using Octoprint v1.3.11 or later.
                         </span>
                     </div>
@@ -355,12 +355,12 @@
                         Add textual information based on an overlay template to your rendered timelapse
                     </p>
                 </div>
-                <div class="control-group" data-bind="visible: font_list().length == 0">
+                <div class="control-group" data-bind="visible: data.font_list().length == 0">
                     <p class="text-error">
                         No fonts were detected on the current system.  If you are using Linux, you may not have font-config installed.
                     </p>
                 </div>
-                <div class="control-group" data-bind="visible: font_list().length > 0">
+                <div class="control-group" data-bind="visible: data.font_list().length > 0">
                     <div class="control-group">
                         <label class="control-label">Text:</label>
                         <div class="controls">
@@ -453,7 +453,7 @@
                         <div class="controls">
                             <div class="scroll-table-container">
                                 <table class="table table-condensed table-hover file-selector-list">
-                                    <tbody data-bind="foreach: font_list">
+                                    <tbody data-bind="foreach: data.font_list">
                                         <tr data-bind="click: $parent.selectOverlayFont, css: { selected: filepath == $parent.overlay_font_path() }">
                                             <td>
                                                 <div>
@@ -479,7 +479,7 @@
                                 </div>
                             </div>
                         </div>
-                        <img class="image-fluid" data-bind="click: requestOverlayPreview, attr:{src: overlay_preview_image_src, alt: overlay_preview_image_error}" />
+                        <img class="image-fluid" data-bind="click: requestOverlayPreview, attr:{src: data.overlay_preview_image_src, alt: data.overlay_preview_image_error}" />
                         <div><span class="label label-important">Note</span>&nbsp;If the preview appears blank, please try another font.</div>
                     </div>
                 </div>

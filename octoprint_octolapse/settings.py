@@ -1049,6 +1049,21 @@ class RenderingProfile(AutomaticConfigurationProfile):
         self.cleanup_after_render_complete = True
         self.cleanup_after_render_fail = False
 
+    @classmethod
+    def try_convert_value(cls, destination, value, key):
+        if key == 'overlay_text_color':
+            if isinstance(value, six.string_types):
+                value = json.loads(value)
+            if not isinstance(value, list):
+                return None
+
+            for index in range(len(value)):
+                value[index] = int(value[index])
+
+            return value
+
+        return super(RenderingProfile, cls).try_convert_value(destination, value, key)
+
     @staticmethod
     def get_options():
         return {

@@ -24,6 +24,7 @@ from __future__ import unicode_literals
 import math
 import os
 import shutil
+import six
 import sys
 import threading
 from six.moves import queue
@@ -95,13 +96,20 @@ def is_overlay_text_template_valid(template, options):
 
 
 def preview_overlay(rendering_profile, image=None):
-    if image is None:
-        # Create an image with background color inverse to the text color.
-        image = Image.new('RGB', (640, 480), color=tuple(255 - c for c in json.loads(rendering_profile.overlay_text_color)))
-
     if rendering_profile.overlay_font_path is None or len(rendering_profile.overlay_font_path.strip()) == 0:
         # we don't have any overlay path, return
         return None
+
+    overlay_text_color = [255, 255, 255, 255]
+    if isinstance(rendering_profile.overlay_text_color, six.string_types):
+        overlay_text_color = json.loads(rendering_profile.overlay_text_color)
+
+    if image is None:
+        image_color = (0,0,0,255)
+        if isinstance(overlay_text_color, list):
+            image_color = tuple(255 - c for c in overlay_text_color)
+        # Create an image with background color inverse to the text color.
+        image = Image.new('RGB', (640, 480), color=image_color)
 
     try:
         font = ImageFont.truetype(rendering_profile.overlay_font_path, size=50)
@@ -109,23 +117,19 @@ def preview_overlay(rendering_profile, image=None):
         logger.exception("An error occurred while opening the selected font")
         raise e
 
-    def draw_center(i, t, dx=0, dy=0):
+    def draw_center(i, t, overlay_text_color, dx=0, dy=0):
         """Draws the text centered in the image, offsets by (dx, dy)."""
         text_image = Image.new('RGBA', i.size, (255, 255, 255, 0))
         d = ImageDraw.Draw(text_image)
         iw, ih = i.size
         tw, th = d.textsize(t, font=font)
 
-        if isinstance(rendering_profile.overlay_text_color, string_types):
-            overlay_text_color = json.loads(rendering_profile.overlay_text_color)
-        else:
-            overlay_text_color = rendering_profile.overlay_text_color
         d.text(xy=(iw / 2 - tw / 2 + dx, ih / 2 - th / 2 + dy), text=t,
                fill=tuple(overlay_text_color), font=font)
         return Image.alpha_composite(i.convert('RGBA'), text_image).convert('RGB')
 
-    image = draw_center(image, "Preview", dy=-20)
-    image = draw_center(image, "Click to refresh", dy=20)
+    image = draw_center(image, "Preview", overlay_text_color, dy=-20)
+    image = draw_center(image, "Click to refresh", overlay_text_color, dy=20)
 
     format_vars = {'snapshot_number': 1234,
                    'file_name': 'image.jpg',
@@ -141,7 +145,7 @@ def preview_overlay(rendering_profile, image=None):
                                            overlay_text_alignment=rendering_profile.overlay_text_alignment,
                                            overlay_text_valign=rendering_profile.overlay_text_valign,
                                            overlay_text_halign=rendering_profile.overlay_text_halign,
-                                           text_color=rendering_profile.overlay_text_color)
+                                           text_color=overlay_text_color)
     return image
 
 
@@ -871,8 +875,6 @@ class TimelapseRenderJob(object):
                               "An invalid overlay text halign ({0}) was specified.".format(overlay_text_halign))
 
         # Draw overlay text.
-        if isinstance(text_color, string_types):
-            text_color = json.loads(text_color)
         d.multiline_text(xy=(x, y), text=text, fill=tuple(text_color), font=font, align=overlay_text_alignment)
         return Image.alpha_composite(image.convert('RGBA'), text_image).convert('RGB')
 

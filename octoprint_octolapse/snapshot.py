@@ -136,7 +136,7 @@ class CaptureSnapshot(object):
                 thread = WebcamSnapshotJob(
                     snapshot_job_info,
                     self.Settings,
-                    download_started_event,
+                    download_started_event=download_started_event,
                     on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback
                 )
                 snapshot_threads.append((thread, snapshot_job_info, download_started_event))
@@ -567,7 +567,7 @@ class ExternalScriptSnapshotJob(SnapshotThread):
 
 class WebcamSnapshotJob(SnapshotThread):
 
-    def __init__(self, snapshot_job_info, settings, download_started_event, on_new_thumbnail_available_callback=None):
+    def __init__(self, snapshot_job_info, settings, download_started_event=None, on_new_thumbnail_available_callback=None):
         super(WebcamSnapshotJob, self).__init__(
             snapshot_job_info,
             settings,
@@ -585,7 +585,8 @@ class WebcamSnapshotJob(SnapshotThread):
             ""
         )
         self.download_started_event = download_started_event
-        self.download_started_event.clear()
+        if self.download_started_event:
+            self.download_started_event.clear()
         self.Url = url
 
     def run(self):
@@ -599,7 +600,8 @@ class WebcamSnapshotJob(SnapshotThread):
             logger.exception(e)
             message="An error occurred while applying the snapshot delay.  See plugin.octolapse.log for details."
             self.download_error = SnapshotError("snapshot-delay-error", message, e)
-            self.download_started_event.set()
+            if self.download_started_event:
+                self.download_started_event.set()
             return
 
         r = None
@@ -644,7 +646,8 @@ class WebcamSnapshotJob(SnapshotThread):
             )
             return
         finally:
-            self.download_started_event.set()
+            if self.download_started_event:
+                self.download_started_event.set()
 
         # start post processing
         try:

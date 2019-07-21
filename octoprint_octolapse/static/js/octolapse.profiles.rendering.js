@@ -48,6 +48,7 @@ $(function() {
 
     Octolapse.RenderingProfileViewModel = function (values) {
         var self = this;
+        self.data = ko.observable();
         self.profileTypeName = ko.observable("Rendering");
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
@@ -68,13 +69,14 @@ $(function() {
         self.selected_watermark = ko.observable(values.selected_watermark); // Absolute filepath of the selected watermark.
         self.watermark_list = ko.observableArray(); // A list of WatermarkImages that are available for selection on the server.
         self.overlay_text_template = ko.observable(values.overlay_text_template);
-        self.font_list = ko.observableArray(); // A list of Fonts that are available for selection on the server.
+
         self.overlay_font_path = ko.observable(values.overlay_font_path);
         self.overlay_font_size = ko.observable(values.overlay_font_size);
         self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
         self.cleanup_after_render_fail = ko.observable(values.cleanup_after_render_fail);
         self.thread_count = ko.observable(values.thread_count);
-        
+
+        self.data.font_list = ko.observableArray(); // A list of Fonts that are available for selection on the server.
         // Text position as a JSON string.
         self.overlay_text_pos = ko.pureComputed({
             read: function() {
@@ -116,6 +118,7 @@ $(function() {
         self.overlay_text_color = ko.observable(values.overlay_text_color);
         // The overlay text color formatted as a CSS value. Note RGB vary from 0-255, but A varies from 0-1.
         // ie. rgba(57, 64, 32, 0.1).
+
         self.overlay_text_color_as_css = ko.pureComputed({
             read: function () {
                 // Convert to js.
@@ -143,19 +146,19 @@ $(function() {
             },
         });
 
-        self.overlay_preview_image = ko.observable('');
-        self.overlay_preview_image_error = ko.observable('');
-        self.overlay_preview_image_src = ko.computed(function() {
-            return 'data:image/jpeg;base64,' + self.overlay_preview_image();
+        self.data.overlay_preview_image = ko.observable('');
+        self.data.overlay_preview_image_error = ko.observable('');
+        self.data.overlay_preview_image_src = ko.computed(function() {
+            return 'data:image/jpeg;base64,' + self.data.overlay_preview_image();
         });
         self.overlay_preview_image_alt_text = ko.computed(function() {
-            if (self.overlay_preview_image_error.length == 0) {
+            if (self.data.overlay_preview_image_error.length == 0) {
                 return 'A preview of the overlay text.'
             }
-            return 'Image could not be retrieved from server. The error returned was: ' + self.overlay_preview_image_error() + '.';
+            return 'Image could not be retrieved from server. The error returned was: ' + self.data.overlay_preview_image_error() + '.';
         });
 
-        self.can_synchronize_format = ko.pureComputed(function() {
+        self.data.can_synchronize_format = ko.pureComputed(function() {
             return ['mp4','h264'].indexOf(self.output_format()) > -1;
         });
 
@@ -268,14 +271,14 @@ $(function() {
         self.updateFontList = function() {
              return OctoPrint.get(OctoPrint.getBlueprintUrl('octolapse') + 'rendering/font')
                     .then(function(response) {
-                        self.font_list.removeAll();
+                        self.data.font_list.removeAll();
                         // The let expression was not working in safari
                         for (var index = 0; index< response.length; index++) {
-                            self.font_list.push(new Font(response[index]));
+                            self.data.font_list.push(new Font(response[index]));
                         }
                      }, function(response) {
                         // Failed to load any fonts.
-                        self.font_list.removeAll();
+                        self.data.font_list.removeAll();
                      });
         };
 
@@ -299,24 +302,21 @@ $(function() {
             OctoPrint.post(OctoPrint.getBlueprintUrl('octolapse') + 'rendering/previewOverlay', data)
                 .then(function(response, success_name, response_status) {
                     // Loaded the overlay!
-                    self.overlay_preview_image(response.image);
-                    self.overlay_preview_image_error('');
+                    self.data.overlay_preview_image(response.image);
+                    self.data.overlay_preview_image_error('');
                 },
                 function(response_status, error_name, stack_trace) {
                     // Failed to load an overlay.
                     //console.log('Failed to load overlay preview from server.')
                     //console.log(stack_trace);
-                    self.overlay_preview_image('');
-                    self.overlay_preview_image_error('Error loading overlay preview: ' + error_name + '. Click to refresh.');
+                    self.data.overlay_preview_image('');
+                    self.data.overlay_preview_image_error('Error loading overlay preview: ' + error_name + '. Click to refresh.');
                 });
         };
 
         self.toJS = function()
         {
             var copy = ko.toJS(self);
-            delete copy.font_list;
-            delete copy.overlay_preview_image;
-            delete copy.overlay_preview_image_src;
             return copy;
         };
         
