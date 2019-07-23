@@ -27,6 +27,7 @@ import uuid
 import tempfile
 import json
 import six
+import os
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -40,7 +41,6 @@ class ExternalSettings(object):
     def get_available_profiles(current_octolapse_version, default_profiles_path=None):
         try:
             profiles_dict = ExternalSettings._get_profiles_from_server(current_octolapse_version)
-
             if default_profiles_path:
                 ExternalSettings._save_available_profiles(profiles_dict, default_profiles_path)
                 pass
@@ -70,25 +70,35 @@ class ExternalSettings(object):
     @staticmethod
     def _load_available_profiles(file_path):
         # use a temporary file so that if there is an error creating the json the
-        with open(file_path, "r") as f:
-            return json.load(f)
+        if os.path.exists(file_path):
+            with open(file_path, "r") as f:
+                try:
+                    return json.load(f)
+                except ValueError as e:
+                    raise ExternalSettingsError('Error loading available profiles from json path.', cause=e)
+
 
     @staticmethod
     def _get_profiles_from_server(current_octolapse_version):
         # get the best settings version, or raise an error if we can't get one
         settings_version = ExternalSettings._get_best_settings_version(current_octolapse_version)
+        if not settings_version:
+            return None
         # construct the URL for the current version
         url = (
             "https://raw.githubusercontent.com/FormerLurker/Octolapse-Profiles/master/{0}/profiles.json?nonce={1}"
-                .format(settings_version, uuid.uuid4().hex)
+            .format(settings_version, uuid.uuid4().hex)
         )
-        r = requests.get(url, timeout=float(5))
-        if r.status_code != requests.codes.ok:
-            message = (
-                "An invalid status code or {0} was returned while getting available profiles."
-                    .format(r.status_code)
-            )
-            raise ExternalSettingsError('invalid-status-code', message)
+        try:
+            r = requests.get(url, timeout=float(5))
+        except (
+            requests.exceptions.HTTPError,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ConnectTimeout
+        ) as e:
+            message = "An error occurred while retrieving profiles from the server."
+            raise ExternalSettingsError('profiles-retrieval-error', message, cause=e)
+
         if 'content-length' in r.headers and r.headers["content-length"] == 0:
             message = "No profile data was returned."
             raise ExternalSettingsError('no-data', message)
@@ -166,6 +176,8 @@ class ExternalSettings(object):
     def get_profile(current_octolapse_version, profile_type, key_values):
         # get the best settings version, or raise an error if we can't get one
         settings_version = ExternalSettings._get_best_settings_version(current_octolapse_version)
+        if not settings_version:
+            return None
         # construct the URL for the current version
         keys = [x["value"] for x in key_values]
         url = ExternalSettings._get_url_for_profile(settings_version, profile_type, keys)
@@ -182,6 +194,7 @@ class ExternalSettings(object):
         # if we're here, we've had great success!
         return r.json()
 
+
     @staticmethod
     def _get_url_for_profile(settings_version, profile_type, key_values):
         # build up keys string
@@ -195,6 +208,8 @@ class ExternalSettings(object):
     def _get_best_settings_version(current_version):
         # load the available versions
         versions = ExternalSettings._get_versions()["versions"]
+        if not versions:
+            return None
         versions.sort(key=LooseVersion)
         settings_version = None
         for version in versions:
@@ -218,20 +233,23 @@ class ExternalSettings(object):
 
     @staticmethod
     def _get_versions():
-        # load the available versions
-        r = requests.get(
-            (
-                "https://raw.githubusercontent.com/FormerLurker/Octolapse-Profiles/master/versions.json?nonce={0}"
-                .format(uuid.uuid4().hex)
-             ),
-            timeout=float(5)
-        )
-        if r.status_code != requests.codes.ok:
-            message = (
-                "An invalid status code or {0} was returned while getting available profile versions."
-                .format(r.status_code)
+        try:
+            # load the available versions
+            r = requests.get(
+                (
+                    "https://raw.githubusercontent.com/FormerLurker/Octolapse-Profiles/master/versions.json?nonce={0}"
+                    .format(uuid.uuid4().hex)
+                 ),
+                timeout=float(5)
             )
-            raise ExternalSettingsError('invalid-status-code', message)
+            r.raise_for_status()
+        except (
+            requests.exceptions.HTTPError,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ConnectTimeout
+        ) as e:
+            message = "An error occurred while retrieving profiles from the server."
+            raise ExternalSettingsError('profiles-retrieval-error', message, cause=e)
         if 'content-length' in r.headers and r.headers["content-length"] == 0:
             message = "No Octolapse version data was returned while requesting profiles"
             raise ExternalSettingsError('no-data', message)

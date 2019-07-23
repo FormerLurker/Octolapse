@@ -1528,9 +1528,6 @@ class OctolapsePlugin(
                     available_profiles = ExternalSettings.get_available_profiles(
                         self._plugin_version, self.get_available_server_profiles_path()
                     )
-                    if not available_profiles:
-                        logger.error("No server profiles could be loaded from the server or from a locally cached copy")
-                        return None
                     # update the profile options within the octolapse settings
                     self._octolapse_settings.profiles.options.update_server_options(available_profiles)
                     # notify the clients of the makes and models changes
@@ -1551,7 +1548,7 @@ class OctolapsePlugin(
                 with self.automatic_update_lock:
                     logger.info("Checking for profile updates.")
                     available_profiles = _get_available_profiles()
-                    if available_profiles is not None:
+                    if available_profiles:
                         self.available_profiles = available_profiles
                         self.check_for_updates()
                     else:
@@ -1587,6 +1584,8 @@ class OctolapsePlugin(
                 logger.info("Profile updates are available.")
             else:
                 logger.info("No profile updates are available.")
+        except ExternalSettingsError as e:
+            logger.exception(e)
         finally:
             if wait_for_lock:
                 self.automatic_update_lock.release()

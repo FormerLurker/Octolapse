@@ -1043,7 +1043,7 @@ class RenderingProfile(AutomaticConfigurationProfile):
         self.overlay_text_alignment = "left"  # Text alignment between lines in the overlay.
         self.overlay_text_valign = "top"  # Overall alignment of text box vertically.
         self.overlay_text_halign = "left"  # Overall alignment of text box horizontally.
-        self.overlay_text_color = [255, 255, 255, 128]
+        self.overlay_text_color = [255, 255, 255, 255]
         self.thread_count = 1
         # Snapshot Cleanup
         self.cleanup_after_render_complete = True
