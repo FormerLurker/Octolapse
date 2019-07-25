@@ -976,7 +976,407 @@
       }
     },
     "current_debug_profile_guid": "afbe12d6-0dee-4911-b77e-ee9ebfae7521",
-    "defaults": null,
+    "defaults": {
+      "printer": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Select a value",
+              "value": "null"
+            },
+            {
+              "name": "Select a value",
+              "value": "null"
+            }
+          ],
+          "is_custom": false,
+          "suppress_update_notification_version": false,
+          "version": null
+        },
+        "gocde_axis_compatibility_mode_enabled": true,
+        "home_axis_gcode": "G90; Switch to Absolute XYZ\r\nG28 X Y; Home XY Axis",
+        "height": 0.0,
+        "custom_bounding_box": false,
+        "restrict_snapshot_area": false,
+        "snapshot_min_z": 0.0,
+        "snapshot_min_x": 0.0,
+        "guid": "c94c01b9-eea9-4295-84cd-f4a96da1abe6",
+        "description": "",
+        "snapshot_min_y": 0.0,
+        "home_z": null,
+        "min_y": 0.0,
+        "home_x": null,
+        "home_y": null,
+        "override_octoprint_profile_settings": false,
+        "suppress_snapshot_command_always": true,
+        "min_x": 0.0,
+        "default_firmware_retractions": false,
+        "diameter_xy": 0.0,
+        "width": 0.0,
+        "max_z": 0.0,
+        "max_x": 0.0,
+        "max_y": 0.0,
+        "has_been_saved_by_user": false,
+        "snapshot_diameter_xy": 0.0,
+        "e_axis_default_mode": "require-explicit",
+        "slicer_type": "automatic",
+        "auto_position_detection_commands": "",
+        "g90_influences_extruder": "use-octoprint-settings",
+        "priming_height": 0.75,
+        "abort_out_of_bounds": true,
+        "units_default": "millimeters",
+        "default_firmware_retractions_zhop": false,
+        "axis_speed_display_units": "mm-min",
+        "gcode_generation_settings": {
+          "vase_mode": null,
+          "retraction_speed": null,
+          "deretraction_speed": null,
+          "z_lift_speed": null,
+          "x_y_travel_speed": null,
+          "lift_when_retracted": null,
+          "retract_before_move": null,
+          "first_layer_travel_speed": null,
+          "z_lift_height": null,
+          "layer_height": null,
+          "retraction_length": null
+        },
+        "name": "Default Printer Profile",
+        "min_z": 0.0,
+        "bed_type": "rectangular",
+        "minimum_layer_height": 0.05,
+        "snapshot_command": "snap",
+        "depth": 0.0,
+        "slicers": {
+          "simplify_3d": {
+            "extruder_use_retract": null,
+            "z_axis_movement_speed": null,
+            "retraction_vertical_lift": null,
+            "retraction_speed": null,
+            "slicer_type": "simplify-3d",
+            "x_y_axis_movement_speed": null,
+            "version": "unknown",
+            "retraction_distance": null,
+            "axis_speed_display_settings": "mm-min",
+            "spiral_vase_mode": null,
+            "layer_height": null
+          },
+          "other": {
+            "axis_speed_display_units": "mm-min",
+            "vase_mode": null,
+            "layer_height": null,
+            "retract_length": null,
+            "lift_when_retracted": false,
+            "deretract_speed": null,
+            "slicer_type": "other",
+            "retract_before_move": false,
+            "z_hop": null,
+            "version": "unknown",
+            "speed_tolerance": 1,
+            "travel_speed": null,
+            "print_speed": null,
+            "retract_speed": null,
+            "z_travel_speed": null
+          },
+          "slic3r_pe": {
+            "axis_speed_display_units": "mm-sec",
+            "layer_height": null,
+            "retract_length": null,
+            "deretract_speed": null,
+            "slicer_type": "slic3r-pe",
+            "retract_lift": null,
+            "version": "unknown",
+            "travel_speed": null,
+            "spiral_vase": null,
+            "retract_speed": null,
+            "retract_before_travel": false
+          },
+          "cura": {
+            "smooth_spiralized_contours": null,
+            "retraction_hop": null,
+            "max_feedrate_z_override": null,
+            "retraction_prime_speed": null,
+            "speed_travel": null,
+            "layer_height": null,
+            "slicer_type": "cura",
+            "retraction_enable": null,
+            "axis_speed_display_settings": "mm-sec",
+            "version": "unknown",
+            "retraction_retract_speed": null,
+            "retraction_amount": null,
+            "magic_mesh_surface_mode": "normal",
+            "retraction_hop_enabled": null
+          }
+        },
+        "snapshot_max_x": 0.0,
+        "snapshot_max_y": 0.0,
+        "snapshot_max_z": 0.0,
+        "xyz_axes_default_mode": "require-explicit",
+        "auto_detect_position": true,
+        "origin_type": "front_left"
+      },
+      "stabilization": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Select a value",
+              "value": "null"
+            }
+          ],
+          "is_custom": false,
+          "suppress_update_notification_version": false,
+          "version": null
+        },
+        "y_relative_path_loop": true,
+        "y_relative": 50.0,
+        "x_relative_path": "50.0",
+        "guid": "59833e86-ab58-4f72-98cf-1d6cd055409e",
+        "y_fixed_path_loop": true,
+        "x_relative_path_invert_loop": true,
+        "x_type": "relative",
+        "x_relative_path_loop": true,
+        "x_fixed_path": "0",
+        "y_type": "relative",
+        "y_fixed_coordinate": 0.0,
+        "x_fixed_coordinate": 0.0,
+        "y_fixed_path_invert_loop": true,
+        "description": "",
+        "x_fixed_path_loop": true,
+        "x_relative_print": 50.0,
+        "x_relative": 50.0,
+        "x_fixed_path_invert_loop": true,
+        "y_relative_path_invert_loop": true,
+        "name": "Default Stabilization Profile",
+        "y_fixed_path": "0",
+        "y_relative_print": 50.0,
+        "y_relative_path": "50"
+      },
+      "trigger": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Select a value",
+              "value": "null"
+            }
+          ],
+          "is_custom": false,
+          "suppress_update_notification_version": false,
+          "version": null
+        },
+        "smart_layer_trigger_speed_threshold": 0,
+        "trigger_on_retracted": "trigger_on",
+        "layer_trigger_height": 0.0,
+        "guid": "6c06fd0f-e115-4526-8dcb-788137174e85",
+        "smart_layer_trigger_type": 2,
+        "trigger_type": "smart-layer",
+        "timer_trigger_seconds": 30,
+        "position_restrictions": [],
+        "trigger_on_retracting_start": "",
+        "smart_layer_snap_to_print": false,
+        "require_zhop": false,
+        "description": "",
+        "trigger_on_extruding": "trigger_on",
+        "is_default": false,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_partially_retracted": "forbidden",
+        "position_restrictions_enabled": false,
+        "smart_layer_disable_z_lift": true,
+        "extruder_state_requirements_enabled": true,
+        "smart_layer_trigger_distance_threshold_percent": 10,
+        "trigger_on_primed": "trigger_on",
+        "name": "Default Trigger Profile",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_retracting": "",
+        "trigger_subtype": "layer",
+        "trigger_on_deretracted": "forbidden",
+        "trigger_on_deretracting_start": ""
+      },
+      "rendering": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Select a value",
+              "value": "null"
+            }
+          ],
+          "is_custom": false,
+          "suppress_update_notification_version": false,
+          "version": null
+        },
+        "overlay_text_template": "",
+        "overlay_text_valign": "top",
+        "thread_count": 1,
+        "overlay_text_color": [ 255, 255, 255, 1 ],
+        "min_fps": 2.0,
+        "cleanup_after_render_complete": true,
+        "guid": "53763fb2-6bb2-4aef-a597-4455e446dfca",
+        "overlay_font_path": "",
+        "sync_with_timelapse": true,
+        "max_fps": 120.0,
+        "snapshots_to_skip_beginning": 0,
+        "fps": 30,
+        "output_template": "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}",
+        "selected_watermark": "",
+        "overlay_text_alignment": "left",
+        "snapshot_to_skip_end": 0,
+        "description": "",
+        "output_format": "mp4",
+        "fps_calculation_type": "duration",
+        "post_roll_seconds": 0,
+        "bitrate": "6000k",
+        "overlay_text_halign": "left",
+        "cleanup_after_render_fail": false,
+        "name": "Default Rendering Profile",
+        "enabled": true,
+        "enable_watermark": false,
+        "pre_roll_seconds": 0,
+        "overlay_font_size": 10,
+        "run_length_seconds": 5,
+        "overlay_text_pos": "[0,0]"
+      },
+      "camera": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Select a value",
+              "value": "null"
+            }
+          ],
+          "is_custom": false,
+          "suppress_update_notification_version": false,
+          "version": null
+        },
+        "timeout_ms": 5000,
+        "apply_settings_at_startup": false,
+        "on_after_render_script": "",
+        "name": "Default Camera Profile",
+        "on_before_snapshot_script": "",
+        "gcode_camera_script": "",
+        "enabled": true,
+        "external_camera_snapshot_script": "",
+        "snapshot_transpose": "",
+        "on_before_render_script": "",
+        "delay": 125,
+        "camera_type": "webcam",
+        "enable_custom_image_preferences": false,
+        "webcam_settings": {
+          "username": "",
+          "ignore_ssl_error": false,
+          "server_type": "mjpg-streamer",
+          "mjpg_streamer": {
+            "name": "mjpg-streamer",
+            "controls": {},
+            "server_type": "mjpg-streamer"
+          },
+          "use_custom_webcam_settings_page": true,
+          "address": "http://127.0.0.1/webcam/",
+          "snapshot_request_template": "{camera_address}?action=snapshot",
+          "password": "",
+          "type": null,
+          "stream_template": "/webcam/?action=stream"
+        },
+        "on_after_snapshot_script": "",
+        "on_print_start_script": "",
+        "apply_settings_before_print": false,
+        "guid": "9c9e89a0-c969-4772-9dfe-20c9957a134b",
+        "description": ""
+      },
+      "debug": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Select a value",
+              "value": "null"
+            }
+          ],
+          "is_custom": false,
+          "suppress_update_notification_version": false,
+          "version": null
+        },
+        "name": "Default Debug Profile",
+        "log_to_console": false,
+        "is_test_mode": false,
+        "enabled": false,
+        "enabled_loggers": [
+          {
+            "log_level": 10,
+            "name": "octolapse.gcode"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.gcode_parser"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.camera"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.position"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.timelapse"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.stabilization_preprocessing"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.__init__"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.messenger_worker"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.settings"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.settings_migration"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.snapshot"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.utility"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.gcode_preprocessing"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.settings_external"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.trigger"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.gcode_position"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.render"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.snapshot_plan"
+          }
+        ],
+        "log_all_errors": true,
+        "guid": "891d5f82-866f-44c4-8fbc-2b73a2c23a49",
+        "default_log_level": 10,
+        "description": ""
+      }
+
+    },
     "printers": {},
     "debug": {
       "3811da8f-182d-44bf-8fcb-95614e4daf1b": {

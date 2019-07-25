@@ -1048,6 +1048,10 @@ class RenderingProfile(AutomaticConfigurationProfile):
         # Snapshot Cleanup
         self.cleanup_after_render_complete = True
         self.cleanup_after_render_fail = False
+        # Skip Snapshots
+        self.snapshots_to_skip_beginning = 0
+        self.snapshot_to_skip_end = 0
+
 
     @classmethod
     def try_convert_value(cls, destination, value, key):

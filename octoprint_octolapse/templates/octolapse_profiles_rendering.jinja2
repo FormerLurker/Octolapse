@@ -67,7 +67,7 @@
             <div>
                 <hr />
                 <div>
-                    <h4>Output and Sync</h4>
+                    <h4>Output</h4>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Output Format (Codec)</label>
@@ -84,6 +84,7 @@
                         </span>
                     </div>
                 </div>
+
             </div>
             <div>
                 <hr />
@@ -179,6 +180,26 @@
                         <a class="octolapse_help" data-help-url="profiles.rendering.post_roll_seconds.md" data-help-title="Post-Roll" />
                         <div class="error_label_container text-error" data-error-for="rendering_profile_post_roll_seconds"></div>
                         <span class="help-inline">Copies the last frame of the timelapse so that it shows for the number of seconds entered.</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Skip Snapshots At Beginning</label>
+                    <div class="controls">
+                        <input name="snapshots_to_skip_beginning" type="number" class="input-small ignore_hidden_errors"
+                               data-bind="value: snapshots_to_skip_beginning" min="0" max="9999" required="true" />
+                        <a class="octolapse_help" data-help-url="profiles.rendering.snapshots_to_skip_beginning.md" data-help-title="Post-Roll" />
+                        <div class="error_label_container text-error" data-error-for="snapshots_to_skip_beginning"></div>
+                        <span class="help-inline">Remove frames from the beginning of the timelapse</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Skip Snapshots At End</label>
+                    <div class="controls">
+                        <input name="snapshot_to_skip_end" type="number" class="input-small ignore_hidden_errors"
+                               data-bind="value: snapshot_to_skip_end" min="0" max="9999" required="true" />
+                        <a class="octolapse_help" data-help-url="profiles.rendering.snapshot_to_skip_end.md" data-help-title="Post-Roll" />
+                        <div class="error_label_container text-error" data-error-for="snapshot_to_skip_end"></div>
+                        <span class="help-inline">Remove frames from the end of the timelapse</span>
                     </div>
                 </div>
                 <div class="control-group">

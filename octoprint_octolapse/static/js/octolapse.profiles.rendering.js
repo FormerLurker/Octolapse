@@ -69,12 +69,13 @@ $(function() {
         self.selected_watermark = ko.observable(values.selected_watermark); // Absolute filepath of the selected watermark.
         self.watermark_list = ko.observableArray(); // A list of WatermarkImages that are available for selection on the server.
         self.overlay_text_template = ko.observable(values.overlay_text_template);
-
         self.overlay_font_path = ko.observable(values.overlay_font_path);
         self.overlay_font_size = ko.observable(values.overlay_font_size);
         self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
         self.cleanup_after_render_fail = ko.observable(values.cleanup_after_render_fail);
         self.thread_count = ko.observable(values.thread_count);
+        self.snapshots_to_skip_beginning = ko.observable(values.snapshots_to_skip_beginning);
+        self.snapshot_to_skip_end = ko.observable(values.snapshot_to_skip_end);
 
         self.data.font_list = ko.observableArray(); // A list of Fonts that are available for selection on the server.
         // Text position as a JSON string.
