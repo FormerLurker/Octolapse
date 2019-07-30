@@ -118,8 +118,7 @@ $(function() {
         self.overlay_outline_color = ko.observable(values.overlay_outline_color);
         self.overlay_outline_width = ko.observable(values.overlay_outline_width);
 
-        self.text_color_to_css = function(text_color)
-        {
+        self.text_color_to_css = function(text_color){
             // Convert to js.
             var rgba;
             if (Array.isArray(text_color))
@@ -136,10 +135,9 @@ $(function() {
             return 'rgba(' + rgba.join(', ') + ')'
         };
 
-        self.css_to_text_color = function(css)
-        {
+        self.css_to_text_color = function(css){
             // Extract values.
-                var rgba = /rgba\((\d+),\s*(\d+),\s*(\d+),\s(\d*\.?\d+)\)/.exec(value).slice(1).map(Number);
+                var rgba = /rgba\((\d+),\s*(\d+),\s*(\d+),\s(\d*\.?\d+)\)/.exec(css).slice(1).map(Number);
                 // Multiply alpha by 255 and round.
                 //rgba[3] = Math.round(rgba[3] * 255);
                 // Write to variable.
@@ -185,6 +183,7 @@ $(function() {
         // This function is called when the Edit Profile dialog shows.
         self.onShow = function(parent) {
              $('#rendering_profile_overlay_color').minicolors({format: 'rgb', opacity: true});
+             $('#rendering_profile_outline_color').minicolors({format: 'rgb', opacity: true});
              self.updateWatermarkList();
              self.updateFontList();
              self.initWatermarkUploadButton();
@@ -309,7 +308,7 @@ $(function() {
 
         // Request a preview of the overlay from the server.
         self.requestOverlayPreview = function() {
-            data = {
+            var data = {
                 'overlay_text_template': self.overlay_text_template(),
                 'overlay_font_path': self.overlay_font_path(),
                 'overlay_font_size': self.overlay_font_size(),
@@ -337,34 +336,8 @@ $(function() {
                     //console.log(stack_trace);
                     self.data.overlay_preview_image('');
                     self.data.overlay_preview_image_error('Error loading overlay preview: ' + errorThrown + '. Click to refresh.');
-
                 }
             });
-            /*
-            data = {
-                    'overlay_text_template': self.overlay_text_template(),
-                    'overlay_font_path': self.overlay_font_path(),
-                    'overlay_font_size': self.overlay_font_size(),
-                    'overlay_text_pos': self.overlay_text_pos(),
-                    'overlay_text_alignment': self.overlay_text_alignment(),
-                    'overlay_text_valign': self.overlay_text_valign(),
-                    'overlay_text_halign': self.overlay_text_halign(),
-                    'overlay_text_color': self.overlay_text_color())
-            };
-            OctoPrint.post(OctoPrint.getBlueprintUrl('octolapse') + 'rendering/previewOverlay', data)
-                .then(function(response, success_name, response_status) {
-                    // Loaded the overlay!
-                    self.data.overlay_preview_image(response.image);
-                    self.data.overlay_preview_image_error('');
-                },
-                function(response_status, error_name, stack_trace) {
-                    // Failed to load an overlay.
-                    //console.log('Failed to load overlay preview from server.')
-                    //console.log(stack_trace);
-                    self.data.overlay_preview_image('');
-                    self.data.overlay_preview_image_error('Error loading overlay preview: ' + error_name + '. Click to refresh.');
-                });
-             */
         };
 
         self.toJS = function()

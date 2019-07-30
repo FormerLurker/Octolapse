@@ -1084,7 +1084,7 @@ class RenderingProfile(AutomaticConfigurationProfile):
 
     @classmethod
     def try_convert_value(cls, destination, value, key):
-        if key == 'overlay_text_color':
+        if key in ['overlay_text_color', 'overlay_outline_color']:
             if isinstance(value, six.string_types):
                 value = json.loads(value)
             if not isinstance(value, list):
