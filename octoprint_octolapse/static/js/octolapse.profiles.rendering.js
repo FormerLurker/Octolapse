@@ -114,37 +114,55 @@ $(function() {
         self.overlay_text_alignment = ko.observable(values.overlay_text_alignment);
         self.overlay_text_valign = ko.observable(values.overlay_text_valign);
         self.overlay_text_halign = ko.observable(values.overlay_text_halign);
-        // The overlay text colour in as a 4-element array, represented in a string. Note values vary from 0-255.
-        // ie. [57, 64, 32, 25]
         self.overlay_text_color = ko.observable(values.overlay_text_color);
-        // The overlay text color formatted as a CSS value. Note RGB vary from 0-255, but A varies from 0-1.
-        // ie. rgba(57, 64, 32, 0.1).
+        self.overlay_outline_color = ko.observable(values.overlay_outline_color);
+        self.overlay_outline_width = ko.observable(values.overlay_outline_width);
 
-        self.overlay_text_color_as_css = ko.pureComputed({
-            read: function () {
-                // Convert to js.
-                var rgba;
-                if (Array.isArray(self.overlay_text_color()))
-                {
-                    rgba = self.overlay_text_color();
-                    // Divide alpha by 255.
-                    //rgba[3] = rgba[3] / 255.0;
-                }
-                else
-                {
-                    rgba = JSON.parse(self.overlay_text_color());
-                }
+        self.text_color_to_css = function(text_color)
+        {
+            // Convert to js.
+            var rgba;
+            if (Array.isArray(text_color))
+            {
+                rgba = text_color;
+                // Divide alpha by 255.
+                //rgba[3] = rgba[3] / 255.0;
+            }
+            else
+            {
+                rgba = JSON.parse(text_color);
+            }
+            // Build the correct string.
+            return 'rgba(' + rgba.join(', ') + ')'
+        };
 
-                // Build the correct string.
-                return 'rgba(' + rgba.join(', ') + ')'
-            },
-            write: function (value) {
-                // Extract values.
+        self.css_to_text_color = function(css)
+        {
+            // Extract values.
                 var rgba = /rgba\((\d+),\s*(\d+),\s*(\d+),\s(\d*\.?\d+)\)/.exec(value).slice(1).map(Number);
                 // Multiply alpha by 255 and round.
                 //rgba[3] = Math.round(rgba[3] * 255);
                 // Write to variable.
-                self.overlay_text_color(JSON.stringify(rgba));
+                return JSON.stringify(rgba);
+        };
+
+        self.overlay_text_color_as_css = ko.pureComputed({
+            read: function () {
+                return self.text_color_to_css(self.overlay_text_color());
+            },
+            write: function (value) {
+                // Extract values.
+                self.overlay_text_color(self.css_to_text_color(value));
+            },
+        });
+
+        self.overlay_outline_color_as_css = ko.pureComputed({
+            read: function () {
+                return self.text_color_to_css(self.overlay_outline_color());
+            },
+            write: function (value) {
+                // Extract values.
+                self.overlay_outline_color(self.css_to_text_color(value));
             },
         });
 
@@ -292,14 +310,16 @@ $(function() {
         // Request a preview of the overlay from the server.
         self.requestOverlayPreview = function() {
             data = {
-                    'overlay_text_template': self.overlay_text_template(),
-                    'overlay_font_path': self.overlay_font_path(),
-                    'overlay_font_size': self.overlay_font_size(),
-                    'overlay_text_pos': self.overlay_text_pos(),
-                    'overlay_text_alignment': self.overlay_text_alignment(),
-                    'overlay_text_valign': self.overlay_text_valign(),
-                    'overlay_text_halign': self.overlay_text_halign(),
-                    'overlay_text_color': self.overlay_text_color()
+                'overlay_text_template': self.overlay_text_template(),
+                'overlay_font_path': self.overlay_font_path(),
+                'overlay_font_size': self.overlay_font_size(),
+                'overlay_text_pos': self.overlay_text_pos(),
+                'overlay_text_alignment': self.overlay_text_alignment(),
+                'overlay_text_valign': self.overlay_text_valign(),
+                'overlay_text_halign': self.overlay_text_halign(),
+                'overlay_text_color': self.overlay_text_color(),
+                'overlay_outline_color': self.overlay_outline_color(),
+                'overlay_outline_width': self.overlay_outline_width()
             };
             $.ajax({
                 url: "./" + OctoPrint.getBlueprintUrl('octolapse') + 'rendering/previewOverlay',

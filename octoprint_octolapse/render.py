@@ -101,7 +101,8 @@ def preview_overlay(rendering_profile, image=None):
         return None
 
     overlay_text_color = rendering_profile.get_overlay_text_color()
-
+    overlay_outline_color = rendering_profile.get_overlay_outline_color()
+    overlay_outline_width = rendering_profile.overlay_outline_width
     if image is None:
         image_color = (0,0,0,255)
         if isinstance(overlay_text_color, list):
@@ -147,7 +148,9 @@ def preview_overlay(rendering_profile, image=None):
                                            overlay_text_alignment=rendering_profile.overlay_text_alignment,
                                            overlay_text_valign=rendering_profile.overlay_text_valign,
                                            overlay_text_halign=rendering_profile.overlay_text_halign,
-                                           text_color=overlay_text_color)
+                                           text_color=overlay_text_color,
+                                           outline_color=overlay_outline_color,
+                                           outline_width=overlay_outline_width)
     return image
 
 
@@ -891,7 +894,9 @@ class TimelapseRenderJob(object):
                                  overlay_text_alignment=self._rendering.overlay_text_alignment,
                                  overlay_text_valign=self._rendering.overlay_text_valign,
                                  overlay_text_halign=self._rendering.overlay_text_halign,
-                                 text_color=self._rendering.get_overlay_text_color())
+                                 text_color=self._rendering.get_overlay_text_color(),
+                                 outline_color=self._rendering.get_overlay_outline_color(),
+                                 outline_width=self._rendering.overlay_outline_width)
                 # Save processed image.
                 output_path = os.path.join(
                     preprocessed_directory, self.render_job_info.snapshot_filename_format % snapshot_number)
@@ -945,10 +950,13 @@ class TimelapseRenderJob(object):
 
     @staticmethod
     def add_overlay(image, text_template, format_vars, font_path, font_size, overlay_location, overlay_text_alignment,
-                    overlay_text_valign, overlay_text_halign, text_color):
+                    overlay_text_valign, overlay_text_halign, text_color, outline_color, outline_width):
         """Adds an overlay to an image with the given parameters. The image is not mutated.
         :param image: A Pillow RGB image.
         :returns The image with the overlay added."""
+
+        text_color_tuple = tuple(text_color)
+        outline_color_tuple = tuple(outline_color)
         # No text to draw.
         if not text_template:
             return image
@@ -992,8 +1000,30 @@ class TimelapseRenderJob(object):
             raise RenderError('overlay-text-halign',
                               "An invalid overlay text halign ({0}) was specified.".format(overlay_text_halign))
 
+        # Draw overlay text outline
+        # create outline text
+        for adj in range(outline_width):
+            # move right
+            d.multiline_text(xy=(x - adj, y), text=text, font=font, fill=outline_color_tuple)
+            # move left
+            d.multiline_text(xy=(x + adj, y), text=text, font=font, fill=outline_color_tuple)
+            # move up
+            d.multiline_text(xy=(x, y + adj), text=text, font=font, fill=outline_color_tuple)
+            # move down
+            d.multiline_text(xy=(x, y - adj), text=text, font=font, fill=outline_color_tuple)
+            # diagnal left up
+            d.multiline_text(xy=(x - adj, y + adj), text=text, font=font, fill=outline_color_tuple)
+            # diagnal right up
+            d.multiline_text(xy=(x + adj, y + adj), text=text, font=font, fill=outline_color_tuple)
+            # diagnal left down
+            d.multiline_text(xy=(x - adj, y - adj), text=text, font=font, fill=outline_color_tuple)
+            # diagnal right down
+            d.multiline_text(xy=(x + adj, y - adj), text=text, font=font, fill=outline_color_tuple)
+
         # Draw overlay text.
-        d.multiline_text(xy=(x, y), text=text, fill=tuple(text_color), font=font, align=overlay_text_alignment)
+        d.multiline_text(xy=(x, y), text=text, fill=text_color_tuple, font=font, align=overlay_text_alignment)
+
+
         return Image.alpha_composite(image.convert('RGBA'), text_image).convert('RGB')
 
     def _apply_pre_post_roll(self, image_dir):

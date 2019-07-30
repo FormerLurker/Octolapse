@@ -1044,6 +1044,8 @@ class RenderingProfile(AutomaticConfigurationProfile):
         self.overlay_text_valign = "top"  # Overall alignment of text box vertically.
         self.overlay_text_halign = "left"  # Overall alignment of text box horizontally.
         self.overlay_text_color = [255, 255, 255, 1.0]
+        self.overlay_outline_color = [0, 0, 0, 1.0]
+        self.overlay_outline_width = 1
         self.thread_count = 1
         # Snapshot Cleanup
         self.cleanup_after_render_complete = True
@@ -1053,12 +1055,19 @@ class RenderingProfile(AutomaticConfigurationProfile):
         self.snapshot_to_skip_end = 0
 
     def get_overlay_text_color(self):
+        return RenderingProfile._get_color_(self.overlay_text_color)
+
+    def get_overlay_outline_color(self):
+        return RenderingProfile._get_color_(self.overlay_outline_color)
+
+    @staticmethod
+    def _get_color_(rgba_color):
         overlay_text_color = [255, 255, 255, 1.0]
-        if isinstance(self.overlay_text_color, six.string_types):
-            overlay_text_color = json.loads(self.overlay_text_color)
-        elif isinstance(self.overlay_text_color, list):
+        if isinstance(rgba_color, six.string_types):
+            overlay_text_color = json.loads(rgba_color)
+        elif isinstance(rgba_color, list):
             # make sure to copy the list so we don't alter the original
-            overlay_text_color = list(self.overlay_text_color)
+            overlay_text_color = list(rgba_color)
         overlay_text_color[3] = int(overlay_text_color[3] * 255.0)
 
         # verify and error correct all of the components of the color

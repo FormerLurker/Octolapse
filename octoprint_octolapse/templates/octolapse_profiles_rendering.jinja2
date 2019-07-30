@@ -402,7 +402,7 @@
                         <label class="control-label">Size:</label>
                         <div class="controls">
                             <span class="input-append" style="display:inline-block">
-                                <input id="rendering_profile_overlay_font_size" name="octolapse_overlay_font_size" type="number" class="input-small ignore_hidden_errors" data-bind="value: overlay_font_size" required="true" />
+                                <input id="rendering_profile_overlay_font_size" name="octolapse_overlay_font_size" type="number" class="input-small ignore_hidden_errors" data-bind="value: overlay_font_size" required="true" min="1" max="255" />
                                 <span class="add-on">pt</span>
                             </span>
                             <a class="octolapse_help" data-help-url="profiles.rendering.overlay_font_size.md" data-help-title="Overlay Font Size"></a>
@@ -459,11 +459,30 @@
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="rendering_profile_overlay_color" class="control-label">Color:</label>
+                        <label for="rendering_profile_overlay_color" class="control-label">Text Color:</label>
                         <div class="controls">
                             <input type="text" id="rendering_profile_overlay_color" class="form-control demo" data-format="rgb" data-bind="value: overlay_text_color_as_css" required="true">
-                            <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_color_as_css.md" data-help-title="Overlay Text Color" />
+                            <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_color.md" data-help-title="Overlay Text Color" />
                             <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_color"></div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label for="rendering_profile_outline_color" class="control-label">Outline Color:</label>
+                        <div class="controls">
+                            <input type="text" id="rendering_profile_outline_color" class="form-control demo" data-format="rgb" data-bind="value: overlay_outline_color_as_css" required="true">
+                            <a class="octolapse_help" data-help-url="profiles.rendering.overlay_outline_color.md" data-help-title="Overlay Outline Color" />
+                            <div class="error_label_container text-error" data-error-for="rendering_profile_outline_color"></div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">Outline Width:</label>
+                        <div class="controls">
+                            <span class="input-append" style="display:inline-block">
+                                <input id="rendering_profile_overlay_outline_width" name="octolapse_overlay_outline_width" type="number" class="input-small ignore_hidden_errors" data-bind="value: overlay_outline_width" required="true" min="0" max="5" />
+                                <span class="add-on">pixels</span>
+                            </span>
+                            <a class="octolapse_help" data-help-url="profiles.rendering.overlay_outline_width.md" data-help-title="Overlay Outline Width"></a>
+                            <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_outline_width"></div>
                         </div>
                     </div>
                     <div class="control-group">

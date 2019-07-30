@@ -1,0 +1,1 @@
+Sets the outline color of the text, including an optional transparency value so that you can see your timelapse through the overlay.  Note that the Outline Width setting must be greater than 0 in order for the outline to be visible.
