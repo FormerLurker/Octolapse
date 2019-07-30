@@ -239,6 +239,16 @@ def get_snapshot_filename(print_name, print_start_time, snapshot_number):
                 PRINTSTARTTIME="{0:d}".format(math.trunc(round(print_start_time, 2) * 100)))
     return "{0}{1}.{2}".format(file_template, format_snapshot_number(snapshot_number), "jpg")
 
+def get_pre_roll_snapshot_filename(print_name, print_start_time, snapshot_number):
+    file_template = get_snapshot_filename_template() \
+        .format(FILENAME=get_string(print_name, ""),
+                DATETIMESTAMP="{0:d}".format(math.trunc(round(time.time(), 2) * 100)),
+                PRINTSTARTTIME="{0:d}".format(math.trunc(round(print_start_time, 2) * 100)))
+    return "{0}{1}_{2}.{3}".format(
+        file_template,
+        format_snapshot_number(snapshot_number),
+        format_snapshot_number(snapshot_number),
+        "jpg")
 
 SnapshotNumberFormat = "%06d"
 

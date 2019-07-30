@@ -100,11 +100,7 @@ def preview_overlay(rendering_profile, image=None):
         # we don't have any overlay path, return
         return None
 
-    overlay_text_color = [255, 255, 255, 255]
-    if isinstance(rendering_profile.overlay_text_color, six.string_types):
-        overlay_text_color = json.loads(rendering_profile.overlay_text_color)
-    elif isinstance(rendering_profile.overlay_text_color, list):
-        overlay_text_color = rendering_profile.overlay_text_color
+    overlay_text_color = rendering_profile.get_overlay_text_color()
 
     if image is None:
         image_color = (0,0,0,255)
@@ -166,8 +162,13 @@ class RenderJobInfo(object):
         self.camera = current_camera
         self.job_directory = os.path.join(data_directory, "snapshots", timelapse_job_info.JobGuid)
         self.snapshot_directory = os.path.join(data_directory, "snapshots", timelapse_job_info.JobGuid, current_camera.guid)
-        self.snapshot_filename_format = os.path.basename(utility.get_snapshot_filename(
-            timelapse_job_info.PrintFileName, timelapse_job_info.PrintStartTime, utility.SnapshotNumberFormat)
+        self.snapshot_filename_format = os.path.basename(
+            utility.get_snapshot_filename(
+                timelapse_job_info.PrintFileName, timelapse_job_info.PrintStartTime, utility.SnapshotNumberFormat
+            )
+        )
+        self.pre_roll_snapshot_filename_format = utility.get_pre_roll_snapshot_filename(
+            timelapse_job_info.PrintFileName, timelapse_job_info.PrintStartTime, utility.SnapshotNumberFormat
         )
         self.output_tokens = self._get_output_tokens(data_directory)
         self.rendering = rendering.clone()
@@ -292,6 +293,7 @@ class RenderingProcessor(threading.Thread):
         logger.info("Sending render end message")
         self.on_end()
 
+
 class TimelapseRenderJob(object):
     render_job_lock = threading.RLock()
 
@@ -319,6 +321,7 @@ class TimelapseRenderJob(object):
         self._imageCount = None
         self._threads = threads
         self._ffmpeg = None
+        self._images_removed = 0
         if ffmpeg_path is not None:
             self._ffmpeg = ffmpeg_path.strip()
             if sys.platform == "win32" and not (self._ffmpeg.startswith('"') and self._ffmpeg.endswith('"')):
@@ -352,18 +355,34 @@ class TimelapseRenderJob(object):
         return self._render()
 
     def _pre_render(self):
+        # remove frames from the timelapse as specified by the snapshots_to_skip_beginning and
+        # snapshot_to_skip_end settings
+        self._remove_frames()
 
+        # count the remaining snapshots
         self._count_snapshots()
+
+        # read any metadata produced by the timelapse process
+        # this is used to create text overlays
         self._read_snapshot_metadata()
 
+        # If there aren't enough images, report an error
+        # First see if there were enough images, but they were removed because of the the
+        # snapshots_to_skip_beginning and snapshot_to_skip_end settings
+        if self._images_removed > 1 and self._imageCount < 2:
+            raise RenderError(
+                'insufficient-images',
+                "Not enough snapshots were found to generate a timelapse for the '{0}' camera profile.  {1} snapshot "
+                "were removed during pre-processing.".format(self.render_job_info.camera.name, self._images_removed)
+            )
         if self._imageCount == 0:
             raise RenderError(
                 'insufficient-images',
-                "No snapshots were found for the '{0}' camera profile.".format(self.render_job_info.camera.name)
+                "No snapshots were available for the '{0}' camera profile.".format(self.render_job_info.camera.name)
               )
         if self._imageCount == 1:
             raise RenderError('insufficient-images',
-                              "Only 1 frame was captured, cannot make a timelapse with a single frame.")
+                              "Only 1 frame was available, cannot make a timelapse with a single frame.")
         # calculate the FPS
         self._calculate_fps()
         if self._fps < 1:
@@ -498,6 +517,58 @@ class TimelapseRenderJob(object):
         except RenderError as e:
             self.after_render_error = e
 
+    def _remove_frames(self):
+        start_count = self._rendering.snapshots_to_skip_beginning
+        end_count = self._rendering.snapshot_to_skip_end
+        # get the path to the snapshot
+        path = self.render_job_info.snapshot_directory
+        # make sure the path exists
+        if not os.path.exists(self.render_job_info.snapshot_directory):
+            # there is nothing we can do here.  Return
+            return
+
+        # see if there are start frames to remove
+        if start_count > 0:
+            # iterate a sorted list of snapshot files starting from the first snapshots taken
+            for index, filename in enumerate(sorted(os.listdir(path))):
+                # only remove jpeg files
+                if not filename.lower().endswith(".jpg"):
+                    continue
+                # break if we've removed enough files
+                if start_count < 1:
+                    break
+                # create a path to the current file
+                file_path = os.path.join(path, filename)
+                os.remove(file_path)
+                self._images_removed += 1
+                start_count -= 1
+
+            logger.info(
+                "%d snapshots were removed from the beginning of the timelapse.",
+                self._rendering.snapshots_to_skip_beginning
+            )
+
+        # see if there are end frames to remove
+        if end_count > 0:
+            # iterate a sorted list of snapshot files starting from the last snapshots taken
+            for index, filename in enumerate(sorted(os.listdir(path), reverse=True)):
+                # only remove jpeg files
+                if not filename.lower().endswith(".jpg"):
+                    continue
+                # break if we've removed enough files
+                if end_count < 1:
+                    break
+                # create a path to the current file
+                file_path = os.path.join(path, filename)
+                os.remove(file_path)
+                self._images_removed += 1
+                end_count -= 1
+
+            logger.info(
+                "%d snapshots were removed from the end of the timelapse.",
+                self._rendering.snapshot_to_skip_end
+            )
+
     def _count_snapshots(self):
         self._imageCount = 0
         if os.path.exists(self.render_job_info.snapshot_directory):
@@ -513,16 +584,31 @@ class TimelapseRenderJob(object):
         logger.info("Found %s images via a manual search.", self._imageCount)
 
     def _read_snapshot_metadata(self):
+        # get the metadata path
         metadata_path = os.path.join(self.render_job_info.snapshot_directory, SnapshotMetadata.METADATA_FILE_NAME)
+        # make sure the metadata file exists
+        if not os.path.isfile(metadata_path):
+            # nothing to do here.  Exit
+            return
+        # see if the metadata file exists
         logger.info('Reading snapshot metadata from %s', metadata_path)
+        skip_beginning = self._rendering.snapshots_to_skip_beginning
+        skip_end = self._rendering.snapshot_to_skip_end
         try:
             with open(metadata_path, 'r') as metadata_file:
+                # read the metadaata and convert it to a dict
                 dictreader = DictReader(metadata_file, SnapshotMetadata.METADATA_FIELDS)
-                self._snapshot_metadata = list(dictreader)
+                # convert the dict to a list
+                metadata_list = list(dictreader)
+                # remove metadata for any removed frames due to the
+                # snapshots_to_skip_beginning and snapshot_to_skip_end settings
+                self._snapshot_metadata = metadata_list[skip_beginning:len(metadata_list)-skip_end]
+
                 # add the snapshot count to the output tokens
                 self.render_job_info.output_tokens["SNAPSHOTCOUNT"] = "{0}".format(self._imageCount)
                 return
         except IOError as e:
+            logger.exception("No metadata exists, skipping metadata processing.")
             # If we fail to read the metadata, it could be that no snapshots were taken.
             # Let's not throw an error and just render without the metadata
             pass
@@ -630,6 +716,7 @@ class TimelapseRenderJob(object):
         r_error = None
         try:
             self.on_prerender_start(self.create_callback_payload(0,"Prerender is starting."))
+
             self._pre_render_script()
 
             self._pre_render()
@@ -665,18 +752,19 @@ class TimelapseRenderJob(object):
             if self._rendering.enable_watermark:
                 watermark_path = self._rendering.selected_watermark
                 if watermark_path == '':
-                    raise RenderError('watermark-path',
-                                      "Render - Watermark was enabled but no watermark file was selected.")
-                if not os.path.exists(watermark_path):
-                    raise RenderError('watermark-non-existent', "Render - Watermark file does not exist.")
-
-                if sys.platform == "win32":
+                    logger.error("Watermark was enabled but no watermark file was selected.")
+                    watermark_path = None
+                elif not os.path.exists(watermark_path):
+                    logger.error("Render - Watermark file does not exist.")
+                    watermark_path = None
+                elif sys.platform == "win32":
                     # Because ffmpeg hiccups on windows' drive letters and backslashes we have to give the watermark
                     # path a special treatment. Yeah, I couldn't believe it either...
                     watermark_path = watermark_path.replace(
                         "\\", "/").replace(":", "\\\\:")
 
-            # Do image preprocessing.
+            # Do image preprocessing.  This relies on the original file name, so no renaming before running
+            # this function
             self._preprocess_images(self.temp_rendering_dir)
 
             # rename the images
@@ -760,7 +848,7 @@ class TimelapseRenderJob(object):
             for i in range(self._imageCount):
                 file_path = os.path.join(
                     self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format % i)
-                if os.exists(file_path):
+                if os.path.exists(file_path):
                     output_path = os.path.join(preprocessed_directory, self.render_job_info.snapshot_filename_format % i)
                     output_dir = os.path.dirname(output_path)
                     if not os.path.exists(output_dir):
@@ -770,7 +858,7 @@ class TimelapseRenderJob(object):
                     logger.error("The snapshot at %s does not exist.  Skipping.", file_path)
             return
         first_timestamp = float(self._snapshot_metadata[0]['time_taken'])
-        for i, data in enumerate(self._snapshot_metadata):
+        for index, data in enumerate(self._snapshot_metadata):
             # TODO:  MAKE SURE THIS WORKS IF THERE ARE ANY ERRORS
             # Variables the user can use in overlay_text_template.format().
             format_vars = {}
@@ -803,7 +891,7 @@ class TimelapseRenderJob(object):
                                  overlay_text_alignment=self._rendering.overlay_text_alignment,
                                  overlay_text_valign=self._rendering.overlay_text_valign,
                                  overlay_text_halign=self._rendering.overlay_text_halign,
-                                 text_color=self._rendering.overlay_text_color)
+                                 text_color=self._rendering.get_overlay_text_color())
                 # Save processed image.
                 output_path = os.path.join(
                     preprocessed_directory, self.render_job_info.snapshot_filename_format % snapshot_number)
@@ -812,9 +900,18 @@ class TimelapseRenderJob(object):
                 image.save(output_path)
             else:
                 file_path = os.path.join(
-                    self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format % i)
+                    self.render_job_info.snapshot_directory,
+                    self.render_job_info.snapshot_filename_format % (
+                        index + self._rendering.snapshots_to_skip_beginning
+                    )
+                )
                 if os.path.exists(file_path):
-                    output_path = os.path.join(preprocessed_directory, self.render_job_info.snapshot_filename_format % i)
+                    output_path = os.path.join(
+                        preprocessed_directory,
+                        self.render_job_info.snapshot_filename_format % (
+                            index +  self._rendering.snapshots_to_skip_beginning
+                        )
+                    )
                     output_dir = os.path.dirname(output_path)
                     if not os.path.exists(output_dir):
                         os.makedirs(output_dir)
@@ -825,10 +922,25 @@ class TimelapseRenderJob(object):
         logger.info("Preprocessing success!")
 
     def _rename_images(self, preprocessed_directory):
-        for index, filename in enumerate(sorted(os.listdir(preprocessed_directory))):
-            output_path = os.path.join(preprocessed_directory, self.render_job_info.snapshot_filename_format % index)
-            file_path = os.path.join(preprocessed_directory, filename)
-            shutil.move(file_path, output_path)
+        # First, we need to rename our files, but we have to change the file name so that it won't overwrite any existing files
+        image_index = 0
+        for filename in sorted(os.listdir(preprocessed_directory)):
+            # make sure the file is a jpg image
+            if filename.lower().endswith(".jpg"):
+                output_path = os.path.join(
+                    preprocessed_directory,
+                    "{0}.tmp".format(self.render_job_info.snapshot_filename_format % image_index)
+                )
+                file_path = os.path.join(preprocessed_directory, filename)
+                shutil.move(file_path, output_path)
+                image_index += 1
+
+        # now loop back through all of the files and remove the .tmp extension
+        for filename in os.listdir(preprocessed_directory):
+            if filename.endswith(".tmp"):
+                output_path = os.path.join(preprocessed_directory, filename[:-4])
+                file_path = os.path.join(preprocessed_directory, filename)
+                shutil.move(file_path, output_path)
 
 
     @staticmethod
@@ -885,37 +997,43 @@ class TimelapseRenderJob(object):
         return Image.alpha_composite(image.convert('RGBA'), text_image).convert('RGB')
 
     def _apply_pre_post_roll(self, image_dir):
+        # Here we will be adding pre and post roll frames.
+        # This routine assumes that images exist, that the first image has number 0, and that
+        # there are no missing images
         logger.info("Starting pre/post roll.")
-        # start with pre-roll, since it will require a bunch of renaming
+        # start with pre-roll.
         pre_roll_frames = int(self._rendering.pre_roll_seconds * self._fps)
         if pre_roll_frames > 0:
+            # We will be adding images starting with -1 and decrementing 1 until we've added the
+            # correct number of frames.
 
             # create a variable to hold the new path of the first image
-            first_image_path = ""
+            first_image_path = os.path.join(image_dir, self.render_job_info.snapshot_filename_format % 0)
+
             # rename all of the current files. The snapshot number should be
             # incremented by the number of pre-roll frames. Start with the last
             # image and work backwards to avoid overwriting files we've already moved
-            for image_number in range(self._imageCount - 1, -1, -1):
-                current_image_path = os.path.join(image_dir, self.render_job_info.snapshot_filename_format % image_number)
-                new_image_path = os.path.join(image_dir,
-                                              self.render_job_info.snapshot_filename_format % (image_number + pre_roll_frames))
-                if image_number == 0:
-                    first_image_path = new_image_path
-                shutil.move(current_image_path, new_image_path)
-            # get the path of the first image
-            # copy the first frame as many times as we need
-            for image_index in range(pre_roll_frames):
-                new_image_path = os.path.join(image_dir, self.render_job_info.snapshot_filename_format % image_index)
+            for image_number in range(pre_roll_frames):
+                new_image_path = os.path.join(
+                    image_dir,
+                    self.render_job_info.pre_roll_snapshot_filename_format % (0, image_number)
+                )
                 shutil.copy(first_image_path, new_image_path)
-        # finish with post roll since it's pretty easy
+        # finish with post
         post_roll_frames = int(self._rendering.post_roll_seconds * self._fps)
         if post_roll_frames > 0:
-            last_frame_index = self._imageCount + pre_roll_frames - 1
+            last_frame_index = self._imageCount - 1
             last_image_path = os.path.join(image_dir, self.render_job_info.snapshot_filename_format % last_frame_index)
-            for image_index in range(post_roll_frames):
-                image_number = image_index + self._imageCount + pre_roll_frames
-                new_image_path = os.path.join(image_dir, self.render_job_info.snapshot_filename_format % image_number)
+            for post_roll_index in range(post_roll_frames):
+                new_image_path = os.path.join(
+                    image_dir,
+                    self.render_job_info.pre_roll_snapshot_filename_format % (last_frame_index, post_roll_index)
+                )
                 shutil.copy(last_image_path, new_image_path)
+
+        if pre_roll_frames > 0:
+            # pre or post roll frames were added, so we need to rename all of our images
+            self._rename_images(image_dir)
         logger.info("Pre/post roll generated successfully.")
 
     @staticmethod

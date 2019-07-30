@@ -1043,7 +1043,7 @@ class RenderingProfile(AutomaticConfigurationProfile):
         self.overlay_text_alignment = "left"  # Text alignment between lines in the overlay.
         self.overlay_text_valign = "top"  # Overall alignment of text box vertically.
         self.overlay_text_halign = "left"  # Overall alignment of text box horizontally.
-        self.overlay_text_color = [255, 255, 255, 255]
+        self.overlay_text_color = [255, 255, 255, 1.0]
         self.thread_count = 1
         # Snapshot Cleanup
         self.cleanup_after_render_complete = True
@@ -1052,6 +1052,26 @@ class RenderingProfile(AutomaticConfigurationProfile):
         self.snapshots_to_skip_beginning = 0
         self.snapshot_to_skip_end = 0
 
+    def get_overlay_text_color(self):
+        overlay_text_color = [255, 255, 255, 1.0]
+        if isinstance(self.overlay_text_color, six.string_types):
+            overlay_text_color = json.loads(self.overlay_text_color)
+        elif isinstance(self.overlay_text_color, list):
+            # make sure to copy the list so we don't alter the original
+            overlay_text_color = list(self.overlay_text_color)
+        overlay_text_color[3] = int(overlay_text_color[3] * 255.0)
+
+        # verify and error correct all of the components of the color
+        for index, value in enumerate(overlay_text_color):
+            # make sure the value is an int
+            value = int(value)
+            if value < 0:
+                value = 0
+            elif value > 255:
+                value = 255
+            overlay_text_color[index] = value
+
+        return overlay_text_color
 
     @classmethod
     def try_convert_value(cls, destination, value, key):
@@ -1060,9 +1080,6 @@ class RenderingProfile(AutomaticConfigurationProfile):
                 value = json.loads(value)
             if not isinstance(value, list):
                 return None
-
-            for index in range(len(value)):
-                value[index] = int(value[index])
 
             return value
 

@@ -127,13 +127,14 @@ $(function() {
                 if (Array.isArray(self.overlay_text_color()))
                 {
                     rgba = self.overlay_text_color();
+                    // Divide alpha by 255.
+                    //rgba[3] = rgba[3] / 255.0;
                 }
                 else
                 {
                     rgba = JSON.parse(self.overlay_text_color());
                 }
-                // Divide alpha by 255.
-                rgba[3] = rgba[3] / 255;
+
                 // Build the correct string.
                 return 'rgba(' + rgba.join(', ') + ')'
             },
@@ -141,7 +142,7 @@ $(function() {
                 // Extract values.
                 var rgba = /rgba\((\d+),\s*(\d+),\s*(\d+),\s(\d*\.?\d+)\)/.exec(value).slice(1).map(Number);
                 // Multiply alpha by 255 and round.
-                rgba[3] = Math.round(rgba[3] * 255);
+                //rgba[3] = Math.round(rgba[3] * 255);
                 // Write to variable.
                 self.overlay_text_color(JSON.stringify(rgba));
             },
@@ -298,7 +299,37 @@ $(function() {
                     'overlay_text_alignment': self.overlay_text_alignment(),
                     'overlay_text_valign': self.overlay_text_valign(),
                     'overlay_text_halign': self.overlay_text_halign(),
-                    'overlay_text_color': self.overlay_text_color(),
+                    'overlay_text_color': self.overlay_text_color()
+            };
+            $.ajax({
+                url: "./" + OctoPrint.getBlueprintUrl('octolapse') + 'rendering/previewOverlay',
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    self.data.overlay_preview_image(results.image);
+                    self.data.overlay_preview_image_error('');
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    // Failed to load an overlay.
+                    //console.log('Failed to load overlay preview from server.')
+                    //console.log(stack_trace);
+                    self.data.overlay_preview_image('');
+                    self.data.overlay_preview_image_error('Error loading overlay preview: ' + errorThrown + '. Click to refresh.');
+
+                }
+            });
+            /*
+            data = {
+                    'overlay_text_template': self.overlay_text_template(),
+                    'overlay_font_path': self.overlay_font_path(),
+                    'overlay_font_size': self.overlay_font_size(),
+                    'overlay_text_pos': self.overlay_text_pos(),
+                    'overlay_text_alignment': self.overlay_text_alignment(),
+                    'overlay_text_valign': self.overlay_text_valign(),
+                    'overlay_text_halign': self.overlay_text_halign(),
+                    'overlay_text_color': self.overlay_text_color())
             };
             OctoPrint.post(OctoPrint.getBlueprintUrl('octolapse') + 'rendering/previewOverlay', data)
                 .then(function(response, success_name, response_status) {
@@ -313,6 +344,7 @@ $(function() {
                     self.data.overlay_preview_image('');
                     self.data.overlay_preview_image_error('Error loading overlay preview: ' + error_name + '. Click to refresh.');
                 });
+             */
         };
 
         self.toJS = function()

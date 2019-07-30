@@ -1087,8 +1087,8 @@ class OctolapsePlugin(
             self.saved_parsed_command is None
         ):
             # return without doing anything, this job is already over
-            message = "Unable to accept the snapshot plan. Either the printer is printing, or this plan has been " \
-                      "deleted."
+            message = "Unable to accept the snapshot plan. Either the printer not operational, is currently printing, " \
+                      "or this plan has been deleted. "
             return json.dumps({'success': False, 'error': message}), 200, {'ContentType': 'application/json'}
 
         logger.info("Accepting the saved snapshot plan")
@@ -1147,6 +1147,7 @@ class OctolapsePlugin(
     def preview_overlay(self):
         preview_image = None
         camera_image = None
+        request_values = flask.request.get_json()
         try:
             # Take a snapshot from the first active camera.
             active_cameras = self._octolapse_settings.profiles.active_cameras()
@@ -1158,7 +1159,7 @@ class OctolapsePlugin(
                     logger.exception("Failed to take a snapshot. Falling back to solid color.")
             # Extract the profile from the request.
             try:
-                rendering_profile = RenderingProfile().create_from(flask.request.form)
+                rendering_profile = RenderingProfile().create_from(request_values)
             except Exception as e:
                 logger.exception('Preview overlay request did not provide valid Rendering profile.')
                 return json.dumps({
