@@ -548,6 +548,7 @@ class OctolapsePlugin(
             logger.exception(e)
             return json.dumps(
                 {
+                    "success": False,
                     "message": e.message
                 }
             ), 500, {'ContentType': 'application/json'}
@@ -558,6 +559,7 @@ class OctolapsePlugin(
         )
         return json.dumps(
             {
+                "success": True,
                 "profile_json": updated_profile.to_json()
             }
         ), 200, {'ContentType': 'application/json'}

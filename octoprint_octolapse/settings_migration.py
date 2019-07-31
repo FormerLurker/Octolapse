@@ -38,10 +38,11 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
         has_updated = True
         settings_dict = migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev0.json'))
 
-    # If we've updated the settings, save a backup of the old settings
+    # If we've updated the settings, save a backup of the old settings and update the version
     if has_updated:
         with open(get_settings_backup_name(version, data_directory), "w+") as f:
             json.dump(original_settings_copy, f)
+        settings_dict["main_settings"]["version"] = current_version
 
     return settings_dict
 
@@ -119,7 +120,7 @@ def migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, default_settings_p
             settings_dict[profile_type][index] = defaults_copy
 
     # update the version
-    settings_dict["version"] = current_version
+    settings_dict["version"] = "0.3.3rc3.dev0"
     # return the dict
     return settings_dict
 
@@ -358,7 +359,8 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
         'show_trigger_state_changes': settings_dict.get('show_trigger_state_changes',default_main_settings["show_trigger_state_changes"]),
         'cancel_print_on_startup_error': settings_dict.get('cancel_print_on_startup_error', default_main_settings["cancel_print_on_startup_error"]),
         "show_snapshot_plan_information": default_main_settings["show_snapshot_plan_information"],
-        'platform': sys.platform
+        'platform': sys.platform,
+        'version': "0.4.0rc1.dev0"
     }
 
     # ADD ALL NEW VALUES TO THE NEW SETTINGS - Update any leftover settings.  Note that chages will only be made if
@@ -398,9 +400,9 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
             defaults_copy.update(profile)
             profiles[profile_type][key] = defaults_copy
 
+
     # return the new upgraded settings dict
     return {
-        'version': current_version,
         'main_settings': main_settings,
         'profiles': profiles
     }

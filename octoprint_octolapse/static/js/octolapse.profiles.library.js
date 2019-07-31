@@ -445,6 +445,27 @@ $(function() {
                 contentType: "application/json",
                 dataType: "json",
                 success: function (data) {
+                    if (!data.success)
+                    {
+                        if(on_failed)
+                            on_failed();
+                        var message = "Octolapse was unable to update your " + self.profile_type + " profile." +
+                                      "  Message: " + data.message + "  See plugin_octolapse.log for more details.";
+                        var options = {
+                            title: 'Unable to Update',
+                            text: message,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopupForKey(
+                            options,"profile-library-update","profile-library-update"
+                        );
+                        return;
+                    }
                     var updated_profile = JSON.parse(data.profile_json);
                     // Update automatic configuration settings
                     var automatic_configuration = updated_profile.automatic_configuration;
