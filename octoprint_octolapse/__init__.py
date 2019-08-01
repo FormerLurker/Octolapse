@@ -2184,8 +2184,9 @@ class OctolapsePlugin(
             "lines_processed": lines_processed
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
-        # sleep for just a bit to allow the plugin message time to be sent.
-        time.sleep(0.001)
+        # sleep for just a bit to allow the plugin message time to be sent and for cancel messages to arrive
+        # the real answer for this is to figure out how to allow threading in the C++ code
+        time.sleep(0.017)
 
     def send_popup_message(self, msg):
         self.send_plugin_message("popup", msg)
