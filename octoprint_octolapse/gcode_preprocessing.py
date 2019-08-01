@@ -82,16 +82,22 @@ class GcodeFileProcessor(object):
         reverse_processors = [x for x in filtered_processors if x.file_process_type in [u'reverse', u'both']]
 
         # process any forward items
-        self.process_forwards(forward_processors, target_file_path)
-        self.process_reverse(reverse_processors, target_file_path)
+        complete = self.process_forwards(forward_processors, target_file_path)
+        if not complete:
+            complete = self.process_reverse(reverse_processors, target_file_path)
 
         self.end_time = time.time()
+        if complete:
+            logger.info("Settings preprocessing finished in %f seconds", self.end_time - self.start_time)
+        else:
+            logger.info("Settings preprocessing finished in %f seconds, but could not detect all settings", self.end_time - self.start_time)
         self.notify_progress(end_progress=True)
         return self.get_processor_results()
 
     def process_forwards(self, processors, target_file_path):
         # open the file for streaming
         line_number = 0
+        slicer_type_detected = False
         # we're using binary read to avoid file.tell() issues with windows
         with open(target_file_path, 'r') as f:
             while True:
@@ -106,15 +112,26 @@ class GcodeFileProcessor(object):
                 # get the current file position
                 self.current_file_position = f.tell()
 
-                for processor in processors:
+                for processor in reversed(processors):
                     processor.process_line(line, line_number, 'forward')
-                    if processor.is_complete(u'forward'):
-                        return
+                    if processor.max_search_reached(u'forward'):
+                        processors.remove(processor)
+                    elif processor.is_complete():
+                        return True
+                if not slicer_type_detected:
+                    for processor in processors:
+                        if processor.is_slicer_type_detected:
+                            # remove the other processors
+                            processors = [processor]
+                            slicer_type_detected = True
+                            break
 
                 self.notify_progress()
+        return False
 
     def process_reverse(self, processors, target_file_path):
         # open the file for streaming
+        slicer_type_detected = False
         line_number = 0
         with FileReadBackwards(target_file_path, encoding="utf-8") as frb:
             while True:
@@ -131,12 +148,21 @@ class GcodeFileProcessor(object):
                 # with the reverse processor.  Need to write one that works for this purpose.
                 #self.current_file_position = f.tell()
 
-                for processor in processors:
+                for processor in reversed(processors):
                     processor.process_line(line, line_number, u'reverse')
-                    if processor.is_complete(u'reverse'):
-                        # one processor is complete, return
-                        return
+                    if processor.max_search_reached(u'reverse'):
+                        processors.remove(processor)
+                    elif processor.is_complete():
+                        return True
 
+                if not slicer_type_detected:
+                    for processor in processors:
+                        if processor.is_slicer_type_detected:
+                            # remove the other processors
+                            processors = [processor]
+                            slicer_type_detected = True
+                            continue
+        return False
 
     def notify_progress(self, end_progress=False):
         if self.update_progress_callback is None:
@@ -223,7 +249,9 @@ class GcodeSettingsProcessor(GcodeProcessor):
         self.all_settings_dictionary = self.get_settings_dictionary()
         self.results = {}
         self.active_settings_dictionary = {}
-        self.regex_definitions = self.get_regex_definitions()
+        self.all_regex_definitions = self.get_regex_definitions()
+        self.active_regex_definitions = []
+        self.is_slicer_type_detected = False
 
     def reset(self):
         self.forward_lines_processed = 0
@@ -243,8 +271,10 @@ class GcodeSettingsProcessor(GcodeProcessor):
         self.reset()
 
     def on_apply_filter(self, filter_tags=None):
+        self.active_settings_dictionary = {}
+        self.active_regex_definitions = {}
         # copy any matching settings definitions
-        for key, setting in self.all_settings_dictionary.items():
+        for key, setting in six.iteritems(self.all_settings_dictionary):
             if (
                 filter_tags is None
                 or len(filter_tags) == 0
@@ -253,19 +283,29 @@ class GcodeSettingsProcessor(GcodeProcessor):
                 self.active_settings_dictionary[key] = SettingsDefinition(
                     setting.name, setting.parsing_function, setting.tags
                 )
+        # apply regex filters
+        for key, regex in six.iteritems(self.all_regex_definitions):
+            if (
+                filter_tags is None
+                or len(filter_tags) == 0
+                or (regex.tags is not None and len(regex.tags) > 0 and not regex.tags.isdisjoint(filter_tags))
+            ):
+                self.active_regex_definitions[regex.name] = regex
 
     def can_process(self):
         return len(self.active_settings_dictionary) > 0
 
-    def is_complete(self, process_type):
-        if (
+    def is_complete(self):
+        return (
+            len(self.active_settings_dictionary) == 0
+            or len(self.active_regex_definitions) == 0
+        )
+
+    def max_search_reached(self, process_type):
+        return (
             (process_type == u"forward" and self.forward_lines_processed >= self.max_forward_lines_to_process)
             or (process_type == u"reverse" and self.reverse_lines_processed >= self.max_reverse_lines_to_process)
-            or len(self.active_settings_dictionary) == 0
-            or len(self.regex_definitions) == 0
-        ):
-            return True
-        return False
+        )
 
     def process_line(self, line, line_number, process_type):
         line = line.strip()
@@ -275,7 +315,7 @@ class GcodeSettingsProcessor(GcodeProcessor):
             self.reverse_lines_processed += 1
 
         logger.verbose("Process type: %s, line: %s, gcode: %s", process_type, line_number, line)
-        for regex_definition in self.regex_definitions:
+        for key, regex_definition in six.iteritems(self.active_regex_definitions):
             if regex_definition.match_once and regex_definition.has_matched:
                 continue
             try:
@@ -658,19 +698,20 @@ class SettingsDefinition(object):
         self.name = name
         self.parsing_function = parsing_function
         self.tags = set()
-        if tags is not None:
-            self.tags = set(tags)
+        self.tags = set(tags) if tags is not None else set()
         self.ignore_key = ignore_key
 
 
 class RegexDefinition(object):
-    def __init__(self, name, regex, match_function=None, match_once=False):
+    def __init__(self, name, regex, match_function=None, match_once=False, tags=[]):
         self.name = name
         self.regex_string = regex
         self.regex = re.compile(self.regex_string)
         self.match_function = match_function
         self.match_once = match_once
         self.has_matched = False
+        self.tags = set(tags) if tags is not None else set()
+
 
 
     def try_match(self):
@@ -682,14 +723,14 @@ class RegexDefinition(object):
 # Extends GcodeProcessor
 #############################################
 class Slic3rSettingsProcessor(GcodeSettingsProcessor):
-    def __init__(self, search_direction=u"both", max_forward_search=50, max_reverse_search=400):
+    def __init__(self, search_direction=u"both", max_forward_search=50, max_reverse_search=263):
         super(Slic3rSettingsProcessor, self).__init__(u'slic3r-pe', search_direction, max_forward_search, max_reverse_search)
 
     def get_regex_definitions(self):
-        return [
-            RegexDefinition(u"general_setting", u"^; (?P<key>[^,]*?) = (?P<val>.*)", self.default_matching_function),
-            RegexDefinition(u"version", u"^; generated by (?P<ver>.*) on (?P<year>[0-9]?[0-9]?[0-9]?[0-9])-(?P<mon>[0-9]?[0-9])-(?P<day>[0-9]?[0-9]) at (?P<hour>[0-9]?[0-9]):(?P<min>[0-9]?[0-9]):(?P<sec>[0-9]?[0-9])$", self.version_matched, True),
-        ]
+        return {
+            "general_setting": RegexDefinition(u"general_setting", u"^; (?P<key>[^,]*?) = (?P<val>.*)", self.default_matching_function, tags=[u'octolapse_setting']),
+            "version": RegexDefinition(u"version", u"^; generated by (?P<ver>.*) on (?P<year>[0-9]?[0-9]?[0-9]?[0-9])-(?P<mon>[0-9]?[0-9])-(?P<day>[0-9]?[0-9]) at (?P<hour>[0-9]?[0-9]):(?P<min>[0-9]?[0-9]):(?P<sec>[0-9]?[0-9])$", self.version_matched, True, tags=[u'octolapse_setting']),
+        }
 
     @staticmethod
     def get_settings_dictionary():
@@ -909,19 +950,21 @@ class Slic3rSettingsProcessor(GcodeSettingsProcessor):
                     )
                 }
                 self.active_settings_dictionary.pop(u'version')
+                self.active_regex_definitions.pop('version')
+                self.is_slicer_type_detected = True
 
 
 class Simplify3dSettingsProcessor(GcodeSettingsProcessor):
-    def __init__(self, search_direction="forward", max_forward_search=400, max_reverse_search=0):
+    def __init__(self, search_direction="forward", max_forward_search=295, max_reverse_search=0):
         super(Simplify3dSettingsProcessor, self).__init__(u'simplify-3d', search_direction, max_forward_search, max_reverse_search)
 
     def get_regex_definitions(self):
-        return [
-            RegexDefinition("general_setting", "^;\s\s\s(?P<key>.*?),(?P<val>.*)$", self.default_matching_function),
-            RegexDefinition("printer_models_override", "^;\s\s\sprinterModelsOverride$", self.printer_modesl_override_matched, True),
-            RegexDefinition("version", ";\sG\-Code\sgenerated\sby\sSimplify3D\(R\)\sVersion\s(?P<ver>.*)$", self.version_matched, True),
-            RegexDefinition("gocde_date", "^; (?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s(?P<day>[0-9]?[0-9]), (?P<year>[0-9]?[0-9]?[0-9]?[0-9]) at (?P<hour>[0-9]?[0-9]):(?P<min>[0-9]?[0-9]):(?P<sec>[0-9]?[0-9])\s(?P<period>AM|PM)$", self.gcode_date_matched, True)
-        ]
+        return {
+            "general_setting": RegexDefinition("general_setting", "^;\s\s\s(?P<key>.*?),(?P<val>.*)$", self.default_matching_function, tags=[u'octolapse_setting']),
+            "printer_models_override": RegexDefinition("printer_models_override", "^;\s\s\sprinterModelsOverride$", self.printer_modesl_override_matched, True),
+            "version": RegexDefinition("version", ";\sG\-Code\sgenerated\sby\sSimplify3D\(R\)\sVersion\s(?P<ver>.*)$", self.version_matched, True, tags=[u'octolapse_setting']),
+            "gocde_date": RegexDefinition("gocde_date", "^; (?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s(?P<day>[0-9]?[0-9]), (?P<year>[0-9]?[0-9]?[0-9]?[0-9]) at (?P<hour>[0-9]?[0-9]):(?P<min>[0-9]?[0-9]):(?P<sec>[0-9]?[0-9])\s(?P<period>AM|PM)$", self.gcode_date_matched, True)
+        }
 
     @staticmethod
     def get_settings_dictionary():
@@ -1150,6 +1193,8 @@ class Simplify3dSettingsProcessor(GcodeSettingsProcessor):
                 version = matches.group("ver")
                 self.results["version"] = version
                 self.active_settings_dictionary.pop(u'version')
+                self.active_regex_definitions.pop('version')
+                self.is_slicer_type_detected = True
 
     def gcode_date_matched(self, matches):
         if "gcodeDate" in self.active_settings_dictionary:
@@ -1161,6 +1206,7 @@ class Simplify3dSettingsProcessor(GcodeSettingsProcessor):
                     year=year, month=month, day=day, hour=hour, min=min, sec=sec, period=period
                 )
                 self.active_settings_dictionary.pop(u'gcodeDate')
+                self.active_regex_definitions.pop('gocde_date')
 
     def printer_modesl_override_matched(self, matches):
         if "printerModelsOverride" in self.active_settings_dictionary:
@@ -1168,20 +1214,21 @@ class Simplify3dSettingsProcessor(GcodeSettingsProcessor):
             if setting is not None:
                 self.results[setting.name] = None
                 self.active_settings_dictionary.pop(u'printerModelsOverride')
+                self.active_regex_definitions.pop('printer_models_override')
 
 
 class CuraSettingsProcessor(GcodeSettingsProcessor):
-    def __init__(self, search_direction="both", max_forward_search=400, max_reverse_search=0):
+    def __init__(self, search_direction="both", max_forward_search=550, max_reverse_search=550):
         super(CuraSettingsProcessor, self).__init__(u'cura', search_direction, max_forward_search, max_reverse_search)
 
     def get_regex_definitions(self):
-        return [
-            RegexDefinition(u"general_setting", u"^; (?P<key>[^,]*?) = (?P<val>.*)", self.default_matching_function),
-            RegexDefinition(u"version", u"^;Generated\swith\sCura_SteamEngine\s(?P<ver>.*)$",self.version_matched,True),
-            RegexDefinition(u"filament_used_meters", u"^;Filament\sused:\s(?P<meters>.*)m$", self.filament_used_meters_matched, True),
-            RegexDefinition(u"firmware_flavor", u"^;FLAVOR:(?P<flavor>.*)$", self.firmware_flavor_matched, True),
-            RegexDefinition(u"layer_height", u"^;Layer\sheight:\s(?P<height>.*)$", self.layer_height_matched, True),
-        ]
+        return {
+            "general_setting": RegexDefinition(u"general_setting", u"^; (?P<key>[^,]*?) = (?P<val>.*)", self.default_matching_function, tags=[u'octolapse_setting']),
+            "version": RegexDefinition(u"version", u"^;Generated\swith\sCura_SteamEngine\s(?P<ver>.*)$",self.version_matched,True, tags=[u'octolapse_setting']),
+            "filament_used_meters": RegexDefinition(u"filament_used_meters", u"^;Filament\sused:\s(?P<meters>.*)m$", self.filament_used_meters_matched, True),
+            "firmware_flavor": RegexDefinition(u"firmware_flavor", u"^;FLAVOR:(?P<flavor>.*)$", self.firmware_flavor_matched, True),
+            "layer_height": RegexDefinition(u"layer_height", u"^;Layer\sheight:\s(?P<height>.*)$", self.layer_height_matched, True),
+        }
 
     @staticmethod
     def get_settings_dictionary():
@@ -1711,121 +1758,126 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             version = matches.group(u"ver")
             self.results[u"version"] = version
             self.active_settings_dictionary.pop(u'version')
+            self.active_regex_definitions.pop('version')
+            self.is_slicer_type_detected = True
 
     def filament_used_meters_matched(self, matches):
         if u'filament_used_meters' in self.active_settings_dictionary:
             filament_used = matches.group(u"meters")
             self.results[u"filament_used_meters"] = float(filament_used)
             self.active_settings_dictionary.pop(u'filament_used_meters')
+            self.active_regex_definitions.pop('filament_used_meters')
 
     def firmware_flavor_matched(self, matches):
         if u'firmware_flavor' in self.active_settings_dictionary:
             firmware_flavor = matches.group(u"flavor")
             self.results[u"firmware_flavor"] = float(firmware_flavor)
             self.active_settings_dictionary.pop(u'firmware_flavor')
+            self.active_regex_definitions.pop('firmware_flavor')
 
     def layer_height_matched(self, matches):
         if u'layer_height' in self.active_settings_dictionary:
             layer_height = matches.group(u"height")
             self.results[u"layer_height"] = float(layer_height)
             self.active_settings_dictionary.pop(u'layer_height')
+            self.active_regex_definitions.pop('layer_height')
 
 
-class GcodeFileLineProcessor(GcodeProcessor):
-
-    Position = None
-
-    def __init__(
-        self,
-        name,
-        matching_function,
-        max_forward_lines_to_process=None,
-        include_gcode=True,
-        include_comments=True
-    ):
-        super(GcodeFileLineProcessor, self).__init__(name, u'gcode_file_line_processor')
-        # other slicer specific vars
-        self.file_process_type = u'forward'
-        self.file_process_category = u'gcode-file-line'
-        self.max_forward_lines_to_process = max_forward_lines_to_process
-        self.forward_lines_processed = 0
-        self.results = {}
-        self.include_comments = include_comments
-        self.include_gcode = include_gcode
-        self.matching_function = matching_function
-        if not self.include_comments and not self.include_gcode:
-            raise ValueError(u"Both include_gcode and include_comments are false.  One or both must be true.")
-
-        # get the regex last
-        self.regex_definitions = self.get_regex_definitions()
-
-    def reset(self):
-        self.forward_lines_processed = 0
-        self.results = {}
-
-    def get_regex_definitions(self):
-        regexes = []
-        if self.include_gcode and self.include_comments:
-            regexes.append(
-                RegexDefinition(u"entire_line", u"^(?P<gcode>[^;]*)[;]?(?P<comment>.*$)", self.matching_function)
-            )
-        elif self.include_gcode:
-            regexes.append(
-                RegexDefinition(u"gcode_only", u"(?P<gcode>[^;]*)", self.matching_function)
-            )
-        elif self.include_comments:
-            regexes.append(
-                RegexDefinition(u"comment_only", u"(?<=;)(?P<comment>.*$)", self.matching_function)
-            )
-        return regexes
-
-    def on_before_start(self):
-        # reset everything
-        self.reset()
-
-    def on_apply_filter(self, filter_tags=None):
-        pass
-
-    def can_process(self):
-        return True
-
-    def is_complete(self, process_type):
-        if (
-            (
-                process_type == u"forward"
-                and self.max_forward_lines_to_process is not None
-                and self.forward_lines_processed >= self.max_forward_lines_to_process
-            )
-            or len(self.regex_definitions) == 0
-        ):
-            return True
-        return False
-
-    def process_line(self, line, line_number, process_type):
-        line = line.replace(u'\r', '').replace(u'\n', u'')
-        if process_type == "forward":
-            self.forward_lines_processed += 1
-
-        for regex_definition in self.regex_definitions:
-            if regex_definition.match_once and regex_definition.has_matched:
-                continue
-            match = re.search(regex_definition.regex, line)
-            if not match:
-                continue
-            regex_definition.has_matched = True
-            self.process_match(match, line, regex_definition)
-            break
-
-    def process_match(self, matches, line_text, regex):
-        # see if we have a matched key
-        if regex.match_function is not None:
-            regex.match_function(matches)
-        else:
-            self.default_matching_function(matches)
-
-    def default_matching_function(self, matches):
-        raise NotImplementedError(u"You must implement the default_matching_function")
-
-    def get_results(self):
-        return self.results
-
+# class GcodeFileLineProcessor(GcodeProcessor):
+#
+#     Position = None
+#
+#     def __init__(
+#         self,
+#         name,
+#         matching_function,
+#         max_forward_lines_to_process=None,
+#         include_gcode=True,
+#         include_comments=True
+#     ):
+#         super(GcodeFileLineProcessor, self).__init__(name, u'gcode_file_line_processor')
+#         # other slicer specific vars
+#         self.file_process_type = u'forward'
+#         self.file_process_category = u'gcode-file-line'
+#         self.max_forward_lines_to_process = max_forward_lines_to_process
+#         self.forward_lines_processed = 0
+#         self.results = {}
+#         self.include_comments = include_comments
+#         self.include_gcode = include_gcode
+#         self.matching_function = matching_function
+#         if not self.include_comments and not self.include_gcode:
+#             raise ValueError(u"Both include_gcode and include_comments are false.  One or both must be true.")
+#
+#         # get the regex last
+#         self.regex_definitions = self.get_regex_definitions()
+#
+#     def reset(self):
+#         self.forward_lines_processed = 0
+#         self.results = {}
+#
+#     def get_regex_definitions(self):
+#         regexes = []
+#         if self.include_gcode and self.include_comments:
+#             regexes.append(
+#                 RegexDefinition(u"entire_line", u"^(?P<gcode>[^;]*)[;]?(?P<comment>.*$)", self.matching_function)
+#             )
+#         elif self.include_gcode:
+#             regexes.append(
+#                 RegexDefinition(u"gcode_only", u"(?P<gcode>[^;]*)", self.matching_function)
+#             )
+#         elif self.include_comments:
+#             regexes.append(
+#                 RegexDefinition(u"comment_only", u"(?<=;)(?P<comment>.*$)", self.matching_function)
+#             )
+#         return regexes
+#
+#     def on_before_start(self):
+#         # reset everything
+#         self.reset()
+#
+#     def on_apply_filter(self, filter_tags=None):
+#         pass
+#
+#     def can_process(self):
+#         return True
+#
+#     def is_complete(self, process_type):
+#         if (
+#             (
+#                 process_type == u"forward"
+#                 and self.max_forward_lines_to_process is not None
+#                 and self.forward_lines_processed >= self.max_forward_lines_to_process
+#             )
+#             or len(self.regex_definitions) == 0
+#         ):
+#             return True
+#         return False
+#
+#     def process_line(self, line, line_number, process_type):
+#         line = line.replace(u'\r', '').replace(u'\n', u'')
+#         if process_type == "forward":
+#             self.forward_lines_processed += 1
+#
+#         for regex_definition in self.regex_definitions:
+#             if regex_definition.match_once and regex_definition.has_matched:
+#                 continue
+#             match = re.search(regex_definition.regex, line)
+#             if not match:
+#                 continue
+#             regex_definition.has_matched = True
+#             self.process_match(match, line, regex_definition)
+#             break
+#
+#     def process_match(self, matches, line_text, regex):
+#         # see if we have a matched key
+#         if regex.match_function is not None:
+#             regex.match_function(matches)
+#         else:
+#             self.default_matching_function(matches)
+#
+#     def default_matching_function(self, matches):
+#         raise NotImplementedError(u"You must implement the default_matching_function")
+#
+#     def get_results(self):
+#         return self.results
+#

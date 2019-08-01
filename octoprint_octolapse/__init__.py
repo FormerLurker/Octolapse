@@ -1945,7 +1945,7 @@ class OctolapsePlugin(
                 updated_profile_json = printer_profile.to_json()
                 self.send_slicer_settings_detected_message(settings_saved, updated_profile_json)
             else:
-                if self._octolapse_settings.main_settings.self.cancel_print_on_startup_error:
+                if self._octolapse_settings.main_settings.cancel_print_on_startup_error:
                     # If you are using Cura, see this link:  TODO:  ADD LINK TO CURA FEATURE TEMPLATE AND INSTRUCTIONS
                     if error_type == "no-settings-detected":
                         message = "No slicer settings could be extracted from the gcode file.  Please check the " \
