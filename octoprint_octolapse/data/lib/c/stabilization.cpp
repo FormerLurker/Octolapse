@@ -137,19 +137,24 @@ void stabilization::process_file(stabilization_results* results)
 
 	// todo : clear out everything for a fresh go!
 	file_size_ = get_file_size(p_stabilization_args_->file_path);
-	std::ifstream gcodeFile(p_stabilization_args_->file_path.c_str());
-	std::string line;
 
-	if (gcodeFile.is_open())
+	//std::ifstream gcodeFile(p_stabilization_args_->file_path.c_str());
+	FILE *gcodeFile;
+	errno_t err;
+	char line[9999];
+
+	//if (gcodeFile.is_open())
+	err = fopen_s(&gcodeFile, p_stabilization_args_->file_path.c_str(), "r");
+	if(err == 0)
 	{
 		// Communicate every second
 		parsed_command* cmd = new parsed_command();
-		while (std::getline(gcodeFile, line) && is_running_)
+		while (fgets(line, 9999, gcodeFile) && is_running_)
 		{
 			lines_processed_++;
 			cmd->clear();
 			//std::cout << "stabilization::process_file - parsing gcode: " << line << "...";
-			gcode_parser_->try_parse_gcode(line.c_str(), cmd);
+			gcode_parser_->try_parse_gcode(line, cmd);
 			//std::cout << "Complete.\r\n";
 			if (!cmd->cmd_.empty())
 			{
@@ -162,7 +167,7 @@ void stabilization::process_file(stabilization_results* results)
 				if (next_update_time < clock())
 				{
 					// ToDo: tellg does not do what I think it does, but why?
-					long currentPosition = (long)gcodeFile.tellg();
+					long currentPosition = ftell (gcodeFile);
 					long bytesRemaining = file_size_ - currentPosition;
 					double percentProgress = (double)currentPosition / (double)file_size_*100.0;
 					double secondsElapsed = get_time_elapsed(start_clock, clock());
@@ -179,7 +184,7 @@ void stabilization::process_file(stabilization_results* results)
 		}
 		// deallocate the parsed_command object
 		
-		gcodeFile.close();
+		fclose(gcodeFile);
 		on_processing_complete();
 		delete cmd;
 		//std::cout << "stabilization::process_file - Completed Processing file.\r\n";
