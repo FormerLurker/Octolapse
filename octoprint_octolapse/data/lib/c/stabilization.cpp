@@ -26,8 +26,6 @@
 #include <vector>
 #include "logging.h"
 
-
-
 stabilization::stabilization(
 	gcode_position_args* position_args, stabilization_args* stab_args, pythonGetCoordinatesCallback get_coordinates_callback, pythonProgressCallback progress
 )
@@ -139,13 +137,10 @@ void stabilization::process_file(stabilization_results* results)
 	file_size_ = get_file_size(p_stabilization_args_->file_path);
 
 	//std::ifstream gcodeFile(p_stabilization_args_->file_path.c_str());
-	FILE *gcodeFile;
-	
+	FILE *gcodeFile = fopen(p_stabilization_args_->file_path.c_str(), "r");
 	char line[9999];
 
-	//if (gcodeFile.is_open())
-	const int err = fopen_s(&gcodeFile, p_stabilization_args_->file_path.c_str(), "r");
-	if(err == 0)
+	if (gcodeFile != NULL)
 	{
 		// Communicate every second
 		parsed_command* cmd = new parsed_command();
@@ -189,10 +184,10 @@ void stabilization::process_file(stabilization_results* results)
 		delete cmd;
 		//std::cout << "stabilization::process_file - Completed Processing file.\r\n";
 	}
-	else
-	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to open the gcode file.");
-	}
+	//else
+	//{
+	//	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to open the gcode file.");
+	//}
 	const clock_t end_clock = clock();
 	const double total_seconds = static_cast<double>(end_clock - start_clock) / CLOCKS_PER_SEC;
 	results->success_ = errors_.empty();

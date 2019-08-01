@@ -22,6 +22,7 @@
 
 #ifndef STABILIZATION_H
 #define STABILIZATION_H
+#define _CRT_SECURE_NO_DEPRECATE
 #include <string>
 #include "position.h"
 #include "gcode_position.h"
