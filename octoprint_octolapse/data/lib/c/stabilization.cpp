@@ -140,11 +140,11 @@ void stabilization::process_file(stabilization_results* results)
 
 	//std::ifstream gcodeFile(p_stabilization_args_->file_path.c_str());
 	FILE *gcodeFile;
-	errno_t err;
+	
 	char line[9999];
 
 	//if (gcodeFile.is_open())
-	err = fopen_s(&gcodeFile, p_stabilization_args_->file_path.c_str(), "r");
+	const int err = fopen_s(&gcodeFile, p_stabilization_args_->file_path.c_str(), "r");
 	if(err == 0)
 	{
 		// Communicate every second
