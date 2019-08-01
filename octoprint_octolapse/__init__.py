@@ -47,6 +47,7 @@ import math
 import threading
 import uuid
 import six
+import time
 from six.moves import queue
 from tempfile import mkdtemp
 # import python 3 specific modules
@@ -2183,6 +2184,8 @@ class OctolapsePlugin(
             "lines_processed": lines_processed
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
+        # sleep for just a bit to allow the plugin message time to be sent.
+        time.sleep(0.001)
 
     def send_popup_message(self, msg):
         self.send_plugin_message("popup", msg)

@@ -242,7 +242,10 @@ extern "C"
 		
 		stabilization_results results;
 		//std::cout << "Processing gcode file.\r\n";
+		
 		stabilization.process_file(&results);
+		
+
 		set_internal_log_levels(true);
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Building snapshot plans.");
 

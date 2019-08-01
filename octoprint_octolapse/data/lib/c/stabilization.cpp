@@ -127,7 +127,6 @@ void stabilization::process_file(stabilization_results* results)
 	p_snapshot_plans_ = &results->snapshot_plans_;
 	//std::cout << "stabilization::process_file - Processing file.\r\n";
 	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Processing File.");
-	PyThreadState *_save = NULL;
 	is_running_ = true;
 	
 	double next_update_time = get_next_update_time();
