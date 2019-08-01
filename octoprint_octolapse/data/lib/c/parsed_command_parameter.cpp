@@ -26,11 +26,11 @@
 #include "python_helpers.h"
 parsed_command_parameter::parsed_command_parameter()
 {
-	name_ = "";
+	//name_ = "";
 	value_type_ = 'N';
-	double_value_ = 0.0;
-	string_value_ = "";
-	unsigned_long_value_ = 0;
+	//double_value_ = 0.0;
+	//string_value_ = "";
+	//unsigned_long_value_ = 0;
 }
 
 parsed_command_parameter::parsed_command_parameter(parsed_command_parameter & source)
@@ -45,22 +45,22 @@ parsed_command_parameter::parsed_command_parameter(parsed_command_parameter & so
 parsed_command_parameter::parsed_command_parameter(std::string name, double double_value) : name_(name), double_value_(double_value)
 {
 	value_type_ = 'F';
-	string_value_ = "";
-	unsigned_long_value_ = 0;
+	//string_value_ = "";
+	//unsigned_long_value_ = 0;
 }
 
 parsed_command_parameter::parsed_command_parameter(std::string name, std::string string_value) : name_(name), string_value_(string_value)
 {
 	value_type_ = 'S';
-	double_value_ = 0.0;
-	unsigned_long_value_ = 0;
+	//double_value_ = 0.0;
+	//unsigned_long_value_ = 0;
 }
 
 parsed_command_parameter::parsed_command_parameter(std::string name, unsigned int unsigned_int_value) : name_(name), string_value_(string_value_), unsigned_long_value_(unsigned_int_value)
 {
 	value_type_ = 'U';
-	double_value_ = 0.0;
-	string_value_ = "";
+	//double_value_ = 0.0;
+	//string_value_ = "";
 }
 parsed_command_parameter::~parsed_command_parameter()
 {

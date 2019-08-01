@@ -262,6 +262,17 @@ bool gcode_parser::try_extract_unsigned_long(char ** p_p_gcode, unsigned long * 
 	return found_numbers;
 }
 
+double gcode_parser::ten_pow(size_t n) {
+	double r = 1.0;
+
+	while (n > 0) {
+		r *= 10;
+		--n;
+	}
+
+	return r;
+}
+
 bool gcode_parser::try_extract_double(char ** p_p_gcode, double * p_double) const
 {
 	char * p = *p_p_gcode;
@@ -308,7 +319,8 @@ bool gcode_parser::try_extract_double(char ** p_p_gcode, double * p_double) cons
 			}
 			++p;
 		}
-		r += f / std::pow(10.0, n);
+		//r += f / std::pow(10.0, n);
+		r += f / ten_pow(n);
 	}
 	if (neg) {
 		r = -r;

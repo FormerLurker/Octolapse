@@ -40,7 +40,8 @@ public:
 	position(const std::string& xyz_axis_default_mode, const std::string& e_axis_default_mode, const std::string&
 	         units_default);
 	~position();
-	static void copy(position &source, position* target);
+	static void copy(position *source, position* target);
+	static void copy(position *source, parsed_command* source_command, position* target);
 	void reset_state();
 	PyObject * to_py_tuple();
 	PyObject * to_py_dict();
@@ -123,5 +124,7 @@ public:
 	double get_offset_e();
 private:
 	void initialize();
+	static void _copy_parsed_command(parsed_command* source_command, position* target);
+	static void _copy_position(position* source, position* target);
 };
 #endif

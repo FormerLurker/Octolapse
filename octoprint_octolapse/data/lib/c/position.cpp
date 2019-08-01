@@ -230,88 +230,102 @@ position::~position()
 		p_command = NULL;
 	}
 }
-
-void position::copy(position &source, position* target)
+void position::_copy_parsed_command(parsed_command* source_command, position* target)
 {
 	if (target->p_command != NULL)
 	{
 		delete target->p_command;
 		target->p_command = NULL;
 	}
-	if(source.p_command != NULL)
-		target->p_command = new parsed_command(*source.p_command);
-	target->f_ = source.f_;
-	target->f_null_ = source.f_null_;
-	target->x_ = source.x_;
-	target->x_null_ = source.x_null_;
-	target->x_offset_ = source.x_offset_;
-	target->x_homed_ = source.x_homed_;
-	target->y_ = source.y_;
-	target->y_null_ = source.y_null_;
-	target->y_offset_ = source.y_offset_;
-	target->y_homed_ = source.y_homed_;
-	target->z_ = source.z_;
-	target->z_null_ = source.z_null_;
-	target->z_offset_ = source.z_offset_;
-	target->z_homed_ = source.z_homed_;
-	target->e_ = source.e_;
-	target->e_offset_ = source.e_offset_;
-	target->is_relative_ = source.is_relative_;
-	target->is_relative_null_ = source.is_relative_null_;
-	target->is_extruder_relative_ = source.is_extruder_relative_;
-	target->is_extruder_relative_null_ = source.is_extruder_relative_null_;
-	target->is_metric_ = source.is_metric_;
-	target->is_metric_null_ = source.is_metric_null_;
-	target->last_extrusion_height_ = source.last_extrusion_height_;
-	target->last_extrusion_height_null_ = source.last_extrusion_height_null_;
-	target->layer_ = source.layer_;
-	target->height_ = source.height_;
-	target->current_height_increment_ = source.current_height_increment_;
-	target->is_printer_primed_ = source.is_printer_primed_;
-	target->firmware_retraction_length_ = source.firmware_retraction_length_;
-	target->firmware_retraction_length_null_ = source.firmware_retraction_length_null_;
-	target->firmware_unretraction_additional_length_ = source.firmware_unretraction_additional_length_;
-	target->firmware_unretraction_additional_length_null_ = source.firmware_unretraction_additional_length_null_;
-	target->firmware_retraction_feedrate_ = source.firmware_retraction_feedrate_;
-	target->firmware_retraction_feedrate_null_ = source.firmware_retraction_feedrate_null_;
-	target->firmware_unretraction_feedrate_ = source.firmware_unretraction_feedrate_;
-	target->firmware_unretraction_feedrate_null_ = source.firmware_unretraction_feedrate_null_;
-	target->firmware_z_lift_ = source.firmware_z_lift_;
-	target->firmware_z_lift_null_ = source.firmware_z_lift_null_;
-	target->has_position_error_ = source.has_position_error_;
-	target->position_error_ = source.position_error_;
-	target->has_homed_position_ = source.has_homed_position_;
-	target->e_relative_ = source.e_relative_;
-	target->z_relative_ = source.z_relative_;
-	target->extrusion_length_ = source.extrusion_length_;
-	target->extrusion_length_total_ = source.extrusion_length_total_;
-	target->retraction_length_ = source.retraction_length_;
-	target->deretraction_length_ = source.deretraction_length_;
-	target->is_extruding_start_ = source.is_extruding_start_;
-	target->is_extruding_ = source.is_extruding_;
-	target->is_primed_ = source.is_primed_;
-	target->is_retracting_start_ = source.is_retracting_start_;
-	target->is_retracting_ = source.is_retracting_;
-	target->is_retracted_ = source.is_retracted_;
-	target->is_partially_retracted_ = source.is_partially_retracted_;
-	target->is_deretracting_start_ = source.is_deretracting_start_;
-	target->is_deretracting_ = source.is_deretracting_;
-	target->is_deretracted_ = source.is_deretracted_;
-	target->is_layer_change_ = source.is_layer_change_;
-	target->is_height_change_ = source.is_height_change_;
-	target->is_xy_travel_ = source.is_xy_travel_;
-	target->is_xyz_travel_ = source.is_xyz_travel_;
-	target->is_zhop_ = source.is_zhop_;
-	target->has_xy_position_changed_ = source.has_xy_position_changed_;
-	target->has_position_changed_ = source.has_position_changed_;
-	target->has_state_changed_ = source.has_state_changed_;
-	target->has_received_home_command_ = source.has_received_home_command_;
-	target->is_in_position_ = source.is_in_position_;
-	target->in_path_position_ = source.in_path_position_;
-	target->file_line_number_ = source.file_line_number_;
-	target->gcode_number_ = source.gcode_number_;
-	target->gcode_ignored_ = source.gcode_ignored_;
-	target->is_in_bounds_ = source.is_in_bounds_;
+	if (source_command != NULL)
+		target->p_command = new parsed_command(*source_command);
+}
+void position::copy(position *source, position* target)
+{
+	position::_copy_parsed_command(source->p_command, target);
+	position::_copy_position(source, target);
+}
+
+void position::_copy_position(position* source, position* target)
+{
+	target->f_ = source->f_;
+	target->f_null_ = source->f_null_;
+	target->x_ = source->x_;
+	target->x_null_ = source->x_null_;
+	target->x_offset_ = source->x_offset_;
+	target->x_homed_ = source->x_homed_;
+	target->y_ = source->y_;
+	target->y_null_ = source->y_null_;
+	target->y_offset_ = source->y_offset_;
+	target->y_homed_ = source->y_homed_;
+	target->z_ = source->z_;
+	target->z_null_ = source->z_null_;
+	target->z_offset_ = source->z_offset_;
+	target->z_homed_ = source->z_homed_;
+	target->e_ = source->e_;
+	target->e_offset_ = source->e_offset_;
+	target->is_relative_ = source->is_relative_;
+	target->is_relative_null_ = source->is_relative_null_;
+	target->is_extruder_relative_ = source->is_extruder_relative_;
+	target->is_extruder_relative_null_ = source->is_extruder_relative_null_;
+	target->is_metric_ = source->is_metric_;
+	target->is_metric_null_ = source->is_metric_null_;
+	target->last_extrusion_height_ = source->last_extrusion_height_;
+	target->last_extrusion_height_null_ = source->last_extrusion_height_null_;
+	target->layer_ = source->layer_;
+	target->height_ = source->height_;
+	target->current_height_increment_ = source->current_height_increment_;
+	target->is_printer_primed_ = source->is_printer_primed_;
+	target->firmware_retraction_length_ = source->firmware_retraction_length_;
+	target->firmware_retraction_length_null_ = source->firmware_retraction_length_null_;
+	target->firmware_unretraction_additional_length_ = source->firmware_unretraction_additional_length_;
+	target->firmware_unretraction_additional_length_null_ = source->firmware_unretraction_additional_length_null_;
+	target->firmware_retraction_feedrate_ = source->firmware_retraction_feedrate_;
+	target->firmware_retraction_feedrate_null_ = source->firmware_retraction_feedrate_null_;
+	target->firmware_unretraction_feedrate_ = source->firmware_unretraction_feedrate_;
+	target->firmware_unretraction_feedrate_null_ = source->firmware_unretraction_feedrate_null_;
+	target->firmware_z_lift_ = source->firmware_z_lift_;
+	target->firmware_z_lift_null_ = source->firmware_z_lift_null_;
+	target->has_position_error_ = source->has_position_error_;
+	target->position_error_ = source->position_error_;
+	target->has_homed_position_ = source->has_homed_position_;
+	target->e_relative_ = source->e_relative_;
+	target->z_relative_ = source->z_relative_;
+	target->extrusion_length_ = source->extrusion_length_;
+	target->extrusion_length_total_ = source->extrusion_length_total_;
+	target->retraction_length_ = source->retraction_length_;
+	target->deretraction_length_ = source->deretraction_length_;
+	target->is_extruding_start_ = source->is_extruding_start_;
+	target->is_extruding_ = source->is_extruding_;
+	target->is_primed_ = source->is_primed_;
+	target->is_retracting_start_ = source->is_retracting_start_;
+	target->is_retracting_ = source->is_retracting_;
+	target->is_retracted_ = source->is_retracted_;
+	target->is_partially_retracted_ = source->is_partially_retracted_;
+	target->is_deretracting_start_ = source->is_deretracting_start_;
+	target->is_deretracting_ = source->is_deretracting_;
+	target->is_deretracted_ = source->is_deretracted_;
+	target->is_layer_change_ = source->is_layer_change_;
+	target->is_height_change_ = source->is_height_change_;
+	target->is_xy_travel_ = source->is_xy_travel_;
+	target->is_xyz_travel_ = source->is_xyz_travel_;
+	target->is_zhop_ = source->is_zhop_;
+	target->has_xy_position_changed_ = source->has_xy_position_changed_;
+	target->has_position_changed_ = source->has_position_changed_;
+	target->has_state_changed_ = source->has_state_changed_;
+	target->has_received_home_command_ = source->has_received_home_command_;
+	target->is_in_position_ = source->is_in_position_;
+	target->in_path_position_ = source->in_path_position_;
+	target->file_line_number_ = source->file_line_number_;
+	target->gcode_number_ = source->gcode_number_;
+	target->gcode_ignored_ = source->gcode_ignored_;
+	target->is_in_bounds_ = source->is_in_bounds_;
+}
+
+void position::copy(position *source, parsed_command* source_command, position* target)
+{
+	position::_copy_parsed_command(source_command, target);
+	position::_copy_position(source, target);
 }
 
 PyObject* position::to_py_tuple()

@@ -26,8 +26,8 @@
 #include <sstream>
 parsed_command::parsed_command()
 {
-	cmd_ = "";
-	gcode_ = "";
+	//cmd_ = "";
+	//gcode_ = "";
 }
 parsed_command::parsed_command(parsed_command & source)
 {

@@ -152,17 +152,19 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 	p_undo_pos_ = p_previous_pos_;
 	p_previous_pos_ = p_current_pos_;
 	p_current_pos_ = old_undo_pos;
-	position::copy(*p_previous_pos_, p_current_pos_);
+	// Copy the previous position to the current, but don't copy the parsed command
+	position::copy(p_previous_pos_, command, p_current_pos_);
+	//position::copy(*p_previous_pos_, p_current_pos_);
 	p_current_pos_->reset_state();
 
 	// add our parsed command to the current position
-	if (p_current_pos_->p_command != NULL)
+	/*if (p_current_pos_->p_command != NULL)
 	{
 		delete p_current_pos_->p_command;
 		p_current_pos_->p_command = NULL;
 	}
 	p_current_pos_->p_command = new parsed_command(*command);
-
+	*/
 	p_current_pos_->file_line_number_ = file_line_number;
 	p_current_pos_->gcode_number_ = gcode_number;
 	// Does our function exist in our functions map?
