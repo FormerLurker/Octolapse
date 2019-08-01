@@ -103,7 +103,7 @@ class OctolapsePlugin(
 ):
     TIMEOUT_DELAY = 1000
     PREPROCESSING_CANCEL_TIMEOUT_SECONDS = 5
-    PREPROCESSING_NOTIFICATION_PERIOD_SECONDS = 0.5
+    PREPROCESSING_NOTIFICATION_PERIOD_SECONDS = 1
 
     def __init__(self):
         self._octolapse_settings = None  # type: OctolapseSettings
