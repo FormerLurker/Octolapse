@@ -528,8 +528,9 @@ def get_system_fonts(base_directory):
     # first add all of our supplied fonts
     default_font_path = os.path.join(base_directory, "data", "fonts", "DejaVu")
     for f in os.listdir(default_font_path):
-        font_names.add(f)
-        font_paths.append(os.path.join(default_font_path, f))
+        if f.endswith(".ttf"):
+            font_names.add(f)
+            font_paths.append(os.path.join(default_font_path, f))
 
     if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
         # Linux and OS X.
