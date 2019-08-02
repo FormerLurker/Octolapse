@@ -1143,7 +1143,7 @@ class OctolapsePlugin(
     @restricted_access
     @admin_permission.require(403)
     def get_available_fonts(self):
-        font_list = utility.get_system_fonts()
+        font_list = utility.get_system_fonts(self._basefolder)
         return json.dumps(font_list), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/previewOverlay", methods=["POST"])

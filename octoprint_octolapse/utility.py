@@ -519,21 +519,38 @@ def exception_to_string(e):
     return ''.join(tb_lines)
 
 
-def get_system_fonts():
+def get_system_fonts(base_directory):
     """Retrieves a list of fonts for any operating system. Note that this may not be a complete list of fonts discoverable on the system.
     :returns A list of filepaths to fonts available on the system."""
+
+    font_paths = []
+    font_names = set()
+    # first add all of our supplied fonts
+    default_font_path = os.path.join(base_directory, "data", "fonts", "DejaVu")
+    for f in os.listdir(default_font_path):
+        font_names.add(f)
+        font_paths.append(os.path.join(default_font_path, f))
+
     if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
         # Linux and OS X.
-        return subprocess.check_output("fc-list --format %{file}\\n".split()).split('\n')
+        linux_font_paths = subprocess.check_output("fc-list --format %{file}\\n".split()).split('\n')
+        for f in linux_font_paths:
+            font_name = os.path.basename(f)
+            if not font_name in font_names:
+                font_names.add(f)
+                font_paths.append(f)
     elif sys.platform == "win32" or sys.platform == "cygwin":
         # Windows.
-        fonts = []
         for f in os.listdir(os.path.join(os.environ['WINDIR'], "fonts")):
             if f.endswith(".ttf"):
-                fonts.append(os.path.join(os.environ['WINDIR'], f))
-        return fonts
+                if not f in font_names:
+                    font_names.add(f)
+                    font_paths.append(os.path.join(os.environ['WINDIR'], f))
     else:
         raise NotImplementedError('Unsupported operating system.')
+
+    return sorted(font_paths)
+
 
 
 class POpenWithTimeout(object):
