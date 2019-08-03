@@ -490,7 +490,8 @@ class PrinterProfile(AutomaticConfigurationProfile):
             ],
             'slicer_type_options': [
                 dict(value='automatic', name='Automatic Configuration'),
-                dict(value='cura', name='Cura'),
+                dict(value='cura_4_2', name='Cura V4.2 and Above'),
+                dict(value='cura', name='Cura V4.1 and Below'),
                 dict(value='simplify-3d', name='Simplify 3D'),
                 dict(value='slic3r-pe', name='Slic3r Prusa Edition'),
                 dict(value='other', name='Other Slicer')
@@ -546,7 +547,7 @@ class PrinterProfile(AutomaticConfigurationProfile):
             return self.slicers.slic3r_pe
         elif slicer_type == 'simplify-3d':
             return self.slicers.simplify_3d
-        elif slicer_type == 'cura':
+        elif slicer_type in ['cura', 'cura_4_2']:
             return self.slicers.cura
         elif slicer_type == 'other':
             return self.slicers.other
@@ -556,7 +557,7 @@ class PrinterProfile(AutomaticConfigurationProfile):
         if self.slicer_type == 'automatic':
             return None
 
-        return self.get_current_slicer_settings().get_gcode_generation_settings()
+        return self.get_current_slicer_settings().get_gcode_generation_settings(slicer_type=self.slicer_type)
 
     def get_gcode_settings_from_file(self, gcode_file_path):
         simplify_preprocessor = gcode_preprocessing.Simplify3dSettingsProcessor(
@@ -594,20 +595,24 @@ class PrinterProfile(AutomaticConfigurationProfile):
                 new_slicer_settings = Slic3rPeSettings()
             elif self.slicer_type == 'simplify-3d':
                 new_slicer_settings = Simplify3dSettings()
-            elif self.slicer_type == 'cura':
+            elif self.slicer_type in ['cura', 'cura_4_2']:
                 new_slicer_settings = CuraSettings()
             else:
                 raise Exception("An invalid slicer type has been detected while extracting settings from gcode.")
 
             new_slicer_settings.update_settings_from_gcode(new_settings)
             # check to make sure all of the required settings are there
-            missing_settings = new_slicer_settings.get_missing_gcode_generation_settings()
+            missing_settings = new_slicer_settings.get_missing_gcode_generation_settings(slicer_type=self.slicer_type)
             if len(missing_settings) > 0:
                 return False, 'required-settings-missing', missing_settings
             # copy the settings into the current profile
             current_slicer_settings = self.get_current_slicer_settings()
             current_slicer_settings.update(new_slicer_settings)
-            self.gcode_generation_settings.update(current_slicer_settings.get_gcode_generation_settings())
+            self.gcode_generation_settings.update(
+                current_slicer_settings.get_gcode_generation_settings(
+                    slicer_type = self.slicer_type
+                )
+            )
 
             return True, None, []
 
@@ -1779,7 +1784,7 @@ class Profiles(Settings):
             new_profile = PrinterProfile.create_from(profile)
             if new_profile.slicer_type != 'automatic':
                 new_profile.gcode_generation_settings = (
-                    new_profile.get_current_slicer_settings().get_gcode_generation_settings()
+                    new_profile.get_current_slicer_settings().get_gcode_generation_settings(new_profile.slicer_type)
                 )
             self.printers[guid] = new_profile
             if len(self.printers) == 1 or self.current_printer_profile_guid not in self.printers:
@@ -2224,8 +2229,8 @@ class SlicerSettings(Settings):
         """Returns OctolapseSlicerSettings"""
         raise NotImplementedError("You must implement get_gcode_generation_settings")
 
-    def get_missing_gcode_generation_settings(self):
-        settings = self.get_gcode_generation_settings()
+    def get_missing_gcode_generation_settings(self, slicer_type=None):
+        settings = self.get_gcode_generation_settings(slicer_type=slicer_type)
         assert(isinstance(settings, OctolapseGcodeSettings))
         issue_list = []
         if settings.retraction_length is None:
@@ -2264,6 +2269,7 @@ class CuraSettings(SlicerSettings):
         self.retraction_enable = None  # new setting
         self.speed_travel = None
         self.max_feedrate_z_override = None
+        self.speed_z_hop = None
         self.retraction_hop = None
         self.axis_speed_display_settings = 'mm-sec'
         self.layer_height = None
@@ -2273,14 +2279,14 @@ class CuraSettings(SlicerSettings):
     def get_speed_tolerance(self):
         return 0.1 / 60.0 / 2.0
 
-    def get_gcode_generation_settings(self):
+    def get_gcode_generation_settings(self, slicer_type="cura"):
         settings = OctolapseGcodeSettings()
         settings.retraction_length = self.get_retraction_amount()
         settings.retraction_speed = self.get_retraction_retract_speed()
         settings.deretraction_speed = self.get_retraction_prime_speed()
         settings.x_y_travel_speed = self.get_speed_travel()
         settings.z_lift_height = self.get_retraction_hop()
-        settings.z_lift_speed = self.get_speed_travel_z()
+        settings.z_lift_speed = self.get_speed_travel_z(slicer_type=slicer_type)
         settings.retract_before_move = (
             self.retraction_enable and settings.retraction_length is not None and settings.retraction_length > 0
         )
@@ -2313,7 +2319,14 @@ class CuraSettings(SlicerSettings):
     def get_speed_travel(self):
         return self.get_speed_mm_min(self.speed_travel)
 
-    def get_speed_travel_z(self):
+    def get_speed_travel_z(self, slicer_type=None):
+        if slicer_type == "cura_4_2" or (
+            self.version and
+            self.version != 'unknown' and
+            LooseVersion(self.version) >= LooseVersion("4.2.0")
+        ):
+            return self.get_speed_mm_min(self.speed_z_hop)
+
         z_max_feedrate = 0
         if self.max_feedrate_z_override:
             z_max_feedrate = self.get_speed_mm_min(self.max_feedrate_z_override)
@@ -2332,8 +2345,12 @@ class CuraSettings(SlicerSettings):
         return utility.round_to(speed, 0.1)
 
     def update_settings_from_gcode(self, settings_dict):
-        # for cura we can just call the regular update function!
+        # for cura we can just call the regular update function for most things
         self.update(settings_dict)
+
+        # if this is version 4.2.0 or greater, blank out max_feedrate_z_override
+        if self.version and LooseVersion(self.version) >= LooseVersion("4.2.0"):
+            self.max_feedrate_z_override = None
 
 
 class Simplify3dSettings(SlicerSettings):

@@ -3,6 +3,8 @@
 ; An up-to-date version of the tjjfvi's original script can be found
 ; here:  https://csi.t6.fyi/
 ; max_feedrate_z_override = {max_feedrate_z_override}
+; machine_max_feedrate_z = {machine_max_feedrate_z}
+; speed_z_hop = {speed_z_hop}
 ; retraction_amount = {retraction_amount}
 ; retraction_hop = {retraction_hop}
 ; retraction_hop_enabled = {retraction_hop_enabled}

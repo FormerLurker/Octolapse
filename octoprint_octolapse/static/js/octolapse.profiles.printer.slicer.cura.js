@@ -7,6 +7,7 @@ Octolapse.CuraViewmodel = function (values) {
     self.retraction_prime_speed = ko.observable(values.retraction_prime_speed);
     self.speed_travel = ko.observable(values.speed_travel);
     self.max_feedrate_z_override = ko.observable(values.max_feedrate_z_override);
+    self.speed_z_hop = ko.observable(values.speed_z_hop);
     self.retraction_hop = ko.observable(values.retraction_hop);
     self.retraction_hop_enabled = ko.observable(values.retraction_hop_enabled);
     self.retraction_enable = ko.observable(values.retraction_enable);

@@ -1978,7 +1978,9 @@ class OctolapsePlugin(
             # it is important to check here in case automatic slicer settings extraction
             # isn't used.
             slicer_settings = settings_clone.profiles.current_printer().get_current_slicer_settings()
-            missing_settings = slicer_settings.get_missing_gcode_generation_settings()
+            missing_settings = slicer_settings.get_missing_gcode_generation_settings(
+                slicer_type=settings_clone.profiles.current_printer().slicer_type
+            )
             if len(missing_settings) > 0:
                 message = "Unable to start the print.  Some required slicer settings are missing or corrupt: {0}" \
                           .format(",".join(missing_settings))

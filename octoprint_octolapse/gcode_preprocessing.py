@@ -1234,7 +1234,11 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
     def get_settings_dictionary():
         return {
             # Octolapse Settings
+            # controls z speed for cura version < 4.2
             u'max_feedrate_z_override': SettingsDefinition(u'max_feedrate_z_override', CuraParsingFunctions.parse_float,[u'octolapse_setting']),
+            # controls z speed for cura version >= 4.2
+            u'speed_z_hop': SettingsDefinition(u'speed_z_hop', CuraParsingFunctions.parse_float,
+                                                           [u'octolapse_setting']),
             u'retraction_amount': SettingsDefinition(u'retraction_amount', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
             u'retraction_hop': SettingsDefinition(u'retraction_hop', CuraParsingFunctions.parse_float,[u'octolapse_setting']),
             u'retraction_hop_enabled': SettingsDefinition(u'retraction_hop_enabled', CuraParsingFunctions.parse_bool,[u'octolapse_setting']),
