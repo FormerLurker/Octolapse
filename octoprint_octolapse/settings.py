@@ -2314,7 +2314,9 @@ class CuraSettings(SlicerSettings):
         return self.get_speed_mm_min(self.speed_travel)
 
     def get_speed_travel_z(self):
-        z_max_feedrate = self.get_speed_mm_min(self.max_feedrate_z_override)
+        z_max_feedrate = 0
+        if self.max_feedrate_z_override:
+            z_max_feedrate = self.get_speed_mm_min(self.max_feedrate_z_override)
         travel_feedrate = self.get_speed_mm_min(self.speed_travel)
         if z_max_feedrate == 0:
             return travel_feedrate

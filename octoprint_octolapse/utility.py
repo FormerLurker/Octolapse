@@ -550,7 +550,18 @@ def get_system_fonts(base_directory):
     else:
         raise NotImplementedError('Unsupported operating system.')
 
-    return sorted(font_paths)
+    def sort_fonts(a, b):
+        a_name = os.path.basename(a).lower()
+        b_name = os.path.basename(b).lower()
+        if a_name > b_name:
+            return 1
+        elif a_name == b_name:
+            return 0
+        else:
+            return -1
+    # sort the fonts
+    font_paths.sort(sort_fonts)
+    return font_paths
 
 
 

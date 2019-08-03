@@ -240,7 +240,7 @@ class ExternalSettings(object):
                     "https://raw.githubusercontent.com/FormerLurker/Octolapse-Profiles/master/versions.json?nonce={0}"
                     .format(uuid.uuid4().hex)
                  ),
-                timeout=float(5)
+                timeout=float(10)
             )
             r.raise_for_status()
         except (
