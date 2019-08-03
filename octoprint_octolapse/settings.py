@@ -610,7 +610,7 @@ class PrinterProfile(AutomaticConfigurationProfile):
             current_slicer_settings.update(new_slicer_settings)
             self.gcode_generation_settings.update(
                 current_slicer_settings.get_gcode_generation_settings(
-                    slicer_type = self.slicer_type
+                    slicer_type=self.slicer_type
                 )
             )
 
@@ -1784,7 +1784,9 @@ class Profiles(Settings):
             new_profile = PrinterProfile.create_from(profile)
             if new_profile.slicer_type != 'automatic':
                 new_profile.gcode_generation_settings = (
-                    new_profile.get_current_slicer_settings().get_gcode_generation_settings(new_profile.slicer_type)
+                    new_profile.get_current_slicer_settings().get_gcode_generation_settings(
+                        slicer_type=new_profile.slicer_type
+                    )
                 )
             self.printers[guid] = new_profile
             if len(self.printers) == 1 or self.current_printer_profile_guid not in self.printers:
@@ -2225,7 +2227,7 @@ class SlicerSettings(Settings):
     def get_speed_tolerance(self):
         raise NotImplementedError("You must implement get_speed_tolerance")
 
-    def get_gcode_generation_settings(self):
+    def get_gcode_generation_settings(self, slicer_type=None):
         """Returns OctolapseSlicerSettings"""
         raise NotImplementedError("You must implement get_gcode_generation_settings")
 
@@ -2371,7 +2373,7 @@ class Simplify3dSettings(SlicerSettings):
     def get_speed_tolerance(self):
         return 1
 
-    def get_gcode_generation_settings(self):
+    def get_gcode_generation_settings(self, slicer_type=None):
         """Returns OctolapseSlicerSettings"""
         settings = OctolapseGcodeSettings()
         settings.retraction_length = self.get_retraction_distance()
@@ -2473,7 +2475,7 @@ class Slic3rPeSettings(SlicerSettings):
             speed = speed * 60.0
         return speed
 
-    def get_gcode_generation_settings(self):
+    def get_gcode_generation_settings(self, slicer_type=None):
         settings = OctolapseGcodeSettings()
         settings.retraction_length = self.get_retract_length()
         settings.retraction_speed = self.get_retract_speed()
@@ -2624,7 +2626,7 @@ class OtherSlicerSettings(SlicerSettings):
             return self.speed_tolerance * 60.0
         return self.speed_tolerance
 
-    def get_gcode_generation_settings(self):
+    def get_gcode_generation_settings(self, slicer_typ=None):
         """Returns OctolapseSlicerSettings"""
         settings = OctolapseGcodeSettings()
         settings.retraction_length = self.get_retract_length()

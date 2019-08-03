@@ -154,13 +154,13 @@ class ExternalSettings(object):
                     if (
                         updatable_profile["version"] is None or
                         (
-                            LooseVersion(available_profile["version"]) > LooseVersion(updatable_profile["version"]) and
+                            LooseVersion(str(available_profile["version"])) > LooseVersion(str(updatable_profile["version"])) and
                             (
                                 not updatable_profile["suppress_update_notification_version"] or
                                 (
                                     force_updates or
-                                    LooseVersion(available_profile["version"]) >
-                                    LooseVersion(updatable_profile["suppress_update_notification_version"])
+                                    LooseVersion(str(available_profile["version"])) >
+                                    LooseVersion(str(updatable_profile["suppress_update_notification_version"]))
                                 )
                             )
                         )
@@ -213,7 +213,7 @@ class ExternalSettings(object):
         versions.sort(key=LooseVersion)
         settings_version = None
         for version in versions:
-            if LooseVersion(version) >= LooseVersion(current_version):
+            if LooseVersion(str(version)) >= LooseVersion(str(current_version)):
                 settings_version = version
                 break
 
