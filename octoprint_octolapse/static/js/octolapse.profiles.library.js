@@ -76,7 +76,15 @@ $(function() {
         self.ignore_is_custom_change = false;
 
         // profile observables
-        self.version = ko.observable(values.version);
+        self.version = ko.observable(values.version).extend({numeric: 1});
+        self.is_beta = ko.pureComputed(function(){
+            var version = parseFloat(self.version());
+            if (version)
+            {
+                return version < 1.0;
+            }
+            return false;
+        });
         self.suppress_update_notification_version = ko.observable(values.suppress_update_notification_version);
         self.is_custom = ko.observable(values.is_custom);
         // Create the key observable and attach a confirmation popup extender
