@@ -2265,6 +2265,7 @@ class CuraSettings(SlicerSettings):
     def __init__(self, version="unknown"):
         super(CuraSettings, self).__init__(SlicerSettings.SlicerTypeCura, version)
         self.retraction_amount = None
+        self.retraction_speed = None
         self.retraction_retract_speed = None
         self.retraction_prime_speed = None
         self.retraction_hop_enabled = None  # new setting
@@ -2313,10 +2314,14 @@ class CuraSettings(SlicerSettings):
         return float(self.retraction_hop)
 
     def get_retraction_retract_speed(self):
-        return self.get_speed_mm_min(self.retraction_retract_speed)
+        if self.retraction_retract_speed:
+            return self.get_speed_mm_min(self.retraction_retract_speed)
+        return self.get_speed_mm_min(self.retraction_speed)
 
     def get_retraction_prime_speed(self):
-        return self.get_speed_mm_min(self.retraction_prime_speed)
+        if self.retraction_prime_speed:
+            return self.get_speed_mm_min(self.retraction_prime_speed)
+        return self.get_speed_mm_min(self.retraction_speed)
 
     def get_speed_travel(self):
         return self.get_speed_mm_min(self.speed_travel)

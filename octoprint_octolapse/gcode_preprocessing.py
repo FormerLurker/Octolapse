@@ -668,7 +668,6 @@ class CuraParsingFunctions(ParsingFunctions):
                 u'cm3': cm3_used
             }
 
-
     @staticmethod
     def parse_version(parse_string):
         # get version
@@ -1242,13 +1241,13 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             u'retraction_amount': SettingsDefinition(u'retraction_amount', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
             u'retraction_hop': SettingsDefinition(u'retraction_hop', CuraParsingFunctions.parse_float,[u'octolapse_setting']),
             u'retraction_hop_enabled': SettingsDefinition(u'retraction_hop_enabled', CuraParsingFunctions.parse_bool,[u'octolapse_setting']),
-            u'retraction_prime_speed': SettingsDefinition(u'retraction_prime_speed', CuraParsingFunctions.parse_int,[u'octolapse_setting']),
-            u'retraction_retract_speed': SettingsDefinition(u'retraction_retract_speed', CuraParsingFunctions.parse_int,[u'octolapse_setting']),
-            u'retraction_speed': SettingsDefinition(u'retraction_speed', CuraParsingFunctions.parse_int,[u'octolapse_setting']),
+            u'retraction_prime_speed': SettingsDefinition(u'retraction_prime_speed', CuraParsingFunctions.parse_float,[u'octolapse_setting']),
+            u'retraction_retract_speed': SettingsDefinition(u'retraction_retract_speed', CuraParsingFunctions.parse_float,[u'octolapse_setting']),
+            u'retraction_speed': SettingsDefinition(u'retraction_speed', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
 
             # Note that the below speed doesn't represent the initial layer or travel speed.  See speed_print_layer_0
             # however, a test will need to be performed.
-            u'speed_travel': SettingsDefinition(u'speed_travel', CuraParsingFunctions.parse_int, [u'octolapse_setting']),
+            u'speed_travel': SettingsDefinition(u'speed_travel', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
             u'retraction_enable': SettingsDefinition(u'retraction_enable', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
             u'version': SettingsDefinition(u'version', CuraParsingFunctions.strip_string, [u'octolapse_setting']),
 
@@ -1259,7 +1258,7 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
                                                            CuraParsingFunctions.strip_string, [u'octolapse_setting']),
 
             # End Octolapse Settings - The rest is included in case it is ever helpful for Octolapse or for other projects!
-            u'speed_infill': SettingsDefinition(u'speed_infill', CuraParsingFunctions.parse_int,
+            u'speed_infill': SettingsDefinition(u'speed_infill', CuraParsingFunctions.parse_float,
                                                 [u'misc']),
             u'skirt_brim_speed': SettingsDefinition(u'skirt_brim_speed', CuraParsingFunctions.parse_float,
                                                     [u'misc']),
