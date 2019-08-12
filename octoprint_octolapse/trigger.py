@@ -96,8 +96,8 @@ class Triggers(object):
                     current_trigger.update(position)
 
                 # Make sure there are no position errors (unknown position, out of bounds, etc)
-                if position.current_pos.has_position_error:
-                    logger.error("A trigger has a position error:%s", position.current_pos.position_error)
+                if position.previous_pos.has_position_error:
+                    logger.error("A trigger has a position error:%s", position.previous_pos.position_error)
                 # see if the current trigger is triggering, indicting that a snapshot should be taken
         except Exception as e:
             logger.exception("Failed to update the snapshot triggers.")
@@ -345,9 +345,12 @@ class GcodeTrigger(Trigger):
                 state = GcodeTriggerState(state)
             # reset any variables that must be reset each update
             state.reset_state()
+
+            # set the trigger position.  It should be the previous position, not the current
+            trigger_position = position.previous_pos
+
             # Don't update the trigger if we don't have a homed axis
-            # Make sure to use the previous value so the homing operation can complete
-            if not position.current_pos.has_homed_position:
+            if not trigger_position.has_homed_position:
                 state.is_triggered = False
                 state.is_homed = False
             else:
@@ -355,17 +358,17 @@ class GcodeTrigger(Trigger):
                 # check to see if we are in the proper position to take a snapshot
 
                 # set is in position
-                state.is_in_position = position.current_pos.is_in_position and position.current_pos.is_in_bounds
+                state.is_in_position = trigger_position.is_in_position and trigger_position.is_in_bounds
                 state.in_path_position = position.current_pos.in_path_position
 
                 if self.snapshot_command.lower() == parsed_command.gcode.lower():
                     state.is_waiting = True
                 if state.is_waiting:
-                    if position.is_extruder_triggered(self.extruder_triggers):
-                        if not position.previous_pos.has_homed_position:
+                    if position.is_previous_extruder_triggered(self.extruder_triggers):
+                        if not trigger_position.has_homed_position:
                             state.is_waiting_for_homed_position = True
                             logger.debug("GcodeTrigger - Triggering - Waiting for the previous position to be homed.")
-                        elif self.require_zhop and not position.current_pos.is_zhop:
+                        elif self.require_zhop and not trigger_position.is_zhop:
                             state.is_waiting_on_zhop = True
                             logger.debug("GcodeTrigger - Waiting on ZHop.")
                         elif not state.is_in_position and not state.in_path_position:
@@ -508,16 +511,20 @@ class LayerTrigger(Trigger):
 
             # reset any variables that must be reset each update
             state.reset_state()
+
+            # set the trigger position.  It should be the previous position, not the current
+            trigger_position = position.previous_pos
             # Don't update the trigger if we don't have a homed axis
-            # Make sure to use the previous value so the homing operation can complete
-            if not position.current_pos.has_homed_position:
+            if not trigger_position.has_homed_position:
                 state.is_triggered = False
                 state.is_homed = False
             else:
                 state.is_homed = True
 
                 # set is in position
-                state.is_in_position = position.current_pos.is_in_position and position.current_pos.is_in_bounds
+                state.is_in_position = trigger_position.is_in_position and trigger_position.is_in_bounds
+                # the in path position will be our CURRENT POSITION not the trigger position
+                # (which is the previous position)
                 state.in_path_position = position.current_pos.in_path_position
 
                 # calculate height increment changed
@@ -526,12 +533,12 @@ class LayerTrigger(Trigger):
                     and self.height_increment > 0
                     and position.current_pos.is_layer_change
                     and (
-                        state.current_increment * self.height_increment < position.current_pos.height or
+                        state.current_increment * self.height_increment < trigger_position.height or
                         state.current_increment == 0
                     )
                 ):
 
-                    new_increment = int(math.ceil(position.current_pos.height/self.height_increment))
+                    new_increment = int(math.ceil(trigger_position.height/self.height_increment))
 
                     if new_increment <= state.current_increment:
                         message = (
@@ -556,7 +563,7 @@ class LayerTrigger(Trigger):
                             "Layer Trigger - Height Increment:%s, Current Increment:%s, Height: %s",
                             self.height_increment,
                             state.current_increment,
-                            position.current_pos.height
+                            trigger_position.height
                         )
 
                 # see if we've encountered a layer or height change
@@ -566,8 +573,9 @@ class LayerTrigger(Trigger):
                         state.is_waiting = True
 
                 else:
+                    # see if the CURRENT position is a layer change
                     if position.current_pos.is_layer_change:
-                        state.layer = position.current_pos.layer
+                        state.layer = trigger_position.layer
                         state.is_layer_change_wait = True
                         state.is_layer_change = True
                         state.is_waiting = True
@@ -575,7 +583,7 @@ class LayerTrigger(Trigger):
                 if state.is_height_change_wait or state.is_layer_change_wait or state.is_waiting:
                     state.is_waiting = True
                     # see if the extruder is triggering
-                    is_extruder_triggering = position.is_extruder_triggered(self.extruder_triggers)
+                    is_extruder_triggering = position.is_previous_extruder_triggered(self.extruder_triggers)
                     if not is_extruder_triggering:
                         state.is_waiting_on_extruder = True
                         if state.is_height_change_wait:
@@ -583,10 +591,10 @@ class LayerTrigger(Trigger):
                         elif state.is_layer_change_wait:
                             logger.debug("LayerTrigger - Layer change triggering, waiting on extruder.")
                     else:
-                        if not position.previous_pos.has_homed_position:
+                        if not trigger_position.has_homed_position:
                             state.is_waiting_for_homed_position = True
                             logger.debug("LayerTrigger - Triggering - Waiting for the previous position to be homed.")
-                        elif self.require_zhop and not position.current_pos.is_zhop:
+                        elif self.require_zhop and not trigger_position.is_zhop:
                             state.is_waiting_on_zhop = True
                             logger.debug("LayerTrigger - Triggering - Waiting on ZHop.")
                         elif not state.is_in_position and not state.in_path_position:
@@ -750,9 +758,10 @@ class TimerTrigger(Trigger):
             state.reset_state()
             state.is_triggered = False
 
+            # set the trigger position.  It should be the previous position, not the current
+            trigger_position = position.previous_pos
             # Don't update the trigger if we don't have a homed axis
-            # Make sure to use the previous value so the homing operation can complete
-            if not position.current_pos.has_homed_position:
+            if not trigger_position.has_homed_position:
                 state.is_triggered = False
                 state.is_homed = False
             else:
@@ -762,7 +771,7 @@ class TimerTrigger(Trigger):
                 current_time = time.time()
 
                 # set is in position
-                state.is_in_position = position.current_pos.is_in_position and position.current_pos.is_in_bounds
+                state.is_in_position = trigger_position.is_in_position and trigger_position.is_in_bounds
                 state.in_path_position = position.current_pos.in_path_position
 
                 # if the trigger start time is null, set it now.
@@ -790,11 +799,11 @@ class TimerTrigger(Trigger):
                     state.is_waiting = True
 
                     # see if the exturder is in the right position
-                    if position.is_extruder_triggered(self.extruder_triggers):
-                        if not position.previous_pos.has_homed_position:
+                    if position.is_previous_extruder_triggered(self.extruder_triggers):
+                        if not trigger_position.has_homed_position:
                             state.is_waiting_for_homed_position = True
                             logger.debug("TimerTrigger - Triggering - Waiting for the previous position to be homed.")
-                        if self.require_zhop and not position.current_pos.is_zhop:
+                        if self.require_zhop and not trigger_position.is_zhop:
                             logger.debug("TimerTrigger - Waiting on ZHop.")
                             state.is_waiting_on_zhop = True
                         elif not state.is_in_position and not state.in_path_position:

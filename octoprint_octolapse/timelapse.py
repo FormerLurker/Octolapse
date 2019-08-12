@@ -787,7 +787,7 @@ class Timelapse(object):
                                 thread.start()
 
                                 # undo the position update since we'll be suppressing this command
-                                self._position.undo_update()
+                                #self._position.undo_update()
 
                                 # suppress the current command, we'll send it later
                                 return None,
@@ -1072,6 +1072,8 @@ class Timelapse(object):
             logf("Force E axis mode gcode - %s: %s", msg, cmd)
         elif "preview-stabilization" in tags:
             logf("Preview stabilization gcode - %s: %s", msg, cmd)
+        else:
+            logf("%s: %s", msg, cmd)
 
     # internal functions
     ####################

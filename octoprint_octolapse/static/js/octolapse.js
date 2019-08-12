@@ -366,7 +366,8 @@ $(function () {
                 delete Octolapse.ConfirmDialogs[key];
             }
         }
-    }
+    };
+
     Octolapse.showConfirmDialog = function(key, title, text, onConfirm, onCancel, onComplete)
     {
         Octolapse.closeConfirmDialogsForKeys([key]);

@@ -110,6 +110,7 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 	{
 		is_layer_change_wait_ = true;
 		// get distance from current point to the stabilization point
+		
 		standard_layer_trigger_distance_ = utilities::get_cartesian_distance(
 			p_current_pos->x_, p_current_pos->y_,
 			stabilization_x_, stabilization_y_
@@ -289,7 +290,16 @@ void stabilization_smart_layer::add_plan()
 	{
 		//std::cout << "Adding saved plan to plans...  F Speed" << p_saved_position_->f_ << " \r\n";
 		snapshot_plan* p_plan = new snapshot_plan();
-		double total_travel_distance = p_closest->distance * 2;
+		double total_travel_distance;
+		if (p_smart_layer_args_->snap_to_print)
+		{
+			total_travel_distance = 0;
+		}
+		else
+		{
+			total_travel_distance = p_closest->distance * 2;
+		}
+
 		p_plan->total_travel_distance = total_travel_distance;
 		p_plan->saved_travel_distance = (standard_layer_trigger_distance_ * 2) - total_travel_distance;
 		p_plan->triggering_command_type = p_closest->type;

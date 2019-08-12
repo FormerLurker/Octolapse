@@ -264,7 +264,7 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 		{
 			if (!p_current_pos_->z_null_)
 			{
-				if (p_current_pos_->is_extruding_)
+				if (p_current_pos_->is_extruding_ || p_current_pos_->is_primed_)
 				{
 					p_current_pos_->last_extrusion_height_ = p_current_pos_->z_;
 					p_current_pos_->last_extrusion_height_null_ = false;

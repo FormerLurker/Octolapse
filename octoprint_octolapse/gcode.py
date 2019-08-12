@@ -71,6 +71,21 @@ class SnapshotGcode(object):
     def snapshot_index(self):
         return len(self.InitializationGcode) + len(self.StartGcode) + len(self.snapshot_commands) - 1
 
+    def __str__(self):
+        gcode_strings = ["\r\n\tSnapshot Gcode"]
+
+        for gcode in self.InitializationGcode:
+            gcode_strings.append("Init     - {0}".format(gcode))
+        for gcode in self.StartGcode:
+            gcode_strings.append("Start    - {0}".format(gcode))
+        for gcode in self.snapshot_commands:
+            gcode_strings.append("Snapshot - {0}".format(gcode))
+        for gcode in self.ReturnCommands:
+            gcode_strings.append("Return   - {0}".format(gcode))
+        for gcode in self.EndGcode:
+            gcode_strings.append("End      - {0}".format(gcode))
+
+        return '\r\n\t\t'.join(gcode_strings)
 
 class SnapshotPlanStep(object):
     def __init__(self, action, x=None, y=None, z=None, e=None, f=None):
@@ -834,10 +849,13 @@ class SnapshotGcodeGenerator(object):
     def create_snapshot_plan(self, position, trigger):
         snapshot_plan = SnapshotPlan()
 
+        # we have to undo the current position update since we will be operating on the previous position!
+        final_position = position.undo_update()
         # the parsed command has not been sent, but record it
-        snapshot_plan.triggering_command = position.current_pos.parsed_command
-        parsed_command_position = position.current_pos
-        current_position = position.previous_pos
+        snapshot_plan.triggering_command = final_position.parsed_command
+        parsed_command_position = final_position
+        current_position = position.current_pos
+
         # create the start and end gcode, which would include any split gcode (position restriction intersection)
         # or any saved command that needs to be appended
 
@@ -881,8 +899,6 @@ class SnapshotGcodeGenerator(object):
 
             snapshot_plan.start_command = gcode_command_1
 
-            # undo the previous update to the position processor
-            position.undo_update()
             # calculate the initial position
             position.update(gcode_command_1.gcode)
             snapshot_plan.initial_position = position.current_pos
@@ -1030,8 +1046,10 @@ class SnapshotGcodeGenerator(object):
             self.snapshot_gcode.snapshot_index(),
             self.snapshot_gcode.end_index()
         )
-        for gcode in self.snapshot_gcode.snapshot_gcode():
-            logger.info("    %s", gcode)
+        # enhanced snapshot gcode logger
+        logger.info("%s", self.snapshot_gcode)
+        #for gcode in self.snapshot_gcode.snapshot_gcode():
+        #    logger.info("    %s", gcode)
 
         return self.snapshot_gcode
 

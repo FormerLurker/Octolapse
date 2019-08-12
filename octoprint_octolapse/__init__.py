@@ -1871,7 +1871,7 @@ class OctolapsePlugin(
         return {"success": True}
 
     def get_octoprint_g90_influences_extruder(self):
-        return self._settings.global_get(["feature", "g90_influences_extruder"])
+        return self._settings.global_get(["feature", "g90InfluencesExtruder"])
 
     def get_octoprint_printer_profile(self):
         return self._printer_profile_manager.get_current()

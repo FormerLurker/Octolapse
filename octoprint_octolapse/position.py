@@ -985,6 +985,13 @@ class Position(object):
         return None
 
     def is_extruder_triggered(self, options):
+        return self._is_extruder_triggered(self.current_pos, options)
+
+    def is_previous_extruder_triggered(self, options):
+        return self._is_extruder_triggered(self.previous_pos, options)
+
+    @staticmethod
+    def _is_extruder_triggered(pos, options):
         # if there are no extruder trigger options, return true.
         if options is None:
             return True
@@ -992,35 +999,35 @@ class Position(object):
         # Matches the supplied extruder trigger options to the current
         # extruder state.  Returns true if triggering, false if not.
 
-        extruding_start_triggered = self._extruder_state_triggered(
-            options.on_extruding_start, self.current_pos.is_extruding_start
+        extruding_start_triggered = Position._extruder_state_triggered(
+            options.on_extruding_start, pos.is_extruding_start
         )
-        extruding_triggered = self._extruder_state_triggered(
-            options.on_extruding, self.current_pos.is_extruding
+        extruding_triggered = Position._extruder_state_triggered(
+            options.on_extruding, pos.is_extruding
         )
-        primed_triggered = self._extruder_state_triggered(
-            options.on_primed, self.current_pos.is_primed
+        primed_triggered = Position._extruder_state_triggered(
+            options.on_primed, pos.is_primed
         )
-        retracting_start_triggered = self._extruder_state_triggered(
-            options.on_retracting_start, self.current_pos.is_retracting_start
+        retracting_start_triggered = Position._extruder_state_triggered(
+            options.on_retracting_start, pos.is_retracting_start
         )
-        retracting_triggered = self._extruder_state_triggered(
-            options.on_retracting, self.current_pos.is_retracting
+        retracting_triggered = Position._extruder_state_triggered(
+            options.on_retracting, pos.is_retracting
         )
-        partially_retracted_triggered = self._extruder_state_triggered(
-            options.on_partially_retracted, self.current_pos.is_partially_retracted
+        partially_retracted_triggered = Position._extruder_state_triggered(
+            options.on_partially_retracted, pos.is_partially_retracted
         )
-        retracted_triggered = self._extruder_state_triggered(
-            options.on_retracted, self.current_pos.is_retracted
+        retracted_triggered = Position._extruder_state_triggered(
+            options.on_retracted, pos.is_retracted
         )
-        deretracting_start_triggered = self._extruder_state_triggered(
-            options.on_deretracting_start, self.current_pos.is_deretracting_start
+        deretracting_start_triggered = Position._extruder_state_triggered(
+            options.on_deretracting_start, pos.is_deretracting_start
         )
-        deretracting_triggered = self._extruder_state_triggered(
-            options.on_deretracting, self.current_pos.is_deretracting
+        deretracting_triggered = Position._extruder_state_triggered(
+            options.on_deretracting, pos.is_deretracting
         )
-        deretracted_triggered = self._extruder_state_triggered(
-            options.on_deretracted, self.current_pos.is_deretracted
+        deretracted_triggered = Position._extruder_state_triggered(
+            options.on_deretracted, pos.is_deretracted
         )
 
         ret_value = False
