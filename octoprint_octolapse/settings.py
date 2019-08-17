@@ -493,7 +493,7 @@ class PrinterProfile(AutomaticConfigurationProfile):
                 dict(value='cura_4_2', name='Cura V4.2 and Above'),
                 dict(value='cura', name='Cura V4.1 and Below'),
                 dict(value='simplify-3d', name='Simplify 3D'),
-                dict(value='slic3r-pe', name='Slic3r Prusa Edition'),
+                dict(value='slic3r-pe', name='Slic3r/Slic3r PE/Prusa Slicer'),
                 dict(value='other', name='Other Slicer')
             ],
             'e_axis_default_mode_options': [
