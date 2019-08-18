@@ -1,0 +1,14 @@
+# ignore file from exports
+
+# git files
+.gitattributes export-ignore
+.gitignore export-ignore
+# github files
+ISSUE_TEMPLATE.md export-ignore
+CODE_OF_CONDUCT.md export-ignore
+README.md export-ignore
+# pycharm files
+.editorconfig export-ignore
+# all files within the Extras folder
+Extras export-ignore
+
