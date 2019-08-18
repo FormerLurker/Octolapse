@@ -402,6 +402,10 @@ $(function() {
                     {
                         message = "Successfully switched to the default mjpg-streamer control page.";
                     }
+                    else
+                    {
+                        message = "A custom image preference control page exists for this camera!.";
+                    }
                     var options = {
                             title: title,
                             text: message,
