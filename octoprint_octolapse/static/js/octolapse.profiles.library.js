@@ -26,6 +26,7 @@ $(function() {
         values, profiles, profile_type, parent, update_callback
     ){
         var self = this;
+        self.options_caption = "Not Selected";
         self.is_initialized = false;
         // Available profile and key information
         if (profiles)
@@ -48,7 +49,7 @@ $(function() {
             var key_value;
             var has_null_value = false;
             if (!values.key_values || !values.key_values[index] || has_null_value) {
-                key_value = {name: "Select Profile", value: "null"};
+                key_value = {name: self.options_caption, value: "null"};
                 has_null_value = true;
             }
             else
@@ -250,7 +251,7 @@ $(function() {
             if (key == "null")
             {
                 option_value = {
-                    "name": "Select a value",
+                    "name": self.options_caption,
                     "value": "null"
                 };
             }
@@ -303,7 +304,7 @@ $(function() {
                 if (current_option_value) {
                     var key = self.getKeyFromIndexedKey(current_option_value);
                     if (!(key in current_parent.values)) {
-                        options.unshift(self.createIndexedOption("Select a value","null", key_index));
+                        options.unshift(self.createIndexedOption(self.options_caption,"null", key_index));
                         return;
                     }
                     current_parent = current_parent.values[key];
@@ -331,7 +332,7 @@ $(function() {
             options.sort(function(left, right) {
                 return left.name == right.name ? 0 : (left.name < right.name ? -1 : 1)
             });
-            options.unshift(self.createIndexedOption("Select a value","null", key_index));
+            options.unshift(self.createIndexedOption(self.options_caption,"null", key_index));
             self.ignore_key_change = false;
         };
 
@@ -352,7 +353,7 @@ $(function() {
                 if (prevent_update && index == self.available_keys.length-1)
                     self.ignore_key_change = true;
                 if (index < keys.length){
-                    var indexed_key_value = {name:"Select a value", value: "0-null"};
+                    var indexed_key_value = {name:self.options_caption, value: "0-null"};
                     if (keys[index])
                         indexed_key_value = self.createIndexedKey(keys[index].value, index);
                     self.key_values_with_index()[index](indexed_key_value);
