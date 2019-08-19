@@ -1328,6 +1328,7 @@ class WebcamSettings(Settings):
         self.type = None
         self.use_custom_webcam_settings_page = True
         self.mjpg_streamer = MjpgStreamer()
+        self.stream_download = False
 
     def update(self, iterable, **kwargs):
         try:
@@ -1385,7 +1386,6 @@ class CameraProfile(AutomaticConfigurationProfile):
         self.on_after_render_script = ""
         self.delay = 125
         self.timeout_ms = 5000
-
         self.snapshot_transpose = ""
         self.webcam_settings = WebcamSettings()
         self.enable_custom_image_preferences = False

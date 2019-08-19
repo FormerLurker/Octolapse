@@ -236,6 +236,7 @@ $(function() {
         self.timeout_ms = ko.observable();
         self.server_type = ko.observable();
         self.type = ko.observable();
+        self.stream_download = ko.observable();
         self.mjpg_streamer = new Octolapse.MjpgStreamerViewModel();
         self.use_custom_webcam_settings_page = ko.observable();
         self.webcam_two_column_view = ko.observable(Octolapse.getLocalStorage("webcam_two_column_view") || false);
@@ -658,6 +659,9 @@ $(function() {
             if ("type" in webcam_settings) {
                 self.type(webcam_settings.type);
             }
+
+            if ("stream_download" in webcam_settings)
+                self.stream_download(webcam_settings.stream_download);
 
             if("use_custom_webcam_settings_page" in webcam_settings)
             {

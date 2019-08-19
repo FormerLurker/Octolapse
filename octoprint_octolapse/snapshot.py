@@ -567,7 +567,13 @@ class ExternalScriptSnapshotJob(SnapshotThread):
 
 class WebcamSnapshotJob(SnapshotThread):
 
-    def __init__(self, snapshot_job_info, settings, download_started_event=None, on_new_thumbnail_available_callback=None):
+    def __init__(
+        self,
+        snapshot_job_info,
+        settings,
+        download_started_event=None,
+        on_new_thumbnail_available_callback=None
+    ):
         super(WebcamSnapshotJob, self).__init__(
             snapshot_job_info,
             settings,
@@ -588,6 +594,7 @@ class WebcamSnapshotJob(SnapshotThread):
         if self.download_started_event:
             self.download_started_event.clear()
         self.Url = url
+        self.stream_download = self.snapshot_job_info.camera.webcam_settings.stream_download
 
     def run(self):
         try:
@@ -616,7 +623,7 @@ class WebcamSnapshotJob(SnapshotThread):
                     auth=HTTPBasicAuth(self.Username, self.Password),
                     verify=not self.IgnoreSslError,
                     timeout=float(self.snapshot_job_info.TimeoutSeconds),
-                    stream=True
+                    stream=self.stream_download
                 )
             else:
                 logger.debug("Snapshot - downloading from %s.", self.Url)
@@ -624,9 +631,8 @@ class WebcamSnapshotJob(SnapshotThread):
                 r = requests.get(
                     self.Url,
                     verify=not self.IgnoreSslError,
-                    #timeout=float(self.snapshot_job_info.TimeoutSeconds),
                     timeout=float(self.snapshot_job_info.TimeoutSeconds),
-                    stream=True
+                    stream=self.stream_download
                 )
             r.raise_for_status()
             logger.debug("Snapshot - downloaded started in %.3f seconds.", time() - download_start_time)
