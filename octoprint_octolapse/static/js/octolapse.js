@@ -368,9 +368,46 @@ $(function () {
         }
     };
 
+    Octolapse.checkPNotifyDefaultConfirmButtons = function()
+    {
+        // check to see if exactly two default pnotify confirm buttons exist.
+        // If we keep running into problems we might need to inspect the buttons to make sure they
+        // really are the defaults.
+        if (PNotify.prototype.options.confirm.buttons.length != 2)
+        {
+            // Someone removed the confirmation buttons, darnit!  Report the error and re-add the buttons.
+            var message = "Octolapse detected the removal or addition of PNotify default confirmation buttons, " +
+                "which should not be done in a shared environment.  Some plugins may show strange behavior.  Please " +
+                "report this error at https://github.com/FormerLurker/Octolapse/issues.  Octolapse will now clear " +
+                "and re-add the default PNotify buttons.";
+            console.error(message);
+
+            // Reset the buttons in case extra buttons were added.
+            PNotify.prototype.options.confirm.buttons = [];
+
+            var buttons = [
+                {
+                    text: "Ok",
+                    addClass: "",
+                    promptTrigger: true,
+                    click: function(b,a){b.remove();b.get().trigger("pnotify.confirm",[b,a])}
+                },
+                {
+                    text: "Cancel",
+                    addClass: "",
+                    promptTrigger: true,
+                    click: function(b){b.remove();b.get().trigger("pnotify.cancel",b)}
+                }
+            ];
+            PNotify.prototype.options.confirm.buttons = buttons;
+        }
+    };
+
     Octolapse.showConfirmDialog = function(key, title, text, onConfirm, onCancel, onComplete)
     {
         Octolapse.closeConfirmDialogsForKeys([key]);
+        // Make sure that the default pnotify buttons exist
+        Octolapse.checkPNotifyDefaultConfirmButtons();
         Octolapse.ConfirmDialogs[key] = (
             new PNotify({
                 title: title,
