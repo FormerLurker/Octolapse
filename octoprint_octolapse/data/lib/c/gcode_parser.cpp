@@ -135,7 +135,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::WARNING, message);
 			return true;
 		}
-		p_text_command->name_ = "TEXT";
+		p_text_command->name_ = '\0';
 	}
 	else
 	{
@@ -211,8 +211,25 @@ bool gcode_parser::try_extract_gcode_command(char ** p_p_gcode, std::string * p_
 					found_command = true;
 					(*p_command) += *p++;
 				}
+				else if (found_command)
+				{
+					// Previously we just ignored all spaces,
+					// but for the command itself, it might be a good idea
+					// to assume the space is important.
+					// instead, keep moving forward until no spaces are found
+					while (*p == ' ')
+					{
+						p++;
+					}
+					break;
+				}
 				else
+				{
+					// a space was encountered, but no command was found.
+					// increment the pointer and continue to search
+					// for an address
 					++p;
+				}
 			}
 			if (*p == '.') {
 				(*p_command) += *p++;
@@ -369,9 +386,9 @@ bool gcode_parser::try_extract_parameter(char ** p_p_gcode, parsed_command_param
 	
 	// Deal with case sensitivity
 	if (*p >= 'a' && *p <= 'z')
-		parameter->name_ += *p++ - 32;
+		parameter->name_ = *p++ - 32;
 	else if (*p >= 'A' && *p <= 'Z')
-		parameter->name_ += *p++;
+		parameter->name_ = *p++;
 	else
 		return false;
 
@@ -401,7 +418,7 @@ bool gcode_parser::try_extract_t_parameter(char ** p_p_gcode, parsed_command_par
 {
 	//std::cout << "Trying to extract a T parameter from " << *p_p_gcode << "\r\n";
 	char * p = *p_p_gcode;
-	parameter->name_ = "T";
+	parameter->name_ = 'T';
 	// Ignore Leading Spaces
 	while (*p == L' ')
 	{

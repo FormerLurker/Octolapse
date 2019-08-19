@@ -36,13 +36,13 @@ public:
 	parsed_command_parameter();
 	~parsed_command_parameter();
 	parsed_command_parameter(parsed_command_parameter & source);
-	parsed_command_parameter(std::string name, double double_value);
-	parsed_command_parameter(std::string name, std::string string_value);
-	parsed_command_parameter(std::string name, unsigned int unsigned_int_value);
+	parsed_command_parameter(char name, double double_value);
+	parsed_command_parameter(char name, std::string string_value);
+	parsed_command_parameter(char name, unsigned int unsigned_int_value);
 
 	PyObject * value_to_py_object();
 
-	std::string name_;
+	char name_;
 	char value_type_;
 	double double_value_;
 	unsigned long unsigned_long_value_;

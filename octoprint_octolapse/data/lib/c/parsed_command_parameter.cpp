@@ -42,21 +42,21 @@ parsed_command_parameter::parsed_command_parameter(parsed_command_parameter & so
 	unsigned_long_value_ = source.unsigned_long_value_;
 }
 
-parsed_command_parameter::parsed_command_parameter(std::string name, double double_value) : name_(name), double_value_(double_value)
+parsed_command_parameter::parsed_command_parameter(char name, double double_value) : name_(name), double_value_(double_value)
 {
 	value_type_ = 'F';
 	//string_value_ = "";
 	//unsigned_long_value_ = 0;
 }
 
-parsed_command_parameter::parsed_command_parameter(std::string name, std::string string_value) : name_(name), string_value_(string_value)
+parsed_command_parameter::parsed_command_parameter(char name, std::string string_value) : name_(name), string_value_(string_value)
 {
 	value_type_ = 'S';
 	//double_value_ = 0.0;
 	//unsigned_long_value_ = 0;
 }
 
-parsed_command_parameter::parsed_command_parameter(std::string name, unsigned int unsigned_int_value) : name_(name), string_value_(string_value_), unsigned_long_value_(unsigned_int_value)
+parsed_command_parameter::parsed_command_parameter(char name, unsigned int unsigned_int_value) : name_(name), string_value_(string_value_), unsigned_long_value_(unsigned_int_value)
 {
 	value_type_ = 'U';
 	//double_value_ = 0.0;

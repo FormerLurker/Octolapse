@@ -117,8 +117,11 @@ PyObject * parsed_command::to_py_object()
 			// Errors here will be handled by value_to_py_object, just return NULL
 			if (param_value == NULL)
 				return NULL;
-			
-			if (PyDict_SetItemString(pyParametersDict, param->name_.c_str(), param_value) != 0)
+			char temp_c_str[2];
+			temp_c_str[0] = param->name_;
+			temp_c_str[1] = '\0';
+			const char * p_name = temp_c_str;
+			if (PyDict_SetItemString(pyParametersDict, p_name, param_value) != 0)
 			{
 				PyErr_Print();
 				// Handle error here, display detailed message
