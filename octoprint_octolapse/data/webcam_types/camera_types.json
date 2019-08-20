@@ -5,6 +5,7 @@
       "directory": "mjpg_streamer",
       "file_names": [
         "logitech_c920.json",
+        "logitech_c920_2.json",
         "raspi_cam_v2.json"
       ]
     }
