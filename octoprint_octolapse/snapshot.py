@@ -635,7 +635,11 @@ class WebcamSnapshotJob(SnapshotThread):
                     stream=self.stream_download
                 )
             r.raise_for_status()
-            logger.debug("Snapshot - downloaded started in %.3f seconds.", time() - download_start_time)
+            if self.stream_download:
+                logger.debug("Snapshot - received streaming response in %.3f seconds.", time() - download_start_time)
+            else:
+                logger.debug("Snapshot - snapshot downloaded in %.3f seconds.", time() - download_start_time)
+
         except Exception as e:
             message = "An error occurred downloading a snapshot for the {0} camera.".format(
                 self.snapshot_job_info.camera.name
