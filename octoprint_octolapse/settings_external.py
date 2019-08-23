@@ -211,16 +211,15 @@ class ExternalSettings(object):
         if not versions:
             return None
         versions.sort(key=LooseVersion)
+
         settings_version = None
         for version in versions:
             if LooseVersion(str(version)) >= LooseVersion(str(current_version)):
                 settings_version = version
                 break
 
-        if settings_version is None:
-            message = "No available settings were found for the current version ((0)) of Octolapse.  This is probably " \
-                      "a development or alpha version.  Try back soon!".format(version)
-            raise ExternalSettingsError('no-version-found', message)
+        if settings_version is None and len(versions) > 0:
+            settings_version = versions[len(versions)-1]
         return settings_version
 
     @staticmethod
