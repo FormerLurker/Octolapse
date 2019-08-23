@@ -50,25 +50,38 @@
                     <div class="margin-small">
                         <div class="row-fluid">
                             <div class="span4">
-                                <div>X Homed</div>
-                                <span class="fa-stack fa-2x" data-bind="attr: {title: PrinterState.getXHomedStateText}">
-                                    <span class="fa fa-square fa-stack-2x"></span>
-                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.x_homed(),'icon-ok-circle','icon-ban-circle','icon-ban-circle'),style: {color:PrinterState.getColor(PrinterState.x_homed(),'greenyellow','red','red')}"></span>
-                                </span>
+                                <div data-bind="visible: !PrinterState.has_definite_position()">
+                                    <div>X Homed</div>
+                                    <span class="fa-stack fa-2x" data-bind="attr: {title: PrinterState.getXHomedStateText}">
+                                        <span class="fa fa-square fa-stack-2x"></span>
+                                        <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.x_homed(),'icon-ok-circle','icon-ban-circle','icon-ban-circle'),style: {color:PrinterState.getColor(PrinterState.x_homed(),'greenyellow','red','red')}"></span>
+                                    </span>
+                                </div>
                             </div>
                             <div class="span4">
-                                <div>Y Homed</div>
-                                <span class="fa-stack fa-2x" data-bind="attr: {title: PrinterState.getYHomedStateText}">
-                                    <span class="fa fa-square fa-stack-2x"></span>
-                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.y_homed(),'icon-ok-circle','icon-ban-circle','icon-ban-circle'),style: {color:PrinterState.getColor(PrinterState.y_homed(),'greenyellow','red','red')}"></span>
-                                </span>
+                                <div data-bind="visible: !PrinterState.has_definite_position()">
+                                    <div>Y Homed</div>
+                                    <span class="fa-stack fa-2x" data-bind="attr: {title: PrinterState.getYHomedStateText}">
+                                        <span class="fa fa-square fa-stack-2x"></span>
+                                        <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.y_homed(),'icon-ok-circle','icon-ban-circle','icon-ban-circle'),style: {color:PrinterState.getColor(PrinterState.y_homed(),'greenyellow','red','red')}"></span>
+                                    </span>
+                                </div>
+                                <div data-bind="visible: PrinterState.has_definite_position">
+                                    <div>Known Position</div>
+                                    <span class="fa-stack fa-2x" data-bind="attr: {title: PrinterState.getHasDefinitePositionText}">
+                                        <span class="fa fa-square fa-stack-2x"></span>
+                                        <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.has_definite_position(),'icon-ok-circle','icon-ban-circle','icon-ban-circle'),style: {color:PrinterState.getColor(PrinterState.has_definite_position(),'greenyellow','red','red')}"></span>
+                                    </span>
+                                </div>
                             </div>
                             <div class="span4">
-                                <div>Z Homed</div>
-                                <span class="fa-stack fa-2x" data-bind="attr: {title: PrinterState.getZHomedStateText}">
-                                    <span class="fa fa-square fa-stack-2x"></span>
-                                    <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.z_homed(),'icon-ok-circle','icon-ban-circle','icon-ban-circle'),style: {color:PrinterState.getColor(PrinterState.z_homed(),'greenyellow','red','red')}"></span>
-                                </span>
+                                <div data-bind="visible: !PrinterState.has_definite_position()">
+                                    <div>Z Homed</div>
+                                    <span class="fa-stack fa-2x" data-bind="attr: {title: PrinterState.getZHomedStateText}">
+                                        <span class="fa fa-square fa-stack-2x"></span>
+                                        <span class="fa fa-1x fa-stack-1x position-state-icon" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.z_homed(),'icon-ok-circle','icon-ban-circle','icon-ban-circle'),style: {color:PrinterState.getColor(PrinterState.z_homed(),'greenyellow','red','red')}"></span>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -471,7 +471,7 @@ form.octolapse_form .modal-body {
     color: greenyellow;
 }
 
-.bg-paused, .bg-not-homed, .bg-lightgray {
+.bg-paused, .bg-unknown-position, .bg-lightgray {
     color: lightgray;
 }
 

@@ -86,7 +86,7 @@ public:
 	bool firmware_z_lift_null_;
 	bool has_position_error_;
 	std::string position_error_;
-	bool has_homed_position_;
+	bool has_definite_position_;
 	double e_relative_;
 	double z_relative_;
 	double extrusion_length_;

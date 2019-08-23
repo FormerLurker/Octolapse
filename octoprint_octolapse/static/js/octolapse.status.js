@@ -852,6 +852,7 @@ $(function () {
             self.x_homed = ko.observable(false);
             self.y_homed = ko.observable(false);
             self.z_homed = ko.observable(false);
+            self.has_definite_position = ko.observable(false);
             self.is_layer_change = ko.observable(false);
             self.is_height_change = ko.observable(false);
             self.is_in_position = ko.observable(false);
@@ -872,6 +873,7 @@ $(function () {
                 this.x_homed(state.x_homed);
                 this.y_homed(state.y_homed);
                 this.z_homed(state.z_homed);
+                this.has_definite_position(state.has_definite_position);
                 this.is_layer_change(state.is_layer_change);
                 this.is_height_change(state.is_height_change);
                 this.is_in_position(state.is_in_position);
@@ -945,6 +947,13 @@ $(function () {
                 else
                     return "Not a zhop";
             }, self);
+
+            self.getHasDefinitePositionText = ko.pureComputed(function(){
+               if (self.has_definite_position())
+                   return "Current position is definite";
+               else
+                   return "Current position is not fully known.";
+            });
 
             self.getis_in_printerStateText = ko.pureComputed(function () {
                 if (self.is_in_position())
@@ -1230,7 +1239,7 @@ $(function () {
             self.is_waiting_on_extruder = ko.observable(state.is_waiting_on_extruder);
             self.require_zhop = ko.observable(state.require_zhop);
             self.trigger_count = ko.observable(state.trigger_count).extend({compactint: 1});
-            self.is_homed = ko.observable(state.is_homed);
+            self.has_definite_position = ko.observable(state.has_definite_position);
             self.is_in_position = ko.observable(state.is_in_position);
             self.in_path_position = ko.observable(state.Isin_path_position);
             self.update = function (state) {
@@ -1242,13 +1251,13 @@ $(function () {
                 self.is_waiting_on_extruder(state.is_waiting_on_extruder);
                 self.require_zhop(state.require_zhop);
                 self.trigger_count(state.trigger_count);
-                self.is_homed(state.is_homed);
+                self.has_definite_position(state.has_definite_position);
                 self.is_in_position(state.is_in_position);
                 self.in_path_position(state.in_path_position);
             };
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
-                if (!self.is_homed())
-                    return "bg-not-homed";
+                if (!self.has_definite_position())
+                    return "bg-unknown-position";
                 else if (!self.is_triggered() && Octolapse.PrinterStatus.isPaused())
                     return " bg-paused";
                 else
@@ -1257,8 +1266,8 @@ $(function () {
             /* style related computed functions */
             self.triggerStateText = ko.pureComputed(function () {
                 //console.log("Calculating trigger state text.");
-                if (!self.is_homed())
-                    return "Idle until all axes are homed";
+                if (!self.has_definite_position())
+                    return "Idle until a definite position is found";
                 else if (self.is_triggered())
                     return "Triggering a snapshot";
                 else if (Octolapse.PrinterStatus.isPaused())
@@ -1287,7 +1296,7 @@ $(function () {
 
             }, self);
             self.triggerIconClass = ko.pureComputed(function () {
-                if (!self.is_homed())
+                if (!self.has_definite_position())
                     return "not-homed";
                 if (self.is_triggered())
                     return "trigger";
@@ -1318,7 +1327,7 @@ $(function () {
             self.snapshot_command = ko.observable(state.snapshot_command);
             self.require_zhop = ko.observable(state.require_zhop);
             self.trigger_count = ko.observable(state.trigger_count).extend({compactint: 1});
-            self.is_homed = ko.observable(state.is_homed);
+            self.has_definite_position = ko.observable(state.has_definite_position);
             self.is_in_position = ko.observable(state.is_in_position);
             self.in_path_position = ko.observable(state.Isin_path_position);
             self.update = function (state) {
@@ -1331,14 +1340,14 @@ $(function () {
                 self.snapshot_command(state.snapshot_command);
                 self.require_zhop(state.require_zhop);
                 self.trigger_count(state.trigger_count);
-                self.is_homed(state.is_homed);
+                self.has_definite_position(state.has_definite_position);
                 self.is_in_position(state.is_in_position);
                 self.in_path_position(state.in_path_position);
             };
 
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
-                if (!self.is_homed())
-                    return "bg-not-homed";
+                if (!self.has_definite_position())
+                    return "bg-unknown-position";
                 else if (!self.is_triggered() && Octolapse.PrinterStatus.isPaused())
                     return " bg-paused";
                 else
@@ -1347,8 +1356,8 @@ $(function () {
 
             /* style related computed functions */
             self.triggerStateText = ko.pureComputed(function () {
-                if (!self.is_homed())
-                    return "Idle until all axes are homed";
+                if (!self.has_definite_position())
+                    return "Idle until a definite position is found";
                 else if (self.is_triggered())
                     return "Triggering a snapshot";
                 else if (Octolapse.PrinterStatus.isPaused())
@@ -1377,7 +1386,7 @@ $(function () {
 
             }, self);
             self.triggerIconClass = ko.pureComputed(function () {
-                if (!self.is_homed())
+                if (!self.has_definite_position())
                     return "not-homed";
                 if (self.is_triggered())
                     return "trigger";
@@ -1416,7 +1425,7 @@ $(function () {
             self.height_increment = ko.observable(state.height_increment).extend({numeric: 2});
             self.require_zhop = ko.observable(state.require_zhop);
             self.trigger_count = ko.observable(state.trigger_count).extend({compactint: 1});
-            self.is_homed = ko.observable(state.is_homed);
+            self.has_definite_position = ko.observable(state.has_definite_position);
             self.layer = ko.observable(state.layer);
             self.is_in_position = ko.observable(state.is_in_position);
             self.in_path_position = ko.observable(state.in_path_position);
@@ -1435,22 +1444,22 @@ $(function () {
                 self.height_increment(state.height_increment);
                 self.require_zhop(state.require_zhop);
                 self.trigger_count(state.trigger_count);
-                self.is_homed(state.is_homed);
+                self.has_definite_position(state.has_definite_position);
                 self.layer(state.layer);
                 self.is_in_position(state.is_in_position);
                 self.in_path_position(state.in_path_position);
             };
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
-                if (!self.is_homed())
-                    return "bg-not-homed";
+                if (!self.has_definite_position())
+                    return "bg-unknown-position";
                 else if (!self.is_triggered() && Octolapse.PrinterStatus.isPaused())
                     return " bg-paused";
             }, self);
 
             /* style related computed functions */
             self.triggerStateText = ko.pureComputed(function () {
-                if (!self.is_homed())
-                    return "Idle until all axes are homed";
+                if (!self.has_definite_position())
+                    return "Idle until a definite position is found";
                 else if (self.is_triggered())
                     return "Triggering a snapshot";
                 else if (Octolapse.PrinterStatus.isPaused())
@@ -1488,7 +1497,7 @@ $(function () {
             }, self);
 
             self.triggerIconClass = ko.pureComputed(function () {
-                if (!self.is_homed())
+                if (!self.has_definite_position())
                     return "not-homed";
                 if (self.is_triggered())
                     return "trigger";
@@ -1537,7 +1546,7 @@ $(function () {
             self.pause_time = ko.observable(state.pause_time).extend({time: null});
             self.require_zhop = ko.observable(state.require_zhop);
             self.trigger_count = ko.observable(state.trigger_count);
-            self.is_homed = ko.observable(state.is_homed);
+            self.has_definite_position = ko.observable(state.has_definite_position);
             self.is_in_position = ko.observable(state.is_in_position);
             self.in_path_position = ko.observable(state.Isin_path_position);
             self.update = function (state) {
@@ -1553,7 +1562,7 @@ $(function () {
                 self.pause_time(state.pause_time);
                 self.interval_seconds(state.interval_seconds);
                 self.trigger_count(state.trigger_count);
-                self.is_homed(state.is_homed);
+                self.has_definite_position(state.has_definite_position);
                 self.is_in_position(state.is_in_position);
                 self.in_path_position(state.in_path_position);
             };
@@ -1561,8 +1570,8 @@ $(function () {
 
             /* style related computed functions */
             self.triggerStateText = ko.pureComputed(function () {
-                if (!self.is_homed())
-                    return "Idle until all axes are homed";
+                if (!self.has_definite_position())
+                    return "Idle until a definite position is found";
                 else if (self.is_triggered())
                     return "Triggering a snapshot";
                 else if (Octolapse.PrinterStatus.isPaused())
@@ -1591,13 +1600,13 @@ $(function () {
 
             }, self);
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
-                if (!self.is_homed())
-                    return "bg-not-homed";
+                if (!self.has_definite_position())
+                    return "bg-unknown-position";
                 else if (!self.is_triggered() && Octolapse.PrinterStatus.isPaused())
                     return " bg-paused";
             }, self);
             self.triggerIconClass = ko.pureComputed(function () {
-                if (!self.is_homed())
+                if (!self.has_definite_position())
                     return "not-homed";
                 if (self.is_triggered())
                     return "trigger";

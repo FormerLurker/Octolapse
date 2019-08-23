@@ -47,7 +47,7 @@ private:
 	bool try_extract_parameter(char ** p_p_gcode, parsed_command_parameter * parameter) const;
 	static bool try_extract_t_parameter(char ** p_p_gcode, parsed_command_parameter * parameter);
 	static bool try_extract_unsigned_long(char ** p_p_gcode, unsigned long * p_value);
-	double static ten_pow(size_t n);
+	double static ten_pow(unsigned short n);
 
 };
 #endif

@@ -80,7 +80,7 @@ class Triggers(object):
     def update(self, position, parsed_command):
         # the previous command (not just the current) MUST have homed positions else
         # we may have some null coordinates.
-        #if not position.current_pos.has_homed_position:
+        #if not position.current_pos.has_definite_position:
         #    return
         ## Note:  I think we need to add waits to handle the above
         """Update all triggers and return any that are triggering"""
@@ -160,7 +160,7 @@ class TriggerState(object):
         self.is_waiting_on_zhop = False if state is None else state.is_waiting_on_zhop
         self.is_waiting_on_extruder = False if state is None else state.is_waiting_on_extruder
         self.has_changed = False if state is None else state.has_changed
-        self.is_homed = False if state is None else state.is_homed
+        self.has_definite_position = False if state is None else state.has_definite_position
 
     def to_dict(self, trigger):
         return {
@@ -174,7 +174,7 @@ class TriggerState(object):
             "is_waiting_on_extruder": self.is_waiting_on_extruder,
             "has_changed": self.has_changed,
             "require_zhop": trigger.require_zhop,
-            "is_homed": self.is_homed,
+            "has_definite_position": self.has_definite_position,
             "trigger_count": trigger.trigger_count
         }
 
@@ -195,7 +195,7 @@ class TriggerState(object):
                 and self.is_home_position_wait == state.is_home_position_wait
                 and self.is_waiting_on_zhop == state.is_waiting_on_zhop
                 and self.is_waiting_on_extruder == state.is_waiting_on_extruder
-                and self.is_homed == state.is_homed):
+                and self.has_definite_position == state.has_definite_position):
             return True
         return False
 
@@ -350,11 +350,11 @@ class GcodeTrigger(Trigger):
             trigger_position = position.previous_pos
 
             # Don't update the trigger if we don't have a homed axis
-            if not trigger_position.has_homed_position:
+            if not trigger_position.has_definite_position:
                 state.is_triggered = False
-                state.is_homed = False
+                state.has_definite_position = False
             else:
-                state.is_homed = True
+                state.has_definite_position = trigger_position.has_definite_position
                 # check to see if we are in the proper position to take a snapshot
 
                 # set is in position
@@ -365,12 +365,14 @@ class GcodeTrigger(Trigger):
                     state.is_waiting = True
                 if state.is_waiting:
                     if position.is_previous_extruder_triggered(self.extruder_triggers):
-                        if not trigger_position.has_homed_position:
-                            state.is_waiting_for_homed_position = True
-                            logger.debug("GcodeTrigger - Triggering - Waiting for the previous position to be homed.")
+                        if not trigger_position.has_definite_position:
+                            state.is_waiting_for_definite_position = True
+                            logger.debug("GcodeTrigger - Triggering - Waiting for a definite previous position.")
                         elif self.require_zhop and not trigger_position.is_zhop:
                             state.is_waiting_on_zhop = True
                             logger.debug("GcodeTrigger - Waiting on ZHop.")
+                        elif not trigger_position.is_in_bounds:
+                            logger.debug("GcodeTrigger - Waiting for in-bounds position.")
                         elif not state.is_in_position and not state.in_path_position:
                             # Make sure the previous X,Y is in position
                             logger.debug("GcodeTrigger - Waiting on Position.")
@@ -515,11 +517,11 @@ class LayerTrigger(Trigger):
             # set the trigger position.  It should be the previous position, not the current
             trigger_position = position.previous_pos
             # Don't update the trigger if we don't have a homed axis
-            if not trigger_position.has_homed_position:
+            if not trigger_position.has_definite_position:
                 state.is_triggered = False
-                state.is_homed = False
+                state.has_definite_position = False
             else:
-                state.is_homed = True
+                state.has_definite_position = True
 
                 # set is in position
                 state.is_in_position = trigger_position.is_in_position and trigger_position.is_in_bounds
@@ -591,12 +593,14 @@ class LayerTrigger(Trigger):
                         elif state.is_layer_change_wait:
                             logger.debug("LayerTrigger - Layer change triggering, waiting on extruder.")
                     else:
-                        if not trigger_position.has_homed_position:
-                            state.is_waiting_for_homed_position = True
-                            logger.debug("LayerTrigger - Triggering - Waiting for the previous position to be homed.")
+                        if not trigger_position.has_definite_position:
+                            state.is_waiting_for_definite_position = True
+                            logger.debug("LayerTrigger - Triggering - Waiting for a definite previous position.")
                         elif self.require_zhop and not trigger_position.is_zhop:
                             state.is_waiting_on_zhop = True
                             logger.debug("LayerTrigger - Triggering - Waiting on ZHop.")
+                        elif not trigger_position.is_in_bounds:
+                            logger.debug("GcodeTrigger - Waiting for in-bounds position.")
                         elif not state.is_in_position and not state.in_path_position:
                             # Make sure the previous X,Y is in position
                             logger.debug("LayerTrigger - Waiting on Position.")
@@ -761,11 +765,11 @@ class TimerTrigger(Trigger):
             # set the trigger position.  It should be the previous position, not the current
             trigger_position = position.previous_pos
             # Don't update the trigger if we don't have a homed axis
-            if not trigger_position.has_homed_position:
+            if not trigger_position.has_definite_position:
                 state.is_triggered = False
-                state.is_homed = False
+                state.has_definite_position = False
             else:
-                state.is_homed = True
+                state.has_definite_position = True
 
                 # record the current time to keep things consistant
                 current_time = time.time()
@@ -800,15 +804,16 @@ class TimerTrigger(Trigger):
 
                     # see if the exturder is in the right position
                     if position.is_previous_extruder_triggered(self.extruder_triggers):
-                        if not trigger_position.has_homed_position:
-                            state.is_waiting_for_homed_position = True
-                            logger.debug("TimerTrigger - Triggering - Waiting for the previous position to be homed.")
+                        if not trigger_position.has_definite_position:
+                            state.is_waiting_for_definite_position = True
+                            logger.debug("TimerTrigger - Triggering - Waiting for a definite previous position.")
                         if self.require_zhop and not trigger_position.is_zhop:
                             logger.debug("TimerTrigger - Waiting on ZHop.")
                             state.is_waiting_on_zhop = True
+                        elif not trigger_position.is_in_bounds:
+                            logger.debug("GcodeTrigger - Waiting for in-bounds position.")
                         elif not state.is_in_position and not state.in_path_position:
                             # Make sure the previous X,Y is in position
-
                             logger.debug("TimerTrigger - Waiting on Position.")
                         else:
                             # Is Triggering

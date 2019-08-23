@@ -194,12 +194,12 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 			p_current_pos_->z_null_ != p_previous_pos_->z_null_);
 
 		// see if our position is homed
-		if (!p_current_pos_->has_homed_position_)
+		if (!p_current_pos_->has_definite_position_)
 		{
-			p_current_pos_->has_homed_position_ = (
-				p_current_pos_->x_homed_ &&
-				p_current_pos_->y_homed_ &&
-				p_current_pos_->z_homed_ &&
+			p_current_pos_->has_definite_position_ = (
+				//p_current_pos_->x_homed_ &&
+				//p_current_pos_->y_homed_ &&
+				//p_current_pos_->z_homed_ &&
 				p_current_pos_->is_metric_ &&
 				!p_current_pos_->is_metric_null_ &&
 				!p_current_pos_->x_null_ &&

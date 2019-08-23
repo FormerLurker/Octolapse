@@ -66,7 +66,7 @@ void position::initialize()
 	firmware_z_lift_null_ = true;
 	has_position_error_ = false;
 	position_error_ = "";
-	has_homed_position_ = false;
+	has_definite_position_ = false;
 	e_relative_ = 0;
 	z_relative_ = 0;
 	extrusion_length_ = 0;
@@ -149,7 +149,7 @@ position::position(position & source)
 	firmware_z_lift_null_ = source.firmware_z_lift_null_;
 	has_position_error_ = source.has_position_error_;
 	position_error_ = source.position_error_;
-	has_homed_position_ = source.has_homed_position_;
+	has_definite_position_ = source.has_definite_position_;
 	e_relative_ = source.e_relative_;
 	z_relative_ = source.z_relative_;
 	extrusion_length_ = source.extrusion_length_;
@@ -288,7 +288,7 @@ void position::_copy_position(position* source, position* target)
 	target->firmware_z_lift_null_ = source->firmware_z_lift_null_;
 	target->has_position_error_ = source->has_position_error_;
 	target->position_error_ = source->position_error_;
-	target->has_homed_position_ = source->has_homed_position_;
+	target->has_definite_position_ = source->has_definite_position_;
 	target->e_relative_ = source->e_relative_;
 	target->z_relative_ = source->z_relative_;
 	target->extrusion_length_ = source->extrusion_length_;
@@ -376,7 +376,7 @@ PyObject* position::to_py_tuple()
 		is_metric_, // 28
 		is_printer_primed_, // 29
 		has_position_error_, // 30
-		has_homed_position_, // 31
+		has_definite_position_, // 31
 		is_extruding_start_, // 32
 		is_extruding_, // 33
 		is_primed_, // 34
@@ -572,8 +572,8 @@ PyObject* position::to_py_dict()
 		firmware_z_lift_null_,
 		"has_position_error",
 		has_position_error_,
-		"has_homed_position",
-		has_homed_position_,
+		"has_definite_position",
+		has_definite_position_,
 		"is_extruding_start",
 		is_extruding_start_,
 		"is_extruding",

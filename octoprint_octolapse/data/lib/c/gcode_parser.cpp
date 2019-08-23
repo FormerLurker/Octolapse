@@ -279,7 +279,7 @@ bool gcode_parser::try_extract_unsigned_long(char ** p_p_gcode, unsigned long * 
 	return found_numbers;
 }
 
-double gcode_parser::ten_pow(size_t n) {
+double gcode_parser::ten_pow(unsigned short n) {
 	double r = 1.0;
 
 	while (n > 0) {
@@ -325,7 +325,7 @@ bool gcode_parser::try_extract_double(char ** p_p_gcode, double * p_double) cons
 	}
 	if (*p == '.') {
 		double f = 0.0;
-		int n = 0;
+		unsigned short n = 0;
 		++p;
 		while ((*p >= '0' && *p <= '9') || *p == ' ') {
 			if (*p != ' ')

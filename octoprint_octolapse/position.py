@@ -40,7 +40,7 @@ class Pos(object):
         "height", "is_printer_primed", "is_in_position", "in_path_position",
         "is_xy_travel", "is_xyz_travel","firmware_retraction_length",
         "firmware_unretraction_additional_length", "firmware_retraction_feedrate", "firmware_unretraction_feedrate", 
-        "firmware_z_lift", "has_homed_position", "is_layer_change", "is_height_change", "is_zhop",
+        "firmware_z_lift", "has_definite_position", "is_layer_change", "is_height_change", "is_zhop",
         "has_xy_position_changed", "has_position_changed", "has_state_changed", "has_received_home_command",
         "has_position_error", "position_error", 'e_relative', 'z_relative', 'extrusion_length', 'extrusion_length_total',
         'retraction_length','deretraction_length', 'is_extruding_start', 'is_extruding', 'is_primed',
@@ -80,7 +80,7 @@ class Pos(object):
             self.firmware_z_lift = copy_from_pos.firmware_z_lift
             self.has_position_error = copy_from_pos.has_position_error
             self.position_error = copy_from_pos.position_error
-            self.has_homed_position = copy_from_pos.has_homed_position
+            self.has_definite_position = copy_from_pos.has_definite_position
 
             # Extruder Tracking
             self.e_relative = copy_from_pos.e_relative
@@ -160,7 +160,7 @@ class Pos(object):
             self.firmware_z_lift = None
             self.has_position_error = False
             self.position_error = None
-            self.has_homed_position = False
+            self.has_definite_position = False
 
             # Extruder Tracking
 
@@ -228,7 +228,7 @@ class Pos(object):
         target.is_metric = None if cpp_pos[60] > 0 else cpp_pos[28] > 0
         target.is_printer_primed = cpp_pos[29] > 0
         target.has_position_error = cpp_pos[30] > 0
-        target.has_homed_position = cpp_pos[31] > 0
+        target.has_definite_position = cpp_pos[31] > 0
         target.is_extruding_start = cpp_pos[32] > 0
         target.is_extruding = cpp_pos[33] > 0
         target.is_primed = cpp_pos[34] > 0
@@ -294,6 +294,7 @@ class Pos(object):
             "x_homed": self.x_homed,
             "y_homed": self.y_homed,
             "z_homed": self.z_homed,
+            "has_definite_position": self.has_definite_position,
             "is_layer_change": self.is_layer_change,
             "is_height_change": self.is_height_change,
             "is_zhop": self.is_zhop,
@@ -565,7 +566,7 @@ class Position(object):
         target.firmware_z_lift = source.firmware_z_lift
         target.has_position_error = source.has_position_error
         target.position_error = source.position_error
-        target.has_homed_position = source.has_homed_position
+        target.has_definite_position = source.has_definite_position
         target.in_path_position = source.in_path_position
         target.is_zhop = source.is_zhop
 
