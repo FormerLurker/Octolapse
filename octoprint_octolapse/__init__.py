@@ -1327,13 +1327,8 @@ class OctolapsePlugin(
     def get_timelapse_folder(self):
         return utility.get_rendering_directory_from_data_directory(self.get_plugin_data_folder())
 
-    def get_default_settings_path(self):
-        return os.path.join(
-            self.get_default_settings_folder(), "settings_default_{0}.json".format(self._plugin_version)
-        )
-
     def get_default_settings_filename(self):
-        return "settings_default_{0}.json".format(self._plugin_version)
+        return "settings_default_current.json".format(self._plugin_version)
 
     def get_default_settings_folder(self):
         return os.path.join(self._basefolder, 'data')
