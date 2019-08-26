@@ -34,9 +34,8 @@ $(function () {
         self.snap_to_print_disable_z_lift = ko.observable(values.snap_to_print_disable_z_lift);
         self.fastest_speed = ko.observable(values.fastest_speed);
         self.smart_layer_trigger_type = ko.observable(values.smart_layer_trigger_type);
-        self.smart_layer_trigger_speed_threshold = ko.observable(values.smart_layer_trigger_speed_threshold);
-        self.smart_layer_trigger_distance_threshold_percent = ko.observable(values.smart_layer_trigger_distance_threshold_percent);
-        self.smart_layer_snap_to_print = ko.observable(values.smart_layer_snap_to_print);
+        self.smart_layer_snap_to_fastest = ko.observable(values.smart_layer_snap_to_fastest);
+
         self.smart_layer_disable_z_lift = ko.observable(values.smart_layer_disable_z_lift);
         self.trigger_subtype = ko.observable(values.trigger_subtype);
         /*
@@ -148,9 +147,6 @@ $(function () {
             self.snap_to_print_disable_z_lift(values.snap_to_print_disable_z_lift);
             self.fastest_speed(values.fastest_speed);
             self.smart_layer_trigger_type(values.smart_layer_trigger_type);
-            self.smart_layer_trigger_speed_threshold(values.smart_layer_trigger_speed_threshold);
-            self.smart_layer_trigger_distance_threshold_percent(values.smart_layer_trigger_distance_threshold_percent);
-            self.smart_layer_snap_to_print(values.smart_layer_snap_to_print);
             self.smart_layer_disable_z_lift(values.smart_layer_disable_z_lift);
             self.trigger_subtype(values.trigger_subtype);
             self.timer_trigger_seconds(values.timer_trigger_seconds);

@@ -38,6 +38,10 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
         has_updated = True
         settings_dict = migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev0.json'))
 
+    if LooseVersion(version) < LooseVersion("0.4.0rc1.dev2"):
+        has_updated = True
+        settings_dict = migrate_pre_0_4_0_rc1_dev2(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev2.json'))
+
     # If we've updated the settings, save a backup of the old settings and update the version
     if has_updated:
         with open(get_settings_backup_name(version, data_directory), "w+") as f:
@@ -407,6 +411,21 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
         'profiles': profiles
     }
 
+def migrate_pre_0_4_0_rc1_dev2(current_version, settings_dict, default_settings_path):
+    default_settings = get_default_settings(default_settings_path)
+    # remove all triggers
+    settings_dict["profiles"]["triggers"] = {}
+    # add the default triggers
+    triggers = default_settings["profiles"]["triggers"]
+    for key, trigger in six.iteritems(triggers):
+        # remove all triggers
+        settings_dict["profiles"]["triggers"][key] = trigger
+
+    # set the current trigger
+    settings_dict["profiles"]["current_trigger_profile_guid"] = default_settings["profiles"]["current_trigger_profile_guid"]
+
+    settings_dict["main_settings"]["version"] = "0.4.0rc1.dev2"
+    return settings_dict
 
 def get_default_settings(default_settings_path):
     with open(default_settings_path) as defaultSettingsJson:

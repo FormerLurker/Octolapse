@@ -30,7 +30,6 @@
 #include <Python.h>
 #define _DEBUG
 #endif
-static const char* LOCK_TO_PRINT_CORNER_STABILIZATION = "lock-to-print-corner";
 class stabilization_snap_to_print :
 	public stabilization
 {

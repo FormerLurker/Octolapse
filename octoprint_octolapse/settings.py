@@ -855,14 +855,11 @@ class StabilizationProfile(AutomaticConfigurationProfile):
 
 class TriggerProfile(AutomaticConfigurationProfile):
     TRIGGER_TYPE_REAL_TIME = "real-time"
-    TRIGGER_TYPE_SNAP_TO_PRINT = "snap-to-print"
     TRIGGER_TYPE_SMART_LAYER = "smart-layer"
-    SMART_TRIGGER_TYPE_FASTEST = 0
+    SMART_TRIGGER_TYPE_SNAP_TO_PRINT = 0
     SMART_TRIGGER_TYPE_FAST = 1
     SMART_TRIGGER_TYPE_COMPATIBILITY = 2
-    SMART_TRIGGER_TYPE_NORMAL_QUALITY = 3
-    SMART_TRIGGER_TYPE_HIGH_QUALITY = 4
-    SMART_TRIGGER_TYPE_BEST_QUALITY = 5
+    SMART_TRIGGER_TYPE_HIGH_QUALITY = 3
     EXTRUDER_TRIGGER_IGNORE_VALUE = ""
     EXTRUDER_TRIGGER_REQUIRED_VALUE = "trigger_on"
     EXTRUDER_TRIGGER_FORBIDDEN_VALUE = "forbidden"
@@ -875,9 +872,7 @@ class TriggerProfile(AutomaticConfigurationProfile):
         self.trigger_type = TriggerProfile.TRIGGER_TYPE_SMART_LAYER
         # smart layer trigger options
         self.smart_layer_trigger_type = TriggerProfile.SMART_TRIGGER_TYPE_COMPATIBILITY
-        self.smart_layer_trigger_speed_threshold = 0
-        self.smart_layer_trigger_distance_threshold_percent = 10
-        self.smart_layer_snap_to_print = False
+        self.smart_layer_snap_to_fastest = False
         self.smart_layer_disable_z_lift = True
 
         # Settings that were formerly in the snapshot profile (now removed)
@@ -908,13 +903,13 @@ class TriggerProfile(AutomaticConfigurationProfile):
         self.trigger_on_deretracted = TriggerProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
 
     def get_snapshot_plan_options(self):
-        if self.trigger_type == TriggerProfile.TRIGGER_TYPE_SNAP_TO_PRINT:
+        if self.trigger_type == TriggerProfile.SMART_TRIGGER_TYPE_SNAP_TO_PRINT:
             return {
                 'disable_z_lift': self.snap_to_print_disable_z_lift,
             }
         if (
             self.trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER and
-            self.smart_layer_snap_to_print
+            self.smart_layer_trigger_type == TriggerProfile.SMART_TRIGGER_TYPE_SNAP_TO_PRINT
         ):
             return {
                 'disable_z_lift': self.smart_layer_disable_z_lift
@@ -924,7 +919,6 @@ class TriggerProfile(AutomaticConfigurationProfile):
     @staticmethod
     def get_precalculated_trigger_types():
         return [
-            TriggerProfile.TRIGGER_TYPE_SNAP_TO_PRINT,
             TriggerProfile.TRIGGER_TYPE_SMART_LAYER
         ]
 
@@ -949,12 +943,10 @@ class TriggerProfile(AutomaticConfigurationProfile):
                 dict(value='relative', name='Relative Coordinate (0-100)'),
                 dict(value='relative_path', name='List of Relative Coordinates')
             ], 'smart_layer_trigger_type_options': [
-                dict(value='{}'.format(TriggerProfile.SMART_TRIGGER_TYPE_FASTEST), name='Fastest'),
                 dict(value='{}'.format(TriggerProfile.SMART_TRIGGER_TYPE_FAST), name='Fast'),
                 dict(value='{}'.format(TriggerProfile.SMART_TRIGGER_TYPE_COMPATIBILITY), name='Compatibility'),
-                dict(value='{}'.format(TriggerProfile.SMART_TRIGGER_TYPE_NORMAL_QUALITY), name='Normal Quality'),
                 dict(value='{}'.format(TriggerProfile.SMART_TRIGGER_TYPE_HIGH_QUALITY), name='High Quality'),
-                dict(value='{}'.format(TriggerProfile.SMART_TRIGGER_TYPE_BEST_QUALITY), name='Best Quality'),
+                dict(value='{}'.format(TriggerProfile.SMART_TRIGGER_TYPE_SNAP_TO_PRINT), name='Snap to Print'),
             ], 'trigger_subtype_options': [
                 dict(value=TriggerProfile.LAYER_TRIGGER_TYPE, name="Layer/Height"),
                 dict(value=TriggerProfile.TIMER_TRIGGER_TYPE, name="Timer"),

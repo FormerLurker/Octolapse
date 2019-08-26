@@ -184,12 +184,12 @@ class ExternalSettings(object):
         r = requests.get(url, timeout=float(5))
         if r.status_code != requests.codes.ok:
             message = (
-                "An invalid status code or {0} was returned while getting available profiles."
-                .format(r.status_code)
+                "An invalid status code or {0} was returned while getting available profiles at {1}."
+                .format(r.status_code, url)
             )
             raise ExternalSettingsError('invalid-status-code', message)
         if 'content-length' in r.headers and r.headers["content-length"] == 0:
-            message = "No profile data was returned."
+            message = "No profile data was returned for a request at {0}.".format(url)
             raise ExternalSettingsError('no-data', message)
         # if we're here, we've had great success!
         return r.json()

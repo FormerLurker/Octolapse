@@ -47,7 +47,6 @@ class stabilization_args {
 public:
 	stabilization_args()
 	{
-		stabilization_type = "";
 		height_increment = 0.0;
 		notification_period_seconds = 0.25;
 		file_path = "";
@@ -71,7 +70,6 @@ public:
 	PyObject* py_on_progress_received;
 	PyObject * py_get_snapshot_position_callback;
 	PyObject * py_gcode_generator;
-	std::string stabilization_type;
 	std::string file_path;
 	double height_increment;
 	double notification_period_seconds;

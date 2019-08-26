@@ -1215,37 +1215,16 @@ static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_arg
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve trigger_type from the smart layer trigger stabilization args.");
 		return false;
 	}
-	args->smart_layer_trigger_type = static_cast<smart_layer_args::trigger_type>(PyLong_AsLong(py_trigger_type));
+	args->smart_layer_trigger_type = static_cast<trigger_position::trigger_type>(PyLong_AsLong(py_trigger_type));
 
-	// Extract speed_threshold
-	PyObject * py_speed_threshold = PyDict_GetItemString(py_args, "speed_threshold");
-	if (py_speed_threshold == NULL)
+	PyObject * py_snap_to_fastest = PyDict_GetItemString(py_args, "snap_to_fastest");
+	if (py_snap_to_fastest == NULL)
 	{
 		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve speed_threshold from the smart layer trigger stabilization args.");
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve snap_to_fastest from the position args dict.");
 		return false;
 	}
-	args->speed_threshold = PyFloatOrInt_AsDouble(py_speed_threshold);
-
-	// Extract speed_threshold
-	PyObject * py_distance_threshold_percent = PyDict_GetItemString(py_args, "distance_threshold_percent");
-	if (py_distance_threshold_percent == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve distance_threshold_percent from the smart layer trigger stabilization args.");
-		return false;
-	}
-	args->distance_threshold_percent = PyFloatOrInt_AsDouble(py_distance_threshold_percent);
-	//std::cout << "Smart layer args parsed successfully.\r\n";
-	// snap_to_print
-	PyObject * py_snap_to_print = PyDict_GetItemString(py_args, "snap_to_print");
-	if (py_snap_to_print == NULL)
-	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve snap_to_print from the position args dict.");
-		return false;
-	}
-	args->snap_to_print = PyLong_AsLong(py_snap_to_print) > 0;
+	args->snap_to_fastest = PyLong_AsLong(py_snap_to_fastest) > 0;
 
 
 

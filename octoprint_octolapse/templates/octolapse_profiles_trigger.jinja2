@@ -103,16 +103,8 @@
                     </div>
                 </div>
                 <div data-bind="visible: jQuery.inArray(trigger_type(), ['smart-layer'])>-1">
-                    <div class="control-group" >
-                        <label class="control-label">Snap To Print</label>
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input name="smart_layer_snap_to_print" type="checkbox" data-bind="checked: smart_layer_snap_to_print" />Enabled
-                                <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_snap_to_print.md" data-help-title="Snap To Print"/>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="control-group" data-bind="visible:!smart_layer_snap_to_print()">
+
+                    <div class="control-group">
                         <label class="control-label">Smart Layer Trigger Type</label>
                         <div class="controls">
                             <select id="trigger_profile_smart_layer_trigger_type" name="smart_layer_trigger_type"
@@ -124,40 +116,22 @@
                             <div class="error_label_container text-error" data-error-for="trigger_profile_smart_layer_trigger_type"></div>
                         </div>
                     </div>
-                    <div class="control-group" data-bind="visible: smart_layer_trigger_type() == '4'">
-                        <label class="control-label">Distance Threshold Percent</label>
-                        <div class="controls">
-                            <span class="input-append">
-                                <input id="trigger_profile_smart_layer_trigger_distance_threshold_percent" name="smart_layer_trigger_distance_threshold_percent" type="number" class="input-small ignore_hidden_errors"
-                                       data-bind="value: smart_layer_trigger_distance_threshold_percent" min="0.0" max="100" step="1" required="true" />
-                                <span class="add-on">%</span>
-                            </span>
-                            <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_trigger_distance_threshold_percent.md" data-help-title="Distance Threshold Percent"/>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_smart_layer_trigger_distance_threshold_percent"></div>
-                            <span class="help-inline">Octolapse will choose a closer position rather than one of higher quality if it is closer to the trigger point by at least the percentage entered here.</span>
-                        </div>
-                    </div>
-                    <div class="control-group" data-bind="visible: smart_layer_trigger_type() == '1'">
-                        <label class="control-label">Trigger Speed Threshold</label>
-                        <div class="controls">
-                            <span class="input-append">
-                                <input id="trigger_profile_smart_layer_trigger_speed_threshold" name="smart_layer_trigger_speed_threshold" type="number" class="input-small ignore_hidden_errors"
-                                       data-bind="value: smart_layer_trigger_speed_threshold" min="0" step="1" required="true" />
-                                <span class="add-on">mm/minute</span>
-                            </span>
-                            <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_trigger_speed_threshold.md" data-help-title="Trigger Speed Threshold"/>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_smart_layer_trigger_speed_threshold"></div>
-                            <span class="help-inline">Prevents octolapse from triggering unless the extrusion speed is ABOVE this value.  Set to 0 to disable.  If used properly, this can eliminate quality issues associated with taking snapshots while extruding.</span>
-                        </div>
-                    </div>
-                    <div data-bind="visible: smart_layer_snap_to_print">
-
+                    <div data-bind="visible: smart_layer_trigger_type() == '0'">
                         <div class="control-group">
                             <div class="controls">
                                 <label class="checkbox">
                                     <input name="smart_layer_disable_z_lift" type="checkbox" data-bind="checked: smart_layer_disable_z_lift" />Disable Lift Before Snapshot
                                     <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_disable_z_lift.md" data-help-title="Disable Lift Before Snapshot"/>
                                     <span class="help-inline">Disabling z-lift is generally recommended when using snap-to-print.  If it takes a long time to capture an image, consider enabling z_lift to prevent the extruder from melting your print.</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input name="smart_layer_snap_to_fastest" type="checkbox" data-bind="checked: smart_layer_snap_to_fastest" />Snap To Fastest Feedrate
+                                    <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_snap_to_fastest.md" data-help-title="Snap To Fastest Feedrate"/>
+                                    <span class="help-inline">This setting can improve print quality, but may result in a less stable timelapse.</span>
                                 </label>
                             </div>
                         </div>

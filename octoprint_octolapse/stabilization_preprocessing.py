@@ -194,11 +194,7 @@ class StabilizationPreprocessingThread(Thread):
             # run smart layer trigger
             smart_layer_args = {
                 'trigger_type': int(self.trigger_profile.smart_layer_trigger_type),
-                'distance_threshold_percent': (
-                    self.trigger_profile.smart_layer_trigger_distance_threshold_percent / 100.0
-                ),
-                'speed_threshold': self.trigger_profile.smart_layer_trigger_speed_threshold,
-                'snap_to_print': self.trigger_profile.smart_layer_snap_to_print
+                'snap_to_fastest': self.trigger_profile.smart_layer_snap_to_fastest
             }
             results = GcodePositionProcessor.GetSnapshotPlans_SmartLayer(
                 self.cpp_position_args,
