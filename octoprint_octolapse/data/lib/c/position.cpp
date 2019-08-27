@@ -54,18 +54,6 @@ void position::initialize()
 	height_ = 0;
 	current_height_increment_ = 0;
 	is_printer_primed_ = false;
-	firmware_retraction_length_ = 0;
-	firmware_retraction_length_null_ = true;
-	firmware_unretraction_additional_length_ = 0;
-	firmware_unretraction_additional_length_null_ = true;
-	firmware_retraction_feedrate_ = 0;
-	firmware_retraction_feedrate_null_ = true;
-	firmware_unretraction_feedrate_ = 0;
-	firmware_unretraction_feedrate_null_ = true;
-	firmware_z_lift_ = 0;
-	firmware_z_lift_null_ = true;
-	has_position_error_ = false;
-	position_error_ = "";
 	has_definite_position_ = false;
 	e_relative_ = 0;
 	z_relative_ = 0;
@@ -137,18 +125,6 @@ position::position(position & source)
 	height_ = source.height_;
 	current_height_increment_ = source.current_height_increment_;
 	is_printer_primed_ = source.is_printer_primed_;
-	firmware_retraction_length_ = source.firmware_retraction_length_;
-	firmware_retraction_length_null_ = source.firmware_retraction_length_null_;
-	firmware_unretraction_additional_length_ = source.firmware_unretraction_additional_length_;
-	firmware_unretraction_additional_length_null_ = source.firmware_unretraction_additional_length_null_;
-	firmware_retraction_feedrate_ = source.firmware_retraction_feedrate_;
-	firmware_retraction_feedrate_null_ = source.firmware_retraction_feedrate_null_;
-	firmware_unretraction_feedrate_ = source.firmware_unretraction_feedrate_;
-	firmware_unretraction_feedrate_null_ = source.firmware_unretraction_feedrate_null_;
-	firmware_z_lift_ = source.firmware_z_lift_;
-	firmware_z_lift_null_ = source.firmware_z_lift_null_;
-	has_position_error_ = source.has_position_error_;
-	position_error_ = source.position_error_;
 	has_definite_position_ = source.has_definite_position_;
 	e_relative_ = source.e_relative_;
 	z_relative_ = source.z_relative_;
@@ -276,18 +252,6 @@ void position::_copy_position(position* source, position* target)
 	target->height_ = source->height_;
 	target->current_height_increment_ = source->current_height_increment_;
 	target->is_printer_primed_ = source->is_printer_primed_;
-	target->firmware_retraction_length_ = source->firmware_retraction_length_;
-	target->firmware_retraction_length_null_ = source->firmware_retraction_length_null_;
-	target->firmware_unretraction_additional_length_ = source->firmware_unretraction_additional_length_;
-	target->firmware_unretraction_additional_length_null_ = source->firmware_unretraction_additional_length_null_;
-	target->firmware_retraction_feedrate_ = source->firmware_retraction_feedrate_;
-	target->firmware_retraction_feedrate_null_ = source->firmware_retraction_feedrate_null_;
-	target->firmware_unretraction_feedrate_ = source->firmware_unretraction_feedrate_;
-	target->firmware_unretraction_feedrate_null_ = source->firmware_unretraction_feedrate_null_;
-	target->firmware_z_lift_ = source->firmware_z_lift_;
-	target->firmware_z_lift_null_ = source->firmware_z_lift_null_;
-	target->has_position_error_ = source->has_position_error_;
-	target->position_error_ = source->position_error_;
 	target->has_definite_position_ = source->has_definite_position_;
 	target->e_relative_ = source->e_relative_;
 	target->z_relative_ = source->z_relative_;
@@ -360,11 +324,11 @@ PyObject* position::to_py_tuple()
 		deretraction_length_, // 14
 		last_extrusion_height_, // 15
 		height_, // 16
-		firmware_retraction_length_, // 17
-		firmware_unretraction_additional_length_, // 18
-		firmware_retraction_feedrate_, // 19
-		firmware_unretraction_feedrate_, // 20
-		firmware_z_lift_, // 21
+		0.0, // 17
+		0.0, // 18
+		0.0, // 19
+		0.0, // 20
+		0.0, // 21
 		// Int
 		layer_, // 22
 		// Bool (represented as an integer)
@@ -375,7 +339,7 @@ PyObject* position::to_py_tuple()
 		is_extruder_relative_, // 27
 		is_metric_, // 28
 		is_printer_primed_, // 29
-		has_position_error_, // 30
+		false,
 		has_definite_position_, // 31
 		is_extruding_start_, // 32
 		is_extruding_, // 33
@@ -407,11 +371,11 @@ PyObject* position::to_py_tuple()
 		is_extruder_relative_null_, // 58
 		last_extrusion_height_null_, // 59
 		is_metric_null_, // 60
-		firmware_retraction_length_null_, // 61
-		firmware_unretraction_additional_length_null_, // 62
-		firmware_retraction_feedrate_null_, // 63
-		firmware_unretraction_feedrate_null_, // 64
-		firmware_z_lift_null_,  // 65
+		true, // 61
+		true, // 62
+		true, // 63
+		true, // 64
+		true,  // 65
 		// file statistics
 		file_line_number_, // 66
 		gcode_number_, // 67
@@ -507,15 +471,15 @@ PyObject* position::to_py_dict()
 		"current_height_increment_",
 		current_height_increment_,
 		"firmware_retraction_length",
-		firmware_retraction_length_,
+		0.0,
 		"firmware_unretraction_additional_length",
-		firmware_unretraction_additional_length_,
+		0.0,
 		"firmware_retraction_feedrate",
-		firmware_retraction_feedrate_,
+		0.0,
 		"firmware_unretraction_feedrate",
-		firmware_unretraction_feedrate_,
+		0.0,
 		"firmware_z_lift",
-		firmware_z_lift_,
+		0.0,
 		"e_relative",
 		e_relative_,
 		"z_relative",
@@ -561,17 +525,17 @@ PyObject* position::to_py_dict()
 		"last_extrusion_height_null",
 		last_extrusion_height_null_,
 		"firmware_retraction_length_null",
-		firmware_retraction_length_null_,
+		false,
 		"firmware_unretraction_additional_length_null",
-		firmware_unretraction_additional_length_null_,
+		false,
 		"firmware_retraction_feedrate_null",
-		firmware_retraction_feedrate_null_,
+		false,
 		"firmware_unretraction_feedrate_null",
-		firmware_unretraction_feedrate_null_,
+		false,
 		"firmware_z_lift_null",
-		firmware_z_lift_null_,
+		false,
 		"has_position_error",
-		has_position_error_,
+		false,
 		"has_definite_position",
 		has_definite_position_,
 		"is_extruding_start",

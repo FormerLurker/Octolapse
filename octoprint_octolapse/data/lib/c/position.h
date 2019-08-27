@@ -74,18 +74,6 @@ public:
 	double height_;
 	int current_height_increment_;
 	bool is_printer_primed_;
-	double firmware_retraction_length_;
-	bool firmware_retraction_length_null_;
-	double firmware_unretraction_additional_length_;
-	bool firmware_unretraction_additional_length_null_;
-	double firmware_retraction_feedrate_;
-	bool firmware_retraction_feedrate_null_;
-	double firmware_unretraction_feedrate_;
-	bool firmware_unretraction_feedrate_null_;
-	double firmware_z_lift_;
-	bool firmware_z_lift_null_;
-	bool has_position_error_;
-	std::string position_error_;
 	bool has_definite_position_;
 	double e_relative_;
 	double z_relative_;

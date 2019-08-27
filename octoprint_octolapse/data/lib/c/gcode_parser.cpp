@@ -98,6 +98,13 @@ gcode_parser::~gcode_parser()
 	parsable_commands_.clear();
 }
 
+parsed_command * gcode_parser::parse_gcode(const char * gcode)
+{
+	parsed_command * p_cmd = new parsed_command();
+	try_parse_gcode(gcode, p_cmd);
+	return p_cmd;
+}
+
 // Superfast gcode parser - v2
 bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 {
@@ -111,8 +118,22 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::WARNING, message);
 		return false;
 	}
-	command->gcode_ = gcode;
-	std::vector<parsed_command_parameter> parameters;
+	
+	// Create a pointer just to walk through the gcode
+	
+	char * p_gcode = const_cast<char *>(gcode);
+	while (true)
+	{
+		char cur_char = *p_gcode;
+		if (cur_char == '\0' || cur_char == ';')
+			break;
+		else if (cur_char > 32)
+			command->gcode_.push_back(cur_char);
+		p_gcode++;
+	}
+	
+	//command->gcode_ = gcode;
+	//std::vector<parsed_command_parameter> parameters;
 
 	if (parsable_commands_.find(command->cmd_) == parsable_commands_.end())
 	{
@@ -142,15 +163,13 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 		if (command->cmd_[0] == 'T')
 		{
 			//std::cout << "GcodeParser.try_parse_gcode - T parameter found.\r\n";
-			parsed_command_parameter* param = new parsed_command_parameter();
+			parsed_command_parameter param;
 
-			if(!try_extract_t_parameter(&p,param))
+			if(!try_extract_t_parameter(&p,&param))
 			{
 				std::string message = "Unable to extract a parameter from the T command: ";
 				message += gcode;
 				octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-				delete param;
-				param = NULL;
 			}
 			else
 				command->parameters_.push_back(param);
@@ -160,20 +179,21 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 			while (true)
 			{
 				//std::cout << "GcodeParser.try_parse_gcode - Trying to extract parameters.\r\n";
-				parsed_command_parameter* param = new parsed_command_parameter();
-				if (try_extract_parameter(&p, param))
+				parsed_command_parameter param;
+				if (try_extract_parameter(&p, &param))
 					command->parameters_.push_back(param);
 				else
 				{
 					//std::cout << "GcodeParser.try_parse_gcode - No parameters found.\r\n";
-					delete param;
-					param = NULL;
 					break;
 				}
 			}
 		}
 	}
-	
+
+	try_extract_comment(&p_gcode, &(command->comment_));
+		
+
 	return true;
 	
 }
@@ -197,7 +217,7 @@ bool gcode_parser::try_extract_gcode_command(char ** p_p_gcode, std::string * p_
 	if (gcode_word == 'G' || gcode_word == 'M' || gcode_word == 'T')
 	{
 		// Set the gcode word of the new command to the current pointer's location and increment both
-		(*p_command) += gcode_word;
+		(*p_command).push_back(gcode_word);
 		p++;
 
 		if (gcode_word != 'T')
@@ -209,7 +229,7 @@ bool gcode_parser::try_extract_gcode_command(char ** p_p_gcode, std::string * p_
 				if (*p != ' ')
 				{
 					found_command = true;
-					(*p_command) += *p++;
+					(*p_command).push_back(*p++);
 				}
 				else if (found_command)
 				{
@@ -232,13 +252,13 @@ bool gcode_parser::try_extract_gcode_command(char ** p_p_gcode, std::string * p_
 				}
 			}
 			if (*p == '.') {
-				(*p_command) += *p++;
+				(*p_command).push_back(*p++);
 				found_command = false;
 				while ((*p >= '0' && *p <= '9') || *p == ' ') {
 					if (*p != ' ')
 					{
 						found_command = true;
-						(*p_command) += *p++;
+						(*p_command).push_back(*p++);
 					}
 					else
 						++p;
@@ -366,7 +386,7 @@ bool gcode_parser::try_extract_text_parameter(char ** p_p_gcode, std::string * p
 
 	while (*p != '\0' && *p != ';')
 	{
-		(*p_parameter) += *p++;
+		(*p_parameter).push_back(*p++);
 	}
 	*p_p_gcode = p;
 	return true;
@@ -456,4 +476,33 @@ bool gcode_parser::try_extract_t_parameter(char ** p_p_gcode, parsed_command_par
 		parameter->value_type_ = 'U';
 	}
 	return true;
+}
+
+bool gcode_parser::try_extract_comment(char ** p_p_gcode, std::string * p_comment)
+{
+	// Skip initial whitespace
+	//std::cout << "GcodeParser.try_extract_parameter - Trying to extract a text parameter from  " << *p_p_gcode << "\r\n";
+	char * p = *p_p_gcode;
+
+	// Ignore Leading Spaces
+	while (*p != '\0' && *p != ';')
+	{
+		p++;
+	}
+
+	// Add all values, stop at end of string or when we hit a ';'
+	while (*p == ';' || *p == ' ')
+	{
+		p++;
+	}
+	while (*p != '\0')
+	{
+		if (*p != '\r' && *p != '\n')
+			(*p_comment).push_back(*p++);
+		else
+			p++;
+	}
+	*p_p_gcode = p;
+	return p_comment->length() != 0;
+
 }

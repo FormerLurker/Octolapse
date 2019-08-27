@@ -35,11 +35,9 @@ class parsed_command_parameter
 public:
 	parsed_command_parameter();
 	~parsed_command_parameter();
-	parsed_command_parameter(parsed_command_parameter & source);
 	parsed_command_parameter(char name, double double_value);
 	parsed_command_parameter(char name, std::string string_value);
 	parsed_command_parameter(char name, unsigned int unsigned_int_value);
-
 	PyObject * value_to_py_object();
 
 	char name_;

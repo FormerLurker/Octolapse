@@ -1328,7 +1328,7 @@ class OctolapsePlugin(
         return utility.get_rendering_directory_from_data_directory(self.get_plugin_data_folder())
 
     def get_default_settings_filename(self):
-        return "settings_default_current.json".format(self._plugin_version)
+        return "settings_default_current.json"
 
     def get_default_settings_folder(self):
         return os.path.join(self._basefolder, 'data')
@@ -1421,7 +1421,7 @@ class OctolapsePlugin(
     def save_settings(self):
         # Save setting from file
         try:
-            settings_dict = self._octolapse_settings.save(self.get_settings_file_path())
+            self._octolapse_settings.save(self.get_settings_file_path())
             self.configure_loggers()
         except Exception as e:
             logger.exception("Failed to save settings.")
@@ -1921,9 +1921,6 @@ class OctolapsePlugin(
             # info that includes slicer setting
             success, error_type, error_list = current_printer_clone.get_gcode_settings_from_file(gcode_file_path)
             if success:
-                settings_saved = False
-
-                updated_profile_json = None
                 # Save the profile changes
                 # get the extracted slicer settings
                 extracted_slicer_settings = current_printer_clone.get_current_slicer_settings()

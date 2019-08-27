@@ -17,6 +17,7 @@ struct trigger_position
 	 */
 	enum trigger_type { snap_to_print, fast, compatibility, high_quality };
 	enum position_type { unknown, extrusion, lifting, lifted, travel, lifting_travel, lifted_travel, retraction, retracted_lifting, retracted_lifted, retracted_travel, lifting_retracted_travel, lifted_retracted_travel, fastest_extrusion };
+	
 	static const unsigned int num_position_types = 14;
 	static const position_type quality_cutoff = trigger_position::retraction;
 	

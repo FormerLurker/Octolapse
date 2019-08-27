@@ -26,33 +26,35 @@
 #include <sstream>
 parsed_command::parsed_command()
 {
-	//cmd_ = "";
-	//gcode_ = "";
+	/*
+	cmd_.reserve(8);
+	gcode_.reserve(128);
+	comment_.reserve(128);
+	parameters_.reserve(6);
+	*/
 }
 parsed_command::parsed_command(parsed_command & source)
 {
 	cmd_ = source.cmd_;
 	gcode_ = source.gcode_;
-	for (unsigned int index = 0; index < source.parameters_.size(); index++)
-		parameters_.push_back(new parsed_command_parameter(*source.parameters_[index]));
+	comment_ = source.comment_;
+	parameters_ = source.parameters_;
+	/*
+	for (std::vector< parsed_command_parameter * >::iterator it = source.parameters_.begin(); it != source.parameters_.end(); ++it)
+	{
+		parameters_.push_back (new parsed_command_parameter(**it));
+	}*/
 }
 
 parsed_command::~parsed_command()
 {
-	for (std::vector< parsed_command_parameter * >::iterator it = parameters_.begin(); it != parameters_.end(); ++it)
-	{
-		delete (*it);
-	}
 	parameters_.clear();
 }
 void parsed_command::clear()
 {
-	cmd_ = "";
-	gcode_ = "";
-	for (std::vector< parsed_command_parameter * >::iterator it = parameters_.begin(); it != parameters_.end(); ++it)
-	{
-		delete (*it);
-	}
+	cmd_.clear();
+	gcode_.clear();
+	comment_.clear();
 	parameters_.clear();
 }
 PyObject * parsed_command::to_py_object()
@@ -79,10 +81,21 @@ PyObject * parsed_command::to_py_object()
 		PyErr_SetString(PyExc_ValueError, message.c_str());
 		return NULL;
 	}
+
+	PyObject * pyComment = PyUnicode_SafeFromString(comment_.c_str());
+	if (pyComment == NULL)
+	{
+		PyErr_Print();
+		std::string message = "Unable to convert the gocde comment to unicode: ";
+		message += comment_;
+		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
+		PyErr_SetString(PyExc_ValueError, message.c_str());
+		return NULL;
+	}
 	
 	if (parameters_.empty())
 	{
-		ret_val = PyTuple_Pack(3, pyCommandName, Py_None, pyGcode);
+		ret_val = PyTuple_Pack(3, pyCommandName, Py_None, pyGcode, pyComment);
 		if (ret_val == NULL)
 		{
 			PyErr_Print();
@@ -112,13 +125,13 @@ PyObject * parsed_command::to_py_object()
 		// Loop through our parameters vector and create and add PyDict items
 		for (unsigned int index = 0; index < parameters_.size(); index++)
 		{
-			parsed_command_parameter* param = parameters_[index];
-			PyObject * param_value = param->value_to_py_object();
+			parsed_command_parameter param = parameters_[index];
+			PyObject * param_value = param.value_to_py_object();
 			// Errors here will be handled by value_to_py_object, just return NULL
 			if (param_value == NULL)
 				return NULL;
 			char temp_c_str[2];
-			temp_c_str[0] = param->name_;
+			temp_c_str[0] = param.name_;
 			temp_c_str[1] = '\0';
 			const char * p_name = temp_c_str;
 			if (PyDict_SetItemString(pyParametersDict, p_name, param_value) != 0)
@@ -126,15 +139,15 @@ PyObject * parsed_command::to_py_object()
 				PyErr_Print();
 				// Handle error here, display detailed message
 				std::string message = "Unable to add the command parameter to the parameters dictionary.  Parameter Name: ";
-				message += param->name_;
+				message += param.name_;
 				message += " Value Type: ";
-				message += param->value_type_;
+				message += param.value_type_;
 				message += " Value: ";
 
-				switch (param->value_type_)
+				switch (param.value_type_)
 				{
 				case 'S':
-					message += param->string_value_;
+					message += param.string_value_;
 					break;
 				case 'N':
 					message += "None";
@@ -142,17 +155,17 @@ PyObject * parsed_command::to_py_object()
 				case 'F':
 				{
 					std::ostringstream doubld_str;
-					doubld_str << param->double_value_;
+					doubld_str << param.double_value_;
 					message += doubld_str.str();
-					message += param->string_value_;
+					message += param.string_value_;
 				}
 					break;
 				case 'U':
 				{
 					std::ostringstream unsigned_strs;
-					unsigned_strs << param->unsigned_long_value_;
+					unsigned_strs << param.unsigned_long_value_;
 					message += unsigned_strs.str();
-					message += param->string_value_;
+					message += param.string_value_;
 				}
 					break;
 				default:
@@ -166,7 +179,7 @@ PyObject * parsed_command::to_py_object()
 			//std::cout << "param_value refcount = " << param_value->ob_refcnt << "\r\n";
 		}
 
-		ret_val = PyTuple_Pack(3, pyCommandName, pyParametersDict, pyGcode);
+		ret_val = PyTuple_Pack(3, pyCommandName, pyParametersDict, pyGcode, pyComment);
 		if (ret_val == NULL)
 		{
 			PyErr_Print();
@@ -189,6 +202,7 @@ PyObject * parsed_command::to_py_object()
 	Py_DECREF(pyCommandName);
 	// Todo: evaluate the effects of this
 	Py_DECREF(pyGcode);
+	Py_DECREF(pyComment);
 	//std::cout << "pyCommandName refcount = " << pyCommandName->ob_refcnt << "\r\n";
 	//std::cout << "pyGcode refcount = " << pyGcode->ob_refcnt << "\r\n";
 	//std::cout << "ret_val refcount = " << ret_val->ob_refcnt << "\r\n";

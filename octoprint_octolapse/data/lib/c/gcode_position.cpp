@@ -505,31 +505,31 @@ void gcode_position::process_g0_g1(position* posPtr, parsed_command* parsedComma
 	double f = 0;
 	for (unsigned int index = 0; index < parsedCommandPtr->parameters_.size(); index++)
 	{
-		const parsed_command_parameter * p_cur_param = parsedCommandPtr->parameters_[index];
-		if (p_cur_param->name_ == 'X')
+		const parsed_command_parameter p_cur_param = parsedCommandPtr->parameters_[index];
+		if (p_cur_param.name_ == 'X')
 		{
 			update_x = true;
-			x = p_cur_param->double_value_;
+			x = p_cur_param.double_value_;
 		}
-		else if (p_cur_param->name_ == 'Y')
+		else if (p_cur_param.name_ == 'Y')
 		{
 			update_y = true;
-			y = p_cur_param->double_value_;
+			y = p_cur_param.double_value_;
 		}
-		else if (p_cur_param->name_ == 'E')
+		else if (p_cur_param.name_ == 'E')
 		{
 			update_e = true;
-			e = p_cur_param->double_value_;
+			e = p_cur_param.double_value_;
 		}
-		else if (p_cur_param->name_ == 'Z')
+		else if (p_cur_param.name_ == 'Z')
 		{
 			update_z = true;
-			z = p_cur_param->double_value_;
+			z = p_cur_param.double_value_;
 		}
-		else if (p_cur_param->name_ == 'F')
+		else if (p_cur_param.name_ == 'F')
 		{
 			update_f = true;
-			f = p_cur_param->double_value_;
+			f = p_cur_param.double_value_;
 		}
 	}
 	update_position(posPtr, x, update_x, y, update_y, z, update_z, e, update_e, f, update_f, false, true);
@@ -576,12 +576,12 @@ void gcode_position::process_g28(position* p_position, parsed_command* p_parsed_
 
 	for (unsigned int index = 0; index < p_parsed_command->parameters_.size(); index++)
 	{
-		parsed_command_parameter* p_cur_param = p_parsed_command->parameters_[index];
-		if (p_cur_param->name_ == 'X')
+		parsed_command_parameter p_cur_param = p_parsed_command->parameters_[index];
+		if (p_cur_param.name_ == 'X')
 			has_x = true;
-		else if (p_cur_param->name_ == 'Y')
+		else if (p_cur_param.name_ == 'Y')
 			has_y = true;
-		else if (p_cur_param->name_ == 'Z')
+		else if (p_cur_param.name_ == 'Z')
 			has_z = true;
 	}
 	if (has_x)
@@ -680,27 +680,27 @@ void gcode_position::process_g92(position* p_position, parsed_command* p_parsed_
 	double e = 0;
 	for (unsigned int index = 0; index < p_parsed_command->parameters_.size(); index++)
 	{
-		parsed_command_parameter * p_cur_param = p_parsed_command->parameters_[index];
-		char cmdName = p_cur_param->name_;
+		parsed_command_parameter p_cur_param = p_parsed_command->parameters_[index];
+		char cmdName = p_cur_param.name_;
 		if (cmdName == 'X')
 		{
 			update_x = true;
-			x = p_cur_param->double_value_;
+			x = p_cur_param.double_value_;
 		}
 		else if (cmdName == 'Y')
 		{
 			update_y = true;
-			y = p_cur_param->double_value_;
+			y = p_cur_param.double_value_;
 		}
 		else if (cmdName == 'E')
 		{
 			update_e = true;
-			e = p_cur_param->double_value_;
+			e = p_cur_param.double_value_;
 		}
 		else if (cmdName == 'Z')
 		{
 			update_z = true;
-			z = p_cur_param->double_value_;
+			z = p_cur_param.double_value_;
 		}
 		else if (cmdName == 'O')
 		{

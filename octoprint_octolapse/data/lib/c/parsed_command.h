@@ -41,7 +41,8 @@ public:
 	~parsed_command();
 	std::string cmd_;
 	std::string gcode_;
-	std::vector<parsed_command_parameter* > parameters_;
+	std::string comment_;
+	std::vector<parsed_command_parameter> parameters_;
 	PyObject * to_py_object();
 	void clear();
 private:

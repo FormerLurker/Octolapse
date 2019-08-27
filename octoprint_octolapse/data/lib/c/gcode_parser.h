@@ -35,6 +35,7 @@ public:
 	gcode_parser();
 	~gcode_parser();
 	bool try_parse_gcode(const char * gcode, parsed_command * command);
+	parsed_command * parse_gcode(const char * gcode);
 private:
 	gcode_parser(const gcode_parser &source);
 	// Variables and lookups
@@ -48,6 +49,6 @@ private:
 	static bool try_extract_t_parameter(char ** p_p_gcode, parsed_command_parameter * parameter);
 	static bool try_extract_unsigned_long(char ** p_p_gcode, unsigned long * p_value);
 	double static ten_pow(unsigned short n);
-
+	bool try_extract_comment(char ** p_p_gcode, std::string * p_comment);
 };
 #endif
