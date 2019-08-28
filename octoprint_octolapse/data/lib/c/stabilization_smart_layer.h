@@ -19,10 +19,12 @@ struct smart_layer_args
 		smart_layer_trigger_type = trigger_position::trigger_type::compatibility;
 		speed_threshold = 0;
 		snap_to_fastest = false;
+		stabilize_first_position_only = false;
 	}
 	trigger_position::trigger_type smart_layer_trigger_type;
 	double speed_threshold;
 	bool snap_to_fastest;
+	bool stabilize_first_position_only;
 };
 
 class stabilization_smart_layer : public stabilization
@@ -62,6 +64,7 @@ private:
 	double current_layer_saved_extrusion_speed_;
 	double standard_layer_trigger_distance_;
 	smart_layer_args *p_smart_layer_args_;
+	position last_snapshot_initial_position_;
 	// closest extrusion/travel position tracking variables
 	trigger_positions closest_positions_;
 };

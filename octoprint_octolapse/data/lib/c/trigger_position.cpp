@@ -324,29 +324,23 @@ bool trigger_positions::can_process_position(position& p_position, const trigger
 double trigger_positions::get_stabilization_distance(position& p_position)
 {
 	double x, y;
-	if (args_.x_stabilization_disabled)
+	if (args_.x_stabilization_disabled && p_previous_initial_position_.is_empty_)
 	{
-		if (!p_previous_initial_position_.is_empty_)
-			x = p_previous_initial_position_.x_;
-		else
-			x = p_position.x_;
+		x = p_position.x_;
 	}
 	else
 	{
 		x = stabilization_x_;
 	}
-
-	if (args_.y_stabilization_disabled)
+	if (args_.y_stabilization_disabled && p_previous_initial_position_.is_empty_)
 	{
-		if (!p_previous_initial_position_.is_empty_)
-			y = p_previous_initial_position_.y_;
-		else
-			y = p_position.y_;
+		y = p_position.y_;
 	}
 	else
 	{
 		y = stabilization_y_;
 	}
+
 	return utilities::get_cartesian_distance(p_position.x_, p_position.y_, x, y);
 }
 

@@ -51,6 +51,7 @@ stabilization_smart_layer::stabilization_smart_layer(
 	default_args.x_stabilization_disabled = stab_args->x_stabilization_disabled;
 	default_args.y_stabilization_disabled = stab_args->y_stabilization_disabled;
 	closest_positions_.initialize(default_args);
+	last_snapshot_initial_position_.is_empty_ = true;
 	update_stabilization_coordinates();
 }
 
@@ -80,6 +81,7 @@ stabilization_smart_layer::stabilization_smart_layer(
 	default_args.x_stabilization_disabled = stab_args->x_stabilization_disabled;
 	default_args.y_stabilization_disabled = stab_args->y_stabilization_disabled;
 	closest_positions_.initialize(default_args);
+	last_snapshot_initial_position_.is_empty_ = true;
 	update_stabilization_coordinates();
 }
 
@@ -95,8 +97,21 @@ stabilization_smart_layer::~stabilization_smart_layer()
 
 void stabilization_smart_layer::update_stabilization_coordinates()
 {
-	// Get the initial stabilization coordinates
-	get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
+	bool stabilize_first_position_only = p_smart_layer_args_->smart_layer_trigger_type == trigger_position::snap_to_print && p_smart_layer_args_->stabilize_first_position_only;
+	bool stabilization_disabled = p_stabilization_args_->x_stabilization_disabled && p_stabilization_args_->y_stabilization_disabled;
+	if (
+		(stabilization_disabled || stabilize_first_position_only)
+		&& !last_snapshot_initial_position_.is_empty_
+	)
+	{
+		stabilization_x_ = last_snapshot_initial_position_.x_;
+		stabilization_y_ = last_snapshot_initial_position_.y_;
+	}
+	else
+	{
+		// Get the next stabilization point
+		get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
+	}
 	closest_positions_.set_stabilization_coordinates(stabilization_x_, stabilization_y_);
 }
 void stabilization_smart_layer::process_pos(position& p_current_pos, position& p_previous_pos)
@@ -202,13 +217,14 @@ void stabilization_smart_layer::add_plan()
 		// Add the plan
 		p_snapshot_plans_.push_back(p_plan);
 		current_layer_ = p_closest.p_position.layer_;
+		last_snapshot_initial_position_ = p_plan.p_initial_position;
 		// only get the next coordinates if we've actually added a plan.
 		update_stabilization_coordinates();
-
+		
 		// reset the saved positions
 		reset_saved_positions();
-		closest_positions_.set_previous_initial_position(p_plan.p_initial_position);
-		
+		// Need to set the initial position after resetting the saved positions
+		closest_positions_.set_previous_initial_position(last_snapshot_initial_position_);
 	}
 	else
 	{

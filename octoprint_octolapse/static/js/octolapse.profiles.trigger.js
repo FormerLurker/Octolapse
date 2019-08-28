@@ -35,6 +35,7 @@ $(function () {
         self.fastest_speed = ko.observable(values.fastest_speed);
         self.smart_layer_trigger_type = ko.observable(values.smart_layer_trigger_type);
         self.smart_layer_snap_to_fastest = ko.observable(values.smart_layer_snap_to_fastest);
+        self.stabilize_first_position_only = ko.observable(values.stabilize_first_position_only);
 
         self.smart_layer_disable_z_lift = ko.observable(values.smart_layer_disable_z_lift);
         self.trigger_subtype = ko.observable(values.trigger_subtype);

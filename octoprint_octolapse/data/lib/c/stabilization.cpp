@@ -131,10 +131,7 @@ stabilization_results stabilization::process_file()
 	
 	double next_update_time = get_next_update_time();
 	const clock_t start_clock = clock();
-	//double io_time = 0, parsing_time = 0, position_time = 0, stabilization_time = 0;
-	//clock_t section_clock;
 
-	// todo : clear out everything for a fresh go!
 	file_size_ = get_file_size(p_stabilization_args_->file_path);
 
 	//std::ifstream gcodeFile(p_stabilization_args_->file_path.c_str());
@@ -147,34 +144,20 @@ stabilization_results stabilization::process_file()
 		// Communicate every second
 		while (is_running_)
 		{
-			//section_clock = clock();
 			bool has_line = fgets(line, 9999, gcodeFile);
-			//io_time += clock() - section_clock;
 
 			if (!has_line)
 				break;
 
 			lines_processed_++;
-			//std::cout << "stabilization::process_file - parsing gcode: " << line << "...";
-
-			
-			//std::cout << "Complete.\r\n";
 			cmd.clear();
-			//section_clock = clock();
 			bool found_command = gcode_parser_->try_parse_gcode(line, cmd);
-			//parsing_time += clock() - section_clock;
 			if (found_command)
 			{
-				
 				gcodes_processed_++;
 				//std::cout << "stabilization::process_file - updating position...";
-				//section_clock = clock();
 				gcode_position_->update(cmd, lines_processed_, gcodes_processed_);
-				//position_time += clock() - section_clock;
-				//std::cout << "Complete.\r\n";
-				//section_clock = clock();
 				process_pos(*gcode_position_->get_current_position_ptr(), *gcode_position_->get_previous_position_ptr());
-				//stabilization_time += clock() - section_clock;
 
 				if ( (lines_processed_ % read_lines_before_clock_check) == 0 && next_update_time < clock())
 				{
@@ -200,10 +183,10 @@ stabilization_results stabilization::process_file()
 		on_processing_complete();
 		//std::cout << "stabilization::process_file - Completed Processing file.\r\n";
 	}
-	//else
-	//{
-	//	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to open the gcode file.");
-	//}
+	else
+	{
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to open the gcode file.");
+	}
 	const clock_t end_clock = clock();
 	const double total_seconds = static_cast<double>(end_clock - start_clock) / CLOCKS_PER_SEC;
 	stabilization_results results;
@@ -215,19 +198,10 @@ stabilization_results stabilization::process_file()
 	// Assignment apparently doesn't work everywhere :(  Use a loop
 	results.snapshot_plans_ = p_snapshot_plans_;
 
-	/*double io_seconds = static_cast<double>(io_time) / CLOCKS_PER_SEC;
-	double parsing_seconds = static_cast<double>(parsing_time) / CLOCKS_PER_SEC;
-	double position_seconds = static_cast<double>(position_time) / CLOCKS_PER_SEC;
-	double stabilization_seconds = static_cast<double>(stabilization_time) / CLOCKS_PER_SEC;*/
 	std::stringstream sstm;
 	sstm << "Completed file processing\r\n";
 	sstm << "\tSnapshots Found: " << results.snapshot_plans_.size() << "\r\n";
-	//sstm << "\tIO Seconds: " << io_seconds << "\r\n";
-	//sstm << "\tParsing Seconds: " << parsing_seconds << "\r\n";
-	//sstm << "\tPosition Seconds: " << position_seconds << "\r\n";
-	//sstm << "\tStabilization Seconds: " << stabilization_seconds << "\r\n";
 	sstm << "\tTotal Seconds: " << total_seconds << "\r\n";
-	//std::cout << sstm.str();
 	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, sstm.str());
 	return results;
 }

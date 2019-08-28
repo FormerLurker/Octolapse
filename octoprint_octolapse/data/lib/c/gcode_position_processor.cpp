@@ -1220,7 +1220,14 @@ static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_arg
 	}
 	args->snap_to_fastest = PyLong_AsLong(py_snap_to_fastest) > 0;
 
-
-
+	PyObject * py_stabilize_first_position_only = PyDict_GetItemString(py_args, "stabilize_first_position_only");
+	if (py_stabilize_first_position_only == NULL)
+	{
+		PyErr_Print();
+		PyErr_SetString(PyExc_TypeError, "Unable to retrieve stabilize_first_position_only from the position args dict.");
+		return false;
+	}
+	args->stabilize_first_position_only = PyLong_AsLong(py_stabilize_first_position_only) > 0;
+	
 	return true;
 }
