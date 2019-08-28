@@ -30,19 +30,19 @@
 struct snapshot_plan
 {
 	snapshot_plan();
-	snapshot_plan(const snapshot_plan & source);
-	~snapshot_plan();
 	PyObject * to_py_object();
-	static PyObject * build_py_object(std::vector<snapshot_plan *> plans);
+	static PyObject * build_py_object(std::vector<snapshot_plan> &plans);
 	long file_line;
 	long file_gcode_number;
 	trigger_position::position_type triggering_command_type;
-	parsed_command * p_triggering_command;
-	parsed_command * p_start_command;
-	position * p_initial_position;
-	std::vector<snapshot_plan_step*> steps;
-	position * p_return_position;
-	parsed_command * p_end_command;
+	parsed_command p_triggering_command;
+	parsed_command p_start_command;
+	position p_initial_position;
+	bool has_initial_position;
+	std::vector<snapshot_plan_step> steps;
+	position p_return_position;
+	bool has_return_position;
+	parsed_command p_end_command;
 	double total_travel_distance;
 	double saved_travel_distance;
 };

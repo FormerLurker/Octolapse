@@ -34,8 +34,8 @@ class gcode_parser
 public:
 	gcode_parser();
 	~gcode_parser();
-	bool try_parse_gcode(const char * gcode, parsed_command * command);
-	parsed_command * parse_gcode(const char * gcode);
+	bool try_parse_gcode(const char * gcode, parsed_command & command);
+	parsed_command parse_gcode(const char * gcode);
 private:
 	gcode_parser(const gcode_parser &source);
 	// Variables and lookups

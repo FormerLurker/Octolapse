@@ -111,12 +111,21 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.lines_total(lines_total);
                 self.progress_percent((1-(lines_remaining / lines_total)) * 100);
 
+
                 self.x_initial(showing_plan.initial_position.x);
                 self.y_initial(showing_plan.initial_position.y);
                 self.z_initial(showing_plan.initial_position.z);
-                self.x_return(showing_plan.return_position.x);
-                self.y_return(showing_plan.return_position.y);
-                self.z_return(showing_plan.return_position.z);
+                if (showing_plan.return_position) {
+                    self.x_return(showing_plan.return_position.x);
+                    self.y_return(showing_plan.return_position.y);
+                    self.z_return(showing_plan.return_position.z);
+                }
+                else
+                {
+                    self.x_return(showing_plan.initial_position.x);
+                    self.y_return(showing_plan.initial_position.y);
+                    self.z_return(showing_plan.initial_position.z);
+                }
                 self.travel_distance(showing_plan.total_travel_distance);
                 self.saved_travel_distance(showing_plan.total_saved_travel_distance);
                 var x_current = showing_plan.initial_position.x;

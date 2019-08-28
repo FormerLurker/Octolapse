@@ -98,20 +98,21 @@ gcode_parser::~gcode_parser()
 	parsable_commands_.clear();
 }
 
-parsed_command * gcode_parser::parse_gcode(const char * gcode)
+parsed_command gcode_parser::parse_gcode(const char * gcode)
 {
-	parsed_command * p_cmd = new parsed_command();
+
+	parsed_command p_cmd;
 	try_parse_gcode(gcode, p_cmd);
 	return p_cmd;
 }
 
 // Superfast gcode parser - v2
-bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
+bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 {
 	// Create a command
 	//octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::VERBOSE, gcode);
 	char * p = const_cast<char *>(gcode);
-	if(!try_extract_gcode_command(&p, &(command->cmd_)))
+	if(!try_extract_gcode_command(&p, &(command.cmd_)))
 	{
 		std::string message = "No gcode command was found: ";
 		message += gcode;
@@ -120,22 +121,22 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 	}
 	
 	// Create a pointer just to walk through the gcode
-	
+	command.is_empty = false;
 	char * p_gcode = const_cast<char *>(gcode);
 	while (true)
 	{
 		char cur_char = *p_gcode;
 		if (cur_char == '\0' || cur_char == ';')
 			break;
-		else if (cur_char > 32)
-			command->gcode_.push_back(cur_char);
+		else if (cur_char > 31)
+			command.gcode_.push_back(cur_char);
 		p_gcode++;
 	}
 	
 	//command->gcode_ = gcode;
 	//std::vector<parsed_command_parameter> parameters;
 
-	if (parsable_commands_.find(command->cmd_) == parsable_commands_.end())
+	if (parsable_commands_.find(command.cmd_) == parsable_commands_.end())
 	{
 		//std::cout << "GcodeParser.try_parse_gcode - Not in command list, exiting.\r\n";
 		std::string message = "The gcode command is not in the parsable commands set: ";
@@ -144,7 +145,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 		return true;
 	}
 
-	if (text_only_functions_.find(command->cmd_) != text_only_functions_.end())
+	if (text_only_functions_.find(command.cmd_) != text_only_functions_.end())
 	{
 		//std::cout << "GcodeParser.try_parse_gcode - Text only parameter found.\r\n";
 		parsed_command_parameter * p_text_command = new parsed_command_parameter();
@@ -160,7 +161,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 	}
 	else
 	{
-		if (command->cmd_[0] == 'T')
+		if (command.cmd_[0] == 'T')
 		{
 			//std::cout << "GcodeParser.try_parse_gcode - T parameter found.\r\n";
 			parsed_command_parameter param;
@@ -172,7 +173,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 				octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
 			}
 			else
-				command->parameters_.push_back(param);
+				command.parameters_.push_back(param);
 		}
 		else
 		{
@@ -181,7 +182,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 				//std::cout << "GcodeParser.try_parse_gcode - Trying to extract parameters.\r\n";
 				parsed_command_parameter param;
 				if (try_extract_parameter(&p, &param))
-					command->parameters_.push_back(param);
+					command.parameters_.push_back(param);
 				else
 				{
 					//std::cout << "GcodeParser.try_parse_gcode - No parameters found.\r\n";
@@ -191,7 +192,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command * command)
 		}
 	}
 
-	try_extract_comment(&p_gcode, &(command->comment_));
+	try_extract_comment(&p_gcode, &(command.comment_));
 		
 
 	return true;

@@ -205,9 +205,6 @@ extern "C"
 			return NULL;
 		}
 		// Removed by BH on 4-28-2019
-		//Py_INCREF(py_position_args);
-		//Py_INCREF(py_stabilization_args);
-		//Py_INCREF(py_stabilization_type_args);
 		// Extract the position args
 		gcode_position_args p_args;
 		//std::cout << "Parsing position arguments\r\n";
@@ -240,14 +237,11 @@ extern "C"
 			pythonProgressCallback(ExecuteStabilizationProgressCallback)
 		);
 		
-		stabilization_results results;
-		//std::cout << "Processing gcode file.\r\n";
-		
-		stabilization.process_file(&results);
-		
-
+		stabilization_results results = stabilization.process_file();
 		set_internal_log_levels(true);
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Building snapshot plans.");
+		std::stringstream sstm;
+		sstm << "Building " << results.snapshot_plans_.size() << " snapshot plans.";
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, sstm.str());
 
 		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results.snapshot_plans_);
 		if (py_snapshot_plans == NULL)
@@ -385,10 +379,10 @@ extern "C"
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
 
 		parsed_command command;
-		if(gpp::parser->try_parse_gcode(gcode, &command))
-			p_gcode_position->update(&command, -1, -1);
+		if(gpp::parser->try_parse_gcode(gcode, command))
+			p_gcode_position->update(command, -1, -1);
 
-		PyObject * py_position = p_gcode_position->get_current_position()->to_py_tuple();
+		PyObject * py_position = p_gcode_position->get_current_position().to_py_tuple();
 		if (py_position == NULL)
 		{
 			std::string message = "GcodePositionProcessor.Update - Unable to convert the position to a tuple.";
@@ -450,9 +444,9 @@ extern "C"
 			return Py_BuildValue("O", Py_False);
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
-
+		position pos = p_gcode_position->get_current_position();
 		p_gcode_position->update_position(
-			p_gcode_position->get_current_position(),
+			&pos,
 			x,
 			update_x > 0,
 			y,
@@ -466,7 +460,7 @@ extern "C"
 			true,
 			false);
 
-		PyObject * py_position = p_gcode_position->get_current_position()->to_py_tuple();
+		PyObject * py_position = p_gcode_position->get_current_position().to_py_tuple();
 		if (py_position == NULL)
 		{
 			return NULL;
@@ -492,7 +486,7 @@ extern "C"
 			return NULL;
 		}
 		parsed_command command;
-		bool success = gpp::parser->try_parse_gcode(gcode, &command);
+		bool success = gpp::parser->try_parse_gcode(gcode, command);
 		if (!success)
 			return Py_BuildValue("O", Py_False);
 		// Convert ParsedCommand to python object
@@ -528,7 +522,7 @@ extern "C"
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Creating and returning the current position tuple.");
-		return p_gcode_position->get_current_position()->to_py_tuple();
+		return p_gcode_position->get_current_position().to_py_tuple();
 	}
 
 	static PyObject* GetCurrentPositionDict(PyObject* self, PyObject *args)
@@ -556,7 +550,7 @@ extern "C"
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
 
-		return p_gcode_position->get_current_position()->to_py_dict();
+		return p_gcode_position->get_current_position().to_py_dict();
 	}
 
 	static PyObject* GetPreviousPositionTuple(PyObject* self, PyObject *args)
@@ -585,7 +579,7 @@ extern "C"
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Creating and returning the previous position tuple.");
-		return p_gcode_position->get_previous_position()->to_py_tuple();
+		return p_gcode_position->get_previous_position().to_py_tuple();
 	}
 
 	static PyObject* GetPreviousPositionDict(PyObject* self, PyObject *args)
@@ -613,7 +607,7 @@ extern "C"
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
 
-		return p_gcode_position->get_previous_position()->to_py_dict();
+		return p_gcode_position->get_previous_position().to_py_dict();
 	}
 }
 

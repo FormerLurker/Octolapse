@@ -51,7 +51,6 @@ stabilization_smart_layer::stabilization_smart_layer(
 	default_args.x_stabilization_disabled = stab_args->x_stabilization_disabled;
 	default_args.y_stabilization_disabled = stab_args->y_stabilization_disabled;
 	closest_positions_.initialize(default_args);
-
 	update_stabilization_coordinates();
 }
 
@@ -81,7 +80,6 @@ stabilization_smart_layer::stabilization_smart_layer(
 	default_args.x_stabilization_disabled = stab_args->x_stabilization_disabled;
 	default_args.y_stabilization_disabled = stab_args->y_stabilization_disabled;
 	closest_positions_.initialize(default_args);
-
 	update_stabilization_coordinates();
 }
 
@@ -101,17 +99,18 @@ void stabilization_smart_layer::update_stabilization_coordinates()
 	get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
 	closest_positions_.set_stabilization_coordinates(stabilization_x_, stabilization_y_);
 }
-void stabilization_smart_layer::process_pos(position* p_current_pos, position* p_previous_pos)
+void stabilization_smart_layer::process_pos(position& p_current_pos, position& p_previous_pos)
 {
 	//std::cout << "StabilizationSmartLayer::process_pos - Processing Position...";
 	// if we're at a layer change, add the current saved plan
-	if (p_current_pos->is_layer_change_ && p_current_pos->layer_ > 1)
+	if (p_current_pos.is_layer_change_ && p_current_pos.layer_ > 1)
 	{
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Layer change detected.");
 		is_layer_change_wait_ = true;
 		// get distance from current point to the stabilization point
 		
 		standard_layer_trigger_distance_ = utilities::get_cartesian_distance(
-			p_current_pos->x_, p_current_pos->y_,
+			p_current_pos.x_, p_current_pos.y_,
 			stabilization_x_, stabilization_y_
 		);
 	}
@@ -122,7 +121,7 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 		if (p_stabilization_args_->height_increment != 0)
 		{
 			can_add_saved_plan = false;
-			const double increment_double = p_current_pos->height_ / p_stabilization_args_->height_increment;
+			const double increment_double = p_current_pos.height_ / p_stabilization_args_->height_increment;
 			unsigned const int increment = utilities::round_up_to_int(increment_double);
 			if (increment > current_height_increment_)
 			{
@@ -144,18 +143,19 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 		}
 
 	}
-
+	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding closest position.");
 	closest_positions_.try_add(p_current_pos, p_previous_pos);
-	last_tested_gcode_number_ = p_current_pos->gcode_number_;
+	last_tested_gcode_number_ = p_current_pos.gcode_number_;
 }
 
 void stabilization_smart_layer::add_plan()
 {
-	trigger_position * p_closest = closest_positions_.get_position();
-	if (p_closest != NULL)
+	trigger_position p_closest;
+	if (closest_positions_.get_position(p_closest))
 	{
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Adding snapshot position.");
 		//std::cout << "Adding saved plan to plans...  F Speed" << p_saved_position_->f_ << " \r\n";
-		snapshot_plan* p_plan = new snapshot_plan();
+		snapshot_plan p_plan;
 		double total_travel_distance;
 		if (p_smart_layer_args_->smart_layer_trigger_type == trigger_position::snap_to_print)
 		{
@@ -163,59 +163,57 @@ void stabilization_smart_layer::add_plan()
 		}
 		else
 		{
-			total_travel_distance = p_closest->distance * 2;
+			total_travel_distance = p_closest.distance * 2;
 		}
 
-		p_plan->total_travel_distance = total_travel_distance;
-		p_plan->saved_travel_distance = (standard_layer_trigger_distance_ * 2) - total_travel_distance;
-		p_plan->triggering_command_type = p_closest->type;
+		p_plan.total_travel_distance = total_travel_distance;
+		p_plan.saved_travel_distance = (standard_layer_trigger_distance_ * 2) - total_travel_distance;
+		p_plan.triggering_command_type = p_closest.type;
 		// create the initial position
-		p_plan->p_triggering_command = new parsed_command(*p_closest->p_position->p_command);
-		p_plan->p_start_command = new parsed_command(*p_closest->p_position->p_command);
-		p_plan->p_initial_position = new position(*p_closest->p_position);
-
-		bool all_stabilizations_disabled = p_stabilization_args_->x_stabilization_disabled && p_stabilization_args_->y_stabilization_disabled;
+		p_plan.p_triggering_command = p_closest.p_position.p_command;
+		p_plan.p_start_command = p_closest.p_position.p_command;
+		p_plan.p_initial_position = p_closest.p_position;
+		p_plan.has_initial_position = true;
+		const bool all_stabilizations_disabled = p_stabilization_args_->x_stabilization_disabled && p_stabilization_args_->y_stabilization_disabled;
 		
 		if (!(all_stabilizations_disabled || p_smart_layer_args_->smart_layer_trigger_type == trigger_position::snap_to_print))
 		{
 			double x_stabilization, y_stabilization;
 			if (p_stabilization_args_->x_stabilization_disabled)
-				x_stabilization = p_closest->p_position->x_;
+				x_stabilization = p_closest.p_position.x_;
 			else
 				x_stabilization = stabilization_x_;
 
 			if (p_stabilization_args_->y_stabilization_disabled)
-				y_stabilization = p_closest->p_position->y_;
+				y_stabilization = p_closest.p_position.y_;
 			else
 				y_stabilization = stabilization_y_;
 
-			snapshot_plan_step* p_travel_step = new snapshot_plan_step(&x_stabilization, &y_stabilization, NULL, NULL, NULL, travel_action);
-			p_plan->steps.push_back(p_travel_step);
+			const snapshot_plan_step p_travel_step(&x_stabilization, &y_stabilization, NULL, NULL, NULL, travel_action);
+			p_plan.steps.push_back(p_travel_step);
 		}
-		
-		snapshot_plan_step* p_snapshot_step = new snapshot_plan_step(NULL, NULL, NULL, NULL, NULL, snapshot_action);
-		p_plan->steps.push_back(p_snapshot_step);
 
-		p_plan->p_return_position = new position(*p_closest->p_position);
-		p_plan->p_end_command = NULL;
+		const snapshot_plan_step p_snapshot_step(NULL, NULL, NULL, NULL, NULL, snapshot_action);
+		p_plan.steps.push_back(p_snapshot_step);
 
-		p_plan->file_line = p_closest->p_position->file_line_number_;
-		p_plan->file_gcode_number = p_closest->p_position->gcode_number_;
+		p_plan.p_return_position = p_closest.p_position;
+		p_plan.file_line = p_closest.p_position.file_line_number_;
+		p_plan.file_gcode_number = p_closest.p_position.gcode_number_;
 
 		// Add the plan
-		p_snapshot_plans_->push_back(p_plan);
-		current_layer_ = p_closest->p_position->layer_;
+		p_snapshot_plans_.push_back(p_plan);
+		current_layer_ = p_closest.p_position.layer_;
 		// only get the next coordinates if we've actually added a plan.
 		update_stabilization_coordinates();
 
 		// reset the saved positions
 		reset_saved_positions();
-		closest_positions_.set_previous_initial_position(p_plan->p_initial_position);
+		closest_positions_.set_previous_initial_position(p_plan.p_initial_position);
 		
 	}
 	else
 	{
-		std::cout << "No saved position available to add snapshot plan!";
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::WARNING, "No point snapshot position found for layer.");
 		// reset the saved positions
 		reset_saved_positions();
 	}

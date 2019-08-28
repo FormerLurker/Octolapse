@@ -23,9 +23,54 @@
 #include "position.h"
 #include "logging.h"
 
-void position::initialize()
+void position::set_xyz_axis_mode(const std::string& xyz_axis_default_mode)
 {
-	p_command = NULL;
+	if (xyz_axis_default_mode == "relative" || xyz_axis_default_mode == "force-relative")
+	{
+		is_relative_ = true;
+		is_relative_null_ = false;
+	}
+	else if (xyz_axis_default_mode == "absolute" || xyz_axis_default_mode == "force-absolute")
+	{
+		is_relative_ = false;
+		is_relative_null_ = false;
+	}
+
+	
+}
+
+void position::set_e_axis_mode(const std::string& e_axis_default_mode)
+{
+	if (e_axis_default_mode == "relative" || e_axis_default_mode == "force-relative")
+	{
+		is_extruder_relative_ = true;
+		is_extruder_relative_null_ = false;
+	}
+	else if (e_axis_default_mode == "absolute" || e_axis_default_mode == "force-absolute")
+	{
+		is_extruder_relative_ = false;
+		is_extruder_relative_null_ = false;
+	}
+
+	
+}
+void position::set_units_default(const std::string&	units_default)
+{
+	if (units_default == "inches")
+	{
+		is_metric_ = false;
+		is_metric_null_ = false;
+	}
+	else if (units_default == "millimeters")
+	{
+		is_metric_ = true;
+		is_metric_null_ = false;
+	}
+}
+
+
+position::position()
+{ 
 	f_ = 0;
 	f_null_ = true;
 	x_ = 0;
@@ -88,220 +133,17 @@ void position::initialize()
 	is_in_bounds_ = true;
 }
 
-position::position()
-{ 
-	initialize();
-}
-
-position::position(position & source)
-{
-	if(source.p_command != NULL)
-		p_command = new parsed_command(*source.p_command);
-	f_ = source.f_;
-	f_null_ = source.f_null_;
-	x_ = source.x_;
-	x_null_ = source.x_null_;
-	x_offset_ = source.x_offset_;
-	x_homed_ = source.x_homed_;
-	y_ = source.y_;
-	y_null_ = source.y_null_;
-	y_offset_ = source.y_offset_;
-	y_homed_ = source.y_homed_;
-	z_ = source.z_;
-	z_null_ = source.z_null_;
-	z_offset_ = source.z_offset_;
-	z_homed_ = source.z_homed_;
-	e_ = source.e_;
-	e_offset_ = source.e_offset_;
-	is_relative_ = source.is_relative_;
-	is_relative_null_ = source.is_relative_null_;
-	is_extruder_relative_ = source.is_extruder_relative_;
-	is_extruder_relative_null_ = source.is_extruder_relative_null_;
-	is_metric_ = source.is_metric_;
-	is_metric_null_ = source.is_metric_null_;
-	last_extrusion_height_ = source.last_extrusion_height_	;
-	last_extrusion_height_null_ = source.last_extrusion_height_null_;
-	layer_ = source.layer_;
-	height_ = source.height_;
-	current_height_increment_ = source.current_height_increment_;
-	is_printer_primed_ = source.is_printer_primed_;
-	has_definite_position_ = source.has_definite_position_;
-	e_relative_ = source.e_relative_;
-	z_relative_ = source.z_relative_;
-	extrusion_length_ = source.extrusion_length_;
-	extrusion_length_total_ = source.extrusion_length_total_;
-	retraction_length_ = source.retraction_length_;
-	deretraction_length_ = source.deretraction_length_;
-	is_extruding_start_ = source.is_extruding_start_;
-	is_extruding_ = source.is_extruding_;
-	is_primed_ = source.is_primed_;
-	is_retracting_start_ = source.is_retracting_start_;
-	is_retracting_ = source.is_retracting_;
-	is_retracted_ = source.is_retracted_;
-	is_partially_retracted_ = source.is_partially_retracted_;
-	is_deretracting_start_ = source.is_deretracting_start_;
-	is_deretracting_ = source.is_deretracting_;
-	is_deretracted_ = source.is_deretracted_;
-	is_layer_change_ = source.is_layer_change_;
-	is_height_change_ = source.is_height_change_;
-	is_xy_travel_ = source.is_xy_travel_;
-	is_xyz_travel_ = source.is_xyz_travel_;
-	is_zhop_ = source.is_zhop_;
-	has_xy_position_changed_ = source.has_xy_position_changed_;
-	has_position_changed_ = source.has_position_changed_;
-	has_state_changed_ = source.has_state_changed_;
-	has_received_home_command_ = source.has_received_home_command_;
-	is_in_position_ = source.is_in_position_;
-	in_path_position_ = source.in_path_position_;
-	file_line_number_ = source.file_line_number_;
-	gcode_number_ = source.gcode_number_;
-	gcode_ignored_ = source.gcode_ignored_;
-	is_in_bounds_ = source.is_in_bounds_;
-}
-
-position::position(const std::string& xyz_axis_default_mode, const std::string& e_axis_default_mode, const std::string&
-                   units_default)
-{
-	initialize();
-
-	if (xyz_axis_default_mode == "relative" || xyz_axis_default_mode == "force-relative")
-	{
-		is_relative_ = true;
-		is_relative_null_ = false;
-	}
-	else if (xyz_axis_default_mode == "absolute" || xyz_axis_default_mode == "force-absolute")
-	{
-		is_relative_ = false;
-		is_relative_null_ = false;
-	}
-
-	if (e_axis_default_mode == "relative" || e_axis_default_mode == "force-relative")
-	{
-		is_extruder_relative_ = true;
-		is_extruder_relative_null_ = false;
-	}
-	else if (e_axis_default_mode == "absolute" || e_axis_default_mode == "force-absolute")
-	{
-		is_extruder_relative_ = false;
-		is_extruder_relative_null_ = false;
-	}
-
-	if (units_default == "inches")
-	{
-		is_metric_ = false;
-		is_metric_null_ = false;
-	}
-	else if (units_default == "millimeters")
-	{
-		is_metric_ = true;
-		is_metric_null_ = false;
-	}
-}
-
-position::~position()
-{
-	if (p_command != NULL)
-	{
-		delete p_command;
-		p_command = NULL;
-	}
-}
-void position::_copy_parsed_command(parsed_command* source_command, position* target)
-{
-	if (target->p_command != NULL)
-	{
-		delete target->p_command;
-		target->p_command = NULL;
-	}
-	if (source_command != NULL)
-		target->p_command = new parsed_command(*source_command);
-}
-void position::copy(position *source, position* target)
-{
-	position::_copy_parsed_command(source->p_command, target);
-	position::_copy_position(source, target);
-}
-
-void position::_copy_position(position* source, position* target)
-{
-	target->f_ = source->f_;
-	target->f_null_ = source->f_null_;
-	target->x_ = source->x_;
-	target->x_null_ = source->x_null_;
-	target->x_offset_ = source->x_offset_;
-	target->x_homed_ = source->x_homed_;
-	target->y_ = source->y_;
-	target->y_null_ = source->y_null_;
-	target->y_offset_ = source->y_offset_;
-	target->y_homed_ = source->y_homed_;
-	target->z_ = source->z_;
-	target->z_null_ = source->z_null_;
-	target->z_offset_ = source->z_offset_;
-	target->z_homed_ = source->z_homed_;
-	target->e_ = source->e_;
-	target->e_offset_ = source->e_offset_;
-	target->is_relative_ = source->is_relative_;
-	target->is_relative_null_ = source->is_relative_null_;
-	target->is_extruder_relative_ = source->is_extruder_relative_;
-	target->is_extruder_relative_null_ = source->is_extruder_relative_null_;
-	target->is_metric_ = source->is_metric_;
-	target->is_metric_null_ = source->is_metric_null_;
-	target->last_extrusion_height_ = source->last_extrusion_height_;
-	target->last_extrusion_height_null_ = source->last_extrusion_height_null_;
-	target->layer_ = source->layer_;
-	target->height_ = source->height_;
-	target->current_height_increment_ = source->current_height_increment_;
-	target->is_printer_primed_ = source->is_printer_primed_;
-	target->has_definite_position_ = source->has_definite_position_;
-	target->e_relative_ = source->e_relative_;
-	target->z_relative_ = source->z_relative_;
-	target->extrusion_length_ = source->extrusion_length_;
-	target->extrusion_length_total_ = source->extrusion_length_total_;
-	target->retraction_length_ = source->retraction_length_;
-	target->deretraction_length_ = source->deretraction_length_;
-	target->is_extruding_start_ = source->is_extruding_start_;
-	target->is_extruding_ = source->is_extruding_;
-	target->is_primed_ = source->is_primed_;
-	target->is_retracting_start_ = source->is_retracting_start_;
-	target->is_retracting_ = source->is_retracting_;
-	target->is_retracted_ = source->is_retracted_;
-	target->is_partially_retracted_ = source->is_partially_retracted_;
-	target->is_deretracting_start_ = source->is_deretracting_start_;
-	target->is_deretracting_ = source->is_deretracting_;
-	target->is_deretracted_ = source->is_deretracted_;
-	target->is_layer_change_ = source->is_layer_change_;
-	target->is_height_change_ = source->is_height_change_;
-	target->is_xy_travel_ = source->is_xy_travel_;
-	target->is_xyz_travel_ = source->is_xyz_travel_;
-	target->is_zhop_ = source->is_zhop_;
-	target->has_xy_position_changed_ = source->has_xy_position_changed_;
-	target->has_position_changed_ = source->has_position_changed_;
-	target->has_state_changed_ = source->has_state_changed_;
-	target->has_received_home_command_ = source->has_received_home_command_;
-	target->is_in_position_ = source->is_in_position_;
-	target->in_path_position_ = source->in_path_position_;
-	target->file_line_number_ = source->file_line_number_;
-	target->gcode_number_ = source->gcode_number_;
-	target->gcode_ignored_ = source->gcode_ignored_;
-	target->is_in_bounds_ = source->is_in_bounds_;
-}
-
-void position::copy(position *source, parsed_command* source_command, position* target)
-{
-	position::_copy_parsed_command(source_command, target);
-	position::_copy_position(source, target);
-}
 
 PyObject* position::to_py_tuple()
 {
 	PyObject * py_command;
-	if(p_command == NULL)
+	if(p_command.is_empty)
 	{
 		py_command = Py_None;
 	}
 	else
 	{
-		py_command = p_command->to_py_object();
+		py_command = p_command.to_py_object();
 	}
 	PyObject* pyPosition = Py_BuildValue(
 		// ReSharper disable once StringLiteralTypo
@@ -432,13 +274,13 @@ void position::reset_state()
 PyObject* position::to_py_dict()
 {
 	PyObject * py_command;
-	if (p_command == NULL)
+	if (p_command.cmd_.length() == 0)
 	{
 		py_command = Py_None;
 	}
 	else
 	{
-		py_command = p_command->to_py_object();
+		py_command = p_command.to_py_object();
 	}
 
 	PyObject * p_position = Py_BuildValue(

@@ -28,11 +28,3 @@ stabilization_results::stabilization_results()
 	long gcodes_processed = 0;
 	long lines_processed = 0;
 }
-stabilization_results::~stabilization_results()
-{	
-	for (std::vector<snapshot_plan*>::iterator plan = snapshot_plans_.begin(); plan != snapshot_plans_.end(); ++plan)
-	{
-		delete *plan;
-	}
-	snapshot_plans_.clear();
-}

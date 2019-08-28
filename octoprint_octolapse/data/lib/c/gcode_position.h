@@ -26,6 +26,7 @@
 #include <map>
 #include "gcode_parser.h"
 #include "position.h"
+#define NUM_POSITIONS 10
 struct gcode_position_args {
 	gcode_position_args() {
 		// Wipe Variables
@@ -96,22 +97,23 @@ struct gcode_position_args {
 class gcode_position
 {
 public:
-	typedef void(gcode_position::*pos_function_type)(position*, parsed_command*);
+	typedef void(gcode_position::*pos_function_type)(position*, parsed_command&);
 	gcode_position(gcode_position_args* args);
 	gcode_position();
-	~gcode_position();
 
-	void update(parsed_command* command, int file_line_number, int gcode_number);
-	void update_position(position*, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1_g0);
+	void update(parsed_command &command, int file_line_number, int gcode_number);
+	void update_position(position *position, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1_g0);
 	void undo_update();
-	position * get_current_position();
-	position * get_previous_position();
+	position get_current_position() const;
+	position get_previous_position() const;
+	position * get_current_position_ptr();
+	position * get_previous_position_ptr();
 private:
-	gcode_position(const gcode_position & source);
-	
-	position* p_previous_pos_;
-	position* p_current_pos_;
-	position* p_undo_pos_;
+	gcode_position(const gcode_position &source);
+	position positions_[static_cast<int>(NUM_POSITIONS)];
+	int cur_pos_;
+	void add_position(parsed_command &);
+	void add_position(position &);
 	bool autodetect_position_;
 	double priming_height_;
 	double home_x_;
@@ -147,21 +149,21 @@ private:
 	
 	std::map<std::string, pos_function_type> get_gcode_functions();
 	/// Process Gcode Command Functions
-	void process_g0_g1(position*, parsed_command*);
-	void process_g2(position*, parsed_command*);
-	void process_g3(position*, parsed_command*);
-	void process_g10(position*, parsed_command*);
-	void process_g11(position*, parsed_command*);
-	void process_g20(position*, parsed_command*);
-	void process_g21(position*, parsed_command*);
-	void process_g28(position*, parsed_command*);
-	void process_g90(position*, parsed_command*);
-	void process_g91(position*, parsed_command*);
-	void process_g92(position*, parsed_command*);
-	void process_m82(position*, parsed_command*);
-	void process_m83(position*, parsed_command*);
-	void process_m207(position*, parsed_command*);
-	void process_m208(position*, parsed_command*);
+	void process_g0_g1(position*, parsed_command&);
+	void process_g2(position*, parsed_command&);
+	void process_g3(position*, parsed_command&);
+	void process_g10(position*, parsed_command&);
+	void process_g11(position*, parsed_command&);
+	void process_g20(position*, parsed_command&);
+	void process_g21(position*, parsed_command&);
+	void process_g28(position*, parsed_command&);
+	void process_g90(position*, parsed_command&);
+	void process_g91(position*, parsed_command&);
+	void process_g92(position*, parsed_command&);
+	void process_m82(position*, parsed_command&);
+	void process_m83(position*, parsed_command&);
+	void process_m207(position*, parsed_command&);
+	void process_m208(position*, parsed_command&);
 
 };
 

@@ -24,6 +24,7 @@
 #include <time.h>
 #include <iostream>
 #include <vector>
+#include <sstream>
 #include "logging.h"
 
 stabilization::stabilization(
@@ -121,10 +122,9 @@ double stabilization::get_time_elapsed(double start_clock, double end_clock)
 	return static_cast<double>(end_clock - start_clock) / CLOCKS_PER_SEC;
 }
 
-void stabilization::process_file(stabilization_results* results)
+stabilization_results stabilization::process_file()
 {
 	
-	p_snapshot_plans_ = &results->snapshot_plans_;
 	//std::cout << "stabilization::process_file - Processing file.\r\n";
 	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Processing File.");
 	is_running_ = true;
@@ -141,23 +141,24 @@ void stabilization::process_file(stabilization_results* results)
 
 	if (gcodeFile != NULL)
 	{
+		parsed_command cmd;
 		// Communicate every second
-		parsed_command* cmd = new parsed_command();
 		while (fgets(line, 9999, gcodeFile) && is_running_)
 		{
 			lines_processed_++;
-			cmd->clear();
 			//std::cout << "stabilization::process_file - parsing gcode: " << line << "...";
-			gcode_parser_->try_parse_gcode(line, cmd);
-			//std::cout << "Complete.\r\n";
-			if (!cmd->cmd_.empty())
-			{
 
+			
+			//std::cout << "Complete.\r\n";
+			cmd.clear();
+			if (gcode_parser_->try_parse_gcode(line, cmd))
+			{
+				
 				gcodes_processed_++;
 				//std::cout << "stabilization::process_file - updating position...";
 				gcode_position_->update(cmd, lines_processed_, gcodes_processed_);
 				//std::cout << "Complete.\r\n";
-				process_pos(gcode_position_->get_current_position(), gcode_position_->get_previous_position());
+				process_pos(*gcode_position_->get_current_position_ptr(), *gcode_position_->get_previous_position_ptr());
 				if (next_update_time < clock())
 				{
 					// ToDo: tellg does not do what I think it does, but why?
@@ -180,7 +181,6 @@ void stabilization::process_file(stabilization_results* results)
 		
 		fclose(gcodeFile);
 		on_processing_complete();
-		delete cmd;
 		//std::cout << "stabilization::process_file - Completed Processing file.\r\n";
 	}
 	//else
@@ -189,13 +189,16 @@ void stabilization::process_file(stabilization_results* results)
 	//}
 	const clock_t end_clock = clock();
 	const double total_seconds = static_cast<double>(end_clock - start_clock) / CLOCKS_PER_SEC;
-	results->success_ = errors_.empty();
-	results->errors_ = errors_;
-	results->seconds_elapsed_ = total_seconds;
-	results->gcodes_processed_ = gcodes_processed_;
-	results->lines_processed_ = lines_processed_;
+	stabilization_results results;
+	results.success_ = errors_.empty();
+	results.errors_ = errors_;
+	results.seconds_elapsed_ = total_seconds;
+	results.gcodes_processed_ = gcodes_processed_;
+	results.lines_processed_ = lines_processed_;
+	// Assignment apparently doesn't work everywhere :(  Use a loop
+	results.snapshot_plans_ = p_snapshot_plans_;
 	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Completed file processing.");
-	p_snapshot_plans_ = NULL;
+	return results;
 }
 
 void stabilization::notify_progress(const double percent_progress, const double seconds_elapsed, const double seconds_to_complete,
@@ -212,7 +215,7 @@ void stabilization::notify_progress(const double percent_progress, const double 
 
 }
 
-void stabilization::process_pos(position* current_pos, position* previous_pos)
+void stabilization::process_pos(position& current_pos, position& previous_pos)
 {
 	throw std::exception();
 }
@@ -224,6 +227,7 @@ void stabilization::on_processing_complete()
 
 void stabilization::get_next_xy_coordinates(double *x, double*y)
 {
+	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Getting stabilizationcoordinates.");
 	//std::cout << "Getting XY stabilization coordinates...";
 	if (has_python_callbacks_)
 	{

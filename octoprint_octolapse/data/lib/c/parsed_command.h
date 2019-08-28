@@ -37,11 +37,10 @@ class parsed_command
 {
 public:
 	parsed_command();
-	parsed_command(parsed_command & source);
-	~parsed_command();
 	std::string cmd_;
 	std::string gcode_;
 	std::string comment_;
+	bool is_empty;
 	std::vector<parsed_command_parameter> parameters_;
 	PyObject * to_py_object();
 	void clear();

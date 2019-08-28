@@ -47,7 +47,7 @@ public:
 
 private:
 	stabilization_snap_to_print(const stabilization_snap_to_print &source); // don't copy me
-	void process_pos(position* p_current_pos, position* p_previous_pos) override;
+	void process_pos(position& p_current_pos, position& p_previous_pos) override;
 	void on_processing_complete() override;
 	void add_saved_plan();
 	bool has_saved_position();

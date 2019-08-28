@@ -26,37 +26,24 @@
 #include <sstream>
 parsed_command::parsed_command()
 {
-	/*
+	
 	cmd_.reserve(8);
 	gcode_.reserve(128);
 	comment_.reserve(128);
 	parameters_.reserve(6);
-	*/
-}
-parsed_command::parsed_command(parsed_command & source)
-{
-	cmd_ = source.cmd_;
-	gcode_ = source.gcode_;
-	comment_ = source.comment_;
-	parameters_ = source.parameters_;
-	/*
-	for (std::vector< parsed_command_parameter * >::iterator it = source.parameters_.begin(); it != source.parameters_.end(); ++it)
-	{
-		parameters_.push_back (new parsed_command_parameter(**it));
-	}*/
+	is_empty = true;
 }
 
-parsed_command::~parsed_command()
-{
-	parameters_.clear();
-}
 void parsed_command::clear()
 {
+	
 	cmd_.clear();
 	gcode_.clear();
 	comment_.clear();
 	parameters_.clear();
+	is_empty = true;
 }
+
 PyObject * parsed_command::to_py_object()
 {
 	PyObject *ret_val;

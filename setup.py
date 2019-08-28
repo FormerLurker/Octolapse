@@ -72,7 +72,7 @@ plugin_ignored_packages = []
 #   "https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
 
 copt = {
-    'msvc': ['/Ox', '/fp:fast', '/GS', '/GL', '/analyze', '/Gy', '/Oi', '/MD', '/EHsc', '/Ot'],
+    'msvc': ['/Ox', '/fp:fast', '/GS', '/GL', '/analyze', '/Gy', '/Oi', '/MD', '/EHsc', '/Ot', 'std=c++11'],
     'mingw32': ['-fopenmp', '-O3', '-ffast-math', '-march=native', '-std=c++11'],
     'gcc': ['-O3', '-std=c++11']
 }
@@ -109,7 +109,6 @@ plugin_ext_sources = [
     'octoprint_octolapse/data/lib/c/stabilization.cpp',
     'octoprint_octolapse/data/lib/c/stabilization_results.cpp',
     'octoprint_octolapse/data/lib/c/stabilization_smart_layer.cpp',
-    'octoprint_octolapse/data/lib/c/stabilization_snap_to_print.cpp',
     'octoprint_octolapse/data/lib/c/logging.cpp',
     'octoprint_octolapse/data/lib/c/utilities.cpp',
     'octoprint_octolapse/data/lib/c/trigger_position.cpp'

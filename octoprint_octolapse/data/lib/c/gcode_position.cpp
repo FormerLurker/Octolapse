@@ -25,6 +25,7 @@
 
 gcode_position::gcode_position()
 {
+
 	autodetect_position_ = false;
 	home_x_ = 0;
 	home_y_ = 0;
@@ -59,9 +60,17 @@ gcode_position::gcode_position()
 	z_max_ = 0;
 	is_circular_bed_ = false;
 
-	p_previous_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
-	p_current_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
-	p_undo_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
+	cur_pos_ = 0;
+	position initial_pos;
+	initial_pos.set_xyz_axis_mode(xyz_axis_default_mode_);
+	initial_pos.set_e_axis_mode(e_axis_default_mode_);
+	initial_pos.set_units_default(units_default_);
+	for(int index = 0; index < NUM_POSITIONS; index ++)
+	{
+		add_position(initial_pos);
+	}
+	
+	
 }
 
 gcode_position::gcode_position(gcode_position_args* args)
@@ -101,9 +110,15 @@ gcode_position::gcode_position(gcode_position_args* args)
 
 	is_circular_bed_ = args->is_circular_bed;
 
-	p_previous_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
-	p_current_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
-	p_undo_pos_ = new position(xyz_axis_default_mode_, e_axis_default_mode_, units_default_);
+	cur_pos_ = -1;
+	position initial_pos;
+	initial_pos.set_xyz_axis_mode(xyz_axis_default_mode_);
+	initial_pos.set_e_axis_mode(e_axis_default_mode_);
+	initial_pos.set_units_default(units_default_);
+	for (int index = 0; index < NUM_POSITIONS; index++)
+	{
+		add_position(initial_pos);
+	}
 
 }
 
@@ -112,194 +127,190 @@ gcode_position::gcode_position(const gcode_position &source)
 	// Private copy constructor - you can't copy this class
 }
 
-gcode_position::~gcode_position()
+
+void gcode_position::add_position(position& pos)
 {
-	if (p_previous_pos_ != NULL)
-	{
-		delete p_previous_pos_;
-		p_previous_pos_ = NULL;
-	}
-	if (p_current_pos_ != NULL)
-	{
-		delete p_current_pos_;
-		p_current_pos_ = NULL;
-	}
-	if (p_undo_pos_ != NULL)
-	{
-		delete p_undo_pos_;
-		p_undo_pos_ = NULL;
-	}
+	cur_pos_ = (++cur_pos_) % NUM_POSITIONS;
+	positions_[cur_pos_] = pos;
 }
 
-position * gcode_position::get_current_position()
+void gcode_position::add_position(parsed_command& cmd)
 {
-	return p_current_pos_;
+	const int prev_pos = cur_pos_;
+	cur_pos_ = (++cur_pos_) % NUM_POSITIONS;
+	positions_[cur_pos_] = positions_[prev_pos];
+	positions_[cur_pos_].reset_state();
+	positions_[cur_pos_].p_command = cmd;
+	positions_[cur_pos_].is_empty_ = false;
 }
 
-position * gcode_position::get_previous_position()
+position gcode_position::get_current_position() const
 {
-	return p_previous_pos_;
+	return positions_[cur_pos_];
 }
 
-void gcode_position::update(parsed_command *command, const int file_line_number, const int gcode_number)
+position gcode_position::get_previous_position() const
 {
-	if (command->cmd_.empty())
+	return  positions_[(cur_pos_ - 1)%NUM_POSITIONS];
+}
+
+position * gcode_position::get_current_position_ptr()
+{
+	return &positions_[cur_pos_];
+}
+
+position * gcode_position::get_previous_position_ptr()
+{
+
+	return &positions_[(cur_pos_ - 1 + NUM_POSITIONS) % NUM_POSITIONS];
+}
+
+void gcode_position::update(parsed_command& command, const int file_line_number, const int gcode_number)
+{
+	if (command.cmd_.empty())
 		return;
 	// Move the current position to the previous and the previous to the undo position
 	// then copy previous to current
 
-	position * old_undo_pos = p_undo_pos_;
-	p_undo_pos_ = p_previous_pos_;
-	p_previous_pos_ = p_current_pos_;
-	p_current_pos_ = old_undo_pos;
-	// Copy the previous position to the current, but don't copy the parsed command
-	position::copy(p_previous_pos_, command, p_current_pos_);
-	//position::copy(*p_previous_pos_, p_current_pos_);
-	p_current_pos_->reset_state();
-
-	// add our parsed command to the current position
-	/*if (p_current_pos_->p_command != NULL)
-	{
-		delete p_current_pos_->p_command;
-		p_current_pos_->p_command = NULL;
-	}
-	p_current_pos_->p_command = new parsed_command(*command);
-	*/
-	p_current_pos_->file_line_number_ = file_line_number;
-	p_current_pos_->gcode_number_ = gcode_number;
+	
+	add_position(command);
+	position * p_current_pos = get_current_position_ptr();
+	position * p_previous_pos = get_previous_position_ptr();
+	p_current_pos->file_line_number_ = file_line_number;
+	p_current_pos->gcode_number_ = gcode_number;
 	// Does our function exist in our functions map?
-	gcode_functions_iterator_ = gcode_functions_.find(command->cmd_);
+	gcode_functions_iterator_ = gcode_functions_.find(command.cmd_);
 
 	if (gcode_functions_iterator_ != gcode_functions_.end())
 	{
-		p_current_pos_->gcode_ignored_ = false;
+		p_current_pos->gcode_ignored_ = false;
 		// Execute the function to process this gcode
 		const pos_function_type func = gcode_functions_iterator_->second;
-		(this->*func)(p_current_pos_, command);
+		(this->*func)(p_current_pos, command);
 		// calculate z and e relative distances
-		p_current_pos_->e_relative_ = (p_current_pos_->e_ - p_previous_pos_->e_);
-		p_current_pos_->z_relative_ = (p_current_pos_->z_ - p_previous_pos_->z_);
+		p_current_pos->e_relative_ = (p_current_pos->e_ - p_previous_pos->e_);
+		p_current_pos->z_relative_ = (p_current_pos->z_ - p_previous_pos->z_);
 		// Have the XYZ positions changed after processing a command ?
 
-		p_current_pos_->has_xy_position_changed_ = (
-			!utilities::is_equal(p_current_pos_->x_, p_previous_pos_->x_) ||
-			!utilities::is_equal(p_current_pos_->y_, p_previous_pos_->y_)
+		p_current_pos->has_xy_position_changed_ = (
+			!utilities::is_equal(p_current_pos->x_, p_previous_pos->x_) ||
+			!utilities::is_equal(p_current_pos->y_, p_previous_pos->y_)
 			);
-		p_current_pos_->has_position_changed_ = (
-			p_current_pos_->has_xy_position_changed_ ||
-			!utilities::is_equal(p_current_pos_->z_, p_previous_pos_->z_) ||
-			!utilities::is_zero(p_current_pos_->e_relative_) ||
-			p_current_pos_->x_null_ != p_previous_pos_->x_null_ ||
-			p_current_pos_->y_null_ != p_previous_pos_->y_null_ ||
-			p_current_pos_->z_null_ != p_previous_pos_->z_null_);
+		p_current_pos->has_position_changed_ = (
+			p_current_pos->has_xy_position_changed_ ||
+			!utilities::is_equal(p_current_pos->z_, p_previous_pos->z_) ||
+			!utilities::is_zero(p_current_pos->e_relative_) ||
+			p_current_pos->x_null_ != p_previous_pos->x_null_ ||
+			p_current_pos->y_null_ != p_previous_pos->y_null_ ||
+			p_current_pos->z_null_ != p_previous_pos->z_null_);
 
 		// see if our position is homed
-		if (!p_current_pos_->has_definite_position_)
+		if (!p_current_pos->has_definite_position_)
 		{
-			p_current_pos_->has_definite_position_ = (
-				//p_current_pos_->x_homed_ &&
-				//p_current_pos_->y_homed_ &&
-				//p_current_pos_->z_homed_ &&
-				p_current_pos_->is_metric_ &&
-				!p_current_pos_->is_metric_null_ &&
-				!p_current_pos_->x_null_ &&
-				!p_current_pos_->y_null_ &&
-				!p_current_pos_->z_null_ &&
-				!p_current_pos_->is_relative_null_ &&
-				!p_current_pos_->is_extruder_relative_null_);
+			p_current_pos->has_definite_position_ = (
+				//p_current_pos->x_homed_ &&
+				//p_current_pos->y_homed_ &&
+				//p_current_pos->z_homed_ &&
+				p_current_pos->is_metric_ &&
+				!p_current_pos->is_metric_null_ &&
+				!p_current_pos->x_null_ &&
+				!p_current_pos->y_null_ &&
+				!p_current_pos->z_null_ &&
+				!p_current_pos->is_relative_null_ &&
+				!p_current_pos->is_extruder_relative_null_);
 		}
 	}
 
-	if (p_current_pos_->has_position_changed_)
+	if (p_current_pos->has_position_changed_)
 	{
-		p_current_pos_->extrusion_length_total_ += p_current_pos_->e_relative_;
+		p_current_pos->extrusion_length_total_ += p_current_pos->e_relative_;
 
-		if (utilities::greater_than(p_current_pos_->e_relative_, 0) && p_previous_pos_->is_extruding_ && !p_previous_pos_->is_extruding_start_)
+		if (utilities::greater_than(p_current_pos->e_relative_, 0) && p_previous_pos->is_extruding_ && !p_previous_pos->is_extruding_start_)
 		{
 			// A little shortcut if we know we were extruding (not starting extruding) in the previous command
 			// This lets us skip a lot of the calculations for the extruder, including the state calculation
-			p_current_pos_->extrusion_length_ = p_current_pos_->e_relative_;
+			p_current_pos->extrusion_length_ = p_current_pos->e_relative_;
 		}
 		else
 		{
 
 			// Update retraction_length and extrusion_length
-			p_current_pos_->retraction_length_ = p_current_pos_->retraction_length_ - p_current_pos_->e_relative_;
-			if (utilities::less_than_or_equal(p_current_pos_->retraction_length_, 0))
+			p_current_pos->retraction_length_ = p_current_pos->retraction_length_ - p_current_pos->e_relative_;
+			if (utilities::less_than_or_equal(p_current_pos->retraction_length_, 0))
 			{
 				// we can use the negative retraction length to calculate our extrusion length!
-				p_current_pos_->extrusion_length_ = -1.0 * p_current_pos_->retraction_length_;
+				p_current_pos->extrusion_length_ = -1.0 * p_current_pos->retraction_length_;
 				// set the retraction length to 0 since we are extruding
-				p_current_pos_->retraction_length_ = 0;
+				p_current_pos->retraction_length_ = 0;
 			}
 			else
-				p_current_pos_->extrusion_length_ = 0;
+				p_current_pos->extrusion_length_ = 0;
 
 			// calculate deretraction length
-			if (utilities::greater_than(p_previous_pos_->retraction_length_, p_current_pos_->retraction_length_))
+			if (utilities::greater_than(p_previous_pos->retraction_length_, p_current_pos->retraction_length_))
 			{
-				p_current_pos_->deretraction_length_ = p_previous_pos_->retraction_length_ - p_current_pos_->retraction_length_;
+				p_current_pos->deretraction_length_ = p_previous_pos->retraction_length_ - p_current_pos->retraction_length_;
 			}
 			else
-				p_current_pos_->deretraction_length_ = 0;
+				p_current_pos->deretraction_length_ = 0;
 
 			// *************Calculate extruder state*************
 			// rounding should all be done by now
-			p_current_pos_->is_extruding_start_ = utilities::greater_than(p_current_pos_->extrusion_length_, 0) && !p_previous_pos_->is_extruding_;
-			p_current_pos_->is_extruding_ = utilities::greater_than(p_current_pos_->extrusion_length_, 0);
-			p_current_pos_->is_primed_ = utilities::is_zero(p_current_pos_->extrusion_length_) && utilities::is_zero(p_current_pos_->retraction_length_);
-			p_current_pos_->is_retracting_start_ = !p_previous_pos_->is_retracting_ && utilities::greater_than(p_current_pos_->retraction_length_, 0);
-			p_current_pos_->is_retracting_ = utilities::greater_than(p_current_pos_->retraction_length_, p_previous_pos_->retraction_length_);
-			p_current_pos_->is_partially_retracted_ = utilities::greater_than(p_current_pos_->retraction_length_, 0) && utilities::less_than(p_current_pos_->retraction_length_, retraction_length_);
-			p_current_pos_->is_retracted_ = utilities::greater_than_or_equal(p_current_pos_->retraction_length_, retraction_length_);
-			p_current_pos_->is_deretracting_start_ = utilities::greater_than(p_current_pos_->deretraction_length_, 0) && !p_previous_pos_->is_deretracting_;
-			p_current_pos_->is_deretracting_ = utilities::greater_than(p_current_pos_->deretraction_length_, p_previous_pos_->deretraction_length_);
-			p_current_pos_->is_deretracted_ = utilities::greater_than(p_previous_pos_->retraction_length_, 0) && utilities::is_zero(p_current_pos_->retraction_length_);
+			p_current_pos->is_extruding_start_ = utilities::greater_than(p_current_pos->extrusion_length_, 0) && !p_previous_pos->is_extruding_;
+			p_current_pos->is_extruding_ = utilities::greater_than(p_current_pos->extrusion_length_, 0);
+			p_current_pos->is_primed_ = utilities::is_zero(p_current_pos->extrusion_length_) && utilities::is_zero(p_current_pos->retraction_length_);
+			p_current_pos->is_retracting_start_ = !p_previous_pos->is_retracting_ && utilities::greater_than(p_current_pos->retraction_length_, 0);
+			p_current_pos->is_retracting_ = utilities::greater_than(p_current_pos->retraction_length_, p_previous_pos->retraction_length_);
+			p_current_pos->is_partially_retracted_ = utilities::greater_than(p_current_pos->retraction_length_, 0) && utilities::less_than(p_current_pos->retraction_length_, retraction_length_);
+			p_current_pos->is_retracted_ = utilities::greater_than_or_equal(p_current_pos->retraction_length_, retraction_length_);
+			p_current_pos->is_deretracting_start_ = utilities::greater_than(p_current_pos->deretraction_length_, 0) && !p_previous_pos->is_deretracting_;
+			p_current_pos->is_deretracting_ = utilities::greater_than(p_current_pos->deretraction_length_, p_previous_pos->deretraction_length_);
+			p_current_pos->is_deretracted_ = utilities::greater_than(p_previous_pos->retraction_length_, 0) && utilities::is_zero(p_current_pos->retraction_length_);
 			// *************End Calculate extruder state*************
 		}
 		// calculate last_extrusion_height and height
 		// If we are extruding on a higher level, or if retract is enabled and the nozzle is primed
 		// adjust the last extrusion height
-		if (!utilities::is_equal(p_current_pos_->z_, p_current_pos_->last_extrusion_height_))
+		if (!utilities::is_equal(p_current_pos->z_, p_current_pos->last_extrusion_height_))
 		{
-			if (!p_current_pos_->z_null_)
+			if (!p_current_pos->z_null_)
 			{
-				if (p_current_pos_->is_extruding_ || p_current_pos_->is_primed_)
+				if (p_current_pos->is_extruding_ || p_current_pos->is_primed_)
 				{
-					p_current_pos_->last_extrusion_height_ = p_current_pos_->z_;
-					p_current_pos_->last_extrusion_height_null_ = false;
+					p_current_pos->last_extrusion_height_ = p_current_pos->z_;
+					p_current_pos->last_extrusion_height_null_ = false;
 					// Is Primed
-					if (!p_current_pos_->is_printer_primed_)
+					if (!p_current_pos->is_printer_primed_)
 					{
 						// We haven't primed yet, check to see if we have priming height restrictions
 						if (utilities::greater_than(priming_height_, 0))
 						{
 							// if a priming height is configured, see if we've extruded below the  height
-							if (utilities::less_than(p_current_pos_->last_extrusion_height_, priming_height_))
-								p_current_pos_->is_printer_primed_ = true;
+							if (utilities::less_than(p_current_pos->last_extrusion_height_, priming_height_))
+								p_current_pos->is_printer_primed_ = true;
 						}
 						else
 							// if we have no priming height set, just set is_printer_primed = true.
-							p_current_pos_->is_printer_primed_ = true;
+							p_current_pos->is_printer_primed_ = true;
 					}
 
-					if (p_current_pos_->is_printer_primed_)
+					if (p_current_pos->is_printer_primed_)
 					{
 						// Calculate current height
-						if (utilities::greater_than_or_equal(p_current_pos_->z_, p_previous_pos_->height_ + minimum_layer_height_))
+						if (utilities::greater_than_or_equal(p_current_pos->z_, p_previous_pos->height_ + minimum_layer_height_))
 						{
-							p_current_pos_->height_ = p_current_pos_->z_;
-							p_current_pos_->is_layer_change_ = true;
-							p_current_pos_->layer_++;
+							p_current_pos->height_ = p_current_pos->z_;
+							p_current_pos->is_layer_change_ = true;
+							p_current_pos->layer_++;
 						}
 					}
 				}
 
 				// calculate is_zhop
-				if (p_current_pos_->is_extruding_ || p_current_pos_->z_null_ || p_current_pos_->last_extrusion_height_null_)
-					p_current_pos_->is_zhop_ = false;
+				if (p_current_pos->is_extruding_ || p_current_pos->z_null_ || p_current_pos->last_extrusion_height_null_)
+					p_current_pos->is_zhop_ = false;
 				else
-					p_current_pos_->is_zhop_ = utilities::greater_than_or_equal(p_current_pos_->z_ - p_current_pos_->last_extrusion_height_, z_lift_height_);
+					p_current_pos->is_zhop_ = utilities::greater_than_or_equal(p_current_pos->z_ - p_current_pos->last_extrusion_height_, z_lift_height_);
 			}
 
 		}
@@ -313,12 +324,12 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 			if (!is_circular_bed_)
 			{
 				is_in_bounds = !(
-					p_current_pos_->x_ < snapshot_x_min_ ||
-					p_current_pos_->x_ > snapshot_x_max_ ||
-					p_current_pos_->y_ < snapshot_y_min_ ||
-					p_current_pos_->y_ > snapshot_y_max_ ||
-					p_current_pos_->z_ < snapshot_z_min_ ||
-					p_current_pos_->z_ > snapshot_z_max_
+					p_current_pos->x_ < snapshot_x_min_ ||
+					p_current_pos->x_ > snapshot_x_max_ ||
+					p_current_pos->y_ < snapshot_y_min_ ||
+					p_current_pos->y_ > snapshot_y_max_ ||
+					p_current_pos->z_ < snapshot_z_min_ ||
+					p_current_pos->z_ > snapshot_z_max_
 					);
 
 			}
@@ -326,11 +337,11 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 			{
 				double r;
 				r = snapshot_x_max_; // good stand in for radius
-				const double dist = sqrt(p_current_pos_->x_*p_current_pos_->x_ + p_current_pos_->y_*p_current_pos_->y_);
+				const double dist = sqrt(p_current_pos->x_*p_current_pos->x_ + p_current_pos->y_*p_current_pos->y_);
 				is_in_bounds = utilities::less_than_or_equal(dist, r);
 
 			}
-			p_current_pos_->is_in_bounds_ = is_in_bounds;
+			p_current_pos->is_in_bounds_ = is_in_bounds;
 		}
 
 	}
@@ -338,10 +349,7 @@ void gcode_position::update(parsed_command *command, const int file_line_number,
 
 void gcode_position::undo_update()
 {
-	position* temp = p_current_pos_;
-	p_current_pos_ = p_previous_pos_;
-	p_previous_pos_ = p_undo_pos_;
-	p_undo_pos_ = temp;
+	cur_pos_ = (cur_pos_ - 1) % NUM_POSITIONS;
 }
 
 // Private Members
@@ -491,7 +499,7 @@ void gcode_position::update_position(position* pos, double x, bool update_x, dou
 
 }
 
-void gcode_position::process_g0_g1(position* posPtr, parsed_command* parsedCommandPtr)
+void gcode_position::process_g0_g1(position* pos, parsed_command& cmd)
 {
 	bool update_x = false;
 	bool update_y = false;
@@ -503,9 +511,9 @@ void gcode_position::process_g0_g1(position* posPtr, parsed_command* parsedComma
 	double z = 0;
 	double e = 0;
 	double f = 0;
-	for (unsigned int index = 0; index < parsedCommandPtr->parameters_.size(); index++)
+	for (unsigned int index = 0; index < cmd.parameters_.size(); index++)
 	{
-		const parsed_command_parameter p_cur_param = parsedCommandPtr->parameters_[index];
+		const parsed_command_parameter p_cur_param = cmd.parameters_[index];
 		if (p_cur_param.name_ == 'X')
 		{
 			update_x = true;
@@ -532,40 +540,40 @@ void gcode_position::process_g0_g1(position* posPtr, parsed_command* parsedComma
 			f = p_cur_param.double_value_;
 		}
 	}
-	update_position(posPtr, x, update_x, y, update_y, z, update_z, e, update_e, f, update_f, false, true);
+	update_position(pos, x, update_x, y, update_y, z, update_z, e, update_e, f, update_f, false, true);
 }
 
-void gcode_position::process_g2(position* posPtr, parsed_command* parsedCommandPtr)
+void gcode_position::process_g2(position* pos, parsed_command& cmd)
 {
 	// ToDo:  Fix G2
 }
 
-void gcode_position::process_g3(position* posPtr, parsed_command* parsedCommandPtr)
+void gcode_position::process_g3(position* pos, parsed_command& cmd)
 {
 	// Todo: Fix G3
 }
 
-void gcode_position::process_g10(position* posPtr, parsed_command* parsedCommandPtr)
+void gcode_position::process_g10(position* pos, parsed_command& cmd)
 {
 	// Todo: Fix G10
 }
 
-void gcode_position::process_g11(position* posPtr, parsed_command* parsedCommandPtr)
+void gcode_position::process_g11(position* pos, parsed_command& cmd)
 {
 	// Todo: Fix G11
 }
 
-void gcode_position::process_g20(position* posPtr, parsed_command* parsedCommandPtr)
+void gcode_position::process_g20(position* pos, parsed_command& cmd)
 {
 
 }
 
-void gcode_position::process_g21(position* posPtr, parsed_command* parsedCommandPtr)
+void gcode_position::process_g21(position* pos, parsed_command& cmd)
 {
 
 }
 
-void gcode_position::process_g28(position* p_position, parsed_command* p_parsed_command)
+void gcode_position::process_g28(position* pos, parsed_command& cmd)
 {
 	bool has_x = false;
 	bool has_y = false;
@@ -574,9 +582,9 @@ void gcode_position::process_g28(position* p_position, parsed_command* p_parsed_
 	bool set_y_home = false;
 	bool set_z_home = false;
 
-	for (unsigned int index = 0; index < p_parsed_command->parameters_.size(); index++)
+	for (unsigned int index = 0; index < cmd.parameters_.size(); index++)
 	{
-		parsed_command_parameter p_cur_param = p_parsed_command->parameters_[index];
+		parsed_command_parameter p_cur_param = cmd.parameters_[index];
 		if (p_cur_param.name_ == 'X')
 			has_x = true;
 		else if (p_cur_param.name_ == 'Y')
@@ -586,24 +594,24 @@ void gcode_position::process_g28(position* p_position, parsed_command* p_parsed_
 	}
 	if (has_x)
 	{
-		p_position->x_homed_ = true;
+		pos->x_homed_ = true;
 		set_x_home = true;
 	}
 	if (has_y)
 	{
-		p_position->y_homed_ = true;
+		pos->y_homed_ = true;
 		set_y_home = true;
 	}
 	if (has_z)
 	{
-		p_position->z_homed_ = true;
+		pos->z_homed_ = true;
 		set_z_home = true;
 	}
 	if (!has_x && !has_y && !has_z)
 	{
-		p_position->x_homed_ = true;
-		p_position->y_homed_ = true;
-		p_position->z_homed_ = true;
+		pos->x_homed_ = true;
+		pos->y_homed_ = true;
+		pos->z_homed_ = true;
 		set_x_home = true;
 		set_y_home = true;
 		set_z_home = true;
@@ -611,62 +619,62 @@ void gcode_position::process_g28(position* p_position, parsed_command* p_parsed_
 
 	if (set_x_home && !home_x_none_)
 	{
-		p_position->x_ = home_x_;
-		p_position->x_null_ = false;
+		pos->x_ = home_x_;
+		pos->x_null_ = false;
 	}
 	// todo: set error flag on else
 	if (set_y_home && !home_y_none_)
 	{
-		p_position->y_ = home_y_;
-		p_position->y_null_ = false;
+		pos->y_ = home_y_;
+		pos->y_null_ = false;
 	}
 	// todo: set error flag on else
 	if (set_z_home && !home_z_none_)
 	{
-		p_position->z_ = home_z_;
-		p_position->z_null_ = false;
+		pos->z_ = home_z_;
+		pos->z_null_ = false;
 	}
 	// todo: set error flag on else
 }
 
-void gcode_position::process_g90(position* posPtr, parsed_command* parsedCommandPtr)
+void gcode_position::process_g90(position* pos, parsed_command& cmd)
 {
 	// Set xyz to absolute mode
-	if (posPtr->is_relative_null_)
-		posPtr->is_relative_null_ = false;
+	if (pos->is_relative_null_)
+		pos->is_relative_null_ = false;
 
-	posPtr->is_relative_ = false;
+	pos->is_relative_ = false;
 
 	if (g90_influences_extruder_)
 	{
 		// If g90/g91 influences the extruder, set the extruder to absolute mode too
-		if (posPtr->is_extruder_relative_null_)
-			posPtr->is_extruder_relative_null_ = false;
+		if (pos->is_extruder_relative_null_)
+			pos->is_extruder_relative_null_ = false;
 
-		posPtr->is_extruder_relative_ = false;
+		pos->is_extruder_relative_ = false;
 	}
 
 }
 
-void gcode_position::process_g91(position* posPtr, parsed_command* parsedCommandPtr)
+void gcode_position::process_g91(position* pos, parsed_command& cmd)
 {
 	// Set XYZ axis to relative mode
-	if (posPtr->is_relative_null_)
-		posPtr->is_relative_null_ = false;
+	if (pos->is_relative_null_)
+		pos->is_relative_null_ = false;
 
-	posPtr->is_relative_ = true;
+	pos->is_relative_ = true;
 
 	if (g90_influences_extruder_)
 	{
 		// If g90/g91 influences the extruder, set the extruder to relative mode too
-		if (posPtr->is_extruder_relative_null_)
-			posPtr->is_extruder_relative_null_ = false;
+		if (pos->is_extruder_relative_null_)
+			pos->is_extruder_relative_null_ = false;
 
-		posPtr->is_extruder_relative_ = true;
+		pos->is_extruder_relative_ = true;
 	}
 }
 
-void gcode_position::process_g92(position* p_position, parsed_command* p_parsed_command)
+void gcode_position::process_g92(position* pos, parsed_command& cmd)
 {
 	// Set position offset
 	bool update_x = false;
@@ -678,9 +686,9 @@ void gcode_position::process_g92(position* p_position, parsed_command* p_parsed_
 	double y = 0;
 	double z = 0;
 	double e = 0;
-	for (unsigned int index = 0; index < p_parsed_command->parameters_.size(); index++)
+	for (unsigned int index = 0; index < cmd.parameters_.size(); index++)
 	{
-		parsed_command_parameter p_cur_param = p_parsed_command->parameters_[index];
+		parsed_command_parameter p_cur_param = cmd.parameters_[index];
 		char cmdName = p_cur_param.name_;
 		if (cmdName == 'X')
 		{
@@ -712,88 +720,88 @@ void gcode_position::process_g92(position* p_position, parsed_command* p_parsed_
 	{
 		// Our fake O parameter exists, set axis to homed!
 		// This is a workaround to allow folks to use octolapse without homing (for shame, lol!)
-		p_position->x_homed_ = true;
-		p_position->y_homed_ = true;
-		p_position->z_homed_ = true;
+		pos->x_homed_ = true;
+		pos->y_homed_ = true;
+		pos->z_homed_ = true;
 	}
 
 	if (!o_exists && !update_x && !update_y && !update_z && !update_e)
 	{
-		if (!p_position->x_null_)
-			p_position->x_offset_ = p_position->x_;
-		if (!p_position->y_null_)
-			p_position->y_offset_ = p_position->y_;
-		if (!p_position->z_null_)
-			p_position->z_offset_ = p_position->z_;
+		if (!pos->x_null_)
+			pos->x_offset_ = pos->x_;
+		if (!pos->y_null_)
+			pos->y_offset_ = pos->y_;
+		if (!pos->z_null_)
+			pos->z_offset_ = pos->z_;
 		// Todo:  Does this reset E too?  Figure that $#$$ out Formerlurker!
-		p_position->e_offset_ = p_position->e_;
+		pos->e_offset_ = pos->e_;
 	}
 	else
 	{
 		if (update_x)
 		{
-			if (!p_position->x_null_ && p_position->x_homed_)
-				p_position->x_offset_ = p_position->x_ - x;
+			if (!pos->x_null_ && pos->x_homed_)
+				pos->x_offset_ = pos->x_ - x;
 			else
 			{
-				p_position->x_ = x;
-				p_position->x_offset_ = 0;
-				p_position->x_null_ = false;
+				pos->x_ = x;
+				pos->x_offset_ = 0;
+				pos->x_null_ = false;
 			}
 		}
 		if (update_y)
 		{
-			if (!p_position->y_null_ && p_position->y_homed_)
-				p_position->y_offset_ = p_position->y_ - y;
+			if (!pos->y_null_ && pos->y_homed_)
+				pos->y_offset_ = pos->y_ - y;
 			else
 			{
-				p_position->y_ = y;
-				p_position->y_offset_ = 0;
-				p_position->y_null_ = false;
+				pos->y_ = y;
+				pos->y_offset_ = 0;
+				pos->y_null_ = false;
 			}
 		}
 		if (update_z)
 		{
-			if (!p_position->z_null_ && p_position->z_homed_)
-				p_position->z_offset_ = p_position->z_ - z;
+			if (!pos->z_null_ && pos->z_homed_)
+				pos->z_offset_ = pos->z_ - z;
 			else
 			{
-				p_position->z_ = z;
-				p_position->z_offset_ = 0;
-				p_position->z_null_ = false;
+				pos->z_ = z;
+				pos->z_offset_ = 0;
+				pos->z_null_ = false;
 			}
 		}
 		if (update_e)
 		{
-			p_position->e_offset_ = p_position->e_ - e;
+			pos->e_offset_ = pos->e_ - e;
 		}
 	}
 }
 
-void gcode_position::process_m82(position* posPtr, parsed_command* parsedCommandPtr)
+void gcode_position::process_m82(position* pos, parsed_command& cmd)
 {
 	// Set extrder mode to absolute
-	if (posPtr->is_extruder_relative_null_)
-		posPtr->is_extruder_relative_null_ = false;
+	if (pos->is_extruder_relative_null_)
+		pos->is_extruder_relative_null_ = false;
 
-	posPtr->is_extruder_relative_ = false;
+	pos->is_extruder_relative_ = false;
 }
 
-void gcode_position::process_m83(position* posPtr, parsed_command* parsedCommandPtr)
+void gcode_position::process_m83(position* pos, parsed_command& cmd)
 {
 	// Set extrder mode to relative
-	if (posPtr->is_extruder_relative_null_)
-		posPtr->is_extruder_relative_null_ = false;
+	if (pos->is_extruder_relative_null_)
+		pos->is_extruder_relative_null_ = false;
 
-	posPtr->is_extruder_relative_ = true;
+	pos->is_extruder_relative_ = true;
 }
 
-void gcode_position::process_m207(position* posPtr, parsed_command* parsedCommandPtr)
+void gcode_position::process_m207(position* pos, parsed_command& cmd)
 {
 	// Todo: impemente firmware retract
 }
 
-void gcode_position::process_m208(position* posPtr, parsed_command* parsedCommandPtr)
+void gcode_position::process_m208(position* pos, parsed_command& cmd)
 {
 	// Todo: implement firmware retract
 }

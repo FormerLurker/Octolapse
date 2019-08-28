@@ -28,11 +28,9 @@ class stabilization_results
 {
 public:
 	stabilization_results();
-	virtual ~stabilization_results();
-
 	bool success_;
 	std::string errors_;
-	std::vector<snapshot_plan*> snapshot_plans_;
+	std::vector<snapshot_plan> snapshot_plans_;
 	double seconds_elapsed_;
 	long gcodes_processed_;
 	long lines_processed_;

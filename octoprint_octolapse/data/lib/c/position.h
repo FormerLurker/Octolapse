@@ -36,16 +36,10 @@ class position
 {
 public:
 	position();
-	position(position &source);
-	position(const std::string& xyz_axis_default_mode, const std::string& e_axis_default_mode, const std::string&
-	         units_default);
-	~position();
-	static void copy(position *source, position* target);
-	static void copy(position *source, parsed_command* source_command, position* target);
 	void reset_state();
 	PyObject * to_py_tuple();
 	PyObject * to_py_dict();
-	parsed_command* p_command;
+	parsed_command p_command;
 	double f_;
 	bool f_null_;
 	double x_;
@@ -106,13 +100,13 @@ public:
 	int gcode_number_;
 	bool gcode_ignored_;
 	bool is_in_bounds_;
+	bool is_empty_;
 	double get_offset_x();
 	double get_offset_y();
 	double get_offset_z();
 	double get_offset_e();
-private:
-	void initialize();
-	static void _copy_parsed_command(parsed_command* source_command, position* target);
-	static void _copy_position(position* source, position* target);
+	void set_xyz_axis_mode(const std::string& xyz_axis_default_mode);
+	void set_e_axis_mode(const std::string& e_axis_default_mode);
+	void set_units_default(const std::string&	units_default);
 };
 #endif

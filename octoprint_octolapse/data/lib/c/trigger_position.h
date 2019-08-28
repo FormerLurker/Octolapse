@@ -25,23 +25,20 @@ struct trigger_position
 	{
 		type = trigger_position::unknown;
 		distance = -1;
-		p_position = NULL;
+		is_empty = true;
 	}
-	trigger_position(position_type type_, double distance_, position* p_position_)
+	trigger_position(position_type type_, double distance_, position p_position_)
 	{
 		type = type_;
 		distance = distance_;
-		p_position = new position(*p_position_);
+		p_position = p_position_;
+		is_empty = false;
 	}
-	~trigger_position()
-	{
-		if (p_position != NULL)
-			delete p_position;
-	}
-	static position_type get_type(position* p_position);
+	static position_type get_type(position& p_position);
 	position_type type;
 	double distance;
-	position * p_position;
+	position p_position;
+	bool is_empty;
 };
 
 struct trigger_position_args
@@ -67,34 +64,33 @@ class trigger_positions
 public:
 	trigger_positions();
 	~trigger_positions();
-	trigger_position * get_position();
-	trigger_position** get_all();
+	bool get_position(trigger_position &pos);
 
 	void initialize(trigger_position_args args);
 	void clear();
-	void try_add(position *p_position, position *p_previous_position);
+	void try_add(position &p_position, position &p_previous_position);
 	bool is_empty();
-	trigger_position* get(trigger_position::position_type type);
+	trigger_position get(trigger_position::position_type type);
 	void set_stabilization_coordinates(double x, double y);
-	void set_previous_initial_position(position * pos);
+	void set_previous_initial_position(position &pos);
 private:
-	trigger_position* get_fastest_extrusion_position();
-	trigger_position* get_snap_to_print_position();
-	trigger_position* get_fast_position();
-	trigger_position* get_compatibility_position();
-	trigger_position* get_high_quality_position();
+	bool has_fastest_extrusion_position();
+	bool get_snap_to_print_position(trigger_position &pos);
+	bool get_fast_position(trigger_position &pos);
+	bool get_compatibility_position(trigger_position &pos);
+	bool get_high_quality_position(trigger_position &pos);
 
-	double get_stabilization_distance(position* p_position);
+	double get_stabilization_distance(position& p_position);
 
 	//trigger_position* get_normal_quality_position();
-	void save_retracted_position(position* p_retracted_position);
-	void save_primed_position(position* p_primed_position);
-	bool can_process_position(position* p_position, trigger_position::position_type type);
-	void add_internal(position * p_position, double distance, trigger_position::position_type type);
-	void try_add_internal(position * p_position, double distance, trigger_position::position_type type);
-	void try_add_extrusion_start_positions(position* p_extrusion_start_position);
-	void try_add_extrusion_start_position(position * p_extrusion_start_position, position* p_saved_position);
-	trigger_position* position_list_[trigger_position::num_position_types];
+	void save_retracted_position(position& p_retracted_position);
+	void save_primed_position(position& p_primed_position);
+	static bool can_process_position(position& p_position, trigger_position::position_type type);
+	void add_internal(position& p_position, double distance, trigger_position::position_type type);
+	void try_add_internal(position& p_position, double distance, trigger_position::position_type type);
+	void try_add_extrusion_start_positions(position& p_extrusion_start_position);
+	void try_add_extrusion_start_position(position& p_extrusion_start_position, position& p_saved_position);
+	trigger_position position_list_[trigger_position::num_position_types];
 	// arguments
 	trigger_position_args args_;
 	double stabilization_x_;
@@ -102,9 +98,9 @@ private:
 	// Tracking variables
 	double fastest_extrusion_speed_;
 	double slowest_extrusion_speed_;
-	position * p_previous_initial_position_;
-	position * p_previous_retracted_position_;
-	position * p_previous_primed_position_;
+	position p_previous_initial_position_;
+	position p_previous_retracted_position_;
+	position p_previous_primed_position_;
 	
 };
 

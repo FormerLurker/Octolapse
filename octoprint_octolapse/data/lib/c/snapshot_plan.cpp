@@ -21,76 +21,22 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "snapshot_plan.h"
 #include <iostream>
-
+#include "logging.h"
 snapshot_plan::snapshot_plan()
 {
 	file_line = 0;
 	file_gcode_number = 0;
-	p_triggering_command = NULL;
-	p_initial_position = NULL;
-	p_return_position = NULL;
-	p_start_command = NULL;
-	p_end_command = NULL;
 	total_travel_distance = 0;
 	saved_travel_distance = 0;
 	triggering_command_type = trigger_position::unknown; // unknown
+	has_initial_position = false;
+	has_return_position = false;
 }
 
-snapshot_plan::snapshot_plan(const snapshot_plan & source)
+
+PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan> &p_plans)
 {
-	file_line = source.file_line;
-	file_gcode_number = source.file_gcode_number;
-	p_triggering_command = new parsed_command(*source.p_triggering_command);
-	p_initial_position = new position(*source.p_initial_position);
 	
-	for (unsigned int index = 0; index < source.steps.size(); index++)
-	{
-		steps.push_back(new snapshot_plan_step(*source.steps[index]));
-	}
-
-	p_return_position = new position(*source.p_return_position);
-	p_start_command = new parsed_command(*source.p_start_command);
-	p_end_command = new parsed_command(*source.p_end_command);
-}
-
-snapshot_plan::~snapshot_plan()
-{
-	if(p_triggering_command != NULL)
-	{
-		delete p_triggering_command;
-		p_triggering_command = NULL;
-	}
-	if (p_initial_position != NULL)
-	{
-		delete p_initial_position;
-		p_initial_position = NULL;
-	}
-	if (p_return_position != NULL)
-	{
-		delete p_return_position;
-		p_return_position = NULL;
-	}
-	if (p_start_command != NULL)
-	{
-		delete p_start_command;
-		p_start_command = NULL;
-	}
-
-	if (p_end_command != NULL)
-	{
-		delete p_end_command;
-		p_end_command = NULL;
-	}
-
-	for (std::vector<snapshot_plan_step*>::iterator step = steps.begin(); step != steps.end(); ++step) {
-		delete *step;
-	}
-	steps.clear();
-	
-}
-
-PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan *> p_plans)
-{
 	PyObject *py_snapshot_plans = PyList_New(0);
 	if (py_snapshot_plans == NULL)
 	{
@@ -101,12 +47,14 @@ PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan *> p_plans)
 	// Create each snapshot plan
 	for (unsigned int plan_index = 0; plan_index < p_plans.size(); plan_index++)
 	{
-		PyObject * py_snapshot_plan = p_plans[plan_index]->to_py_object();
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Building Plan.");
+		PyObject * py_snapshot_plan = p_plans[plan_index].to_py_object();
 		if (py_snapshot_plan == NULL)
 		{
 			//PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.build_py_object: Unable to convert the snapshot plan to a PyObject.");
 			return NULL;
 		}
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding plan to list of plans.");
 		bool success = !(PyList_Append(py_snapshot_plans, py_snapshot_plan) < 0); // reference to pSnapshotPlan stolen
 		if (!success)
 		{
@@ -124,14 +72,17 @@ PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan *> p_plans)
 PyObject * snapshot_plan::to_py_object()
 {
 	PyObject* py_triggering_command;
-	if (p_triggering_command == NULL)
+	
+	if (p_triggering_command.is_empty)
 	{
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No triggering command for plan.");
 		py_triggering_command = Py_None;
 		Py_IncRef(py_triggering_command);
 	}
 	else
 	{
-		py_triggering_command = p_triggering_command->to_py_object();
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding the triggering command.");
+		py_triggering_command = p_triggering_command.to_py_object();
 		if (py_triggering_command == NULL)
 		{
 			PyErr_Print();
@@ -142,14 +93,16 @@ PyObject * snapshot_plan::to_py_object()
 	
 
 	PyObject* py_start_command = NULL;
-	if (p_start_command == NULL)
+	if (p_start_command.is_empty)
 	{
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No start command.");
 		py_start_command = Py_None;
 		Py_IncRef(Py_None);
 	}
 	else
 	{
-		py_start_command = p_start_command->to_py_object();
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding the start command.");
+		py_start_command = p_start_command.to_py_object();
 		if (py_start_command == NULL)
 		{
 			PyErr_Print();
@@ -159,14 +112,16 @@ PyObject * snapshot_plan::to_py_object()
 	}
 
 	PyObject * py_initial_position;
-	if (p_initial_position == NULL)
+	if (!has_initial_position)
 	{
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No initial position.");
 		py_initial_position = Py_None;
 		Py_IncRef(py_initial_position);
 	}
 	else
 	{
-		py_initial_position = p_initial_position->to_py_tuple();
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding the initial position.");
+		py_initial_position = p_initial_position.to_py_tuple();
 		if (py_initial_position == NULL)
 		{
 			PyErr_Print();
@@ -184,9 +139,9 @@ PyObject * snapshot_plan::to_py_object()
 	}
 	for (unsigned int step_index = 0; step_index < steps.size(); step_index++)
 	{
-
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding snapshot step.");
 		// create the snapshot step object with build
-		PyObject * py_step = steps[step_index]->to_py_object();
+		PyObject * py_step = steps[step_index].to_py_object();
 		if (py_step == NULL)
 		{
 			PyErr_Print();
@@ -206,15 +161,18 @@ PyObject * snapshot_plan::to_py_object()
 
 	}
 
+	
 	PyObject * py_return_position;
-	if (p_return_position == NULL)
+	if (!has_return_position)
 	{
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No return position.");
 		py_return_position = Py_None;
 		Py_IncRef(py_return_position);
 	}
 	else
 	{
-		py_return_position = p_return_position->to_py_tuple();
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding return position.");
+		py_return_position = p_return_position.to_py_tuple();
 		if (py_return_position == NULL)
 		{
 			PyErr_Print();
@@ -224,14 +182,16 @@ PyObject * snapshot_plan::to_py_object()
 	}
 	
 	PyObject* py_end_command;
-	if (p_end_command == NULL)
+	if (p_end_command.is_empty)
 	{
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No end command.");
 		py_end_command = Py_None;
 		Py_IncRef(py_end_command);
 	}
 	else
 	{
-		py_end_command = p_end_command->to_py_object();
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding the end command.");
+		py_end_command = p_end_command.to_py_object();
 		if (py_end_command == NULL)
 		{
 			PyErr_Print();
@@ -239,7 +199,8 @@ PyObject * snapshot_plan::to_py_object()
 			return NULL;
 		}
 	}
-	
+
+	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Converting plan to py object.");
 	PyObject *py_snapshot_plan = Py_BuildValue(
 		"llddOOOOOO",
 		file_line,

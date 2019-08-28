@@ -100,7 +100,7 @@ public:
 	// constructor for use when being called from python
 	stabilization(gcode_position_args* position_args, stabilization_args* args, pythonGetCoordinatesCallback get_coordinates, pythonProgressCallback progress);
 	virtual ~stabilization();
-	void process_file(stabilization_results* results);
+	stabilization_results process_file();
 	
 private:
 	stabilization(const stabilization &source); // don't copy me!
@@ -123,9 +123,9 @@ protected:
 	 * \param y The current y stabilization point, will be replaced with the next y point
 	 */
 	void get_next_xy_coordinates(double *x, double *y);
-	virtual void process_pos(position* p_current_pos, position* p_previous_pos);
+	virtual void process_pos(position& p_current_pos, position& p_previous_pos);
 	virtual void on_processing_complete();
-	std::vector<snapshot_plan*>* p_snapshot_plans_;
+	std::vector<snapshot_plan> p_snapshot_plans_;
 	bool is_running_;
 	std::string errors_;
 	stabilization_args* p_stabilization_args_;
