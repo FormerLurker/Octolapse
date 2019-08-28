@@ -71,6 +71,8 @@ void position::set_units_default(const std::string&	units_default)
 
 position::position()
 { 
+	is_empty_ = true;
+	feature_type_tag_ = 0;
 	f_ = 0;
 	f_null_ = true;
 	x_ = 0;

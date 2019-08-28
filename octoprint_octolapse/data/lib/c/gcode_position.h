@@ -26,6 +26,7 @@
 #include <map>
 #include "gcode_parser.h"
 #include "position.h"
+#include "gcode_comment_processor.h"
 #define NUM_POSITIONS 10
 struct gcode_position_args {
 	gcode_position_args() {
@@ -164,6 +165,8 @@ private:
 	void process_m83(position*, parsed_command&);
 	void process_m207(position*, parsed_command&);
 	void process_m208(position*, parsed_command&);
+
+	gcode_comment_processor comment_processor_;
 
 };
 

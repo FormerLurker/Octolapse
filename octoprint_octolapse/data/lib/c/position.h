@@ -40,6 +40,7 @@ public:
 	PyObject * to_py_tuple();
 	PyObject * to_py_dict();
 	parsed_command p_command;
+	int feature_type_tag_;
 	double f_;
 	bool f_null_;
 	double x_;

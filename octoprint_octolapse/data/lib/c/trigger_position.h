@@ -1,5 +1,6 @@
 #pragma once
 #include "position.h"
+#include "gcode_comment_processor.h"
 
 /**
  * \brief A struct to hold the closest position, which  is used by the stabilization preprocessors.
@@ -26,6 +27,7 @@ struct trigger_position
 		type = trigger_position::unknown;
 		distance = -1;
 		is_empty = true;
+		feature_type = gcode_comment_processor::unknown_feature;
 	}
 	trigger_position(position_type type_, double distance_, position p_position_)
 	{
@@ -33,9 +35,19 @@ struct trigger_position
 		distance = distance_;
 		p_position = p_position_;
 		is_empty = false;
+		feature_type = gcode_comment_processor::unknown_feature;
+	}
+	trigger_position(gcode_comment_processor::feature_type feature_type_, double distance_, position p_position_)
+	{
+		type = trigger_position::unknown;
+		distance = distance_;
+		p_position = p_position_;
+		is_empty = false;
+		feature_type = feature_type_;
 	}
 	static position_type get_type(position& p_position);
 	position_type type;
+	gcode_comment_processor::feature_type feature_type;
 	double distance;
 	position p_position;
 	bool is_empty;
@@ -80,17 +92,20 @@ private:
 	bool get_compatibility_position(trigger_position &pos);
 	bool get_high_quality_position(trigger_position &pos);
 
-	double get_stabilization_distance(position& p_position);
+	double get_stabilization_distance(position& p_position) const;
 
 	//trigger_position* get_normal_quality_position();
 	void save_retracted_position(position& p_retracted_position);
 	void save_primed_position(position& p_primed_position);
 	static bool can_process_position(position& p_position, trigger_position::position_type type);
 	void add_internal(position& p_position, double distance, trigger_position::position_type type);
+	void try_add_feature_position_internal(position & p_position, double distance);
+	void add_feature_position_internal(position &p_position, double distance);
 	void try_add_internal(position& p_position, double distance, trigger_position::position_type type);
 	void try_add_extrusion_start_positions(position& p_extrusion_start_position);
 	void try_add_extrusion_start_position(position& p_extrusion_start_position, position& p_saved_position);
 	trigger_position position_list_[trigger_position::num_position_types];
+	trigger_position feature_position_list_[NUM_FEATURE_TYPES];
 	// arguments
 	trigger_position_args args_;
 	double stabilization_x_;

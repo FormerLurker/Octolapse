@@ -35,6 +35,7 @@ struct snapshot_plan
 	long file_line;
 	long file_gcode_number;
 	trigger_position::position_type triggering_command_type;
+	gcode_comment_processor::feature_type triggering_command_feature_type;
 	parsed_command p_triggering_command;
 	parsed_command p_start_command;
 	position p_initial_position;

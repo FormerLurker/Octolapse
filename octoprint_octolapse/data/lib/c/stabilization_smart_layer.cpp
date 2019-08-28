@@ -183,6 +183,7 @@ void stabilization_smart_layer::add_plan()
 		p_plan.total_travel_distance = total_travel_distance;
 		p_plan.saved_travel_distance = (standard_layer_trigger_distance_ * 2) - total_travel_distance;
 		p_plan.triggering_command_type = p_closest.type;
+		p_plan.triggering_command_feature_type = p_closest.feature_type;
 		// create the initial position
 		p_plan.p_triggering_command = p_closest.p_position.p_command;
 		p_plan.p_start_command = p_closest.p_position.p_command;

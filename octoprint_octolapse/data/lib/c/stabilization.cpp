@@ -155,8 +155,16 @@ stabilization_results stabilization::process_file()
 			if (found_command)
 			{
 				gcodes_processed_++;
-				//std::cout << "stabilization::process_file - updating position...";
-				gcode_position_->update(cmd, lines_processed_, gcodes_processed_);
+			}
+
+			// Always process the command through the printer, even if no command is found
+			// This is important so that comments can be analyzed
+			//std::cout << "stabilization::process_file - updating position...";
+			gcode_position_->update(cmd, lines_processed_, gcodes_processed_);
+
+			// Only continue to process if we've found a command.
+			if (found_command)
+			{
 				process_pos(*gcode_position_->get_current_position_ptr(), *gcode_position_->get_previous_position_ptr());
 
 				if ( (lines_processed_ % read_lines_before_clock_check) == 0 && next_update_time < clock())

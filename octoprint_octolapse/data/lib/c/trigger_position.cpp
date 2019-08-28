@@ -231,6 +231,14 @@ bool trigger_positions::get_fast_position(trigger_position &pos)
 
 bool trigger_positions::get_compatibility_position(trigger_position &pos)
 {
+	for (int index = NUM_FEATURE_TYPES - 1; index > gcode_comment_processor::feature_type::inner_perimeter_feature - 1; index--)
+	{
+		if (!feature_position_list_[index].is_empty)
+		{
+			pos = feature_position_list_[index];
+			return true;
+		}
+	}
 	int current_best_index = -1;
 	for (int index = trigger_position::num_position_types - 1; index > -1; index--)
 	{
@@ -250,6 +258,14 @@ bool trigger_positions::get_compatibility_position(trigger_position &pos)
 
 bool trigger_positions::get_high_quality_position(trigger_position &pos)
 {
+	for (int index = NUM_FEATURE_TYPES - 1; index >  gcode_comment_processor::feature_type::inner_perimeter_feature - 1; index--)
+	{
+		if (!feature_position_list_[index].is_empty)
+		{
+			pos = feature_position_list_[index];
+			return true;
+		}
+	}
 	for (int index = trigger_position::num_position_types - 1; index > trigger_position::quality_cutoff - 1; index--)
 	{
 		if (index == trigger_position::fastest_extrusion && has_fastest_extrusion_position())
@@ -295,6 +311,12 @@ void trigger_positions::clear()
 	{
 		position_list_[index].is_empty = true;
 	}
+
+	// clear out any saved feature positions
+	for (unsigned int index = 0; index < NUM_FEATURE_TYPES; index++)
+	{
+		feature_position_list_[index].is_empty = true;
+	}
 }
 
 trigger_position trigger_positions::get(const trigger_position::position_type type)
@@ -321,7 +343,7 @@ bool trigger_positions::can_process_position(position& p_position, const trigger
 }
 
 
-double trigger_positions::get_stabilization_distance(position& p_position)
+double trigger_positions::get_stabilization_distance(position& p_position) const
 {
 	double x, y;
 	if (args_.x_stabilization_disabled && p_previous_initial_position_.is_empty_)
@@ -347,6 +369,7 @@ double trigger_positions::get_stabilization_distance(position& p_position)
 /// Try to add a position to the position list.  Returns false if no position can be added.
 void trigger_positions::try_add(position &p_position, position &p_previous_position)
 {
+	
 	// Get the position type
 	trigger_position::position_type type = trigger_position::get_type(p_position);
 
@@ -354,7 +377,16 @@ void trigger_positions::try_add(position &p_position, position &p_previous_posit
 	{
 		return;
 	}
-		
+
+	// add any feature positions if a feature tag exists, and if we are in high quality or compatibility mode
+	if (
+		p_position.feature_type_tag_ != gcode_comment_processor::feature_type::unknown_feature &&
+		(args_.type == trigger_position::high_quality || args_.type == trigger_position::compatibility)
+	)
+	{
+		try_add_feature_position_internal(p_position, get_stabilization_distance(p_position));
+	}
+	
 	if (args_.type == trigger_position::snap_to_print && type != trigger_position::extrusion)
 	{
 		save_retracted_position(p_position);
@@ -373,7 +405,44 @@ void trigger_positions::try_add(position &p_position, position &p_previous_posit
 	
 
 }
+void trigger_positions::try_add_feature_position_internal(position & p_position, double distance)
+{
+	bool add_position = false;
+	if (feature_position_list_[p_position.feature_type_tag_].is_empty)
+	{
+		add_position = true;
+	}
+	else if (utilities::less_than(distance, feature_position_list_[p_position.feature_type_tag_].distance))
+	{
+		add_position = true;
+	}
+	else if (utilities::is_equal(feature_position_list_[p_position.feature_type_tag_].distance, distance) && !p_previous_initial_position_.is_empty_)
+	{
+		//std::cout << "Closest position tie detected, ";
+		const double old_distance_from_previous = utilities::get_cartesian_distance(feature_position_list_[p_position.feature_type_tag_].p_position.x_, feature_position_list_[p_position.feature_type_tag_].p_position.y_, p_previous_initial_position_.x_, p_previous_initial_position_.y_);
+		const double new_distance_from_previous = utilities::get_cartesian_distance(p_position.x_, p_position.y_, p_previous_initial_position_.x_, p_previous_initial_position_.y_);
+		if (utilities::less_than(new_distance_from_previous, old_distance_from_previous))
+		{
+			//std::cout << "new is closer to the last initial snapshot position.\r\n";
+			add_position = true;
+		}
+		//std::cout << "old position is closer to the last initial snapshot position.\r\n";
+	}
+	if (add_position)
+	{
+		// add the current position as the fastest extrusion speed 
+		add_feature_position_internal(p_position, distance);
+	}
+}
 
+void trigger_positions::add_feature_position_internal(position &p_position, double distance)
+{
+	feature_position_list_[p_position.feature_type_tag_].p_position = p_position;
+	feature_position_list_[p_position.feature_type_tag_].distance = distance;
+	feature_position_list_[p_position.feature_type_tag_].feature_type = static_cast<gcode_comment_processor::feature_type>(p_position.feature_type_tag_);
+	feature_position_list_[p_position.feature_type_tag_].is_empty = false;
+
+}
 // Adds a position to the internal position list.
 void trigger_positions::add_internal(position &p_position, double distance, trigger_position::position_type type)
 {
