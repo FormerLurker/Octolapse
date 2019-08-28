@@ -153,7 +153,6 @@ void stabilization_smart_layer::add_plan()
 	trigger_position p_closest;
 	if (closest_positions_.get_position(p_closest))
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Adding snapshot position.");
 		//std::cout << "Adding saved plan to plans...  F Speed" << p_saved_position_->f_ << " \r\n";
 		snapshot_plan p_plan;
 		double total_travel_distance;
