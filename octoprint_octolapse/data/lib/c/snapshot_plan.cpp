@@ -30,7 +30,6 @@ snapshot_plan::snapshot_plan()
 	saved_travel_distance = 0;
 	triggering_command_type = trigger_position::unknown; // unknown
 	has_initial_position = false;
-	has_return_position = false;
 }
 
 
@@ -163,7 +162,7 @@ PyObject * snapshot_plan::to_py_object()
 
 	
 	PyObject * py_return_position;
-	if (!has_return_position)
+	if (p_return_position.is_empty_)
 	{
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No return position.");
 		py_return_position = Py_None;

@@ -42,7 +42,6 @@ struct snapshot_plan
 	bool has_initial_position;
 	std::vector<snapshot_plan_step> steps;
 	position p_return_position;
-	bool has_return_position;
 	parsed_command p_end_command;
 	double total_travel_distance;
 	double saved_travel_distance;

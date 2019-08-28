@@ -211,7 +211,10 @@ void stabilization_smart_layer::add_plan()
 		const snapshot_plan_step p_snapshot_step(NULL, NULL, NULL, NULL, NULL, snapshot_action);
 		p_plan.steps.push_back(p_snapshot_step);
 
-		p_plan.p_return_position = p_closest.p_position;
+		// Only add a return position if we're not using snap to print
+		if(p_smart_layer_args_->smart_layer_trigger_type != trigger_position::snap_to_print)
+			p_plan.p_return_position = p_closest.p_position;
+
 		p_plan.file_line = p_closest.p_position.file_line_number_;
 		p_plan.file_gcode_number = p_closest.p_position.gcode_number_;
 
