@@ -87,7 +87,7 @@ public:
 	double y_coordinate;
 };
 typedef bool(*progressCallback)(double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
-typedef bool(*pythonProgressCallback)(PyObject* python_progress_callback, double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
+typedef bool(*pythonProgressCallback)(PyObject* python_progress_callback, double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, int gcodesProcessed, int linesProcessed);
 typedef bool(*pythonGetCoordinatesCallback)(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double* x_result, double* y_result);
 
 class stabilization
@@ -110,7 +110,7 @@ private:
 	// False if return < 0, else true
 	pythonGetCoordinatesCallback _get_coordinates_callback;
 	void notify_progress(double percent_progress, double seconds_elapsed, double seconds_to_complete,
-		long gcodes_processed, long lines_processed);
+		int gcodes_processed, int lines_processed);
 	gcode_position_args* p_args_;
 	// current stabilization point
 
@@ -135,8 +135,8 @@ protected:
 	gcode_parser* gcode_parser_;
 	long get_file_size(const std::string& file_path);
 	long file_size_;
-	long lines_processed_;
-	long gcodes_processed_;
+	int lines_processed_;
+	int gcodes_processed_;
 
 	
 };

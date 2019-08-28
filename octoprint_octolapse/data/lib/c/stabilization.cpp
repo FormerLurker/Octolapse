@@ -22,7 +22,6 @@
 #include "stabilization.h"
 #include <fstream>
 #include <time.h>
-#include <chrono> 
 #include <iostream>
 #include <vector>
 #include <sstream>
@@ -125,18 +124,16 @@ double stabilization::get_time_elapsed(double start_clock, double end_clock)
 
 stabilization_results stabilization::process_file()
 {
-	
+	int read_lines_before_clock_check = 1000;
 	//std::cout << "stabilization::process_file - Processing file.\r\n";
 	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Processing File.");
 	is_running_ = true;
 	
 	double next_update_time = get_next_update_time();
 	const clock_t start_clock = clock();
-	double io_time = 0, parsing_time = 0, position_time = 0, stabilization_time = 0;
-	std::chrono::steady_clock::time_point section_start_timer;
-	std::chrono::steady_clock::time_point section_end_timer;
-	std::chrono::duration<double> elapsed;
-	
+	//double io_time = 0, parsing_time = 0, position_time = 0, stabilization_time = 0;
+	//clock_t section_clock;
+
 	// todo : clear out everything for a fresh go!
 	file_size_ = get_file_size(p_stabilization_args_->file_path);
 
@@ -150,11 +147,9 @@ stabilization_results stabilization::process_file()
 		// Communicate every second
 		while (is_running_)
 		{
-			section_start_timer = std::chrono::high_resolution_clock::now();
+			//section_clock = clock();
 			bool has_line = fgets(line, 9999, gcodeFile);
-			section_end_timer = std::chrono::high_resolution_clock::now();
-			elapsed = section_end_timer - section_start_timer;
-			io_time += elapsed.count();
+			//io_time += clock() - section_clock;
 
 			if (!has_line)
 				break;
@@ -165,29 +160,23 @@ stabilization_results stabilization::process_file()
 			
 			//std::cout << "Complete.\r\n";
 			cmd.clear();
-			section_start_timer = std::chrono::high_resolution_clock::now();
+			//section_clock = clock();
 			bool found_command = gcode_parser_->try_parse_gcode(line, cmd);
-			section_end_timer = std::chrono::high_resolution_clock::now();
-			elapsed = section_end_timer - section_start_timer;
-			parsing_time += elapsed.count();
+			//parsing_time += clock() - section_clock;
 			if (found_command)
 			{
 				
 				gcodes_processed_++;
 				//std::cout << "stabilization::process_file - updating position...";
-				section_start_timer = std::chrono::high_resolution_clock::now();
+				//section_clock = clock();
 				gcode_position_->update(cmd, lines_processed_, gcodes_processed_);
-				section_end_timer = std::chrono::high_resolution_clock::now();
-				elapsed = section_end_timer - section_start_timer; 
-				position_time += elapsed.count();
+				//position_time += clock() - section_clock;
 				//std::cout << "Complete.\r\n";
-				section_start_timer = std::chrono::high_resolution_clock::now();
+				//section_clock = clock();
 				process_pos(*gcode_position_->get_current_position_ptr(), *gcode_position_->get_previous_position_ptr());
-				section_end_timer = std::chrono::high_resolution_clock::now();
-				elapsed = section_end_timer - section_start_timer; 
-				stabilization_time += elapsed.count();
+				//stabilization_time += clock() - section_clock;
 
-				if (next_update_time < clock())
+				if ( (lines_processed_ % read_lines_before_clock_check) == 0 && next_update_time < clock())
 				{
 					// ToDo: tellg does not do what I think it does, but why?
 					long currentPosition = ftell (gcodeFile);
@@ -226,21 +215,25 @@ stabilization_results stabilization::process_file()
 	// Assignment apparently doesn't work everywhere :(  Use a loop
 	results.snapshot_plans_ = p_snapshot_plans_;
 
+	/*double io_seconds = static_cast<double>(io_time) / CLOCKS_PER_SEC;
+	double parsing_seconds = static_cast<double>(parsing_time) / CLOCKS_PER_SEC;
+	double position_seconds = static_cast<double>(position_time) / CLOCKS_PER_SEC;
+	double stabilization_seconds = static_cast<double>(stabilization_time) / CLOCKS_PER_SEC;*/
 	std::stringstream sstm;
 	sstm << "Completed file processing\r\n";
 	sstm << "\tSnapshots Found: " << results.snapshot_plans_.size() << "\r\n";
-	sstm << "\tIO Seconds: " << io_time << "\r\n";
-	sstm << "\tParsing Seconds: " << parsing_time << "\r\n";
-	sstm << "\tPosition Seconds: " << position_time << "\r\n";
-	sstm << "\tStabilization Seconds: " << stabilization_time << "\r\n";
+	//sstm << "\tIO Seconds: " << io_seconds << "\r\n";
+	//sstm << "\tParsing Seconds: " << parsing_seconds << "\r\n";
+	//sstm << "\tPosition Seconds: " << position_seconds << "\r\n";
+	//sstm << "\tStabilization Seconds: " << stabilization_seconds << "\r\n";
 	sstm << "\tTotal Seconds: " << total_seconds << "\r\n";
-	std::cout << sstm.str();
+	//std::cout << sstm.str();
 	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, sstm.str());
 	return results;
 }
 
 void stabilization::notify_progress(const double percent_progress, const double seconds_elapsed, const double seconds_to_complete,
-	const long gcodes_processed, const long lines_processed)
+	const int gcodes_processed, const int lines_processed)
 {
 	if (has_python_callbacks_)
 	{

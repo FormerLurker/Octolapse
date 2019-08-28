@@ -611,7 +611,7 @@ extern "C"
 	}
 }
 
-static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, const double percent_complete, const double seconds_elapsed, const double estimated_seconds_remaining, const long gcodes_processed, const long lines_processed)
+static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, const double percent_complete, const double seconds_elapsed, const double estimated_seconds_remaining, const int gcodes_processed, const int lines_processed)
 {
 	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Executing the stabilization progress callback.");
 	PyObject * funcArgs = Py_BuildValue("(d,d,d,i,i)", percent_complete, seconds_elapsed, estimated_seconds_remaining, gcodes_processed, lines_processed);
