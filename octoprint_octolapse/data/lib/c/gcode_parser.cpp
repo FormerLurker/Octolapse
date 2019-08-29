@@ -112,16 +112,14 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 	// Create a command
 	//octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::VERBOSE, gcode);
 	char * p = const_cast<char *>(gcode);
-	if(!try_extract_gcode_command(&p, &(command.cmd_)))
+	bool command_found = try_extract_gcode_command(&p, &(command.cmd_));
+	if (!command_found)
 	{
 		std::string message = "No gcode command was found: ";
 		message += gcode;
 		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::WARNING, message);
-		return false;
+		
 	}
-	
-	// Create a pointer just to walk through the gcode
-	command.is_empty = false;
 	char * p_gcode = const_cast<char *>(gcode);
 	while (true)
 	{
@@ -132,70 +130,75 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 			command.gcode_.push_back(cur_char);
 		p_gcode++;
 	}
-	
-	//command->gcode_ = gcode;
-	//std::vector<parsed_command_parameter> parameters;
-
-	if (parsable_commands_.find(command.cmd_) == parsable_commands_.end())
+	if (command_found)
 	{
-		//std::cout << "GcodeParser.try_parse_gcode - Not in command list, exiting.\r\n";
-		std::string message = "The gcode command is not in the parsable commands set: ";
-		message += gcode;
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::VERBOSE, message);
-		return true;
-	}
+		// Create a pointer just to walk through the gcode
+		command.is_empty = false;
+		
 
-	if (text_only_functions_.find(command.cmd_) != text_only_functions_.end())
-	{
-		//std::cout << "GcodeParser.try_parse_gcode - Text only parameter found.\r\n";
-		parsed_command_parameter * p_text_command = new parsed_command_parameter();
+		//command->gcode_ = gcode;
+		//std::vector<parsed_command_parameter> parameters;
 
-		if(!try_extract_text_parameter(&p, &(p_text_command->string_value_)))
+		if (parsable_commands_.find(command.cmd_) == parsable_commands_.end())
 		{
-			std::string message = "Unable to extract a text parameter from: ";
-			message += p;
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::WARNING, message);
+			//std::cout << "GcodeParser.try_parse_gcode - Not in command list, exiting.\r\n";
+			std::string message = "The gcode command is not in the parsable commands set: ";
+			message += gcode;
+			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::VERBOSE, message);
 			return true;
 		}
-		p_text_command->name_ = '\0';
-	}
-	else
-	{
-		if (command.cmd_[0] == 'T')
-		{
-			//std::cout << "GcodeParser.try_parse_gcode - T parameter found.\r\n";
-			parsed_command_parameter param;
 
-			if(!try_extract_t_parameter(&p,&param))
+		if (text_only_functions_.find(command.cmd_) != text_only_functions_.end())
+		{
+			//std::cout << "GcodeParser.try_parse_gcode - Text only parameter found.\r\n";
+			parsed_command_parameter * p_text_command = new parsed_command_parameter();
+
+			if (!try_extract_text_parameter(&p, &(p_text_command->string_value_)))
 			{
-				std::string message = "Unable to extract a parameter from the T command: ";
-				message += gcode;
-				octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
+				std::string message = "Unable to extract a text parameter from: ";
+				message += p;
+				octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::WARNING, message);
+				return true;
 			}
-			else
-				command.parameters_.push_back(param);
+			p_text_command->name_ = '\0';
 		}
 		else
 		{
-			while (true)
+			if (command.cmd_[0] == 'T')
 			{
-				//std::cout << "GcodeParser.try_parse_gcode - Trying to extract parameters.\r\n";
+				//std::cout << "GcodeParser.try_parse_gcode - T parameter found.\r\n";
 				parsed_command_parameter param;
-				if (try_extract_parameter(&p, &param))
-					command.parameters_.push_back(param);
-				else
+
+				if (!try_extract_t_parameter(&p, &param))
 				{
-					//std::cout << "GcodeParser.try_parse_gcode - No parameters found.\r\n";
-					break;
+					std::string message = "Unable to extract a parameter from the T command: ";
+					message += gcode;
+					octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
+				}
+				else
+					command.parameters_.push_back(param);
+			}
+			else
+			{
+				while (true)
+				{
+					//std::cout << "GcodeParser.try_parse_gcode - Trying to extract parameters.\r\n";
+					parsed_command_parameter param;
+					if (try_extract_parameter(&p, &param))
+						command.parameters_.push_back(param);
+					else
+					{
+						//std::cout << "GcodeParser.try_parse_gcode - No parameters found.\r\n";
+						break;
+					}
 				}
 			}
 		}
 	}
-
 	try_extract_comment(&p_gcode, &(command.comment_));
 		
 
-	return true;
+	return command_found;
 	
 }
 

@@ -108,6 +108,9 @@ void gcode_comment_processor::update(std::string & comment)
 
 void gcode_comment_processor::update_unknown_section(std::string & comment)
 {
+	if (comment.length() == 0)
+		return;
+
 	if (update_cura_section(comment))
 	{
 		processing_type_ = cura;
@@ -143,7 +146,12 @@ bool gcode_comment_processor::update_cura_section(std::string &comment)
 		current_section_ = infill_section;
 		return true;
 	}
-	if (comment.rfind("LAYER:", 0))
+	if (comment == "TYPE:SKIN")
+	{
+		current_section_ = solid_infill_section;
+		return true;
+	}
+	if (comment.rfind("LAYER:", 0) != std::string::npos)
 	{
 		current_section_ = no_section;
 		return false;
