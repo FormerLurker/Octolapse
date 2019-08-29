@@ -268,10 +268,14 @@ bool trigger_positions::get_high_quality_position(trigger_position &pos)
 	}
 	for (int index = trigger_position::num_position_types - 1; index > trigger_position::quality_cutoff - 1; index--)
 	{
-		if (index == trigger_position::fastest_extrusion && has_fastest_extrusion_position())
+		if (index == trigger_position::fastest_extrusion)
 		{
-			pos = position_list_[index];
-			return true;
+			if (has_fastest_extrusion_position())
+			{
+				pos = position_list_[index];
+				return true;
+			}
+			continue;
 		}
 		else if (!position_list_[index].is_empty)
 		{

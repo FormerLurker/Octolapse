@@ -3,7 +3,7 @@
 gcode_comment_processor::gcode_comment_processor()
 {
 	current_section_ = no_section;
-	processing_type_ = UNKNOWN;
+	processing_type_ = unknown;
 }
 
 gcode_comment_processor::~gcode_comment_processor()
@@ -21,31 +21,19 @@ void gcode_comment_processor::update(position& pos)
 		return;
 	}		
 
-	switch (processing_type_)
+	if (processing_type_ == unknown || processing_type_ == slic3r_pe)
 	{
-	case OFF:
-		break;
-	case UNKNOWN:
-		update_feature_for_unknown_slicer_comment(pos, pos.p_command.comment_);
-	case SLIC3R_PE:
-		update_feature_for_slic3r_pe_comment(pos, pos.p_command.comment_);
-		break;
+		if (update_feature_for_slic3r_pe_comment(pos, pos.p_command.comment_))
+			processing_type_ = slic3r_pe;
 	}
 	
-}
-void gcode_comment_processor::update_feature_for_unknown_slicer_comment(position& pos, std::string &comment)
-{
-	if(update_feature_for_slic3r_pe_comment(pos, comment))
-	{
-		processing_type_ = SLIC3R_PE;
-	}
 }
 
 bool gcode_comment_processor::update_feature_for_slic3r_pe_comment(position& pos, std::string &comment) const
 {
 	if (comment == "perimeter" || comment == "move to first perimeter point")
 	{
-		pos.feature_type_tag_ = infill_feature;
+		pos.feature_type_tag_ = unknown_perimeter_feature;
 		return true;
 	}
 	if (comment == "infill" || comment == "move to first infill point")
@@ -58,14 +46,9 @@ bool gcode_comment_processor::update_feature_for_slic3r_pe_comment(position& pos
 		pos.feature_type_tag_ = bridge_feature;
 		return true;
 	}
-	if (comment == "skirt")
+	if (comment == "skirt" || comment == "move to first skirt point")
 	{
-		pos.feature_type_tag_ = infill_feature;
-		return true;
-	}
-	if (comment == "move to first skirt point")
-	{
-		pos.feature_type_tag_ = infill_feature;
+		pos.feature_type_tag_ = skirt_feature;
 		return true;
 	}
 	return false;
@@ -76,111 +59,30 @@ void gcode_comment_processor::update_feature_from_section(position& pos)
 	if (processing_type_ == OFF || current_section_ == no_section)
 		return;
 
-	switch (processing_type_)
-	{
-	case UNKNOWN:
-		update_feature_from_section_for_unknown(pos);
-		break;
-	case CURA:
-		update_feature_from_section_for_cura(pos);
-		break;
-	case SIMPLIFY_3D:
-		update_feature_from_section_for_simplify_3d(pos);
-		break;
-	case SLIC3R_PE:
-		update_feature_from_section_for_slice3r_pe(pos);
-		break;
-	}
-}
-
-bool gcode_comment_processor::update_feature_from_section_for_unknown(position& pos) const
-{
 	switch (current_section_)
 	{
 	case(outer_perimeter_section):
 		pos.feature_type_tag_ = outer_perimeter_feature;
-		return true;
+		break;
 	case(inner_perimeter_section):
-		pos.feature_type_tag_ = inner_perimeter_section;
-		return true;
+		pos.feature_type_tag_ = inner_perimeter_feature;
+		break;
 	case(skirt_section):
 		pos.feature_type_tag_ = skirt_feature;
-		return true;
-	case(solid_layer_section):
+		break;
+	case(solid_infill_section):
 		pos.feature_type_tag_ = solid_infill_feature;
-		return true;
+		break;
 	case(ooze_shield_section):
-		pos.feature_type_tag_ = ooze_shield_section;
-		return true;
+		pos.feature_type_tag_ = ooze_shield_feature;
+		break;
 	case(infill_section):
 		pos.feature_type_tag_ = infill_feature;
-		return true;
+		break;
 	case(prime_pillar_section):
-		pos.feature_type_tag_ = prime_pillar_section;
-		return true;
+		pos.feature_type_tag_ = prime_pillar_feature;
+		break;
 	}
-	return false;
-}
-
-bool gcode_comment_processor::update_feature_from_section_for_cura(position& pos) const
-{
-	switch (current_section_)
-	{
-	case(outer_perimeter_section):
-		pos.feature_type_tag_ = outer_perimeter_feature;
-		return true;
-	case(inner_perimeter_section):
-		pos.feature_type_tag_ = inner_perimeter_section;
-		return true;
-	case(skirt_section):
-		pos.feature_type_tag_ = skirt_feature;
-		return true;
-	case(solid_layer_section):
-		pos.feature_type_tag_ = solid_infill_feature;
-		return true;
-	case(infill_section):
-		pos.feature_type_tag_ = infill_feature;
-		return true;
-	}
-	return false;
-}
-
-bool gcode_comment_processor::update_feature_from_section_for_simplify_3d(position& pos) const
-{
-	switch (current_section_)
-	{
-	case(outer_perimeter_section):
-		pos.feature_type_tag_ = outer_perimeter_feature;
-		return true;
-	case(inner_perimeter_section):
-		pos.feature_type_tag_ = inner_perimeter_section;
-		return true;
-	case(skirt_section):
-		pos.feature_type_tag_ = skirt_feature;
-		return true;
-	case(solid_layer_section):
-		pos.feature_type_tag_ = solid_infill_feature;
-		return true;
-	case(ooze_shield_section):
-		pos.feature_type_tag_ = ooze_shield_section;
-		return true;
-	case(infill_section):
-		pos.feature_type_tag_ = infill_feature;
-		return true;
-	case(prime_pillar_section):
-		pos.feature_type_tag_ = prime_pillar_section;
-		return true;
-	}
-}
-
-bool gcode_comment_processor::update_feature_from_section_for_slice3r_pe(position& pos) const
-{
-	if (current_section_ == prime_pillar_section)
-	{
-		pos.feature_type_tag_ = prime_pillar_section;
-		return true;
-	}
-	return false;
 }
 
 void gcode_comment_processor::update(std::string & comment)
@@ -189,16 +91,16 @@ void gcode_comment_processor::update(std::string & comment)
 	{
 	case OFF:
 		break;
-	case UNKNOWN:
+	case unknown:
 		update_unknown_section(comment);
 		break;
-	case CURA:
+	case cura:
 		update_cura_section(comment);
 		break;
-	case SLIC3R_PE:
+	case slic3r_pe:
 		update_slic3r_pe_section(comment);
 		break;
-	case SIMPLIFY_3D:
+	case simplify_3d:
 		update_simplify_3d_section(comment);
 		break;
 	}
@@ -208,18 +110,18 @@ void gcode_comment_processor::update_unknown_section(std::string & comment)
 {
 	if (update_cura_section(comment))
 	{
-		processing_type_ = CURA;
+		processing_type_ = cura;
 		return;
 	}
 		
 	if (update_simplify_3d_section(comment))
 	{
-		processing_type_ = SIMPLIFY_3D;
+		processing_type_ = simplify_3d;
 		return;
 	}
 	if(update_slic3r_pe_section(comment))
 	{
-		processing_type_ = SLIC3R_PE;
+		processing_type_ = slic3r_pe;
 		return;
 	}
 }
@@ -273,7 +175,7 @@ bool gcode_comment_processor::update_simplify_3d_section(std::string &comment)
 	}
 	if (comment == "solid layer")
 	{
-		current_section_ = solid_layer_section;
+		current_section_ = solid_infill_section;
 		return true;
 	}
 	if (comment == "skirt")

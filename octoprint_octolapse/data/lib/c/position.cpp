@@ -271,6 +271,7 @@ void position::reset_state()
 	is_in_bounds_ = true;
 	e_relative_ = 0;
 	z_relative_ = 0;
+	feature_type_tag_ = 0;
 }
 
 PyObject* position::to_py_dict()
