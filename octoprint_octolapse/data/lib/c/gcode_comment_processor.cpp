@@ -54,7 +54,7 @@ bool gcode_comment_processor::update_feature_for_slic3r_pe_comment(position& pos
 	return false;
 }
 
-void gcode_comment_processor::update_feature_from_section(position& pos)
+void gcode_comment_processor::update_feature_from_section(position& pos) const
 {
 	if (processing_type_ == OFF || current_section_ == no_section)
 		return;
@@ -82,6 +82,8 @@ void gcode_comment_processor::update_feature_from_section(position& pos)
 	case(prime_pillar_section):
 		pos.feature_type_tag_ = prime_pillar_feature;
 		break;
+	case(gap_fill_section):
+		pos.feature_type_tag_ = gap_fill_feature;
 	}
 }
 
@@ -166,46 +168,97 @@ bool gcode_comment_processor::update_cura_section(std::string &comment)
 
 bool gcode_comment_processor::update_simplify_3d_section(std::string &comment)
 {
-	if (comment == "outer perimeter")
+	// Apparently simplify 3d added the word 'feature' to the their feature comments
+	// at some point to make my life more difficult :P
+	if (comment.rfind("feature", 0) != std::string::npos)
 	{
-		current_section_ = outer_perimeter_section;
-		return true;
+		if (comment == "feature outer perimeter")
+		{
+			current_section_ = outer_perimeter_section;
+			return true;
+		}
+		if (comment == "feature inner perimeter")
+		{
+			current_section_ = inner_perimeter_section;
+			return true;
+		}
+		if (comment == "feature infill")
+		{
+			current_section_ = infill_section;
+			return true;
+		}
+		if (comment == "feature solid layer")
+		{
+			current_section_ = solid_infill_section;
+			return true;
+		}
+		if (comment == "feature skirt")
+		{
+			current_section_ = skirt_section;
+			return true;
+		}
+		if (comment == "feature ooze shield")
+		{
+			current_section_ = ooze_shield_section;
+			return true;
+		}
+		if (comment == "feature prime pillar")
+		{
+			current_section_ = prime_pillar_section;
+			return true;
+		}
+		if (comment == "feature gap fill")
+		{
+			current_section_ = gap_fill_section;
+			return true;
+		}
 	}
-	if (comment == "inner perimeter")
+	else
 	{
-		current_section_ = inner_perimeter_section;
-		return true;
+		if (comment == "outer perimeter")
+		{
+			current_section_ = outer_perimeter_section;
+			return true;
+		}
+		if (comment == "inner perimeter")
+		{
+			current_section_ = inner_perimeter_section;
+			return true;
+		}
+		if (comment == "infill")
+		{
+			current_section_ = infill_section;
+			return true;
+		}
+		if (comment == "solid layer")
+		{
+			current_section_ = solid_infill_section;
+			return true;
+		}
+		if (comment == "skirt")
+		{
+			current_section_ = skirt_section;
+			return true;
+		}
+		if (comment == "ooze shield")
+		{
+			current_section_ = ooze_shield_section;
+			return true;
+		}
+
+		if (comment == "prime pillar")
+		{
+			current_section_ = prime_pillar_section;
+			return true;
+		}
+
+		if (comment == "gap fill")
+		{
+			current_section_ = gap_fill_section;
+			return true;
+		}
 	}
-	if (comment == "infill")
-	{
-		current_section_ = infill_section;
-		return true;
-	}
-	if (comment == "solid layer")
-	{
-		current_section_ = solid_infill_section;
-		return true;
-	}
-	if (comment == "skirt")
-	{
-		current_section_ = skirt_section;
-		return true;
-	}
-	if (comment == "ooze shield")
-	{
-		current_section_ = ooze_shield_section;
-		return true;
-	}
-	if (comment == "skirt")
-	{
-		current_section_ = skirt_section;
-		return true;
-	}
-	if (comment == "prime pillar")
-	{
-		current_section_ = skirt_section;
-		return true;
-	}
+	
 	
 	return false;
 }
