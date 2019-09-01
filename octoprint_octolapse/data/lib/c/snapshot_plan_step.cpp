@@ -87,7 +87,7 @@ snapshot_plan_step::snapshot_plan_step(const snapshot_plan_step & source)
 
 	action = source.action;
 }
-snapshot_plan_step::snapshot_plan_step(double* x, double* y, double* z, double* e, double* f, std::string action) 
+snapshot_plan_step::snapshot_plan_step(double* x, double* y, double* z, double* e, double* f, std::string action_type) 
 {
 	if (x != NULL)
 	{
@@ -140,7 +140,7 @@ snapshot_plan_step::snapshot_plan_step(double* x, double* y, double* z, double* 
 		p_f = NULL;
 	}
 
-	action = action;
+	action = action_type;
 }
 
 snapshot_plan_step::~snapshot_plan_step()

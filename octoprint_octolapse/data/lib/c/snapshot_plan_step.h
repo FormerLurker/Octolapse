@@ -32,7 +32,7 @@
 struct snapshot_plan_step
 {
 	snapshot_plan_step();
-	snapshot_plan_step(double* x, double* y, double* z, double* e, double* f, std::string action);
+	snapshot_plan_step(double* x, double* y, double* z, double* e, double* f, std::string action_type);
 	snapshot_plan_step(const snapshot_plan_step & source);
 	~snapshot_plan_step();
 	PyObject * to_py_object();
