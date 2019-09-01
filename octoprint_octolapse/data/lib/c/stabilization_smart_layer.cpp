@@ -47,7 +47,7 @@ stabilization_smart_layer::stabilization_smart_layer(
 	trigger_position_args default_args;
 	default_args.type = mt_args->smart_layer_trigger_type;
 	default_args.minimum_speed = mt_args->speed_threshold;
-	default_args.snap_to_fastest = mt_args->snap_to_fastest;
+	default_args.snap_to_print_high_quality = mt_args->snap_to_print_high_quality;
 	default_args.x_stabilization_disabled = stab_args->x_stabilization_disabled;
 	default_args.y_stabilization_disabled = stab_args->y_stabilization_disabled;
 	closest_positions_.initialize(default_args);
@@ -77,7 +77,7 @@ stabilization_smart_layer::stabilization_smart_layer(
 	trigger_position_args default_args;
 	default_args.type = mt_args->smart_layer_trigger_type;
 	default_args.minimum_speed = mt_args->speed_threshold;
-	default_args.snap_to_fastest = mt_args->snap_to_fastest;
+	default_args.snap_to_print_high_quality = mt_args->snap_to_print_high_quality;
 	default_args.x_stabilization_disabled = stab_args->x_stabilization_disabled;
 	default_args.y_stabilization_disabled = stab_args->y_stabilization_disabled;
 	closest_positions_.initialize(default_args);
@@ -97,10 +97,10 @@ stabilization_smart_layer::~stabilization_smart_layer()
 
 void stabilization_smart_layer::update_stabilization_coordinates()
 {
-	bool stabilize_first_position_only = p_smart_layer_args_->smart_layer_trigger_type == trigger_position::snap_to_print && p_smart_layer_args_->stabilize_first_position_only;
+	bool snap_to_print_smooth = p_smart_layer_args_->smart_layer_trigger_type == trigger_position::snap_to_print && p_smart_layer_args_->snap_to_print_smooth;
 	bool stabilization_disabled = p_stabilization_args_->x_stabilization_disabled && p_stabilization_args_->y_stabilization_disabled;
 	if (
-		(stabilization_disabled || stabilize_first_position_only)
+		(stabilization_disabled || snap_to_print_smooth)
 		&& !last_snapshot_initial_position_.is_empty
 	)
 	{

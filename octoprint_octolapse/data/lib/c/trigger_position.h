@@ -60,13 +60,13 @@ public:
 	{
 		type = trigger_position::trigger_type::compatibility;
 		minimum_speed = 0;
-		snap_to_fastest = false;
+		snap_to_print_high_quality = false;
 		x_stabilization_disabled = true;
 		y_stabilization_disabled = true;
 	}
 	trigger_position::trigger_type type;
 	double minimum_speed;
-	bool snap_to_fastest;
+	bool snap_to_print_high_quality;
 	bool x_stabilization_disabled;
 	bool y_stabilization_disabled;
 };
@@ -81,12 +81,12 @@ public:
 	void initialize(trigger_position_args args);
 	void clear();
 	void try_add(position &current_pos, position &previous_pos);
-	bool is_empty();
+	bool is_empty() const;
 	trigger_position get(trigger_position::position_type type);
 	void set_stabilization_coordinates(double x, double y);
 	void set_previous_initial_position(position &pos);
 private:
-	bool has_fastest_extrusion_position();
+	bool has_fastest_extrusion_position() const;
 	bool get_snap_to_print_position(trigger_position &pos);
 	bool get_fast_position(trigger_position &pos);
 	bool get_compatibility_position(trigger_position &pos);

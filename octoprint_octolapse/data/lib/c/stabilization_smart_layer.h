@@ -18,13 +18,13 @@ struct smart_layer_args
 	{
 		smart_layer_trigger_type = trigger_position::trigger_type::compatibility;
 		speed_threshold = 0;
-		snap_to_fastest = false;
-		stabilize_first_position_only = false;
+		snap_to_print_high_quality = false;
+		snap_to_print_smooth = false;
 	}
 	trigger_position::trigger_type smart_layer_trigger_type;
 	double speed_threshold;
-	bool snap_to_fastest;
-	bool stabilize_first_position_only;
+	bool snap_to_print_high_quality;
+	bool snap_to_print_smooth;
 };
 
 class stabilization_smart_layer : public stabilization

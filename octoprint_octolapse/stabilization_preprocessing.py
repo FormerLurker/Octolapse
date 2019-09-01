@@ -194,8 +194,8 @@ class StabilizationPreprocessingThread(Thread):
             # run smart layer trigger
             smart_layer_args = {
                 'trigger_type': int(self.trigger_profile.smart_layer_trigger_type),
-                'snap_to_fastest': self.trigger_profile.smart_layer_snap_to_fastest,
-                'stabilize_first_position_only': self.trigger_profile.stabilize_first_position_only
+                'snap_to_print_high_quality': self.trigger_profile.smart_layer_snap_to_print_high_quality,
+                'snap_to_print_smooth': self.trigger_profile.smart_layer_snap_to_print_smooth
             }
             results = GcodePositionProcessor.GetSnapshotPlans_SmartLayer(
                 self.cpp_position_args,

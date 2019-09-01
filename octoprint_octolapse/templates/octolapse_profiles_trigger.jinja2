@@ -129,17 +129,17 @@
                         <div class="control-group">
                             <div class="controls">
                                 <label class="checkbox">
-                                    <input name="smart_layer_snap_to_fastest" type="checkbox" data-bind="checked: smart_layer_snap_to_fastest" />Snap To Fastest Feedrate
-                                    <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_snap_to_fastest.md" data-help-title="Snap To Fastest Feedrate"/>
-                                    <span class="help-inline">This setting can improve print quality, but may result in a less stable timelapse.</span>
+                                    <input name="smart_layer_snap_to_print_high_quality" type="checkbox" data-bind="checked: smart_layer_snap_to_print_high_quality" />High Quality Mode
+                                    <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_snap_to_print_high_quality.md" data-help-title="High Quality Mode"/>
+                                    <span class="help-inline">This setting can improve print when using snap-to-print, especially if your image capture time is high (DSLR).  However, this may result in a less stable timelapse.</span>
                                 </label>
                             </div>
                         </div>
                         <div class="control-group">
                             <div class="controls">
                                 <label class="checkbox">
-                                    <input name="stabilize_first_position_only" type="checkbox" data-bind="checked: stabilize_first_position_only" />Stabilize First Position Only
-                                    <a class="octolapse_help" data-help-url="profiles.trigger.stabilize_first_position_only.md" data-help-title="Snap To Fastest Feedrate"/>
+                                    <input name="smart_layer_snap_to_print_smooth" type="checkbox" data-bind="checked: smart_layer_snap_to_print_smooth" />Smooth Mode
+                                    <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_snap_to_print_smooth.md" data-help-title="Snap To Fastest Feedrate"/>
                                     <span class="help-inline">When enabled, the first snapshot will be stabilized, and every snapshot thereafter will be taken at the closest point to the previous snapshot, usually resulting in a much smoother timelapse.</span>
                                 </label>
                             </div>

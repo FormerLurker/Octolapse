@@ -109,7 +109,7 @@ void trigger_positions::set_previous_initial_position(position &pos)
 	previous_initial_pos_.is_empty = false;
 }
 
-bool trigger_positions::is_empty()
+bool trigger_positions::is_empty() const
 {
 	for (unsigned int index = 0; index < trigger_position::num_position_types; index++)
 	{
@@ -137,7 +137,7 @@ bool trigger_positions::get_position(trigger_position &pos)
 }
 
 // Returns the fastest extrusion position, or NULL if there is not one (including any speed requirements)
-bool trigger_positions::has_fastest_extrusion_position()
+bool trigger_positions::has_fastest_extrusion_position() const
 {
 	// If there are no fastest speeds return null
 	if (slowest_extrusion_speed_ == -1 || fastest_extrusion_speed_ == -1)
@@ -168,10 +168,26 @@ bool trigger_positions::has_fastest_extrusion_position()
 bool trigger_positions::get_snap_to_print_position(trigger_position &pos)
 {
 	pos.is_empty = true;
-	bool has_fastest_position = has_fastest_extrusion_position();
+	const bool has_fastest_position = has_fastest_extrusion_position();
 	// If we are snapping to the closest and fastest point, return that if it exists.
-	if (args_.snap_to_fastest)
+	if (args_.snap_to_print_high_quality)
 	{
+		int current_closest_index = -1;
+		// First try to get the closest known high quality feature position if one exists
+		for (int index = NUM_FEATURE_TYPES - 1; index > gcode_comment_processor::feature_type::inner_perimeter_feature - 1; index--)
+		{
+			if (!feature_position_list_[index].is_empty)
+			{
+				if (current_closest_index < 0 || utilities::less_than(feature_position_list_[index].distance, feature_position_list_[current_closest_index].distance))
+					current_closest_index = index;
+			}
+		}
+		if (current_closest_index > -1)
+		{
+			pos = feature_position_list_[current_closest_index];
+			return true;
+		}
+
 		if (has_fastest_position)
 		{
 			pos = position_list_[trigger_position::fastest_extrusion];
@@ -384,7 +400,7 @@ void trigger_positions::try_add(position &current_pos, position &previous_pos)
 {
 	
 	// Get the position type
-	trigger_position::position_type type = trigger_position::get_type(current_pos);
+	const trigger_position::position_type type = trigger_position::get_type(current_pos);
 
 	if (!can_process_position(current_pos, type))
 	{
@@ -394,7 +410,11 @@ void trigger_positions::try_add(position &current_pos, position &previous_pos)
 	// add any feature positions if a feature tag exists, and if we are in high quality or compatibility mode
 	if (
 		current_pos.feature_type_tag != gcode_comment_processor::feature_type::unknown_feature &&
-		(args_.type == trigger_position::high_quality || args_.type == trigger_position::compatibility)
+		(
+			args_.type == trigger_position::high_quality || 
+			args_.type == trigger_position::compatibility ||
+			(args_.type == trigger_position::snap_to_print && type == trigger_position::extrusion && args_.snap_to_print_high_quality)
+		)
 	)
 	{
 		try_add_feature_position_internal(current_pos, get_stabilization_distance(current_pos));
@@ -498,7 +518,7 @@ void trigger_positions::try_add_extrusion_start_position(position & extrusion_st
 		return;
 	}
 
-	double distance = get_stabilization_distance(saved_pos);
+	const double distance = get_stabilization_distance(saved_pos);
 
 	// See if we need to update the fastest extrusion position
 	if (
@@ -561,7 +581,7 @@ void trigger_positions::try_add_internal(position & pos, double distance, trigge
 				return;
 		}
 
-		// Now that we've filtered any feedrates below the minimum speed, let's let's see if we've set a new speed record
+		// Now that we've filtered any feed rates below the minimum speed, let's let's see if we've set a new speed record
 		bool add_fastest = false;
 		if (utilities::greater_than(pos.f, fastest_extrusion_speed_))
 		{
