@@ -121,8 +121,12 @@ def greater_than(a, b):
     return a - b > FLOAT_MATH_EQUALITY_RANGE
 
 
+def less_than(a, b):
+    return b - a > FLOAT_MATH_EQUALITY_RANGE
+
+
 def less_than_or_equal(a, b):
-    return a < b or is_equal(a,b)
+    return a < b or is_equal(a, b)
 
 
 def greater_than_or_equal(a, b):

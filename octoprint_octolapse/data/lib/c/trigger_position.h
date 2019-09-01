@@ -29,27 +29,27 @@ struct trigger_position
 		is_empty = true;
 		feature_type = gcode_comment_processor::unknown_feature;
 	}
-	trigger_position(position_type type_, double distance_, position p_position_)
+	trigger_position(position_type type_, double distance_, position pos_)
 	{
 		type = type_;
 		distance = distance_;
-		p_position = p_position_;
+		pos = pos_;
 		is_empty = false;
 		feature_type = gcode_comment_processor::unknown_feature;
 	}
-	trigger_position(gcode_comment_processor::feature_type feature_type_, double distance_, position p_position_)
+	trigger_position(gcode_comment_processor::feature_type feature_type_, double distance_, position pos_)
 	{
 		type = trigger_position::unknown;
 		distance = distance_;
-		p_position = p_position_;
+		pos = pos_;
 		is_empty = false;
 		feature_type = feature_type_;
 	}
-	static position_type get_type(position& p_position);
+	static position_type get_type(position& pos_);
 	position_type type;
 	gcode_comment_processor::feature_type feature_type;
 	double distance;
-	position p_position;
+	position pos;
 	bool is_empty;
 };
 
@@ -80,7 +80,7 @@ public:
 
 	void initialize(trigger_position_args args);
 	void clear();
-	void try_add(position &p_position, position &p_previous_position);
+	void try_add(position &current_pos, position &previous_pos);
 	bool is_empty();
 	trigger_position get(trigger_position::position_type type);
 	void set_stabilization_coordinates(double x, double y);
@@ -92,18 +92,18 @@ private:
 	bool get_compatibility_position(trigger_position &pos);
 	bool get_high_quality_position(trigger_position &pos);
 
-	double get_stabilization_distance(position& p_position) const;
+	double get_stabilization_distance(position& pos) const;
 
 	//trigger_position* get_normal_quality_position();
-	void save_retracted_position(position& p_retracted_position);
-	void save_primed_position(position& p_primed_position);
-	static bool can_process_position(position& p_position, trigger_position::position_type type);
-	void add_internal(position& p_position, double distance, trigger_position::position_type type);
-	void try_add_feature_position_internal(position & p_position, double distance);
-	void add_feature_position_internal(position &p_position, double distance);
-	void try_add_internal(position& p_position, double distance, trigger_position::position_type type);
-	void try_add_extrusion_start_positions(position& p_extrusion_start_position);
-	void try_add_extrusion_start_position(position& p_extrusion_start_position, position& p_saved_position);
+	void save_retracted_position(position& retracted_pos);
+	void save_primed_position(position& primed_pos);
+	static bool can_process_position(position& pos, trigger_position::position_type type);
+	void add_internal(position& pos, double distance, trigger_position::position_type type);
+	void try_add_feature_position_internal(position & pos, double distance);
+	void add_feature_position_internal(position &pos, double distance);
+	void try_add_internal(position& pos, double distance, trigger_position::position_type type);
+	void try_add_extrusion_start_positions(position& extrusion_start_pos);
+	void try_add_extrusion_start_position(position& extrusion_start_pos, position& saved_pos);
 	trigger_position position_list_[trigger_position::num_position_types];
 	trigger_position feature_position_list_[NUM_FEATURE_TYPES];
 	// arguments
@@ -113,9 +113,9 @@ private:
 	// Tracking variables
 	double fastest_extrusion_speed_;
 	double slowest_extrusion_speed_;
-	position p_previous_initial_position_;
-	position p_previous_retracted_position_;
-	position p_previous_primed_position_;
+	position previous_initial_pos_;
+	position previous_retracted_pos_;
+	position p_previous_primed_pos_;
 	
 };
 

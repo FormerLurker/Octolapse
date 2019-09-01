@@ -27,13 +27,13 @@ void position::set_xyz_axis_mode(const std::string& xyz_axis_default_mode)
 {
 	if (xyz_axis_default_mode == "relative" || xyz_axis_default_mode == "force-relative")
 	{
-		is_relative_ = true;
-		is_relative_null_ = false;
+		is_relative = true;
+		is_relative_null = false;
 	}
 	else if (xyz_axis_default_mode == "absolute" || xyz_axis_default_mode == "force-absolute")
 	{
-		is_relative_ = false;
-		is_relative_null_ = false;
+		is_relative = false;
+		is_relative_null = false;
 	}
 
 	
@@ -43,13 +43,13 @@ void position::set_e_axis_mode(const std::string& e_axis_default_mode)
 {
 	if (e_axis_default_mode == "relative" || e_axis_default_mode == "force-relative")
 	{
-		is_extruder_relative_ = true;
-		is_extruder_relative_null_ = false;
+		is_extruder_relative = true;
+		is_extruder_relative_null = false;
 	}
 	else if (e_axis_default_mode == "absolute" || e_axis_default_mode == "force-absolute")
 	{
-		is_extruder_relative_ = false;
-		is_extruder_relative_null_ = false;
+		is_extruder_relative = false;
+		is_extruder_relative_null = false;
 	}
 
 	
@@ -58,173 +58,173 @@ void position::set_units_default(const std::string&	units_default)
 {
 	if (units_default == "inches")
 	{
-		is_metric_ = false;
-		is_metric_null_ = false;
+		is_metric = false;
+		is_metric_null = false;
 	}
 	else if (units_default == "millimeters")
 	{
-		is_metric_ = true;
-		is_metric_null_ = false;
+		is_metric = true;
+		is_metric_null = false;
 	}
 }
 
 
 position::position()
 { 
-	is_empty_ = true;
-	feature_type_tag_ = 0;
-	f_ = 0;
-	f_null_ = true;
-	x_ = 0;
-	x_null_ = true;
-	x_offset_ = 0;
-	x_homed_ = false;
-	y_ = 0;
-	y_null_ = true;
-	y_offset_ = 0;
-	y_homed_ = false;
-	z_ = 0;
-	z_null_ = true;
-	z_offset_ = 0;
-	z_homed_ = false;
-	e_ = 0;
-	e_offset_ = 0;
-	is_relative_ = false;
-	is_relative_null_ = true;
-	is_extruder_relative_ = false;
-	is_extruder_relative_null_ = true;
-	is_metric_ = true;
-	is_metric_null_ = true;
-	last_extrusion_height_ = 0;
-	last_extrusion_height_null_ = true;
-	layer_ = 0;
-	height_ = 0;
-	current_height_increment_ = 0;
-	is_printer_primed_ = false;
-	has_definite_position_ = false;
-	e_relative_ = 0;
-	z_relative_ = 0;
-	extrusion_length_ = 0;
-	extrusion_length_total_ = 0;
-	retraction_length_ = 0;
-	deretraction_length_ = 0;
-	is_extruding_start_ = false;
-	is_extruding_ = false;
-	is_primed_ = false;
-	is_retracting_start_ = false;
-	is_retracting_ = false;
-	is_retracted_ = false;
-	is_partially_retracted_ = false;
-	is_deretracting_start_ = false;
-	is_deretracting_ = false;
-	is_deretracted_ = false;
-	is_in_position_ = false;
-	in_path_position_ = false;
-	is_zhop_ = false;
-	is_layer_change_ = false;
-	is_height_change_ = false;
-	is_xy_travel_ = false;
-	is_xyz_travel_ = false;
-	has_xy_position_changed_ = false;
-	has_position_changed_ = false;
-	has_state_changed_ = false;
-	has_received_home_command_ = false;
-	file_line_number_ = -1;
-	gcode_number_ = -1;
-	gcode_ignored_ = true;
-	is_in_bounds_ = true;
+	is_empty = true;
+	feature_type_tag = 0;
+	f = 0;
+	f_null = true;
+	x = 0;
+	x_null = true;
+	x_offset = 0;
+	x_homed = false;
+	y = 0;
+	y_null = true;
+	y_offset = 0;
+	y_homed = false;
+	z = 0;
+	z_null = true;
+	z_offset = 0;
+	z_homed = false;
+	e = 0;
+	e_offset = 0;
+	is_relative = false;
+	is_relative_null = true;
+	is_extruder_relative = false;
+	is_extruder_relative_null = true;
+	is_metric = true;
+	is_metric_null = true;
+	last_extrusion_height = 0;
+	last_extrusion_height_null = true;
+	layer = 0;
+	height = 0;
+	current_height_increment = 0;
+	is_printer_primed = false;
+	has_definite_position = false;
+	e_relative = 0;
+	z_relative = 0;
+	extrusion_length = 0;
+	extrusion_length_total = 0;
+	retraction_length = 0;
+	deretraction_length = 0;
+	is_extruding_start = false;
+	is_extruding = false;
+	is_primed = false;
+	is_retracting_start = false;
+	is_retracting = false;
+	is_retracted = false;
+	is_partially_retracted = false;
+	is_deretracting_start = false;
+	is_deretracting = false;
+	is_deretracted = false;
+	is_in_position = false;
+	in_path_position = false;
+	is_zhop = false;
+	is_layer_change = false;
+	is_height_change = false;
+	is_xy_travel = false;
+	is_xyz_travel = false;
+	has_xy_position_changed = false;
+	has_position_changed = false;
+	has_state_changed = false;
+	has_received_home_command = false;
+	file_line_number = -1;
+	gcode_number = -1;
+	gcode_ignored = true;
+	is_in_bounds = true;
 }
 
 
 PyObject* position::to_py_tuple()
 {
 	PyObject * py_command;
-	if(p_command.is_empty)
+	if(command.is_empty)
 	{
 		py_command = Py_None;
 	}
 	else
 	{
-		py_command = p_command.to_py_object();
+		py_command = command.to_py_object();
 	}
 	PyObject* pyPosition = Py_BuildValue(
 		// ReSharper disable once StringLiteralTypo
 		"ddddddddddddddddddddddlllllllllllllllllllllllllllllllllllllllllllllllO",
 		// Floats
-		x_, // 0
-		y_, // 1
-		z_, // 2
-		f_, // 3
-		e_, // 4
-		x_offset_, // 5
-		y_offset_, // 6
-		z_offset_, // 7
-		e_offset_, // 8
-		e_relative_, // 9
-		z_relative_, // 10
-		extrusion_length_, // 11
-		extrusion_length_total_, // 12
-		retraction_length_, // 13
-		deretraction_length_, // 14
-		last_extrusion_height_, // 15
-		height_, // 16
+		x, // 0
+		y, // 1
+		z, // 2
+		f, // 3
+		e, // 4
+		x_offset, // 5
+		y_offset, // 6
+		z_offset, // 7
+		e_offset, // 8
+		e_relative, // 9
+		z_relative, // 10
+		extrusion_length, // 11
+		extrusion_length_total, // 12
+		retraction_length, // 13
+		deretraction_length, // 14
+		last_extrusion_height, // 15
+		height, // 16
 		0.0, // 17
 		0.0, // 18
 		0.0, // 19
 		0.0, // 20
 		0.0, // 21
 		// Int
-		layer_, // 22
+		layer, // 22
 		// Bool (represented as an integer)
-		x_homed_, // 23
-		y_homed_, // 24
-		z_homed_, // 25
-		is_relative_, // 26
-		is_extruder_relative_, // 27
-		is_metric_, // 28
-		is_printer_primed_, // 29
+		x_homed, // 23
+		y_homed, // 24
+		z_homed, // 25
+		is_relative, // 26
+		is_extruder_relative, // 27
+		is_metric, // 28
+		is_printer_primed, // 29
 		false,
-		has_definite_position_, // 31
-		is_extruding_start_, // 32
-		is_extruding_, // 33
-		is_primed_, // 34
-		is_retracting_start_, // 35
-		is_retracting_, // 36
-		is_retracted_, // 37
-		is_partially_retracted_, // 38
-		is_deretracting_start_, // 39
-		is_deretracting_, // 40
-		is_deretracted_, // 41
-		is_layer_change_, // 42
-		is_height_change_, // 43
-		is_xy_travel_, // 44
-		is_xyz_travel_, // 45
-		is_zhop_, // 46
-		has_xy_position_changed_, // 47
-		has_position_changed_, // 48
-		has_state_changed_, // 49
-		has_received_home_command_, // 50
-		is_in_position_, // 51
-		in_path_position_, // 52
+		has_definite_position, // 31
+		is_extruding_start, // 32
+		is_extruding, // 33
+		is_primed, // 34
+		is_retracting_start, // 35
+		is_retracting, // 36
+		is_retracted, // 37
+		is_partially_retracted, // 38
+		is_deretracting_start, // 39
+		is_deretracting, // 40
+		is_deretracted, // 41
+		is_layer_change, // 42
+		is_height_change, // 43
+		is_xy_travel, // 44
+		is_xyz_travel, // 45
+		is_zhop, // 46
+		has_xy_position_changed, // 47
+		has_position_changed, // 48
+		has_state_changed, // 49
+		has_received_home_command, // 50
+		is_in_position, // 51
+		in_path_position, // 52
 		// Null bool, represented as integers
-		x_null_, // 53
-		y_null_, // 54
-		z_null_, // 55
-		f_null_, // 56
-		is_relative_null_, // 57
-		is_extruder_relative_null_, // 58
-		last_extrusion_height_null_, // 59
-		is_metric_null_, // 60
+		x_null, // 53
+		y_null, // 54
+		z_null, // 55
+		f_null, // 56
+		is_relative_null, // 57
+		is_extruder_relative_null, // 58
+		last_extrusion_height_null, // 59
+		is_metric_null, // 60
 		true, // 61
 		true, // 62
 		true, // 63
 		true, // 64
 		true,  // 65
 		// file statistics
-		file_line_number_, // 66
-		gcode_number_, // 67
+		file_line_number, // 66
+		gcode_number, // 67
 		// is in bounds
-		is_in_bounds_, // 68
+		is_in_bounds, // 68
 		// Objects
 		py_command // 69
 	);
@@ -243,47 +243,49 @@ PyObject* position::to_py_tuple()
 
 double position::get_offset_x()
 {
-	return x_ - x_offset_;
+	return x - x_offset;
 }
 double position::get_offset_y()
 {
-	return y_ - y_offset_;
+	return y - y_offset;
 }
 double position::get_offset_z()
 {
-	return z_ - z_offset_;
+	return z - z_offset;
 }
 double position::get_offset_e()
 {
-	return e_ - e_offset_;
+	return e - e_offset;
 }
 
 void position::reset_state()
 {
-	is_layer_change_ = false;
-	is_height_change_ = false;
-	is_xy_travel_ = false;
-	is_xyz_travel_ = false;
-	has_position_changed_ = false;
-	has_state_changed_ = false;
-	has_received_home_command_ = false;
-	gcode_ignored_ = true;
-	is_in_bounds_ = true;
-	e_relative_ = 0;
-	z_relative_ = 0;
-	feature_type_tag_ = 0;
+	is_layer_change = false;
+	is_height_change = false;
+	is_xy_travel = false;
+	is_xyz_travel = false;
+	has_position_changed = false;
+	has_state_changed = false;
+	has_received_home_command = false;
+	gcode_ignored = true;
+	
+	//is_in_bounds = true; // I dont' think we want to reset this every time since it's only calculated if the current position
+	// changes.
+	e_relative = 0;
+	z_relative = 0;
+	feature_type_tag = 0;
 }
 
 PyObject* position::to_py_dict()
 {
 	PyObject * py_command;
-	if (p_command.cmd_.length() == 0)
+	if (command.command.length() == 0)
 	{
 		py_command = Py_None;
 	}
 	else
 	{
-		py_command = p_command.to_py_object();
+		py_command = command.to_py_object();
 	}
 
 	PyObject * p_position = Py_BuildValue(
@@ -292,29 +294,29 @@ PyObject* position::to_py_dict()
 		py_command,
 		// FLOATS
 		"x",
-		x_,
+		x,
 		"y",
-		y_,
+		y,
 		"z",
-		z_,
+		z,
 		"f",
-		f_,
+		f,
 		"e",
-		e_,
+		e,
 		"x_offset",
-		x_offset_,
+		x_offset,
 		"y_offset",
-		y_offset_,
+		y_offset,
 		"z_offset",
-		z_offset_,
+		z_offset,
 		"e_offset",
-		e_offset_,
+		e_offset,
 		"last_extrusion_height",
-		last_extrusion_height_,
+		last_extrusion_height,
 		"height",
-		height_,
+		height,
 		"current_height_increment_",
-		current_height_increment_,
+		current_height_increment,
 		"firmware_retraction_length",
 		0.0,
 		"firmware_unretraction_additional_length",
@@ -326,49 +328,49 @@ PyObject* position::to_py_dict()
 		"firmware_z_lift",
 		0.0,
 		"e_relative",
-		e_relative_,
+		e_relative,
 		"z_relative",
-		z_relative_,
+		z_relative,
 		"extrusion_length",
-		extrusion_length_,
+		extrusion_length,
 		"extrusion_length_total",
-		extrusion_length_total_,
+		extrusion_length_total,
 		"retraction_length",
-		retraction_length_,
+		retraction_length,
 		"deretraction_length",
-		deretraction_length_,
+		deretraction_length,
 		"layer", 
-		layer_,
+		layer,
 		"x_null",
-		x_null_,
+		x_null,
 		"y_null",
-		y_null_,
+		y_null,
 		"z_null",
-		z_null_,
+		z_null,
 		"f_null",
-		f_null_,
+		f_null,
 		"x_homed",
-		x_homed_,
+		x_homed,
 		"y_homed",
-		y_homed_,
+		y_homed,
 		"z_homed",
-		z_homed_,
+		z_homed,
 		"is_relative",
-		is_relative_,
+		is_relative,
 		"is_relative_null",
-		is_relative_null_,
+		is_relative_null,
 		"is_extruder_relative",
-		is_extruder_relative_,
+		is_extruder_relative,
 		"is_extruder_relative_null",
-		is_extruder_relative_null_,
+		is_extruder_relative_null,
 		"is_metric",
-		is_metric_,
+		is_metric,
 		"is_metric_null",
-		is_metric_null_,
+		is_metric_null,
 		"is_printer_primed",
-		is_printer_primed_,
+		is_printer_primed,
 		"last_extrusion_height_null",
-		last_extrusion_height_null_,
+		last_extrusion_height_null,
 		"firmware_retraction_length_null",
 		false,
 		"firmware_unretraction_additional_length_null",
@@ -382,55 +384,55 @@ PyObject* position::to_py_dict()
 		"has_position_error",
 		false,
 		"has_definite_position",
-		has_definite_position_,
+		has_definite_position,
 		"is_extruding_start",
-		is_extruding_start_,
+		is_extruding_start,
 		"is_extruding",
-		is_extruding_,
+		is_extruding,
 		"is_primed",
-		is_primed_,
+		is_primed,
 		"is_retracting_start",
-		is_retracting_start_,
+		is_retracting_start,
 		"is_retracting",
-		is_retracting_,
+		is_retracting,
 		"is_retracted",
-		is_retracted_,
+		is_retracted,
 		"is_partially_retracted",
-		is_partially_retracted_,
+		is_partially_retracted,
 		"is_deretracting_start",
-		is_deretracting_start_,
+		is_deretracting_start,
 		"is_deretracting",
-		is_deretracting_,
+		is_deretracting,
 		"is_deretracted",
-		is_deretracted_,
+		is_deretracted,
 		"is_layer_change",
-		is_layer_change_,
+		is_layer_change,
 		"is_height_change",
-		is_height_change_,
+		is_height_change,
 		"is_xy_travel",
-		is_xy_travel_,
+		is_xy_travel,
 		"is_xyz_travel",
-		is_xyz_travel_,
+		is_xyz_travel,
 		"is_zhop",
-		is_zhop_,
+		is_zhop,
 		"has_xy_position_changed",
-		has_xy_position_changed_,
+		has_xy_position_changed,
 		"has_position_changed",
-		has_position_changed_,
+		has_position_changed,
 		"has_state_changed",
-		has_state_changed_,
+		has_state_changed,
 		"has_received_home_command",
-		has_received_home_command_,
+		has_received_home_command,
 		"is_in_position",
-		is_in_position_,
+		is_in_position,
 		"in_path_position",
-		in_path_position_,
+		in_path_position,
 		"file_line_number",
-		file_line_number_,
+		file_line_number,
 		"gcode_number",
-		gcode_number_,
+		gcode_number,
 		"is_in_bounds",
-		is_in_bounds_
+		is_in_bounds
 	);
 	if (p_position == NULL)
 	{

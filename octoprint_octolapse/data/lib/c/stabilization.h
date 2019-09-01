@@ -88,7 +88,7 @@ public:
 };
 typedef bool(*progressCallback)(double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
 typedef bool(*pythonProgressCallback)(PyObject* python_progress_callback, double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, int gcodesProcessed, int linesProcessed);
-typedef bool(*pythonGetCoordinatesCallback)(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double* x_result, double* y_result);
+typedef bool(*pythonGetCoordinatesCallback)(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double& x_result, double& y_result);
 
 class stabilization
 {
@@ -122,7 +122,7 @@ protected:
 	 * \param x The current x stabilization point, will be replaced with the next x point.
 	 * \param y The current y stabilization point, will be replaced with the next y point
 	 */
-	void get_next_xy_coordinates(double *x, double *y);
+	void get_next_xy_coordinates(double &x, double &y);
 	virtual void process_pos(position& p_current_pos, position& p_previous_pos);
 	virtual void on_processing_complete();
 	std::vector<snapshot_plan> p_snapshot_plans_;

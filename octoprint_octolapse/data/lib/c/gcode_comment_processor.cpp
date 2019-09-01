@@ -23,7 +23,7 @@ void gcode_comment_processor::update(position& pos)
 
 	if (processing_type_ == unknown || processing_type_ == slic3r_pe)
 	{
-		if (update_feature_for_slic3r_pe_comment(pos, pos.p_command.comment_))
+		if (update_feature_for_slic3r_pe_comment(pos, pos.command.comment))
 			processing_type_ = slic3r_pe;
 	}
 	
@@ -33,22 +33,22 @@ bool gcode_comment_processor::update_feature_for_slic3r_pe_comment(position& pos
 {
 	if (comment == "perimeter" || comment == "move to first perimeter point")
 	{
-		pos.feature_type_tag_ = unknown_perimeter_feature;
+		pos.feature_type_tag = unknown_perimeter_feature;
 		return true;
 	}
 	if (comment == "infill" || comment == "move to first infill point")
 	{
-		pos.feature_type_tag_ = infill_feature;
+		pos.feature_type_tag = infill_feature;
 		return true;
 	}
 	if (comment == "infill(bridge)" || comment == "move to first infill(bridge) point")
 	{
-		pos.feature_type_tag_ = bridge_feature;
+		pos.feature_type_tag = bridge_feature;
 		return true;
 	}
 	if (comment == "skirt" || comment == "move to first skirt point")
 	{
-		pos.feature_type_tag_ = skirt_feature;
+		pos.feature_type_tag = skirt_feature;
 		return true;
 	}
 	return false;
@@ -62,28 +62,28 @@ void gcode_comment_processor::update_feature_from_section(position& pos) const
 	switch (current_section_)
 	{
 	case(outer_perimeter_section):
-		pos.feature_type_tag_ = outer_perimeter_feature;
+		pos.feature_type_tag = outer_perimeter_feature;
 		break;
 	case(inner_perimeter_section):
-		pos.feature_type_tag_ = inner_perimeter_feature;
+		pos.feature_type_tag = inner_perimeter_feature;
 		break;
 	case(skirt_section):
-		pos.feature_type_tag_ = skirt_feature;
+		pos.feature_type_tag = skirt_feature;
 		break;
 	case(solid_infill_section):
-		pos.feature_type_tag_ = solid_infill_feature;
+		pos.feature_type_tag = solid_infill_feature;
 		break;
 	case(ooze_shield_section):
-		pos.feature_type_tag_ = ooze_shield_feature;
+		pos.feature_type_tag = ooze_shield_feature;
 		break;
 	case(infill_section):
-		pos.feature_type_tag_ = infill_feature;
+		pos.feature_type_tag = infill_feature;
 		break;
 	case(prime_pillar_section):
-		pos.feature_type_tag_ = prime_pillar_feature;
+		pos.feature_type_tag = prime_pillar_feature;
 		break;
 	case(gap_fill_section):
-		pos.feature_type_tag_ = gap_fill_feature;
+		pos.feature_type_tag = gap_fill_feature;
 	}
 }
 

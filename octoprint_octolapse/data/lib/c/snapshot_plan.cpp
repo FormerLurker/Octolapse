@@ -72,7 +72,7 @@ PyObject * snapshot_plan::to_py_object()
 {
 	PyObject* py_triggering_command;
 	
-	if (p_triggering_command.is_empty)
+	if (triggering_command.is_empty)
 	{
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No triggering command for plan.");
 		py_triggering_command = Py_None;
@@ -81,7 +81,7 @@ PyObject * snapshot_plan::to_py_object()
 	else
 	{
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding the triggering command.");
-		py_triggering_command = p_triggering_command.to_py_object();
+		py_triggering_command = triggering_command.to_py_object();
 		if (py_triggering_command == NULL)
 		{
 			PyErr_Print();
@@ -92,7 +92,7 @@ PyObject * snapshot_plan::to_py_object()
 	
 
 	PyObject* py_start_command = NULL;
-	if (p_start_command.is_empty)
+	if (start_command.is_empty)
 	{
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No start command.");
 		py_start_command = Py_None;
@@ -101,7 +101,7 @@ PyObject * snapshot_plan::to_py_object()
 	else
 	{
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding the start command.");
-		py_start_command = p_start_command.to_py_object();
+		py_start_command = start_command.to_py_object();
 		if (py_start_command == NULL)
 		{
 			PyErr_Print();
@@ -120,7 +120,7 @@ PyObject * snapshot_plan::to_py_object()
 	else
 	{
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding the initial position.");
-		py_initial_position = p_initial_position.to_py_tuple();
+		py_initial_position = initial_position.to_py_tuple();
 		if (py_initial_position == NULL)
 		{
 			PyErr_Print();
@@ -162,7 +162,7 @@ PyObject * snapshot_plan::to_py_object()
 
 	
 	PyObject * py_return_position;
-	if (p_return_position.is_empty_)
+	if (return_position.is_empty)
 	{
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No return position.");
 		py_return_position = Py_None;
@@ -171,7 +171,7 @@ PyObject * snapshot_plan::to_py_object()
 	else
 	{
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding return position.");
-		py_return_position = p_return_position.to_py_tuple();
+		py_return_position = return_position.to_py_tuple();
 		if (py_return_position == NULL)
 		{
 			PyErr_Print();
@@ -181,7 +181,7 @@ PyObject * snapshot_plan::to_py_object()
 	}
 	
 	PyObject* py_end_command;
-	if (p_end_command.is_empty)
+	if (end_command.is_empty)
 	{
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No end command.");
 		py_end_command = Py_None;
@@ -190,7 +190,7 @@ PyObject * snapshot_plan::to_py_object()
 	else
 	{
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding the end command.");
-		py_end_command = p_end_command.to_py_object();
+		py_end_command = end_command.to_py_object();
 		if (py_end_command == NULL)
 		{
 			PyErr_Print();

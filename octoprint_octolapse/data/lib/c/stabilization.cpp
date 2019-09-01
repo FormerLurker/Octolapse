@@ -238,7 +238,7 @@ void stabilization::on_processing_complete()
 	throw std::exception();
 }
 
-void stabilization::get_next_xy_coordinates(double *x, double*y)
+void stabilization::get_next_xy_coordinates(double &x, double&y)
 {
 	//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Getting stabilization coordinates.");
 	//std::cout << "Getting XY stabilization coordinates...";
@@ -251,8 +251,8 @@ void stabilization::get_next_xy_coordinates(double *x, double*y)
 	else
 	{
 		//std::cout << "extracting from args...";
-		*x = p_stabilization_args_->x_coordinate;
-		*y = p_stabilization_args_->y_coordinate;
+		x = p_stabilization_args_->x_coordinate;
+		y = p_stabilization_args_->y_coordinate;
 	}
 	//std::cout << " - X coord: " << x;
 	//std::cout << " - Y coord: " << y << "\r\n";

@@ -24,151 +24,151 @@
 #include <iostream>
 snapshot_plan_step::snapshot_plan_step()
 {
-	p_x_ = NULL;
-	p_y_ = NULL;
-	p_z_ = NULL;
-	p_e_ = NULL;
-	p_f_ = NULL;
-	action_ = "";
+	p_x = NULL;
+	p_y = NULL;
+	p_z = NULL;
+	p_e = NULL;
+	p_f = NULL;
+	action = "";
 }
 
 snapshot_plan_step::snapshot_plan_step(const snapshot_plan_step & source)
 {
-	if (source.p_x_ != NULL)
+	if (source.p_x != NULL)
 	{
-		p_x_ = new double;
-		*p_x_ = *source.p_x_;
+		p_x = new double;
+		*p_x = *source.p_x;
 	}
 	else
 	{
-		p_x_ = NULL;
+		p_x = NULL;
 	}
 
-	if (source.p_y_ != NULL)
+	if (source.p_y != NULL)
 	{
-		p_y_ = new double;
-		*p_y_ = *source.p_y_;
+		p_y = new double;
+		*p_y = *source.p_y;
 	}
 	else
 	{
-		p_y_ = NULL;
+		p_y = NULL;
 	}
 
 
-	if (source.p_z_ != NULL)
+	if (source.p_z != NULL)
 	{
-		p_z_ = new double;
-		*p_z_ = *source.p_z_;
+		p_z = new double;
+		*p_z = *source.p_z;
 	}
 	else
 	{
-		p_z_ = NULL;
+		p_z = NULL;
 	}
 
-	if (source.p_e_ != NULL)
+	if (source.p_e != NULL)
 	{
-		p_e_ = new double;
-		*p_e_ = *source.p_e_;
+		p_e = new double;
+		*p_e = *source.p_e;
 	}
 	else
 	{
-		p_e_ = NULL;
+		p_e = NULL;
 	}
 
-	if (source.p_f_ != NULL)
+	if (source.p_f != NULL)
 	{
-		p_f_ = new double;
-		*p_f_ = *source.p_f_;
+		p_f = new double;
+		*p_f = *source.p_f;
 	}
 	else
 	{
-		p_f_ = NULL;
+		p_f = NULL;
 	}
 
-	action_ = source.action_;
+	action = source.action;
 }
 snapshot_plan_step::snapshot_plan_step(double* x, double* y, double* z, double* e, double* f, std::string action) 
 {
 	if (x != NULL)
 	{
-		p_x_ = new double;
-		*p_x_ = *x;
+		p_x = new double;
+		*p_x = *x;
 	}
 	else
 	{
-		p_x_ = NULL;
+		p_x = NULL;
 	}
 
 	if (y != NULL)
 	{
-		p_y_ = new double;
-		*p_y_ = *y;
+		p_y = new double;
+		*p_y = *y;
 	}
 	else
 	{
-		p_y_ = NULL;
+		p_y = NULL;
 	}
 
 
 	if (z != NULL)
 	{
-		p_z_ = new double;
-		*p_z_ = *z;
+		p_z = new double;
+		*p_z = *z;
 	}
 	else
 	{
-		p_z_ = NULL;
+		p_z = NULL;
 	}
 
 	if (e != NULL)
 	{
-		p_e_ = new double;
-		*p_e_ = *e;
+		p_e = new double;
+		*p_e = *e;
 	}
 	else
 	{
-		p_e_ = NULL;
+		p_e = NULL;
 	}
 
 	if (f != NULL)
 	{
-		p_f_ = new double;
-		*p_f_ = *f;
+		p_f = new double;
+		*p_f = *f;
 	}
 	else
 	{
-		p_f_ = NULL;
+		p_f = NULL;
 	}
 
-	action_ = action;
+	action = action;
 }
 
 snapshot_plan_step::~snapshot_plan_step()
 {
-	if (p_x_ != NULL)
+	if (p_x != NULL)
 	{
-		delete p_x_;
-		p_x_ = NULL;
+		delete p_x;
+		p_x = NULL;
 	}
-	if(p_y_ != NULL)
+	if(p_y != NULL)
 	{
-		delete p_y_;
-		p_y_ = NULL;
+		delete p_y;
+		p_y = NULL;
 	}
-	if (p_z_ != NULL)
+	if (p_z != NULL)
 	{
-		delete p_z_;
-		p_z_ = NULL;
+		delete p_z;
+		p_z = NULL;
 	}
-	if (p_e_ != NULL)
+	if (p_e != NULL)
 	{
-		delete p_e_;
-		p_e_ = NULL;
+		delete p_e;
+		p_e = NULL;
 	}
-	if (p_f_ != NULL)
+	if (p_f != NULL)
 	{
-		delete p_f_;
-		p_f_ = NULL;
+		delete p_f;
+		p_f = NULL;
 	}
 	
 }
@@ -176,14 +176,14 @@ snapshot_plan_step::~snapshot_plan_step()
 PyObject * snapshot_plan_step::to_py_object()
 {
 	PyObject * py_x;
-	if(p_x_ == NULL)
+	if(p_x == NULL)
 	{
 		py_x = Py_None;
 		Py_IncRef(py_x);
 	}
 	else
 	{
-		py_x = PyFloat_FromDouble(*p_x_);
+		py_x = PyFloat_FromDouble(*p_x);
 	}
 	if (py_x == NULL)
 	{
@@ -193,14 +193,14 @@ PyObject * snapshot_plan_step::to_py_object()
 	}
 	
 	PyObject * py_y;
-	if (p_y_ == NULL)
+	if (p_y == NULL)
 	{
 		py_y = Py_None;
 		Py_IncRef(py_y);
 	}
 	else
 	{
-		py_y = PyFloat_FromDouble(*p_y_);
+		py_y = PyFloat_FromDouble(*p_y);
 	}
 	if (py_y == NULL)
 	{
@@ -210,14 +210,14 @@ PyObject * snapshot_plan_step::to_py_object()
 	}
 
 	PyObject * py_z;
-	if (p_z_ == NULL)
+	if (p_z == NULL)
 	{
 		py_z = Py_None;
 		Py_IncRef(py_z);
 	}
 	else
 	{
-		py_z = PyFloat_FromDouble(*p_z_);
+		py_z = PyFloat_FromDouble(*p_z);
 	}
 	if (py_z == NULL)
 	{
@@ -227,14 +227,14 @@ PyObject * snapshot_plan_step::to_py_object()
 	}
 
 	PyObject * py_e;
-	if (p_e_ == NULL)
+	if (p_e == NULL)
 	{
 		py_e = Py_None;
 		Py_IncRef(py_e);
 	}
 	else
 	{
-		py_e = PyFloat_FromDouble(*p_e_);
+		py_e = PyFloat_FromDouble(*p_e);
 	}
 	if (py_e == NULL)
 	{
@@ -244,14 +244,14 @@ PyObject * snapshot_plan_step::to_py_object()
 	}
 
 	PyObject * py_f;
-	if (p_f_ == NULL)
+	if (p_f == NULL)
 	{
 		py_f = Py_None;
 		Py_IncRef(py_f);
 	}
 	else
 	{
-		py_f = PyFloat_FromDouble(*p_f_);
+		py_f = PyFloat_FromDouble(*p_f);
 	}
 	if (py_f == NULL)
 	{
@@ -260,7 +260,7 @@ PyObject * snapshot_plan_step::to_py_object()
 		return NULL;
 	}
 
-	PyObject * py_step = Py_BuildValue("sOOOOO", action_.c_str(), py_x, py_y, py_z, py_e, py_f);
+	PyObject * py_step = Py_BuildValue("sOOOOO", action.c_str(), py_x, py_y, py_z, py_e, py_f);
 	if (py_step == NULL)
 	{
 		PyErr_Print();

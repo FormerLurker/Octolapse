@@ -30,21 +30,21 @@
 #else
 #include <Python.h>
 #endif
-class parsed_command_parameter
+struct parsed_command_parameter
 {
 public:
 	parsed_command_parameter();
 	~parsed_command_parameter();
-	parsed_command_parameter(char name, double double_value);
-	parsed_command_parameter(char name, std::string string_value);
-	parsed_command_parameter(char name, unsigned int unsigned_int_value);
+	parsed_command_parameter(char name, double value);
+	parsed_command_parameter(char name, std::string value);
+	parsed_command_parameter(char name, unsigned long value);
 	PyObject * value_to_py_object();
 
-	char name_;
-	char value_type_;
-	double double_value_;
-	unsigned long unsigned_long_value_;
-	std::string string_value_;
+	char name;
+	char value_type;
+	double double_value;
+	unsigned long unsigned_long_value;
+	std::string string_value;
 };
 
 #endif

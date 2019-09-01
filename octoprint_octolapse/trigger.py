@@ -376,6 +376,18 @@ class GcodeTrigger(Trigger):
                         elif not state.is_in_position and not state.in_path_position:
                             # Make sure the previous X,Y is in position
                             logger.debug("GcodeTrigger - Waiting on Position.")
+                        elif not trigger_position.last_extrusion_height:
+                            logger.debug(
+                                "GcodeTrigger - Waiting for at least one extrusion on a previous layer."
+                            )
+                        elif not utility.greater_than_or_equal(
+                                trigger_position.z, trigger_position.last_extrusion_height
+                        ):
+                            # The extruder is below the last extrusion height, do not take a snapshot else we might
+                            # run into the part!
+                            logger.debug(
+                                "GcodeTrigger - Waiting for extruder to move above the highest extrusion point."
+                            )
                         else:
                             state.is_triggered = True
                             self.trigger_count += 1
@@ -604,6 +616,19 @@ class LayerTrigger(Trigger):
                         elif not state.is_in_position and not state.in_path_position:
                             # Make sure the previous X,Y is in position
                             logger.debug("LayerTrigger - Waiting on Position.")
+                        elif not trigger_position.last_extrusion_height:
+                            # this should never be hit, but just in case!
+                            logger.debug(
+                                "LayerTrigger - Waiting for at least one extrusion on a previous layer."
+                            )
+                        elif utility.less_than(
+                            trigger_position.z, trigger_position.last_extrusion_height
+                        ):
+                        # The extruder is below the last extrusion height, do not take a snapshot else we might
+                        # run into the part!
+                            logger.debug(
+                                "LayerTrigger - Waiting for extruder to move above the highest extrusion point."
+                            )
                         else:
                             if state.is_height_change_wait:
                                 logger.debug("LayerTrigger - Height change triggering.")
@@ -811,10 +836,22 @@ class TimerTrigger(Trigger):
                             logger.debug("TimerTrigger - Waiting on ZHop.")
                             state.is_waiting_on_zhop = True
                         elif not trigger_position.is_in_bounds:
-                            logger.debug("GcodeTrigger - Waiting for in-bounds position.")
+                            logger.debug("TimerTrigger - Waiting for in-bounds position.")
                         elif not state.is_in_position and not state.in_path_position:
                             # Make sure the previous X,Y is in position
                             logger.debug("TimerTrigger - Waiting on Position.")
+                        elif not trigger_position.last_extrusion_height:
+                            logger.debug(
+                                "TimerTrigger - Waiting for at least one extrusion on a previous layer."
+                            )
+                        elif not utility.greater_than_or_equal(
+                            trigger_position.z, trigger_position.last_extrusion_height
+                        ):
+                        # The extruder is below the last extrusion height, do not take a snapshot else we might
+                        # run into the part!
+                            logger.debug(
+                                "TimerTrigger - Waiting for extruder to move above the highest extrusion point."
+                            )
                         else:
                             # Is Triggering
                             self.trigger_count += 1

@@ -382,7 +382,7 @@ extern "C"
 		if(gpp::parser->try_parse_gcode(gcode, command))
 			p_gcode_position->update(command, -1, -1);
 
-		PyObject * py_position = p_gcode_position->get_current_position().to_py_tuple();
+		PyObject * py_position = p_gcode_position->get_current_position_ptr()->to_py_tuple();
 		if (py_position == NULL)
 		{
 			std::string message = "GcodePositionProcessor.Update - Unable to convert the position to a tuple.";
@@ -444,9 +444,9 @@ extern "C"
 			return Py_BuildValue("O", Py_False);
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
-		position pos = p_gcode_position->get_current_position();
+		position* pos = p_gcode_position->get_current_position_ptr();
 		p_gcode_position->update_position(
-			&pos,
+			pos,
 			x,
 			update_x > 0,
 			y,
@@ -460,7 +460,7 @@ extern "C"
 			true,
 			false);
 
-		PyObject * py_position = p_gcode_position->get_current_position().to_py_tuple();
+		PyObject * py_position = p_gcode_position->get_current_position_ptr()->to_py_tuple();
 		if (py_position == NULL)
 		{
 			return NULL;

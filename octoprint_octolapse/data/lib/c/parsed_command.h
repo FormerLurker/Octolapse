@@ -33,18 +33,17 @@
 #include <vector>
 #include "parsed_command_parameter.h"
 
-class parsed_command
+struct parsed_command
 {
 public:
 	parsed_command();
-	std::string cmd_;
-	std::string gcode_;
-	std::string comment_;
+	std::string command;
+	std::string gcode;
+	std::string comment;
 	bool is_empty;
-	std::vector<parsed_command_parameter> parameters_;
+	std::vector<parsed_command_parameter> parameters;
 	PyObject * to_py_object();
 	void clear();
-private:
 	
 };
 

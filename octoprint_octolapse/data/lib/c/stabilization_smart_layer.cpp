@@ -51,7 +51,7 @@ stabilization_smart_layer::stabilization_smart_layer(
 	default_args.x_stabilization_disabled = stab_args->x_stabilization_disabled;
 	default_args.y_stabilization_disabled = stab_args->y_stabilization_disabled;
 	closest_positions_.initialize(default_args);
-	last_snapshot_initial_position_.is_empty_ = true;
+	last_snapshot_initial_position_.is_empty = true;
 	update_stabilization_coordinates();
 }
 
@@ -81,7 +81,7 @@ stabilization_smart_layer::stabilization_smart_layer(
 	default_args.x_stabilization_disabled = stab_args->x_stabilization_disabled;
 	default_args.y_stabilization_disabled = stab_args->y_stabilization_disabled;
 	closest_positions_.initialize(default_args);
-	last_snapshot_initial_position_.is_empty_ = true;
+	last_snapshot_initial_position_.is_empty = true;
 	update_stabilization_coordinates();
 }
 
@@ -101,16 +101,16 @@ void stabilization_smart_layer::update_stabilization_coordinates()
 	bool stabilization_disabled = p_stabilization_args_->x_stabilization_disabled && p_stabilization_args_->y_stabilization_disabled;
 	if (
 		(stabilization_disabled || stabilize_first_position_only)
-		&& !last_snapshot_initial_position_.is_empty_
+		&& !last_snapshot_initial_position_.is_empty
 	)
 	{
-		stabilization_x_ = last_snapshot_initial_position_.x_;
-		stabilization_y_ = last_snapshot_initial_position_.y_;
+		stabilization_x_ = last_snapshot_initial_position_.x;
+		stabilization_y_ = last_snapshot_initial_position_.y;
 	}
 	else
 	{
 		// Get the next stabilization point
-		get_next_xy_coordinates(&stabilization_x_, &stabilization_y_);
+		get_next_xy_coordinates(stabilization_x_, stabilization_y_);
 	}
 	closest_positions_.set_stabilization_coordinates(stabilization_x_, stabilization_y_);
 }
@@ -118,14 +118,14 @@ void stabilization_smart_layer::process_pos(position& p_current_pos, position& p
 {
 	//std::cout << "StabilizationSmartLayer::process_pos - Processing Position...";
 	// if we're at a layer change, add the current saved plan
-	if (p_current_pos.is_layer_change_ && p_current_pos.layer_ > 1)
+	if (p_current_pos.is_layer_change && p_current_pos.layer > 1)
 	{
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Layer change detected.");
 		is_layer_change_wait_ = true;
 		// get distance from current point to the stabilization point
 		
 		standard_layer_trigger_distance_ = utilities::get_cartesian_distance(
-			p_current_pos.x_, p_current_pos.y_,
+			p_current_pos.x, p_current_pos.y,
 			stabilization_x_, stabilization_y_
 		);
 	}
@@ -136,7 +136,7 @@ void stabilization_smart_layer::process_pos(position& p_current_pos, position& p
 		if (p_stabilization_args_->height_increment != 0)
 		{
 			can_add_saved_plan = false;
-			const double increment_double = p_current_pos.height_ / p_stabilization_args_->height_increment;
+			const double increment_double = p_current_pos.height / p_stabilization_args_->height_increment;
 			unsigned const int increment = utilities::round_up_to_int(increment_double);
 			if (increment > current_height_increment_)
 			{
@@ -160,7 +160,7 @@ void stabilization_smart_layer::process_pos(position& p_current_pos, position& p
 	}
 	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding closest position.");
 	closest_positions_.try_add(p_current_pos, p_previous_pos);
-	last_tested_gcode_number_ = p_current_pos.gcode_number_;
+	last_tested_gcode_number_ = p_current_pos.gcode_number;
 }
 
 void stabilization_smart_layer::add_plan()
@@ -185,9 +185,9 @@ void stabilization_smart_layer::add_plan()
 		p_plan.triggering_command_type = p_closest.type;
 		p_plan.triggering_command_feature_type = p_closest.feature_type;
 		// create the initial position
-		p_plan.p_triggering_command = p_closest.p_position.p_command;
-		p_plan.p_start_command = p_closest.p_position.p_command;
-		p_plan.p_initial_position = p_closest.p_position;
+		p_plan.triggering_command = p_closest.pos.command;
+		p_plan.start_command = p_closest.pos.command;
+		p_plan.initial_position = p_closest.pos;
 		p_plan.has_initial_position = true;
 		const bool all_stabilizations_disabled = p_stabilization_args_->x_stabilization_disabled && p_stabilization_args_->y_stabilization_disabled;
 		
@@ -195,12 +195,12 @@ void stabilization_smart_layer::add_plan()
 		{
 			double x_stabilization, y_stabilization;
 			if (p_stabilization_args_->x_stabilization_disabled)
-				x_stabilization = p_closest.p_position.x_;
+				x_stabilization = p_closest.pos.x;
 			else
 				x_stabilization = stabilization_x_;
 
 			if (p_stabilization_args_->y_stabilization_disabled)
-				y_stabilization = p_closest.p_position.y_;
+				y_stabilization = p_closest.pos.y;
 			else
 				y_stabilization = stabilization_y_;
 
@@ -213,15 +213,15 @@ void stabilization_smart_layer::add_plan()
 
 		// Only add a return position if we're not using snap to print
 		if(p_smart_layer_args_->smart_layer_trigger_type != trigger_position::snap_to_print)
-			p_plan.p_return_position = p_closest.p_position;
+			p_plan.return_position = p_closest.pos;
 
-		p_plan.file_line = p_closest.p_position.file_line_number_;
-		p_plan.file_gcode_number = p_closest.p_position.gcode_number_;
+		p_plan.file_line = p_closest.pos.file_line_number;
+		p_plan.file_gcode_number = p_closest.pos.gcode_number;
 
 		// Add the plan
 		p_snapshot_plans_.push_back(p_plan);
-		current_layer_ = p_closest.p_position.layer_;
-		last_snapshot_initial_position_ = p_plan.p_initial_position;
+		current_layer_ = p_closest.pos.layer;
+		last_snapshot_initial_position_ = p_plan.initial_position;
 		// only get the next coordinates if we've actually added a plan.
 		update_stabilization_coordinates();
 		
@@ -254,8 +254,8 @@ void stabilization_smart_layer::reset_saved_positions()
 
 void stabilization_smart_layer::on_processing_complete()
 {
-	//std::cout << "Running on_process_complete...";
-	if (!closest_positions_.is_empty())
+	// If we were on 
+	if (is_layer_change_wait_ && !closest_positions_.is_empty())
 	{
 		add_plan();
 	}
