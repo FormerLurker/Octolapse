@@ -64,7 +64,7 @@ def take_in_memory_snapshot(settings, current_camera):
         snapshot_job_info = SnapshotJobInfo(
             TimelapseJobInfo(job_guid=uuid4(), print_start_time=time(), print_file_name='overlay_preview'),
             temp_snapshot_dir, 0, current_camera)
-        if current_camera.camera_type == "external-script":
+        if current_camera.camera_type == "script":
             snapshot_job = ExternalScriptSnapshotJob(snapshot_job_info, settings)
         else:
             snapshot_job = WebcamSnapshotJob(snapshot_job_info, settings)
@@ -123,7 +123,7 @@ class CaptureSnapshot(object):
             snapshot_job_info = SnapshotJobInfo(
                 self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_count, current_camera
             )
-            if current_camera.camera_type == "external-script":
+            if current_camera.camera_type == "script":
                 thread = ExternalScriptSnapshotJob(
                     snapshot_job_info,
                     self.Settings,
