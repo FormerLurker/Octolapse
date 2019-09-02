@@ -28,20 +28,55 @@ Prevents the extruder from leaving the print during stabilization, reducing trav
 
 ### Position Rankings by Quality
 
+Octoalpse ranks positions by both position and feature type.  Exactly how it does this depends on the exact smart layer trigger type and options.
+
+#### Feature Type
+
+In general, the smart layer trigger will choose positions with a known feature type over those without.  However, this depends on the smart layer trigger type.
+
+Most slicers include some comments within the gcode file that indicates what type of feature is being printed.  This information is not always complete, but is often useful for choosing when to take a snapshot with the least impact on print quality.  
+
+These are used with the **Compatibility**, **High Quality**, and **Snap to Print**.
+
+Note that features are only detected in the **Snap to Print** trigger when the **High Quality Mode** option is enabled.
+
+Each slicer has slightly different capabilities.  Cura and Simplify 3D add gcode comment sections to their sliced gcode files by default.  
+
+Slic3r, Slic3r PE, and PrusaSlicer do not output comments by default.  It is **highly recommended** that you enable this by going into ```Print Settings```->```Output Options```->```Output Options``` and enabling ```Verbose G-Code``` by checking the box next to the setting.  This will increase file-size somewhat, but has the potential 
+
+There are the following features that can be detected by Octolapse, in order of quality (highest quality to lowest):
+
+* Prime Pillar - This is usually a waste piece, so it's totally safe to take snapshots when printing a prime pillar.  Supported by Simplify3D, Slic3r PE and Prusa Slicer (Pusa slicers supported when printing with an MMU only as far as I know.)
+* Infill - This is generally the best place to take a snapshot.  Works on all supported slicers.
+* Ooze Shield - This is printed to protect a print from ooze.  I think this is a good place to take a snapshot, but have not tested it yet.
+* Solid Infill - This is usually on the inside of a print, or on the top surface.  An OK place to take a snapshot.  Not yet supported for Prusa slicers.
+* Gap Fill - Another OK place to take a snapshot, but we're starting to get iffy.  Only supported by Simplify 3d.
+* Skirt - This would be considered a high quality place to take a snapshot, and it is, but having it higher causes problems with snap-to-print.
+* Inner Perimeters - Not a great place to take a snapshot, but much better than exterior perimeters.  Prusa slicers do not distinguish from internal and external perimeters.
+
+Some features types are ignored
+* Unknown Perimeters -  Slic3r doesn't differentiate between internal and external perimeters, so all are considered to be external.
+* External Perimeters - The worst place to take snapshots!  Octolapse tries to avoid taking snapshots over these features if at all possible.
+* Bridge - Prusa Slicers will note when a move is a bridge.  Octolapse will avoid taking snapshots over these positions if possible.
+
+
+#### Position Type
 Here is how Octolapse ranks positions (from best to worst) when choosing a point to start taking a snapshot:
 
-* lifted_retracted_travel - The best time to take a snapshot.  Your printer is fully lifted, fully retracted, and is traveling.
-* lifting_retracted_travel - Your printer is fully retracted, and is traveling while lifting at the same time.
-* retracted_travel - Your printer is rully retracted and traveling.
-* retracted_lifted - Your printer is fully retracted and fully lifted.
-* retracted_lifting - Your printer is fully retracted, and is lifting.
-* retraction - Your printer has just completed a retraction.  This can be a good time to take a snapshot.  Most of the smart trigger types will return a position without looking for a closer one at this point.  Only the 'fastest', and sometimes the 'fast' option will keep searching for a closer position if a higher quality position was already found.
-* lifted_travel - Your printer is lifted fully, and traveling.
-* lifting_travel - Your printer is lifting and traveling at the same time (Cura does this I believe)
-* travel - Your printer is traveling.
-* lifted - Your printer is fully lifted (according to the z-hop distance setting in your slicer).
-* lifting - Your printer is raising the Z axis.  Though not a great place to take a snapshot, it's better than while extruding.
-* extrusion - Your printer is extruding.  This is usually the worst time to take a snapshot.
-* unknown - Octolapse doesn't know, or doesn't care what type of position this is.  Snapshots are never taken from unknown positions
+* Fastest Extrusion - If a layer has more than one print speed, the extrusions with the fastest speed are considered the best place to take snapshots.  This isn't always true, especially if the slicer's minimum layer time is being enforced by slowing down priting speeds, but true more often than it is not.  Usually this is the best time to take a snapshot.  Note that for layers with only one extrusion speed, this position will not exist.
+* Lifted and Retracted Travel Move - Usually a good time to take a snapshot.  Your printer is fully lifted, fully retracted, and is traveling.
+* Lifting and Retracted Travel Move - Your printer is fully retracted, and is traveling while lifting at the same time.
+* Retracted Travel Move - Your printer is rully retracted and traveling.
+* Retracted and Lifted - Your printer is fully retracted and fully lifted.
+* Retracted and Lifting - Your printer is fully retracted, and is lifting.
+* Retracted - Your printer has just completed a retraction.  This can be a good time to take a snapshot.  Most of the smart trigger types will return a position without looking for a closer one at this point.  Only the 'fastest', and sometimes the 'fast' option will keep searching for a closer position if a higher quality position was already found.
+* Lifted Travel - Your printer is lifted fully, and traveling.
+* Lifting Travel - Your printer is lifting and traveling at the same time (Cura does this I believe)
+* Travel - Your printer is traveling.
+* Lifted - Your printer is fully lifted (according to the z-hop distance setting in your slicer).
+* Lifting - Your printer is raising the Z axis.  Though not a great place to take a snapshot, it's better than while extruding.
+* Extruding - Your printer is extruding.  This is usually the worst time to take a snapshot.
+* Unknown - Octolapse doesn't know, or doesn't care what type of position this is.  Snapshots are never taken from unknown positions
 
 If you believe there are other scenarios that need to be handled, or that the order of any of the items above is incorrect, please let me know.  This is a work in progress, and I believe there will be lots of tweaks in the future.
+
