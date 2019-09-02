@@ -275,6 +275,36 @@ void gcode_position::update(parsed_command& command, const int file_line_number,
 			p_current_pos->is_deretracted = utilities::greater_than(p_previous_pos->retraction_length, 0) && utilities::is_zero(p_current_pos->retraction_length);
 			// *************End Calculate extruder state*************
 		}
+
+		// Calcluate position restructions
+		// TODO:  INCLUDE POSITION RESTRICTION CALCULATIONS!
+		// Set is_in_bounds_ to false if we're not in bounds, it will be true at this point
+		bool is_in_bounds = true;
+		if (is_bound_)
+		{
+			if (!is_circular_bed_)
+			{
+				is_in_bounds = !(
+					utilities::less_than(p_current_pos->x, snapshot_x_min_) ||
+					utilities::greater_than(p_current_pos->x, snapshot_x_max_) ||
+					utilities::less_than(p_current_pos->y,  snapshot_y_min_) ||
+					utilities::greater_than(p_current_pos->y, snapshot_y_max_) ||
+					utilities::less_than(p_current_pos->z, snapshot_z_min_) ||
+					utilities::greater_than(p_current_pos->z, snapshot_z_max_)
+					);
+
+			}
+			else
+			{
+				double r;
+				r = snapshot_x_max_; // good stand in for radius
+				const double dist = sqrt(p_current_pos->x*p_current_pos->x + p_current_pos->y*p_current_pos->y);
+				is_in_bounds = utilities::less_than_or_equal(dist, r);
+
+			}
+			p_current_pos->is_in_bounds = is_in_bounds;
+		}
+
 		// calculate last_extrusion_height and height
 		// If we are extruding on a higher level, or if retract is enabled and the nozzle is primed
 		// adjust the last extrusion height
@@ -282,7 +312,9 @@ void gcode_position::update(parsed_command& command, const int file_line_number,
 		{
 			if (!p_current_pos->z_null)
 			{
-				if (p_current_pos->is_extruding || p_current_pos->is_primed)
+				// detect layer changes/ printer priming/last extrusion height and height 
+				// Normally we would only want to use is_extruding, but we can also use is_deretracted if the layer is greater than 0
+				if (p_current_pos->is_extruding || (p_current_pos->layer >0 && p_current_pos->is_deretracted))
 				{
 					// Is Primed
 					if (!p_current_pos->is_printer_primed)
@@ -299,7 +331,7 @@ void gcode_position::update(parsed_command& command, const int file_line_number,
 							p_current_pos->is_printer_primed = true;
 					}
 
-					if (p_current_pos->is_printer_primed)
+					if (p_current_pos->is_printer_primed && is_in_bounds)
 					{
 						// Update the last extrusion height
 						p_current_pos->last_extrusion_height = p_current_pos->z;
@@ -324,34 +356,7 @@ void gcode_position::update(parsed_command& command, const int file_line_number,
 
 		}
 
-		// Calcluate position restructions
-		// TODO:  INCLUDE POSITION RESTRICTION CALCULATIONS!
-		// Set is_in_bounds_ to false if we're not in bounds, it will be true at this point
-		if (is_bound_)
-		{
-			bool is_in_bounds = true;
-			if (!is_circular_bed_)
-			{
-				is_in_bounds = !(
-					p_current_pos->x < snapshot_x_min_ ||
-					p_current_pos->x > snapshot_x_max_ ||
-					p_current_pos->y < snapshot_y_min_ ||
-					p_current_pos->y > snapshot_y_max_ ||
-					p_current_pos->z < snapshot_z_min_ ||
-					p_current_pos->z > snapshot_z_max_
-					);
-
-			}
-			else
-			{
-				double r;
-				r = snapshot_x_max_; // good stand in for radius
-				const double dist = sqrt(p_current_pos->x*p_current_pos->x + p_current_pos->y*p_current_pos->y);
-				is_in_bounds = utilities::less_than_or_equal(dist, r);
-
-			}
-			p_current_pos->is_in_bounds = is_in_bounds;
-		}
+		
 
 	}
 }

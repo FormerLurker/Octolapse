@@ -470,7 +470,11 @@ class CameraControl(object):
                     )
                     logger.error(message)
                     raise CameraError('not-an-image', message)
-                elif not is_before_print_test or camera_profile.apply_settings_before_print:
+                elif not is_before_print_test or (
+                    is_before_print_test and
+                    camera_profile.enable_custom_image_preferences and
+                    camera_profile.apply_settings_before_print
+                ):
                     CameraControl._test_web_camera_image_preferences(camera_profile, timeout_seconds)
             else:
                 message = (

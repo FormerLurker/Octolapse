@@ -158,7 +158,7 @@ void stabilization_smart_layer::process_pos(position& p_current_pos, position& p
 		}
 
 	}
-	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding closest position.");
+	//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding closest position.");
 	closest_positions_.try_add(p_current_pos, p_previous_pos);
 	last_tested_gcode_number_ = p_current_pos.gcode_number;
 }
@@ -255,7 +255,7 @@ void stabilization_smart_layer::reset_saved_positions()
 void stabilization_smart_layer::on_processing_complete()
 {
 	// If we were on 
-	if (is_layer_change_wait_ && !closest_positions_.is_empty())
+	if (!closest_positions_.is_empty())
 	{
 		add_plan();
 	}

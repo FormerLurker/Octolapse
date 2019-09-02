@@ -153,7 +153,7 @@ bool gcode_comment_processor::update_cura_section(std::string &comment)
 		current_section_ = solid_infill_section;
 		return true;
 	}
-	if (comment.rfind("LAYER:", 0) != std::string::npos)
+	if (comment.rfind("LAYER:", 0) != std::string::npos || comment.rfind(";MESH:NONMESH", 0) != std::string::npos)
 	{
 		current_section_ = no_section;
 		return false;
