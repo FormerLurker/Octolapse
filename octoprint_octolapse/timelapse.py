@@ -626,10 +626,12 @@ class Timelapse(object):
 
         self.check_current_line_number(tags)
 
-        if tags is not None and "plugin:octolapse" in tags:
+        if not (
+            tags is not None and
+            "plugin:octolapse" in tags and
             self.log_octolapse_gcode(logger.debug, "queuing", command_string, tags)
-        else:
-            logger.verbose("Queuing Command: %s", command_string)
+        ):
+            logger.verbose("Queuing: %s", command_string)
 
         if self.is_realtime:
             return_value = self.process_realtime_gcode(command_string, tags)
@@ -1031,24 +1033,30 @@ class Timelapse(object):
 
     def on_gcode_sending(self, cmd, tags):
         if cmd == "M114" and 'plugin:octolapse' in tags:
-            logger.verbose("The position request is being sent")
+            logger.debug("The position request is being sent")
             self._position_request_sent = True
-        elif tags is not None and "plugin:octolapse" in tags:
-            self.log_octolapse_gcode(logger.verbose, "sending", cmd, tags)
+        elif not (
+            tags is not None
+            and "plugin:octolapse" in tags
+            and self.log_octolapse_gcode(logger.verbose, "sending", cmd, tags)
+        ):
+            logger.verbose("Sending: %s", cmd)
+
 
     def on_gcode_sent(self, cmd, cmd_type, gcode, tags={}):
-        if tags is not None and "plugin:octolapse" in tags:
-            self.log_octolapse_gcode(logger.debug, "sent", cmd, tags)
-        else:
-            logger.verbose("Sent to printer: %s", cmd)
+        if not (
+            tags is not None
+            and "plugin:octolapse" in tags
+            and self.log_octolapse_gcode(logger.debug, "sent", cmd, tags)
+        ):
+            logger.debug("Sent: %s", cmd)
 
     def on_gcode_received(self, line):
-        logger.verbose("Received from printer: %s", line)
+        logger.verbose("Received: %s", line)
         if self._position_request_sent:
             payload = Response.check_for_position_request(line)
             if payload:
                 self.on_position_received(payload)
-
         return line
 
     def log_octolapse_gcode(self, logf, msg, cmd, tags):
@@ -1073,7 +1081,9 @@ class Timelapse(object):
         elif "preview-stabilization" in tags:
             logf("Preview stabilization gcode - %s: %s", msg, cmd)
         else:
-            logf("%s: %s", msg, cmd)
+            return False
+        return True
+
 
     # internal functions
     ####################
