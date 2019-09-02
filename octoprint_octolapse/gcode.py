@@ -878,7 +878,9 @@ class SnapshotGcodeGenerator(object):
             snapshot_plan.steps.append(travel_step)
             snapshot_plan.steps.append(snapshot_step)
             snapshot_plan.return_position = current_position
-            snapshot_plan.end_command = snapshot_plan.triggering_command
+            # make sure the current command is not the snapshot command before adding it as the end command
+            if not utility.is_snapshot_command(snapshot_plan.triggering_command.gcode, self.Printer.snapshot_command):
+                snapshot_plan.end_command = snapshot_plan.triggering_command
             if parsed_command_position.is_xy_travel:
                 logger.info("The triggering command is travel only, skipping return command generation")
                 snapshot_plan.return_position = None

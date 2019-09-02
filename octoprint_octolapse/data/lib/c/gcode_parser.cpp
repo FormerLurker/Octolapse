@@ -111,16 +111,32 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 {
 	// Create a command
 	//octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::VERBOSE, gcode);
+	char * p_gcode = const_cast<char *>(gcode);
 	char * p = const_cast<char *>(gcode);
-	bool command_found = try_extract_gcode_command(&p, &(command.command));
-	if (!command_found)
+	command.is_empty = true;
+	command.is_known_command = try_extract_gcode_command(&p, &(command.command));
+	if (!command.is_known_command)
 	{
+		while (true)
+		{
+			char c = *p_gcode;
+			if (c == '\0' || c == ';' || c == ' ' || c == '\t')
+				break;
+			else if (c > 31)
+			{
+				command.is_empty = false;
+				break;
+			}
+			p_gcode++;
+		}
+
 		std::string message = "No gcode command was found: ";
 		message += gcode;
 		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::WARNING, message);
-		
 	}
-	char * p_gcode = const_cast<char *>(gcode);
+	else
+		command.is_empty = false;
+	
 	while (true)
 	{
 		char cur_char = *p_gcode;
@@ -130,12 +146,8 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 			command.gcode.push_back(cur_char);
 		p_gcode++;
 	}
-	if (command_found)
+	if (command.is_known_command)
 	{
-		// Create a pointer just to walk through the gcode
-		command.is_empty = false;
-		
-
 		//command->gcode_ = gcode;
 		//std::vector<parsed_command_parameter> parameters;
 
@@ -198,7 +210,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 	try_extract_comment(&p_gcode, &(command.comment));
 		
 
-	return command_found;
+	return command.is_known_command;
 	
 }
 

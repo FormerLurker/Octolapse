@@ -379,8 +379,8 @@ extern "C"
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
 
 		parsed_command command;
-		if(gpp::parser->try_parse_gcode(gcode, command))
-			p_gcode_position->update(command, -1, -1);
+		gpp::parser->try_parse_gcode(gcode, command);
+		p_gcode_position->update(command, -1, -1);
 
 		PyObject * py_position = p_gcode_position->get_current_position_ptr()->to_py_tuple();
 		if (py_position == NULL)

@@ -167,24 +167,24 @@ position * gcode_position::get_previous_position_ptr()
 
 void gcode_position::update(parsed_command& command, const int file_line_number, const int gcode_number)
 {
-	if (command.command.empty())
+	
+	if (command.is_empty)
 	{
 		// process any comment sections
 		comment_processor_.update(command.comment);
 		return;
 	}
-	// Move the current position to the previous and the previous to the undo position
-	// then copy previous to current
-
 	
 	add_position(command);
 	position * p_current_pos = get_current_position_ptr();
 	position * p_previous_pos = get_previous_position_ptr();
-
-	comment_processor_.update(*p_current_pos);
-
 	p_current_pos->file_line_number = file_line_number;
 	p_current_pos->gcode_number = gcode_number;
+	comment_processor_.update(*p_current_pos);
+
+	if (!command.is_known_command)
+		return;
+
 	// Does our function exist in our functions map?
 	gcode_functions_iterator_ = gcode_functions_.find(command.command);
 

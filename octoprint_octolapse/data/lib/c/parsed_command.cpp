@@ -31,6 +31,7 @@ parsed_command::parsed_command()
 	gcode.reserve(128);
 	comment.reserve(128);
 	parameters.reserve(6);
+	is_known_command = false;
 	is_empty = true;
 }
 
@@ -41,6 +42,7 @@ void parsed_command::clear()
 	gcode.clear();
 	comment.clear();
 	parameters.clear();
+	is_known_command = false;
 	is_empty = true;
 }
 

@@ -152,7 +152,7 @@ stabilization_results stabilization::process_file()
 			lines_processed_++;
 			cmd.clear();
 			bool found_command = gcode_parser_->try_parse_gcode(line, cmd);
-			if (found_command)
+			if (!cmd.is_empty)
 			{
 				gcodes_processed_++;
 			}
