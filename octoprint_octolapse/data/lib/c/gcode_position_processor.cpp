@@ -473,7 +473,7 @@ extern "C"
 	{
 		set_internal_log_levels(true);
 		octolapse_log(
-			octolapse_log::GCODE_PARSER, octolapse_log::INFO,
+			octolapse_log::GCODE_PARSER, octolapse_log::VERBOSE,
 			"Parsing gcode."
 		);
 		const char* gcode;
