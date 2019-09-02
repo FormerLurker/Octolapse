@@ -133,6 +133,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 		std::string message = "No gcode command was found: ";
 		message += gcode;
 		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::WARNING, message);
+		command.command = "";
 	}
 	else
 		command.is_empty = false;
@@ -283,7 +284,35 @@ bool gcode_parser::try_extract_gcode_command(char ** p_p_gcode, std::string * p_
 		}
 		else
 		{
-			found_command = true;
+			// peek at the next character and see if it is either a number, a question mark, a c or an x.
+			// Use a different pointer so as not to mess up parameter parsing
+			char * p_t = p;
+			// skip any whitespace
+			// Ignore Leading Spaces
+			while (*p_t == ' ' || *p_t == '\t')
+			{
+				p_t++;
+			}
+			// create a char to hold the t parameter
+			char t_param = '\0';
+			// 
+			if (*p_t >= 'a' && *p_t <= 'z')
+				t_param = *p_t - 32;
+			else
+				t_param = *p_t;
+
+
+			if (t_param == 'C' || t_param == 'X' || t_param == '?')
+			{
+				p_t++;
+				// The next letter looks good!  Now see if there are any other characters before the end of the line (excluding comments)
+				while (*p_t == ' ' || *p_t == '\t')
+				{
+					p_t++;
+				}
+				if (*p_t == ';' || *p_t == '\0')
+					found_command = true;
+			}
 		}
 	}
 	*p_p_gcode = p;
