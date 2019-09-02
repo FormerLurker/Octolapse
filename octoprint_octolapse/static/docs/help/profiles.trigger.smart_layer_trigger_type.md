@@ -3,20 +3,28 @@
 There are several smart layer types that are available:
 
 #### Fastest 
-Gets the closest position.  This WILL leave very noticable defects on your print when using this mode.  However, it can be VERY useful if you are printing an ooze shield, or want to stabilize on top of a wipe tower.  The key is to adjust the stabilization point so that Octolapse always triggers on an unimportant piece.
-#### Fast
-Gets the closest position, including the fastest extrusion movement on the current layer, optionally EXCLUDING extrusions with feedrates that are below or equal to a supplied speed threshold.  If only one extrusion speed is detected on a given layer, and no speed threshold is provided, returns the same position that the 'compatibility' type would return.  You can get good results with this option IF you select the proper speed threshold and adjust your slicer to ensure that no critical parts will be printed at any faster speed (say infill).
+Gets the closest position.  **This WILL leave very noticeable defects on your print when using this mode.**  However, it can be VERY useful if you are printing an ooze shield, or want to stabilize on top of a wipe tower.  The key is to adjust the stabilization point so that Octolapse always triggers on an unimportant piece.
+
+**Not recommended for vase mode**
 #### Compatibility
-Attempts to return a high quality position if possible (see position rankings below).  If it cannot, it will return the next best position available (including extrusions) to ensure that a snapshot is taken on every layer.  Use this trigger if you're concerned with quality, but you want Octolapse to trigger on every layer no matter what.  This mode is also more likely to work with some lesser tested slicers and slicer settings.  This mode WILL take a snapshot while extruding if it has found no alternative.
-#### Normal Quality
-Attempts to return a high quality (see position rankings below).  Returns a lesser quality position if no good quality position is found.  Will not take a snapshot during extrusion.
-#### High Quality
-Gets a close High quality position (see position rankings below) and automatically balance time and quality   This mode requires an additional parameter called the 'Distance Threshold Percent', which means that it will choose a lower quality snapshot point ONLY if it gives you a speed improvement that is greater than or equal to the provided percentage.  For example, if Octolapse has found a high quality position that is 200mm away from the stabilization point, and your distance threshold is set to 10%, it would return the high quality position unless the closer one is 180mm away or nearer.  It repeats this process down the quality rankings (see below), but will NEVER take a snapshot while extruding.
+Attempts to return a high quality position if possible (see position rankings below).  If it cannot, it will return the next best position available, **including extrusions**, to ensure that a snapshot is taken on every layer.  Use this trigger if you're concerned with quality, but you want Octolapse to trigger on every layer no matter what.  This mode is also more likely to work with some lesser tested slicers and slicer settings.  This mode WILL take a snapshot while extruding if it has found no alternative and is more likely to leave artifacts than the high quality or smap to print types.
+**Not recommended for vase mode**
 #### Best Quality
-Gets the best quality position available.  Skips snapshots if no quality position can be found.  If you have retraction disabled this mode will probably not take any snapshots at all!
+Gets the best quality position available.  This includes any slicer comment based gcode features.  
 
-**Important Note** The Normal, High and Best quality smart triggers will NOT work properly with vase mode.  You won't get many (any?) snapshots, and your quality will be severely impacted.  If you are printing a vase, consider using the 'snap to print' option, which is much faster, and has a lower impact on vases in general.
+**THIS MODE WILL NOT WORK WITH VASE MODE!**  
 
+Snapshots will be skipped no quality positions can be found.  If you are using this mode and notice fewer snapshots than you expect, try compatibility mode instead if you don't care about reduced quality.  If you have retraction disabled this mode will probably not take any snapshots at all.  If you use vase mode, you will only get a few snapshots at the beginning and possible a few snapshots at the end of the print.
+
+#### Snap to Print
+
+Prevents the extruder from leaving the print during stabilization, reducing travel movements to 0.  This is a great option for improving print quality and reducing the amount of time Octolapse adds to your print.  However, your timelapse will likely be a little jerky depending on the shape of your printed part.
+
+**For the highest quality prints , reduce your camera delay to 0.**
+
+**Not recommended for DSLR cameras or with long camera delays!**
+
+**Works with vase mode**, but you will probably see a seam where snapshots were taken.  This can be reduced somewhat by decreasing the time it takes to acquire a snapshot.
 
 ### Position Rankings by Quality
 

@@ -1,0 +1,1 @@
+When this option is enabled, Octolapse will attempt to stabilize the first snapshot position based on your stabilization setting.  After the first snapshot, Octolapse will always choose the closest position available to the previous snapshot, reducing jitter.  
