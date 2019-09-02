@@ -287,6 +287,10 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
     # UPGRADE CAMERA PROFILES.  The structure has changed quite a bit.
     default_camera_profile = default_settings["profiles"]["defaults"]["camera"]
     for camera in settings_dict['cameras']:
+        if camera["camera_type"] == "external-script":
+            camera["camera_type"] = "script"
+        elif camera["camera_type"] == "printer-gcode":
+            camera["camera_type"] = "gcode"
         camera['webcam_settings'] = {
             "white_balance_temperature": camera['white_balance_temperature'],
             "sharpness": camera['sharpness'],

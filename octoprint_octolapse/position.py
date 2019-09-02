@@ -597,7 +597,7 @@ class Position(object):
         target.has_received_home_command = False
         target.is_in_bounds = True
 
-    def update(self, gcode):
+    def update(self, gcode, file_line_number=None):
         # Move the current position to the previous and the previous to the undo position
         # then copy previous to current
         if self.undo_pos is None:
@@ -609,12 +609,16 @@ class Position(object):
         # TODO:  We probably don't need to copy previous since we'll get the current pos from 'Update' below
         Position.copy_pos(self.previous_pos, self.current_pos)
 
-        previous = self.previous_pos
-        current = self.current_pos
-
         # parse the gcode command
         cpp_pos = GcodePositionProcessor.Update(self.key, gcode)
-        current = Pos.copy_from_cpp_pos(cpp_pos, current)
+        Pos.copy_from_cpp_pos(cpp_pos, self.current_pos)
+
+        # fill in the file line number if it is supplied.
+        if file_line_number is not None:
+            self.current_pos.file_line_number = file_line_number
+
+        previous = self.previous_pos
+        current = self.current_pos
 
         # reset the position restriction in_path_position state since it only works
         # for one gcode at a time.

@@ -178,7 +178,7 @@ class CaptureSnapshot(object):
 
         # now send any gcode for gcode cameras
         for current_camera in self.Cameras:
-            if current_camera.camera_type == "printer-gcode":
+            if current_camera.camera_type == "gcode":
                 logger.info("Sending snapshot gcode array to %s.", current_camera.name)
                 # just send the gcode now so it all goes in order
                 self.SendGcodeArrayCallback(

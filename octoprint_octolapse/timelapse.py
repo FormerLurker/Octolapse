@@ -725,8 +725,8 @@ class Timelapse(object):
         try:
             # get the position state in case it has changed
             # if there has been a position or extruder state change, inform any listener
-
-            self._position.update(gcode)
+            file_line_number = self.get_current_file_line(tags)
+            self._position.update(gcode, file_line_number=file_line_number)
             parsed_command = self._position.current_pos.parsed_command
 
             # if this code is snapshot gcode, simply return it to the printer.

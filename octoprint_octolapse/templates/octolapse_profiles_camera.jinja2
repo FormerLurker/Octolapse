@@ -88,7 +88,7 @@
                     </div>
                 </div>
 
-                <div data-bind="visible: camera_type() == 'printer-gcode'">
+                <div data-bind="visible: camera_type() == 'gcode'">
                     <div>
                         <h4>Gcode Script Camera - Send gcode to your printer to take a snapshot</h4>
                     </div>
@@ -179,7 +179,7 @@
                         <span class="help-inline">Octolapse will wait this long (in milliseconds) to get an image from your camera, else it will timeout and the print will continue.  The timeout doesn't start until after the camera delay specified above.</span>
                     </div>
                 </div>
-                <div class="control-group" data-bind="visible: camera_type() != 'printer-gcode'">
+                <div class="control-group" data-bind="visible: camera_type() != 'gcode'">
                     <label class="control-label">Rotate, Mirror, Flip or Transpose Snapshots</label>
                     <div class="controls">
                         <select id="camera_profile_snapshot_transpose" data-bind="options: Octolapse.Cameras.profileOptions.snapshot_transpose_options,

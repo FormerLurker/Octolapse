@@ -72,20 +72,32 @@ class SnapshotGcode(object):
         return len(self.InitializationGcode) + len(self.StartGcode) + len(self.snapshot_commands) - 1
 
     def __str__(self):
-        gcode_strings = ["\r\n\tSnapshot Gcode"]
-
+        gcode_format_string = "{0:14} - {1}"
+        gcode_strings = []
+        current_index = 0
         for gcode in self.InitializationGcode:
-            gcode_strings.append("Init     - {0}".format(gcode))
+            gcode_strings.append(gcode_format_string.format("Init", gcode))
+            current_index += 1
         for gcode in self.StartGcode:
-            gcode_strings.append("Start    - {0}".format(gcode))
+            gcode_strings.append(gcode_format_string.format("Start", gcode))
+            current_index += 1
         for gcode in self.snapshot_commands:
-            gcode_strings.append("Snapshot - {0}".format(gcode))
+            # see if this is the snapshot command
+            if self.snapshot_index() == current_index:
+                gcode_strings.append(gcode_format_string.format("Take Snapshot", gcode))
+            else:
+                gcode_strings.append(gcode_format_string.format("Snapshot", gcode))
+            current_index += 1
         for gcode in self.ReturnCommands:
-            gcode_strings.append("Return   - {0}".format(gcode))
+            gcode_strings.append(gcode_format_string.format("Return", gcode))
+            current_index += 1
         for gcode in self.EndGcode:
-            gcode_strings.append("End      - {0}".format(gcode))
+            gcode_strings.append(gcode_format_string.format("End", gcode))
+            current_index += 1
+        if len(gcode_strings) > 0:
+            gcode_strings[0] = "\t" + gcode_strings[0]
+        return '\r\n\t'.join(gcode_strings)
 
-        return '\r\n\t\t'.join(gcode_strings)
 
 class SnapshotPlanStep(object):
     def __init__(self, action, x=None, y=None, z=None, e=None, f=None):
@@ -1003,6 +1015,7 @@ class SnapshotGcodeGenerator(object):
 
     def create_gcode_for_snapshot_plan(self, snapshot_plan, g90_influences_extruder, options):
 
+        assert(isinstance(snapshot_plan, SnapshotPlan))
         if not self.initialize_for_snapshot_plan_processing(
             snapshot_plan, g90_influences_extruder, options
         ):
@@ -1043,15 +1056,21 @@ class SnapshotGcodeGenerator(object):
             self.send_end_command()
 
         # print out log messages
-        logger.info(
-            "Snapshot Gcode - snapshot_commandIndex:%s, EndIndex:%s",
-            self.snapshot_gcode.snapshot_index(),
-            self.snapshot_gcode.end_index()
-        )
+        if snapshot_plan.initial_position.file_line_number > 0:
+            logger.info(
+                "Triggered at line: %s by gcode: %s",
+                snapshot_plan.initial_position.file_line_number,
+                snapshot_plan.triggering_command.gcode
+            )
+        else:
+            logger.info(
+                "Triggered by gcode: %s",
+                snapshot_plan.triggering_command.gcode
+            )
+
         # enhanced snapshot gcode logger
-        logger.info("%s", self.snapshot_gcode)
-        #for gcode in self.snapshot_gcode.snapshot_gcode():
-        #    logger.info("    %s", gcode)
+        logger.info("Snapshot Gcode:\r\n%s", self.snapshot_gcode)
+
 
         return self.snapshot_gcode
 
