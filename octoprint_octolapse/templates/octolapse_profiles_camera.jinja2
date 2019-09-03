@@ -164,7 +164,7 @@
                         </span>
                         <a class="octolapse_help" data-help-url="profiles.camera.delay.md" data-help-title="Snapshot Delay" />
                         <div class="error_label_container text-error" data-error-for="camera_profile_delay"></div>
-                        <span class="help-inline">Applied before taking a snapshot.  Use higher values if you encounter motion blur, but consider changing to manual focus/manual exposure/manual white balance in the Image Preferences below.  This can reduce the required delay substantially.  The optimal value = 1000/FPS.  Example for 30FPS:  1000/30FPS = 33.3</span>
+                        <span class="help-inline">This value should be as low as possible (ideally 0).  See the help file for more details.</span>
                     </div>
                 </div>
                 <div class="control-group">
@@ -256,7 +256,7 @@
                 <p>It is highly recommended that you take the time to configure these settings since they can make a big difference in the quality of your timelapse, and reduce the required snapshot delay.</p>
             </div>
             <div class="text-warning" data-bind="visible: camera_type()!='webcam'">
-                <p>Custom image preferences are only available for USB web-cameras running on mjpg_streamer (the raspberry pi camera module is not currently supported).  Consider using a custom 'Before Print Start Script' or try using a web camera running on mjpg_streamer.</p>
+                <p>Custom image preferences are only available when using the 'Webcam' Camera Type setting above.  It may be possible to use the 'Before Print Start Script' script above to configure your camera.</p>
             </div>
         </div>
         <div>
@@ -276,8 +276,8 @@
                     <div class="control-group">
                         <div class="controls">
                             <label class="checkbox">
-                                <input type="checkbox" data-bind="checked: apply_settings_at_startup" />Apply Preferences at Startup
-                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.apply_settings_at_startup.md" data-help-title="Apply webcam preferences at startup" />
+                                <input type="checkbox" data-bind="checked: apply_settings_at_startup" />Apply Preferences When Octoprint Starts
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.apply_settings_at_startup.md" data-help-title="Apply Webcam Preferences When Octoprint Starts" />
                             </label>
                         </div>
                     </div>
@@ -286,7 +286,7 @@
                         <div class="controls">
                             <label class="checkbox">
                                 <input type="checkbox" data-bind="checked: apply_settings_before_print" />Apply Preferences Before Print Start
-                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.apply_settings_before_print.md" data-help-title="Apply webcam preferences at startup" />
+                                <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.apply_settings_before_print.md" data-help-title="Apply Webcam Preferences Before Print Start" />
                             </label>
                         </div>
                     </div>

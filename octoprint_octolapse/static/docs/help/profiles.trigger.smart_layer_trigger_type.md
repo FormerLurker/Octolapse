@@ -9,12 +9,12 @@ Gets the closest position.  **This WILL leave very noticeable defects on your pr
 #### Compatibility
 Attempts to return a high quality position if possible (see position rankings below).  If it cannot, it will return the next best position available, **including extrusions**, to ensure that a snapshot is taken on every layer.  Use this trigger if you're concerned with quality, but you want Octolapse to trigger on every layer no matter what.  This mode is also more likely to work with some lesser tested slicers and slicer settings.  This mode WILL take a snapshot while extruding if it has found no alternative and is more likely to leave artifacts than the high quality or smap to print types.
 **Not recommended for vase mode**
-#### Best Quality
-Gets the best quality position available.  This includes any slicer comment based gcode features.  
+#### High Quality
+Gets the best quality position available.  This includes any slicer comment based gcode features.
 
 **THIS MODE WILL NOT WORK WITH VASE MODE!**  
 
-Snapshots will be skipped no quality positions can be found.  If you are using this mode and notice fewer snapshots than you expect, try compatibility mode instead if you don't care about reduced quality.  If you have retraction disabled this mode will probably not take any snapshots at all.  If you use vase mode, you will only get a few snapshots at the beginning and possible a few snapshots at the end of the print.
+Snapshots will be skipped if no quality positions can be found.  If you are using this mode and notice fewer snapshots than you expect, try compatibility mode instead if you don't care about reduced quality.  If you have retraction disabled this mode will probably not take any snapshots at all.  If you use vase mode, you will only get a few snapshots at the beginning and possible a few snapshots at the end of the print.
 
 #### Snap to Print
 

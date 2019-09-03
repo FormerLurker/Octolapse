@@ -11,7 +11,7 @@
     "is_octolapse_enabled": true,
     "show_printer_state_changes": true,
     "platform": "win32",
-    "version": "0.4.0rc1.dev1",
+    "version": "0.4.0rc1.dev2",
     "show_position_changes": true,
     "automatic_updates_enabled": true,
     "cancel_print_on_startup_error": true,
@@ -500,6 +500,84 @@
         "extruder_state_requirements_enabled": true,
         "trigger_on_primed": "trigger_on",
         "name": "Smart - Snap To Print",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_retracting": "",
+        "trigger_subtype": "layer",
+        "trigger_on_deretracted": "forbidden",
+        "trigger_on_deretracting_start": ""
+      },
+      "4e1302c8-c0a2-433c-9281-5247ba6de963": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Smart - Snap To Print - High Quality",
+              "value": "smart_snap_to_print_high_quality"
+            }
+          ],
+          "is_custom": true,
+          "suppress_update_notification_version": false,
+          "version": "1.0"
+        },
+        "trigger_on_retracted": "trigger_on",
+        "smart_layer_snap_to_print_high_quality": true,
+        "layer_trigger_height": 0.0,
+        "guid": "4e1302c8-c0a2-433c-9281-5247ba6de963",
+        "smart_layer_trigger_type": 0,
+        "trigger_type": "smart-layer",
+        "timer_trigger_seconds": 30,
+        "position_restrictions": [],
+        "trigger_on_retracting_start": "",
+        "require_zhop": false,
+        "description": "This smart layer trigger keeps your extruder over your printed part while taking a snapshot.  As long as your camera is quick to return a snapshot, and there are no communication delays with your printer, this stabilization is very low impact.  Since there are no extra travel movements, it is the fastest trigger available, and adds very little time to your print.  \n\nConsider trying this trigger with the 'disabled' stabilization profile for an interesting effect, depending on the model you're printing.\n\nThis stabilization is suitable for vase mode prints, but may take snapshots more often than normal if you have not entered a 'Layer Height' into your slicer settings.  If you are using 'automatic' slicer settings, this will happen for you.\n\nThe smart trigger pre-processes your gcode in order to choose better stabilization points, reducing travel time.  This trigger is configured for compatibility with different slicers and printers.",
+        "trigger_on_extruding": "trigger_on",
+        "is_default": false,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_partially_retracted": "forbidden",
+        "position_restrictions_enabled": false,
+        "smart_layer_disable_z_lift": true,
+        "extruder_state_requirements_enabled": true,
+        "smart_layer_snap_to_print_smooth": false,
+        "trigger_on_primed": "trigger_on",
+        "name": "Smart - Snap To Print - High Quality",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_retracting": "",
+        "trigger_subtype": "layer",
+        "trigger_on_deretracted": "forbidden",
+        "trigger_on_deretracting_start": ""
+      },
+      "b852dc57-4d8e-457f-825f-2d13d0b1f825": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Smart - Snap To Print - Smooth",
+              "value": "smart_snap_to_print_smooth"
+            }
+          ],
+          "is_custom": false,
+          "suppress_update_notification_version": false,
+          "version": "1.0"
+        },
+        "trigger_on_retracted": "trigger_on",
+        "smart_layer_snap_to_print_high_quality": false,
+        "layer_trigger_height": 0.0,
+        "guid": "b852dc57-4d8e-457f-825f-2d13d0b1f825",
+        "smart_layer_trigger_type": 0,
+        "trigger_type": "smart-layer",
+        "timer_trigger_seconds": 30,
+        "position_restrictions": [],
+        "trigger_on_retracting_start": "",
+        "require_zhop": false,
+        "description": "This smart layer trigger keeps your extruder over your printed part while taking a snapshot.  As long as your camera is quick to return a snapshot, and there are no communication delays with your printer, this stabilization is very low impact.  Since there are no extra travel movements, it is the fastest trigger available, and adds very little time to your print.  \n\nConsider trying this trigger with the 'disabled' stabilization profile for an interesting effect, depending on the model you're printing.\n\nThis stabilization is suitable for vase mode prints, but may take snapshots more often than normal if you have not entered a 'Layer Height' into your slicer settings.  If you are using 'automatic' slicer settings, this will happen for you.\n\nThe smart trigger pre-processes your gcode in order to choose better stabilization points, reducing travel time.  This trigger is configured for compatibility with different slicers and printers.",
+        "trigger_on_extruding": "trigger_on",
+        "is_default": false,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_partially_retracted": "forbidden",
+        "position_restrictions_enabled": false,
+        "smart_layer_disable_z_lift": true,
+        "extruder_state_requirements_enabled": true,
+        "smart_layer_snap_to_print_smooth": true,
+        "trigger_on_primed": "trigger_on",
+        "name": "Smart - Snap To Print - Smooth",
         "trigger_on_deretracting": "forbidden",
         "trigger_on_retracting": "",
         "trigger_subtype": "layer",

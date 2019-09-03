@@ -552,7 +552,8 @@ def get_system_fonts(base_directory):
                     font_names.add(f)
                     font_paths.append(os.path.join(os.environ['WINDIR'], f))
     else:
-        raise NotImplementedError('Unsupported operating system.')
+        # I don't know how to find these for Mac OS  Maybe someone can help with this?
+        pass
 
     def sort_fonts(a, b):
         a_name = os.path.basename(a).lower()

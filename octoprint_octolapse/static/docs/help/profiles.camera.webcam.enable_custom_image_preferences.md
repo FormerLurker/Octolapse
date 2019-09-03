@@ -2,7 +2,7 @@ Enabling custom image preferences will allow you to edit many of your webcam set
 
 As of Octolapse V0.3.4, Custom Image Preferences are only supported if you are using a webcam stream with mjpg_streamer.
 
-## Required boot/octopi.txt changes to use custom image preferences
+### Required boot/octopi.txt changes to use custom image preferences
 
 _**these changes are required in order to use the custom image preferences**_
 
@@ -42,13 +42,39 @@ camera_http_webroot="./www"
 camera_http_options=""
 ```
 
-## Required etc/modules and boot/octopi.txt changes for Raspberry Pi Camera Module
+### Required etc/modules and boot/octopi.txt changes for Raspberry Pi Camera Module
 
-Connect to a terminal window on your raspberry pi and edit the /etc/modules file with the following command:
+A detailed guide for configuring the raspberry pi camera can be found [here](https://github.com/FormerLurker/Octolapse/wiki/Configuring-a-Raspberry-Pi-Camera).  Brief instructions can be found below.  
+
+The first step is to update your raspberry pi.  If you skip this step, the camera driver may not work properly.
+
+Connect to a terminal window on your raspberry pi and enter the following command followed by the Enter key:
+
+```
+sudo apt-get update
+```
+
+Enter your password if you are prompted.  You also might be asked to confirm the updates at some point. If so, press Y to confirm.  This command may take a while to finish.
+
+Next we will upgrade the distribution. Enter the following command and press the Enter key.
+
+```
+sudo apt-get dist-upgrade
+```
+
+You might be asked to confirm the updates at some point. If so, press Y to confirm.
+
+Now reboot your pi for the update to take effect by entering the following command, followed by the Enter key:
+
+```
+sudo reboot
+```
+
+Wait for your pi to reboot (this usually takes a few minutes), then reconnect to a terminal window on your raspberry pi and edit the /etc/modules file with the following command:
 
 ```sudo nano /etc/modules```
 
-Add the following line to the end of the modules file:
+Enter your password if prompted.  After the nano editor opens, add the following line to the end of the modules file:
 
 ```bcm2835-v4l2```
 
