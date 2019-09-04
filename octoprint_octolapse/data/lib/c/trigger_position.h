@@ -30,30 +30,30 @@ struct trigger_position
 	
 	trigger_position()
 	{
-		type = position_type_unknown;
+		type_position = position_type_unknown;
 		distance = -1;
 		is_empty = true;
-		feature_type = feature_type_unknown_feature;
+		type_feature = feature_type_unknown_feature;
 	}
 	trigger_position(position_type type_, double distance_, position pos_)
 	{
-		type = type_;
+		type_position = type_;
 		distance = distance_;
 		pos = pos_;
 		is_empty = false;
-		feature_type = feature_type_unknown_feature;
+		type_feature = feature_type_unknown_feature;
 	}
-	trigger_position(feature_type feature_type_, double distance_, position pos_)
+	trigger_position(feature_type feature_, double distance_, position pos_)
 	{
-		type = position_type_unknown;
+		type_position = position_type_unknown;
 		distance = distance_;
 		pos = pos_;
 		is_empty = false;
-		feature_type = feature_type_;
+		type_feature = feature_;
 	}
 	static position_type get_type(position& pos_);
-	position_type type;
-	feature_type feature_type;
+	position_type type_position;
+	feature_type type_feature;
 	double distance;
 	position pos;
 	bool is_empty;

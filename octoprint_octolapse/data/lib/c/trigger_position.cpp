@@ -480,7 +480,7 @@ void trigger_positions::add_feature_position_internal(position &pos, double dist
 {
 	feature_position_list_[pos.feature_type_tag].pos = pos;
 	feature_position_list_[pos.feature_type_tag].distance = distance;
-	feature_position_list_[pos.feature_type_tag].feature_type = static_cast<feature_type>(pos.feature_type_tag);
+	feature_position_list_[pos.feature_type_tag].type_feature = static_cast<feature_type>(pos.feature_type_tag);
 	feature_position_list_[pos.feature_type_tag].is_empty = false;
 
 }
@@ -489,7 +489,7 @@ void trigger_positions::add_internal(position &pos, double distance, position_ty
 {
 	position_list_[type].pos = pos;
 	position_list_[type].distance = distance;
-	position_list_[type].type = type;
+	position_list_[type].type_position = type;
 	position_list_[type].is_empty = false;
 
 }
