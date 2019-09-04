@@ -97,7 +97,7 @@ stabilization_smart_layer::~stabilization_smart_layer()
 
 void stabilization_smart_layer::update_stabilization_coordinates()
 {
-	bool snap_to_print_smooth = p_smart_layer_args_->smart_layer_trigger_type == trigger_position::snap_to_print && p_smart_layer_args_->snap_to_print_smooth;
+	bool snap_to_print_smooth = p_smart_layer_args_->smart_layer_trigger_type == trigger_type_snap_to_print && p_smart_layer_args_->snap_to_print_smooth;
 	bool stabilization_disabled = p_stabilization_args_->x_stabilization_disabled && p_stabilization_args_->y_stabilization_disabled;
 	if (
 		(stabilization_disabled || snap_to_print_smooth)
@@ -171,7 +171,7 @@ void stabilization_smart_layer::add_plan()
 		//std::cout << "Adding saved plan to plans...  F Speed" << p_saved_position_->f_ << " \r\n";
 		snapshot_plan p_plan;
 		double total_travel_distance;
-		if (p_smart_layer_args_->smart_layer_trigger_type == trigger_position::snap_to_print)
+		if (p_smart_layer_args_->smart_layer_trigger_type == trigger_type_snap_to_print)
 		{
 			total_travel_distance = 0;
 		}
@@ -191,7 +191,7 @@ void stabilization_smart_layer::add_plan()
 		p_plan.has_initial_position = true;
 		const bool all_stabilizations_disabled = p_stabilization_args_->x_stabilization_disabled && p_stabilization_args_->y_stabilization_disabled;
 		
-		if (!(all_stabilizations_disabled || p_smart_layer_args_->smart_layer_trigger_type == trigger_position::snap_to_print))
+		if (!(all_stabilizations_disabled || p_smart_layer_args_->smart_layer_trigger_type == trigger_type_snap_to_print))
 		{
 			double x_stabilization, y_stabilization;
 			if (p_stabilization_args_->x_stabilization_disabled)
@@ -212,7 +212,7 @@ void stabilization_smart_layer::add_plan()
 		p_plan.steps.push_back(p_snapshot_step);
 
 		// Only add a return position if we're not using snap to print
-		if(p_smart_layer_args_->smart_layer_trigger_type != trigger_position::snap_to_print)
+		if(p_smart_layer_args_->smart_layer_trigger_type != trigger_type_snap_to_print)
 			p_plan.return_position = p_closest.pos;
 
 		p_plan.file_line = p_closest.pos.file_line_number;

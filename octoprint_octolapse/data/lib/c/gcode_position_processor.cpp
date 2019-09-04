@@ -1209,7 +1209,7 @@ static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_arg
 		PyErr_SetString(PyExc_TypeError, "Unable to retrieve trigger_type from the smart layer trigger stabilization args.");
 		return false;
 	}
-	args->smart_layer_trigger_type = static_cast<trigger_position::trigger_type>(PyLong_AsLong(py_trigger_type));
+	args->smart_layer_trigger_type = static_cast<trigger_type>(PyLong_AsLong(py_trigger_type));
 
 	PyObject * py_snap_to_print_high_quality = PyDict_GetItemString(py_args, "snap_to_print_high_quality");
 	if (py_snap_to_print_high_quality == NULL)

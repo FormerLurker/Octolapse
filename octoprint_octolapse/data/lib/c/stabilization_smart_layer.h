@@ -16,12 +16,12 @@ struct smart_layer_args
 {
 	smart_layer_args()
 	{
-		smart_layer_trigger_type = trigger_position::trigger_type::compatibility;
+		smart_layer_trigger_type = trigger_type::trigger_type_compatibility;
 		speed_threshold = 0;
 		snap_to_print_high_quality = false;
 		snap_to_print_smooth = false;
 	}
-	trigger_position::trigger_type smart_layer_trigger_type;
+	trigger_type smart_layer_trigger_type;
 	double speed_threshold;
 	bool snap_to_print_high_quality;
 	bool snap_to_print_smooth;
@@ -49,7 +49,7 @@ private:
 	 * \param distance the distance between the supplied position and the stabilization point.  Is set to -1 if there are errors
 	 * \return true if the position is closer, false if it is not or if it is filtered
 	 */
-	bool is_closer(position* p_position, trigger_position::position_type type_, double &distance);
+	bool is_closer(position* p_position, position_type type_, double &distance);
 	void update_stabilization_coordinates();
 	// Layer/height tracking variables
 	bool is_layer_change_wait_;

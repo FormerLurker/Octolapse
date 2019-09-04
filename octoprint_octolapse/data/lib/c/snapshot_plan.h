@@ -34,8 +34,8 @@ struct snapshot_plan
 	static PyObject * build_py_object(std::vector<snapshot_plan> &plans);
 	long file_line;
 	long file_gcode_number;
-	trigger_position::position_type triggering_command_type;
-	gcode_comment_processor::feature_type triggering_command_feature_type;
+	position_type triggering_command_type;
+	feature_type triggering_command_feature_type;
 	parsed_command triggering_command;
 	parsed_command start_command;
 	position initial_position;
