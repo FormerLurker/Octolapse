@@ -316,7 +316,7 @@ $(function() {
                return "Switch to Default Page";
            }
            else{
-               return "Check for Custom Page";
+               return "Switch to Custom Page";
            }
         });
 
