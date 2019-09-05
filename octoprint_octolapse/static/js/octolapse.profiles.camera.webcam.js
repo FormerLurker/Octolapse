@@ -768,7 +768,8 @@ $(function() {
         };
 
         self.previewStabilization = function() {
-            var message = "Make sure your bed is clear, and that your 'Home Axis Gcode Script' \
+            var message = "Your extruder will be moved to the selected stabilization position. \
+                           Make sure your bed is clear, and that your 'Home Axis Gcode Script' \
                            is correct before attempting to preview the stabilization point.  \
                            Are you sure you want to continue?";
             Octolapse.showConfirmDialog("preview-stabilization", "Preview Stabilization", message, function(){

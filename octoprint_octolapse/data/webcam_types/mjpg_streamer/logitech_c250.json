@@ -3,7 +3,7 @@
   "name": "Logitech C250",
   "make": "Logitech",
   "model": "C250",
-  "template": "octolapse-mjpg-streamer-logitech-c920",
+  "template": "octolapse-mjpg-streamer-logitech-c250",
   "controls": [
     {
       "name": "Brightness",
