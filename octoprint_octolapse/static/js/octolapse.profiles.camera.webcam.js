@@ -395,7 +395,7 @@ $(function() {
                     var title = "Webcam type found!";
                     var type = "success";
                     if (!results.type) {
-                        message = "This webcam does not currently support a custom camera control page.";
+                        message = "There is no custom control for your webcam model at the moment!";
                         title = 'Unknown webcam';
                         type = "error";
                     }
