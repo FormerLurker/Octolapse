@@ -637,7 +637,7 @@ class SnapshotGcodeGenerator(object):
 
     def add_travel_action_absolute(self, step):
         assert (isinstance(step, SnapshotPlanStep))
-        if self.x_current != step.x and self.y_current != step.y:
+        if not(self.x_current == step.x and self.y_current == step.y):
             # Move to Snapshot Position
             self.set_xyz_to_absolute(SnapshotGcode.SNAPSHOT_COMMANDS)
             self.x_current = step.x

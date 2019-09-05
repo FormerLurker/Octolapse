@@ -274,7 +274,7 @@ bool trigger_positions::get_compatibility_position(trigger_position &pos)
 
 bool trigger_positions::get_high_quality_position(trigger_position &pos)
 {
-	for (int index = NUM_FEATURE_TYPES - 1; index >  feature_type::feature_type_inner_perimeter_feature - 1; index--)
+	for (int index = NUM_FEATURE_TYPES - 1; index >  feature_type_inner_perimeter_feature - 1; index--)
 	{
 		if (!feature_position_list_[index].is_empty)
 		{
@@ -526,24 +526,24 @@ void trigger_positions::try_add_extrusion_start_position(position & extrusion_st
 		&& utilities::less_than(distance, position_list_[position_type_fastest_extrusion].distance))
 	{
 		// add the current position as the fastest extrusion speed 
-		add_internal(saved_pos, distance, position_type::position_type_fastest_extrusion);
+		add_internal(saved_pos, distance, position_type_fastest_extrusion);
 	}
 
 	
 	bool add_position = false;
-	if (!position_list_[position_type::position_type_extrusion].is_empty)
+	if (!position_list_[position_type_extrusion].is_empty)
 	{
 		add_position = true;
 	}
-	else if (utilities::less_than(distance, position_list_[position_type::position_type_extrusion].distance))
+	else if (utilities::less_than(distance, position_list_[position_type_extrusion].distance))
 	{
 		add_position = true;
 	}
-	else if (utilities::is_equal(position_list_[position_type::position_type_extrusion].distance, distance) && !previous_initial_pos_.is_empty)
+	else if (utilities::is_equal(position_list_[position_type_extrusion].distance, distance) && !previous_initial_pos_.is_empty)
 	{
 		//std::cout << "Closest position tie detected, ";
 		const double old_distance_from_previous = utilities::get_cartesian_distance(
-			position_list_[position_type::position_type_extrusion].pos.x, 
+			position_list_[position_type_extrusion].pos.x, 
 			position_list_[position_type_extrusion].pos.y, 
 			previous_initial_pos_.x, 
 			previous_initial_pos_.y
@@ -559,7 +559,7 @@ void trigger_positions::try_add_extrusion_start_position(position & extrusion_st
 	if (add_position)
 	{
 		// add the current position as the fastest extrusion speed 
-		add_internal(saved_pos, distance, position_type::position_type_extrusion);
+		add_internal(saved_pos, distance, position_type_extrusion);
 	}
 }
 
