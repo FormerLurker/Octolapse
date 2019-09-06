@@ -1949,7 +1949,7 @@ class OctolapsePlugin(
                         }
                     else:
                         message = "Some required slicer settings are missing from your gcode file.  Unable to proceed" \
-                                  ".  Missing Settings: {0}".format(",".join(error_list))
+                                  ".  Missing Settings: {0}\r\nFor more information check Octolapse > Printer > Current Slicer Settings.".format(",".join(error_list))
                         return {
                             "success": False, "error": "missing-automatic-slicer-settings", "error-message": message
                         }
