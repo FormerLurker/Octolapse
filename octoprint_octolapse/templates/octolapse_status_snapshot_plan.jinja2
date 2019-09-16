@@ -109,13 +109,13 @@
                 <div class="span6 no-min-height">
                     <div id="snapshot_plan_canvas_container" title="Shows the position of the extruder during each phase of the snapshot."></div>
                     <div class="text-center ol-hover-button">
-                        <a data-bind="click: SnapshotPlanState.previous_plan_clicked" title="Display the previous snapshot plan."><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-minus fa-stack-1x"></i></span></a>
+                        <a data-bind="click: SnapshotPlanState.previous_plan_clicked" title="Display the previous snapshot plan."><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-caret-left fa-stack-1x"></i></span></a>
                         <a data-bind="click: SnapshotPlanState.show_current_plan_clicked,
                                       attr: {title: (SnapshotPlanState.is_confirmation_popup() ? 'View the first snapshot plan' : 'Display the current snapshot plan.')}">
                             <span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-refresh fa-stack-1x"></i></span>
                         </a>
                         <a data-bind="click: SnapshotPlanState.animate_plan_clicked, disable: SnapshotPlanState.is_animating_plans" title="Animate all snapshot plans."><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-play-circle fa-stack-1x"></i></span></a>
-                        <a data-bind="click: SnapshotPlanState.next_plan_clicked" title="Display the next snapshot plan."><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-plus fa-stack-1x"></i></span></a>
+                        <a data-bind="click: SnapshotPlanState.next_plan_clicked" title="Display the next snapshot plan."><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-caret-right fa-stack-1x"></i></span></a>
                     </div>
                 </div>
             </div>
