@@ -2538,8 +2538,23 @@ class OctolapsePlugin(
                         payload.CameraName,
                         payload.get_rendering_path()
                       )
-
         self.send_render_success_message(message, payload.Synchronize)
+
+        # fire custom event for movie done
+        output_file_name = "{0}.{1}".format(payload.RenderingFilename, payload.RenderingExtension)
+        gcode_filename = "{0}.{1}".format(payload.GcodeFilename, payload.GcodeFileExtension)
+        if payload.Synchronize:
+            output_file_path = os.path.join(payload.SynchronizedDirectory, output_file_name)
+        else:
+            output_file_path = os.path.join(payload.SynchronizedDirectory, output_file_name)
+
+        event = Events.PLUGIN_OCTOLAPSE_MOVIE_DONE
+        custom_payload = dict(
+            gcode=gcode_filename,
+            movie=output_file_path,
+            movie_basename=output_file_name
+        )
+        self._event_bus.fire(event, payload=custom_payload)
 
     def on_render_error(self, payload, error):
         """Called after all rendering and synchronization attempts are complete."""
@@ -2670,6 +2685,9 @@ class OctolapsePlugin(
         max_upload_size_mb = 5  # 5mb bytes
         return [("POST", "/importSettings", 1024*1024*max_upload_size_mb)]
 
+    def register_custom_events(*args, **kwargs):
+        return ["movie_done"]
+
 # If you want your plugin to be registered within OctoPrin#t under a different
 # name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here.  Same goes for the
@@ -2693,5 +2711,6 @@ def __plugin_load__():
         "octoprint.comm.protocol.gcode.sending": (__plugin_implementation__.on_gcode_sending, -1),
         "octoprint.comm.protocol.gcode.received": (__plugin_implementation__.on_gcode_received, -1),
         "octoprint.timelapse.extensions": __plugin_implementation__.get_timelapse_extensions,
-        "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook
+        "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
+        "octoprint.events.register_custom_events": __plugin_implementation__.register_custom_events
     }

@@ -177,7 +177,8 @@ class Timelapse(object):
         self._current_job_info = utility.TimelapseJobInfo(
             job_guid=uuid.uuid4(),
             print_start_time=time.time(),
-            print_file_name=utility.get_filename_from_full_path(gcode_file_path)
+            print_file_name=utility.get_filename_from_full_path(gcode_file_path),
+            print_file_extension=utility.get_extension_from_full_path(gcode_file_path),
         )
 
         if self._rendering_processor is None:

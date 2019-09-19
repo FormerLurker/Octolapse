@@ -709,8 +709,9 @@ class TimelapseRenderJob(object):
             self.render_job_info.jobs_remaining,
             self.render_job_info.camera.name,
             self.before_render_error,
-            self.after_render_error
-
+            self.after_render_error,
+            self.render_job_info.timelapse_job_info.PrintFileName,
+            self.render_job_info.timelapse_job_info.PrintFileExtension
         )
 
     def _render(self):
@@ -1190,7 +1191,9 @@ class RenderingCallbackArgs(object):
         jobs_remaining,
         camera_name,
         before_render_error,
-        after_render_error
+        after_render_error,
+        gcode_filename,
+        gcode_file_extension
     ):
         self.Reason = reason
         self.ReturnCode = return_code
@@ -1209,6 +1212,8 @@ class RenderingCallbackArgs(object):
         self.CameraName = camera_name
         self.BeforeRenderError = before_render_error
         self.AfterRenderError = after_render_error
+        self.GcodeFilename = gcode_filename
+        self.GcodeFileExtension = gcode_file_extension
 
     def get_rendering_filename(self):
         return "{0}.{1}".format(self.RenderingFilename, self.RenderingExtension)

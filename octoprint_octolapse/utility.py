@@ -110,8 +110,22 @@ def get_filename_from_full_path(path):
     basename = ntpath.basename(path)
     head, tail = ntpath.split(basename)
     file_name = tail or ntpath.basename(head)
-    return os.path.splitext(file_name)[0]
+    split_filename = os.path.splitext(file_name)
+    if len(split_filename) > 0:
+        return split_filename[0]
+    return ""
 
+def get_extension_from_full_path(path):
+
+    basename = ntpath.basename(path)
+    head, tail = ntpath.split(basename)
+    file_name = tail or ntpath.basename(head)
+    split_filename = os.path.splitext(file_name)
+    if len(split_filename) > 1:
+        extension = split_filename[1]
+        if len(split_filename) > 1:
+            return extension[1:]
+    return ""
 
 def greater_than_or_close(a, b, abs_tol):
     return a - b > abs_tol
@@ -748,7 +762,7 @@ def run_command_with_timeout(args, timeout_sec):
 class TimelapseJobInfo(object):
     def __init__(
         self, job_info=None, job_guid=None, print_start_time=None, print_end_time=None,
-        print_end_state=None, print_file_name=None
+        print_end_state=None, print_file_name=None, print_file_extension=None
      ):
         if job_info is None:
             self.JobGuid = "{}".format(job_guid)
@@ -756,6 +770,7 @@ class TimelapseJobInfo(object):
             self.PrintEndTime = print_end_time
             self.PrintEndState = print_end_state
             self.PrintFileName = print_file_name
+            self.PrintFileExtension = print_file_extension
 
         else:
             self.JobGuid = job_info.JobGuid
@@ -763,6 +778,7 @@ class TimelapseJobInfo(object):
             self.PrintEndTime = job_info.PrintEndTime
             self.PrintEndState = job_info.PrintEndState
             self.PrintFileName = job_info.PrintFileName
+            self.PrintFileExtension = job_info.PrintFileExtension
 
 
 class RecurringTimerThread(threading.Thread):
