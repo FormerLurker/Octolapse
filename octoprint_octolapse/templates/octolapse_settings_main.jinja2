@@ -123,50 +123,65 @@
                         <h3 class="modal-title">Edit Main Settings</h3>
                     </div>
                     <div class="modal-body scrollable">
-                        <div>
+                        <fieldset class="octolapse">
+                            <legend>Octolapse Status</legend>
                             <div>
-                                <h4>Octolapse Status</h4>
-                            </div>
-                            <div class="control-group">
-                                <div class="controls">
-                                    <label class="checkbox">
-                                        <input type="checkbox" title="Enable or disable the plugin" data-bind="checked:is_octolapse_enabled " />Enabled
-                                        <a class="octolapse_help" data-help-url="main_settings.enabled.md" data-help-title="Enable/Disable Octolapse" />
-                                    </label>
+                                <div class="control-group">
+                                    <div class="controls">
+                                        <label class="checkbox">
+                                            <input type="checkbox" title="Enable or disable the plugin" data-bind="checked:is_octolapse_enabled " />Enabled
+                                            <a class="octolapse_help" data-help-url="main_settings.enabled.md" data-help-title="Enable/Disable Octolapse" />
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <hr />
-                        <div>
-                            <h4>Automatic Updates</h4>
-                        </div>
-                        <div class="control-group">
-                            <label class="control-label">Enabled</label>
-                            <div class="controls">
-                                <label class="checkbox">
-                                    <input type="checkbox" title="Enable automatic updates." data-bind="checked:automatic_updates_enabled" />Enabled
-                                    <a class="octolapse_help" data-help-url="main_settings.automatic_updates_enabled.md" data-help-title="Enable Automatic Updates" />
-                                </label>
-                            </div>
-                        </div>
-                        <div class="control-group" data-bind="visible: automatic_updates_enabled">
-                            <label class="control-label">Update every</label>
-                            <div class="controls">
-                                <span class="input-append">
-                                    <input name="automatic_update_interval_days" class="input-mini ignore_hidden_errors" title="The number of days to wait between update checks." type="number" data-bind="value: automatic_update_interval_days" min="1" max="365" step="1" required="true" />
-                                    <span class="add-on">days</span>
-                                </span>
+                        </fieldset>
 
-                                <a class="octolapse_help" data-help-url="main_settings.automatic_update_interval_days.md" data-help-title="Auto Reload Frames" />
-                                <div class="error_label_container text-error"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <hr />
+                        <fieldset class="octolapse">
+                            <legend>Automatic Updates</legend>
                             <div>
-                                <h4>Print Start Options</h4>
+
+                                <div class="control-group">
+                                    <label class="control-label">Enabled</label>
+                                    <div class="controls">
+                                        <label class="checkbox">
+                                            <input type="checkbox" title="Enable automatic updates." data-bind="checked:automatic_updates_enabled" />Enabled
+                                            <a class="octolapse_help" data-help-url="main_settings.automatic_updates_enabled.md" data-help-title="Enable Automatic Updates" />
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="control-group" data-bind="visible: automatic_updates_enabled">
+                                    <label class="control-label">Update every</label>
+                                    <div class="controls">
+                                        <span class="input-append">
+                                            <input name="automatic_update_interval_days" class="input-mini ignore_hidden_errors" title="The number of days to wait between update checks." type="number" data-bind="value: automatic_update_interval_days" min="1" max="365" step="1" required="true" />
+                                            <span class="add-on">days</span>
+                                        </span>
+
+                                        <a class="octolapse_help" data-help-url="main_settings.automatic_update_interval_days.md" data-help-title="Auto Reload Frames" />
+                                        <div class="error_label_container text-error"></div>
+                                    </div>
+                                </div>
                             </div>
+                        </fieldset>
+                        <fieldset class="octolapse">
+                            <legend>Print Start Options</legend>
                             <div>
+                                <div>
+                                    <h4>Startup Errors</h4>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label">Cancel print if startup errors are detected</label>
+                                    <div class="controls">
+                                        <label class="checkbox">
+                                            <input type="checkbox" title="Cancel if startup errors are detected" data-bind="checked:cancel_print_on_startup_error" />Enabled
+                                            <a class="octolapse_help" data-help-url="main_settings.cancel_print_on_startup_error.md" data-help-title="Cancel Print On Startup Error" />
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4>Snapshot Plan Preview</h4>
+                                </div>
                                 <div class="control-group">
                                     <label class="control-label">Preview Snapshot Plans</label>
                                     <div class="controls">
@@ -195,20 +210,11 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="control-group">
-                                    <label class="control-label">Cancel print if startup errors are detected</label>
-                                    <div class="controls">
-                                        <label class="checkbox">
-                                            <input type="checkbox" title="Cancel if startup errors are detected" data-bind="checked:cancel_print_on_startup_error" />Enabled
-                                            <a class="octolapse_help" data-help-url="main_settings.cancel_print_on_startup_error.md" data-help-title="Cancel Print On Startup Error" />
-                                        </label>
-                                    </div>
-                                </div>
+
                             </div>
-                            <hr />
-                            <div>
-                                <h4>Navbar Options</h4>
-                            </div>
+                        </fieldset>
+                        <fieldset class="octolapse">
+                            <legend>Navbar Options</legend>
                             <div class="control-group">
                                 <label class="control-label">Display Navbar While Printing</label>
                                 <div class="controls">
@@ -227,10 +233,9 @@
                                     </label>
                                 </div>
                             </div>
-                            <hr />
-                            <div>
-                                <h4>Octolapse Tab Options</h4>
-                            </div>
+                        </fieldset>
+                        <fieldset class="octolapse">
+                            <legend>Octolapse Tab Options</legend>
                             <div>
                                 <div>
                                     <h5>Snapshot Viewer</h5>
@@ -252,10 +257,11 @@
                                         <div class="error_label_container text-error"></div>
                                     </div>
                                 </div>
-                                <div>
-                                    <h5>Info Panels</h5>
-                                </div>
-
+                            </div>
+                            <div>
+                                <h4>Info Panels</h4>
+                            </div>
+                            <div>
                                 <div class="control-group">
                                     <label class="control-label">Enable Printer State Panel</label>
                                     <div class="controls">
@@ -306,7 +312,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </fieldset>
                     </div>
                     <div class="modal-footer" style="bottom:0;position:relative">
                         <div class="row-fluid">
