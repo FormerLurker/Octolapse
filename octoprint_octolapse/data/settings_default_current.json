@@ -275,7 +275,7 @@
       }
     },
     "triggers": {
-      "c8f810ef-56b9-4343-8ec3-e35896af1a5c": {
+      "f8e5e1a2-a54c-489b-961b-2530648e1625": {
         "automatic_configuration": {
           "is_custom": false,
           "suppress_update_notification_version": false,
@@ -312,7 +312,7 @@
         "trigger_on_deretracted": "forbidden",
         "trigger_on_deretracting_start": ""
       },
-      "fbd4a42d-c266-4418-a7af-58b02787b6f5": {
+      "322d69ef-e7cb-454a-916a-15856682932c": {
         "automatic_configuration": {
           "is_custom": false,
           "suppress_update_notification_version": false,
@@ -483,7 +483,7 @@
         },
         "trigger_on_retracted": "trigger_on",
         "layer_trigger_height": 0.0,
-        "guid": "20fd8385-d31a-4e88-a280-b07a9c436245",
+        "guid": "0713c9c9-7562-4a04-81e0-9f2f8953e069",
         "smart_layer_trigger_type": 0,
         "trigger_type": "smart-layer",
         "timer_trigger_seconds": 30,

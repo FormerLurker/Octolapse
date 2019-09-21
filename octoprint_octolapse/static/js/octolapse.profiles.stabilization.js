@@ -50,7 +50,6 @@ $(function () {
         self.y_relative_path_invert_loop = ko.observable(values.y_relative_path_invert_loop);
 
         self.updateFromServer = function(values) {
-            self.guid(values.guid);
             self.name(values.name);
             self.description(values.description);
             self.x_type(values.x_type);

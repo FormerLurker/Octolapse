@@ -104,7 +104,6 @@ $(function() {
         };
         
         self.updateFromServer = function(values) {
-            self.guid(values.guid);
             self.name(values.name);
             self.description(values.description);
             self.enabled(values.enabled);

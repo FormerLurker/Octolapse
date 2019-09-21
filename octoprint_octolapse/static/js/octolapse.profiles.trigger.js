@@ -140,7 +140,6 @@ $(function () {
         };
         
         self.updateFromServer = function(values) {
-            self.guid(values.guid);
             self.name(values.name);
             self.description(values.description);
             self.trigger_type(values.trigger_type);

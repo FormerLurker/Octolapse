@@ -268,7 +268,6 @@ $(function() {
         };
 
         self.updateFromServer = function(values) {
-            self.guid(values.guid);
             self.name(values.name);
             self.enabled(values.enabled);
             self.description(values.description);
