@@ -122,9 +122,9 @@
             </div>
         </div>
         <div class="panel-footer" data-bind="visible: SnapshotPlanState.is_confirmation_popup()">
-            <div class="panel-footer" data-bind="visible: SnapshotPlanState.autoclose()">
-                <p>This popup will auto-close and your print will automatically start in <span data-bind="text:SnapshotPlanState.autoclose_seconds"></span> seconds.</p>
-            </div>
+            <p data-bind="visible: SnapshotPlanState.autoclose()">
+                This popup will auto-close and your print will automatically start in <span data-bind="text:SnapshotPlanState.autoclose_seconds"></span> seconds.
+            </p>
             <p>
                 You can enable or disable the snapshot plan preview and configure auto-close within the
                 <a class="ol-button" title="Open Octolapse Main Settings" data-bind="click: function() {openOctolapseSettings('main-settings');}">main settings</a>.
