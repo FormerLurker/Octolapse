@@ -417,9 +417,35 @@ void trigger_positions::try_add(position &current_pos, position &previous_pos)
 		)
 	)
 	{
-		try_add_feature_position_internal(current_pos, get_stabilization_distance(current_pos));
+		// only add features if we are extruding.
+		if (current_pos.is_extruding)
+		{
+			try_add_feature_position_internal(current_pos);
+			if (current_pos.is_extruding_start)
+			{
+				// if this is an extrusion_stat (also an extrusion), we will want to add the
+				// starting point of the extrusion as well , which would not have been marked as an extrusion
+				position* start_pos = NULL;
+				// set the latest saved retracted (preferred) or primed position
+				if (!previous_retracted_pos_.is_empty)
+					start_pos = &previous_retracted_pos_;
+				else
+					start_pos = &p_previous_primed_pos_;
+				
+				if (
+					start_pos != NULL &&
+					start_pos->x == previous_pos.x &&
+					start_pos->y == previous_pos.y &&
+					start_pos->z == previous_pos.z
+					)
+				{
+					// If we have a starting position that matches the previous position (retracted or primed)
+					// try to add the previous position to the feature position list
+					try_add_feature_position_internal(previous_pos);
+				}
+			}
+		}
 	}
-
 	
 	if (args_.type == trigger_type_snap_to_print)
 	{
@@ -443,24 +469,26 @@ void trigger_positions::try_add(position &current_pos, position &previous_pos)
 		// try to add the snap_to_print starting position
 		try_add_extrusion_start_positions(previous_pos);
 	}
-	
-
 }
-void trigger_positions::try_add_feature_position_internal(position & pos, double distance)
+
+void trigger_positions::try_add_feature_position_internal(position & pos)
 {
 	bool add_position = false;
-	if (feature_position_list_[pos.feature_type_tag].is_empty)
+	const double distance = get_stabilization_distance(pos);
+	const feature_type type = static_cast<feature_type>(pos.feature_type_tag);
+
+	if (feature_position_list_[type].is_empty)
 	{
 		add_position = true;
 	}
-	else if (utilities::less_than(distance, feature_position_list_[pos.feature_type_tag].distance))
+	else if (utilities::less_than(distance, feature_position_list_[type].distance))
 	{
 		add_position = true;
 	}
-	else if (utilities::is_equal(feature_position_list_[pos.feature_type_tag].distance, distance) && !previous_initial_pos_.is_empty)
+	else if (utilities::is_equal(feature_position_list_[type].distance, distance) && !previous_initial_pos_.is_empty)
 	{
 		//std::cout << "Closest position tie detected, ";
-		const double old_distance_from_previous = utilities::get_cartesian_distance(feature_position_list_[pos.feature_type_tag].pos.x, feature_position_list_[pos.feature_type_tag].pos.y, previous_initial_pos_.x, previous_initial_pos_.y);
+		const double old_distance_from_previous = utilities::get_cartesian_distance(feature_position_list_[type].pos.x, feature_position_list_[type].pos.y, previous_initial_pos_.x, previous_initial_pos_.y);
 		const double new_distance_from_previous = utilities::get_cartesian_distance(pos.x, pos.y, previous_initial_pos_.x, previous_initial_pos_.y);
 		if (utilities::less_than(new_distance_from_previous, old_distance_from_previous))
 		{
@@ -469,21 +497,23 @@ void trigger_positions::try_add_feature_position_internal(position & pos, double
 		}
 		//std::cout << "old position is closer to the last initial snapshot position.\r\n";
 	}
+	
 	if (add_position)
 	{
 		// add the current position as the fastest extrusion speed 
-		add_feature_position_internal(pos, distance);
+		add_feature_position_internal(pos, distance, static_cast<feature_type>(type));
 	}
 }
 
-void trigger_positions::add_feature_position_internal(position &pos, double distance)
+void trigger_positions::add_feature_position_internal(position &pos, double distance, feature_type type)
 {
 	feature_position_list_[pos.feature_type_tag].pos = pos;
 	feature_position_list_[pos.feature_type_tag].distance = distance;
-	feature_position_list_[pos.feature_type_tag].type_feature = static_cast<feature_type>(pos.feature_type_tag);
+	feature_position_list_[pos.feature_type_tag].type_feature = type;
 	feature_position_list_[pos.feature_type_tag].is_empty = false;
 
 }
+
 // Adds a position to the internal position list.
 void trigger_positions::add_internal(position &pos, double distance, position_type type)
 {
@@ -507,7 +537,6 @@ void trigger_positions::try_add_extrusion_start_positions(position& extrusion_st
 void trigger_positions::try_add_extrusion_start_position(position & extrusion_start_pos, position & saved_pos)
 {
 	// A special case where we are trying to add a snap to print position from the start of an extrusion.
-	// This is currently implemented only for a retracted position, but in theory we should add a primed position too, and use it as a backup.
 	// Note that we do not need to add any checks for max speed or thresholds, since that will have been taken care of
 	if (
 		saved_pos.x != extrusion_start_pos.x ||

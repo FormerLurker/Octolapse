@@ -6,14 +6,38 @@
  * \brief A struct to hold the closest position, which  is used by the stabilization preprocessors.
  */
 static const std::string position_type_name[14] = {
-		"unknown", "extrusion", "lifting", "lifted", "travel", "lifting_travel", "lifted_travel", "retraction", "retracted_lifting", "retracted_lifted", "retracted_travel", "lifting_retracted_travel"," lifted_retracted_travel", "fastest_extrusion"
+	"unknown", 
+	"extrusion", 
+	"lifting", 
+	"lifted", 
+	"travel", 
+	"lifting_travel", 
+	"lifted_travel", 
+	"retraction", 
+	"retracted_lifting", 
+	"retracted_lifted", 
+	"retracted_travel", 
+	"lifting_retracted_travel",
+	"lifted_retracted_travel", 
+	"fastest_extrusion"
 };
 enum trigger_type { trigger_type_snap_to_print, trigger_type_fast, trigger_type_compatibility, trigger_type_high_quality };
 enum position_type
 {
-	position_type_unknown, position_type_extrusion, position_type_lifting, position_type_lifted, position_type_travel, position_type_lifting_travel,
-	position_type_lifted_travel, position_type_retraction, position_type_retracted_lifting, position_type_retracted_lifted,
-	position_type_retracted_travel, position_type_lifting_retracted_travel, position_type_lifted_retracted_travel, position_type_fastest_extrusion
+	position_type_unknown, 
+	position_type_extrusion, 
+	position_type_lifting, 
+	position_type_lifted, 
+	position_type_travel, 
+	position_type_lifting_travel,
+	position_type_lifted_travel, 
+	position_type_retraction, 
+	position_type_retracted_lifting, 
+	position_type_retracted_lifted,
+	position_type_retracted_travel, 
+	position_type_lifting_retracted_travel, 
+	position_type_lifted_retracted_travel, 
+	position_type_fastest_extrusion
 };
 
 struct trigger_position
@@ -105,11 +129,12 @@ private:
 	void save_primed_position(position& primed_pos);
 	static bool can_process_position(position& pos, position_type type);
 	void add_internal(position& pos, double distance, position_type type);
-	void try_add_feature_position_internal(position & pos, double distance);
-	void add_feature_position_internal(position &pos, double distance);
+	void try_add_feature_position_internal(position & pos);
+	void add_feature_position_internal(position &pos, double distance, feature_type type);
 	void try_add_internal(position& pos, double distance, position_type type);
 	void try_add_extrusion_start_positions(position& extrusion_start_pos);
 	void try_add_extrusion_start_position(position& extrusion_start_pos, position& saved_pos);
+
 	trigger_position position_list_[trigger_position::num_position_types];
 	trigger_position feature_position_list_[NUM_FEATURE_TYPES];
 	// arguments
