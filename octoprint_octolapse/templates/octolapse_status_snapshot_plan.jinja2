@@ -118,7 +118,12 @@
                         <a data-bind="click: SnapshotPlanState.next_plan_clicked" title="Display the next snapshot plan."><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-caret-right fa-stack-1x"></i></span></a>
                     </div>
                 </div>
+
             </div>
+        </div>
+        <div class="panel-footer" data-bind="visible: SnapshotPlanState.is_confirmation_popup() && SnapshotPlanState.autoclose()">
+            <p>This popup will auto-close and your print will automatically start in <span data-bind="text:SnapshotPlanState.autoclose_seconds"></span> seconds.</p>
+
         </div>
     </div>
 </script>

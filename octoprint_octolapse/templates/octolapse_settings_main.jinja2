@@ -94,6 +94,14 @@
             </span>
             <span data-bind="text: Octolapse.Globals.preview_snapshot_plans() ? 'Pre-calculated snapshot plan previews will be shown before printing' : 'Not showing pre-calculated snapshot plan previews before printing.'"></span>
         </div>
+        <div data-bind="visible: Octolapse.Globals.preview_snapshot_plans()">
+            <div data-bind="visible: Octolapse.Globals.preview_snapshot_plan_autoclose()">
+                <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.preview_snapshot_plan_autoclose() ? 'The snapshot plan preview will close automatically.' : 'The snapshot plan preview must be closed manually'}">
+                    <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.preview_snapshot_plan_autoclose() ), 'fa-close': (!Octolapse.Globals.preview_snapshot_plan_autoclose() ) },style: { color: (Octolapse.Globals.preview_snapshot_plan_autoclose()  ) ? 'limegreen' : '' }"></span>
+                </span>
+                <span data-bind="text: (Octolapse.Globals.preview_snapshot_plans() ? 'The snapshot plan preview will close automatically after ' + Octolapse.Globals.preview_snapshot_plan_seconds().toString() + ' seconds.' : 'The snapshot plan preview must be closed manually.')"></span>
+            </div>
+        </div>
         <div>
             <span class="fa-lg" data-bind="attr: { title: Octolapse.Globals.automatic_updates_enabled() ? 'Profiles will be automatically updated.' : 'Profiles will not be automatically updated.'}">
                 <span class="fa fa-check " data-bind="css:{'fa-check': (Octolapse.Globals.automatic_updates_enabled()  ), 'fa-close': (!Octolapse.Globals.automatic_updates_enabled() ) },style: { color: (Octolapse.Globals.automatic_updates_enabled()  ) ? 'limegreen' : '' }"></span>
@@ -166,6 +174,25 @@
                                             <input type="checkbox" title="Preview Pre-Calculated Snapshot Plan Information Before Printing" data-bind="checked:preview_snapshot_plans" />Enabled
                                             <a class="octolapse_help" data-help-url="main_settings.preview_snapshot_plans.md" data-help-title="Preview Snapshot Plan" />
                                         </label>
+                                    </div>
+                                </div>
+                                <div data-bind="visible: preview_snapshot_plans">
+                                    <div class="control-group">
+                                        <label class="control-label">Auto-Close Snapshot Plan Preview</label>
+                                        <div class="controls">
+                                            <label class="checkbox">
+                                                <input type="checkbox" title="Automatically close snapshot plan preview" data-bind="checked:preview_snapshot_plan_autoclose" />Enabled
+                                                <a class="octolapse_help" data-help-url="main_settings.preview_snapshot_plan_autoclose.md" data-help-title="Auto-Close Snapshot Plan Preview" />
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="control-group" data-bind="visible: preview_snapshot_plan_autoclose">
+                                        <label class="control-label">Auto-Close Snapshot Plan Preview Seconds</label>
+                                        <div class="controls">
+                                            <input name="auto_reload_frames" class="input-mini ignore_hidden_errors" title="The number of seconds to wait before automatically closing the snapshot plan preview." type="number" data-bind="value: preview_snapshot_plan_seconds" min="1" step="1" required="true" />
+                                            <a class="octolapse_help" data-help-url="main_settings.preview_snapshot_plan_seconds.md" data-help-title="Auto-Close Snapshot Plan Preview Seconds" />
+                                            <div class="error_label_container text-error"></div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="control-group">

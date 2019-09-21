@@ -121,6 +121,9 @@ class OctolapsePlugin(
         self.saved_timelapse_settings = None
         self.saved_snapshot_plans = None
         self.saved_parsed_command = None
+        self.snapshot_plan_preview_autoclose = False
+        self.snapshot_plan_preview_close_time = 0
+        self.autoclose_snapshot_preview_thread_lock = threading.Lock()
         # automatic update thread
         self.automatic_update_thread = None
         self.automatic_updates_notification_thread = None
@@ -326,36 +329,44 @@ class OctolapsePlugin(
     @admin_permission.require(403)
     def save_main_settings_request(self):
         request_values = flask.request.get_json()
-        self._octolapse_settings.main_settings.is_octolapse_enabled = request_values["is_octolapse_enabled"]
-        self._octolapse_settings.main_settings.auto_reload_latest_snapshot = (
-            request_values["auto_reload_latest_snapshot"]
-        )
-        self._octolapse_settings.main_settings.auto_reload_frames = request_values["auto_reload_frames"]
-        self._octolapse_settings.main_settings.show_navbar_icon = request_values["show_navbar_icon"]
-        self._octolapse_settings.main_settings.show_navbar_when_not_printing = (
-            request_values["show_navbar_when_not_printing"]
-        )
-        self._octolapse_settings.main_settings.show_printer_state_changes = (
-            request_values["show_printer_state_changes"]
-        )
-        self._octolapse_settings.main_settings.show_position_changes = request_values["show_position_changes"]
-        self._octolapse_settings.main_settings.show_extruder_state_changes = (
-            request_values["show_extruder_state_changes"]
-        )
-        self._octolapse_settings.main_settings.show_trigger_state_changes = request_values["show_trigger_state_changes"]
-        self._octolapse_settings.main_settings.show_snapshot_plan_information = request_values["show_snapshot_plan_information"]
-        self._octolapse_settings.main_settings.cancel_print_on_startup_error = (
-            request_values["cancel_print_on_startup_error"]
-        )
-        self._octolapse_settings.main_settings.preview_snapshot_plans = (
-            request_values["preview_snapshot_plans"]
-        )
-        self._octolapse_settings.main_settings.automatic_updates_enabled = (
-            request_values["automatic_updates_enabled"]
-        )
-        self._octolapse_settings.main_settings.automatic_update_interval_days = (
-            request_values["automatic_update_interval_days"]
-        )
+        self._octolapse_settings.main_settings.update(request_values)
+
+        # self._octolapse_settings.main_settings.is_octolapse_enabled = request_values["is_octolapse_enabled"]
+        # self._octolapse_settings.main_settings.auto_reload_latest_snapshot = (
+        #     request_values["auto_reload_latest_snapshot"]
+        # )
+        # self._octolapse_settings.main_settings.auto_reload_frames = request_values["auto_reload_frames"]
+        # self._octolapse_settings.main_settings.show_navbar_icon = request_values["show_navbar_icon"]
+        # self._octolapse_settings.main_settings.show_navbar_when_not_printing = (
+        #     request_values["show_navbar_when_not_printing"]
+        # )
+        # self._octolapse_settings.main_settings.show_printer_state_changes = (
+        #     request_values["show_printer_state_changes"]
+        # )
+        # self._octolapse_settings.main_settings.show_position_changes = request_values["show_position_changes"]
+        # self._octolapse_settings.main_settings.show_extruder_state_changes = (
+        #     request_values["show_extruder_state_changes"]
+        # )
+        # self._octolapse_settings.main_settings.show_trigger_state_changes = request_values["show_trigger_state_changes"]
+        # self._octolapse_settings.main_settings.show_snapshot_plan_information = request_values["show_snapshot_plan_information"]
+        # self._octolapse_settings.main_settings.cancel_print_on_startup_error = (
+        #     request_values["cancel_print_on_startup_error"]
+        # )
+        # self._octolapse_settings.main_settings.preview_snapshot_plans = (
+        #     bool(request_values["preview_snapshot_plans"])
+        # )
+        # self._octolapse_settings.main_settings.preview_snapshot_plan_autoclose = (
+        #     bool(request_values["preview_snapshot_plan_autoclose"])
+        # )
+        # self._octolapse_settings.main_settings.preview_snapshot_plan_seconds = (
+        #     int(request_values["preview_snapshot_plan_seconds"])
+        # )
+        # self._octolapse_settings.main_settings.automatic_updates_enabled = (
+        #     bool(request_values["automatic_updates_enabled"])
+        # )
+        # self._octolapse_settings.main_settings.automatic_update_interval_days = (
+        #     int(request_values["automatic_update_interval_days"])
+        # )
 
         # save the updated settings to a file.
         self.save_settings()
@@ -1079,25 +1090,20 @@ class OctolapsePlugin(
     @octoprint.plugin.BlueprintPlugin.route("/acceptSnapshotPlanPreview", methods=["POST"])
     @restricted_access
     @admin_permission.require(403)
-    def accept_snapshot_plan_preview(self):
+    def accept_snapshot_plan_preview_request(self):
         request_values = flask.request.get_json()
         preprocessing_job_guid = request_values["preprocessing_job_guid"]
+
         if (
-            self.preprocessing_job_guid is None or
-            preprocessing_job_guid != str(self.preprocessing_job_guid) or
-            self.saved_timelapse_settings is None or
-            self.saved_snapshot_plans is None or
-            self.saved_parsed_command is None
+            preprocessing_job_guid is not None and
+            self._printer.get_state_id() == 'STARTING' and
+            not self.accept_snapshot_plan_preview(preprocessing_job_guid)
         ):
             # return without doing anything, this job is already over
             message = "Unable to accept the snapshot plan. Either the printer not operational, is currently printing, " \
                       "or this plan has been deleted. "
             return json.dumps({'success': False, 'error': message}), 200, {'ContentType': 'application/json'}
 
-        logger.info("Accepting the saved snapshot plan")
-        self.preprocessing_job_guid = None
-        self.start_preprocessed_timelapse()
-        self.send_snapshot_preview_complete_message()
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/toggleCamera", methods=["POST"])
@@ -2070,6 +2076,8 @@ class OctolapsePlugin(
             self.saved_timelapse_settings = None
             self.saved_snapshot_plans = None
             self.saved_parsed_command = None
+            self.snapshot_plan_preview_autoclose = False
+            self.snapshot_plan_preview_close_time = 0
 
     def pre_processing_cancelled(self):
         # signal complete to the UI (will close the progress popup
@@ -2104,6 +2112,29 @@ class OctolapsePlugin(
         self.saved_timelapse_settings = timelapse_settings
         self.saved_snapshot_plans = snapshot_plans
         self.saved_parsed_command = parsed_command
+        if timelapse_settings["settings"].main_settings.preview_snapshot_plan_autoclose:
+            self.snapshot_plan_preview_autoclose = True
+            self.snapshot_plan_preview_close_time = (
+                time.time() + timelapse_settings["settings"].main_settings.preview_snapshot_plan_seconds
+            )
+            # start a timer thread to automatically close the preview
+            def autoclose_snapshot_preview(preprocessing_job_guid):
+                while True:
+                    # if we aren't autoclosing any longer, return
+                    if str(self.preprocessing_job_guid) != str(preprocessing_job_guid) == 0:
+                        return
+                    if time.time() > self.snapshot_plan_preview_close_time:
+                        # close all of the snapshot preview popups
+                        self.send_snapshot_preview_complete_message()
+                        # start the print
+                        self.accept_snapshot_plan_preview(self.preprocessing_job_guid)
+                        return
+                    time.sleep(1)
+            autoclose_thread = threading.Thread(target=autoclose_snapshot_preview, args=[self.preprocessing_job_guid])
+            autoclose_thread.start()
+        else:
+            self.snapshot_plan_preview_autoclose = False
+            self.snapshot_plan_preview_close_time = 0
 
         if timelapse_settings["settings"].main_settings.preview_snapshot_plans:
             self.send_snapshot_plan_preview()
@@ -2112,6 +2143,12 @@ class OctolapsePlugin(
 
     def send_snapshot_plan_preview(self):
         # set a print job guid so we know if we should cancel this print later or not
+        autoclose = self.snapshot_plan_preview_autoclose
+        autoclose_seconds = int(self.snapshot_plan_preview_close_time - time.time())
+
+        if autoclose_seconds < 0:
+            autoclose_seconds = 0
+
         snapshot_plans = []
         total_travel_distance = 0
         total_saved_travel_distance = 0
@@ -2131,15 +2168,38 @@ class OctolapsePlugin(
             "type": "snapshot-plan-preview",
             "preprocessing_job_guid": str(self.preprocessing_job_guid),
             "snapshot_plans": {
-            "snapshot_plans": snapshot_plans,
-            "printer_volume": printer_volume,
-            "total_travel_distance": total_travel_distance,
-            "total_saved_travel_distance": total_saved_travel_distance,
-            "current_plan_index": 0,
-            "current_file_line": 0,
+                "snapshot_plans": snapshot_plans,
+                "printer_volume": printer_volume,
+                "total_travel_distance": total_travel_distance,
+                "total_saved_travel_distance": total_saved_travel_distance,
+                "current_plan_index": 0,
+                "current_file_line": 0,
+                "autoclose": autoclose,
+                "autoclose_seconds": autoclose_seconds,
             }
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
+
+    def accept_snapshot_plan_preview(self, preprocessing_job_guid=None):
+        # use a lock
+        with self.autoclose_snapshot_preview_thread_lock:
+            if preprocessing_job_guid is not None and self.preprocessing_job_guid is not None:
+                preprocessing_job_guid = str(self.preprocessing_job_guid)
+
+            if (
+                self.preprocessing_job_guid is None or
+                preprocessing_job_guid != str(self.preprocessing_job_guid) or
+                self.saved_timelapse_settings is None or
+                self.saved_snapshot_plans is None or
+                self.saved_parsed_command is None
+            ):
+                return False
+
+            logger.info("Accepting the saved snapshot plan")
+            self.preprocessing_job_guid = None
+            self.start_preprocessed_timelapse()
+            self.send_snapshot_preview_complete_message()
+        return True
 
     def start_preprocessed_timelapse(self):
         # initialize the timelapse obeject

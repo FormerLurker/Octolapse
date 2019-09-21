@@ -49,6 +49,13 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.axes = null;
             self.is_preview = false;
             self.is_confirmation_popup = ko.observable(false);
+            self.autoclose = ko.observable(false);
+            self.autoclose_seconds = ko.observable(0);
+
+            setInterval(function() {
+                var newTimer = self.autoclose_seconds() -1;
+                self.autoclose_seconds(newTimer <= 0 ? 1 : newTimer);
+            }, 1000);
 
             self.update = function (state) {
                 if (state.snapshot_plans != null)
@@ -63,7 +70,14 @@ Octolapse.snapshotPlanStateViewModel = function() {
                         percent_saved = (state.total_saved_travel_distance / potential_total_distance) * 100.0;
                     }
                     self.total_saved_travel_percent(percent_saved);
-
+                    if (typeof state.autoclose !== 'undefined') {
+                        console.log("Setting snapshot plan preview autoclose");
+                        self.autoclose(state.autoclose);
+                        self.autoclose_seconds(state.autoclose_seconds);
+                    }
+                    else {
+                        console.log("Autoclose property not set!");
+                    }
                 }
                 if (state.current_plan_index != null)
                 {

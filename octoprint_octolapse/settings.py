@@ -1525,6 +1525,8 @@ class MainSettings(Settings):
         self.platform = sys.platform
         self.version = plugin_version
         self.preview_snapshot_plans = True
+        self.preview_snapshot_plan_autoclose = False
+        self.preview_snapshot_plan_seconds = 30
         self.automatic_updates_enabled = True
         self.automatic_update_interval_days = 7
 

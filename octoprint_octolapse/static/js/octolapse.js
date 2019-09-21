@@ -120,6 +120,7 @@ $(function () {
         };
     ko.bindingHandlers.octolapseToggle = Octolapse.toggleContent ;
 
+
     Octolapse.arrayFirstIndexOf = function (array, predicate, predicateOwner) {
         for (var i = 0, j = array.length; i < j; i++) {
             if (predicate.call(predicateOwner, array[i])) {
@@ -1192,6 +1193,8 @@ $(function () {
         self.show_trigger_state_changes = ko.observable(false);
         self.show_snapshot_plan_information = ko.observable(false);
         self.preview_snapshot_plans = ko.observable(false);
+        self.preview_snapshot_plan_autoclose = ko.observable(false);
+        self.preview_snapshot_plan_seconds = ko.observable(30);
         self.automatic_updates_enabled = ko.observable(true);
         self.automatic_update_interval_days = ko.observable(7);
         self.auto_reload_latest_snapshot = ko.observable(false);
@@ -1385,6 +1388,16 @@ $(function () {
                 self.preview_snapshot_plans(settings.preview_snapshot_plans());
             else
                 self.preview_snapshot_plans(settings.preview_snapshot_plans);
+
+            if (ko.isObservable(settings.preview_snapshot_plan_autoclose))
+                self.preview_snapshot_plan_autoclose(settings.preview_snapshot_plan_autoclose());
+            else
+                self.preview_snapshot_plan_autoclose(settings.preview_snapshot_plan_autoclose);
+
+            if (ko.isObservable(settings.preview_snapshot_plan_seconds))
+                self.preview_snapshot_plan_seconds(settings.preview_snapshot_plan_seconds());
+            else
+                self.preview_snapshot_plan_seconds(settings.preview_snapshot_plan_seconds);
 
             if (ko.isObservable(settings.automatic_updates_enabled))
                 self.automatic_updates_enabled(settings.automatic_updates_enabled());

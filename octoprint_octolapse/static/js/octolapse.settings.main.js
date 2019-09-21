@@ -45,6 +45,8 @@ $(function () {
         self.show_trigger_state_changes = ko.observable();
         self.show_snapshot_plan_information = ko.observable();
         self.preview_snapshot_plans = ko.observable();
+        self.preview_snapshot_plan_autoclose = ko.observable();
+        self.preview_snapshot_plan_seconds = ko.observable();
         self.automatic_updates_enabled = ko.observable();
         self.automatic_update_interval_days = ko.observable();
         // Informational Values
@@ -74,6 +76,9 @@ $(function () {
             self.show_trigger_state_changes(settings.show_trigger_state_changes);
             self.show_snapshot_plan_information(settings.show_snapshot_plan_information);
             self.preview_snapshot_plans(settings.preview_snapshot_plans);
+            self.preview_snapshot_plan_autoclose(settings.preview_snapshot_plan_autoclose);
+            self.preview_snapshot_plan_seconds(settings.preview_snapshot_plan_seconds);
+
             self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error);
             self.automatic_update_interval_days(settings.automatic_update_interval_days);
             self.automatic_updates_enabled(settings.automatic_updates_enabled);
@@ -138,6 +143,8 @@ $(function () {
             self.show_trigger_state_changes(Octolapse.Globals.show_trigger_state_changes());
             self.show_snapshot_plan_information(Octolapse.Globals.show_snapshot_plan_information());
             self.preview_snapshot_plans(Octolapse.Globals.preview_snapshot_plans());
+            self.preview_snapshot_plan_autoclose(Octolapse.Globals.preview_snapshot_plan_autoclose());
+            self.preview_snapshot_plan_seconds(Octolapse.Globals.preview_snapshot_plan_seconds());
             self.automatic_update_interval_days(Octolapse.Globals.automatic_update_interval_days());
             self.automatic_updates_enabled(Octolapse.Globals.automatic_updates_enabled());
 
@@ -261,6 +268,8 @@ $(function () {
                     self.show_trigger_state_changes(false);
                     self.show_snapshot_plan_information(false);
                     self.preview_snapshot_plans(false);
+                    self.preview_snapshot_plan_autoclose(false);
+                    self.preview_snapshot_plan_seconds(false);
                     self.automatic_update_interval_days(7);
                     self.automatic_updates_enabled(true);
 
@@ -285,6 +294,8 @@ $(function () {
                             , "show_trigger_state_changes": self.show_trigger_state_changes()
                             , "show_snapshot_plan_information": self.show_snapshot_plan_information()
                             , "preview_snapshot_plans": self.preview_snapshot_plans()
+                            , "preview_snapshot_plan_autoclose": self.preview_snapshot_plan_autoclose()
+                            , "preview_snapshot_plan_seconds": self.preview_snapshot_plan_seconds()
                             , "automatic_update_interval_days": self.automatic_update_interval_days()
                             , "automatic_updates_enabled": self.automatic_updates_enabled()
                             , "cancel_print_on_startup_error": self.cancel_print_on_startup_error()
