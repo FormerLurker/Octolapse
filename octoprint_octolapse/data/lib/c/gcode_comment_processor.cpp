@@ -10,6 +10,11 @@ gcode_comment_processor::~gcode_comment_processor()
 {
 }
 
+comment_process_type gcode_comment_processor::get_comment_process_type()
+{
+	return processing_type_;
+}
+
 void gcode_comment_processor::update(position& pos)
 {
 	if (processing_type_ == comment_process_type_off)

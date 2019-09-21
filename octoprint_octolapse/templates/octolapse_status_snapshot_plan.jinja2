@@ -122,6 +122,11 @@
             </div>
         </div>
         <div class="panel-footer" data-bind="visible: SnapshotPlanState.is_confirmation_popup()">
+            <div data-bind="visible: SnapshotPlanState.quality_issues().length > 0">
+                <p>
+                    <span class="label label-important">Warning</span>&nbsp;<span data-bind="text: SnapshotPlanState.quality_issues()"></span>
+                </p>
+            </div>
             <p data-bind="visible: SnapshotPlanState.autoclose()">
                 This popup will auto-close and your print will automatically start in <span data-bind="text:SnapshotPlanState.autoclose_seconds"></span> seconds.
             </p>

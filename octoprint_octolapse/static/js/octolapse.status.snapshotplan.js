@@ -51,6 +51,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.is_confirmation_popup = ko.observable(false);
             self.autoclose = ko.observable(false);
             self.autoclose_seconds = ko.observable(0);
+            self.quality_issues = ko.observable("");
 
             setInterval(function() {
                 var newTimer = self.autoclose_seconds() -1;
@@ -70,6 +71,12 @@ Octolapse.snapshotPlanStateViewModel = function() {
                         percent_saved = (state.total_saved_travel_distance / potential_total_distance) * 100.0;
                     }
                     self.total_saved_travel_percent(percent_saved);
+
+                    if(typeof state.quality_issues !== 'undefined')
+                    {
+                        self.quality_issues(state.quality_issues);
+                    }
+
                     if (typeof state.autoclose !== 'undefined') {
                         console.log("Setting snapshot plan preview autoclose");
                         self.autoclose(state.autoclose);

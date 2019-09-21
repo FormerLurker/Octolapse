@@ -109,6 +109,7 @@ public:
 	position get_previous_position() const;
 	position * get_current_position_ptr();
 	position * get_previous_position_ptr();
+	gcode_comment_processor* get_gcode_comment_processor();
 private:
 	gcode_position(const gcode_position &source);
 	position positions_[static_cast<int>(NUM_POSITIONS)];

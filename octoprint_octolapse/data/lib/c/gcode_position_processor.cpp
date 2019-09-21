@@ -240,26 +240,14 @@ extern "C"
 		stabilization_results results = stabilization.process_file();
 		set_internal_log_levels(true);
 		std::stringstream sstm;
-		sstm << "Building " << results.snapshot_plans_.size() << " snapshot plans.";
+		sstm << "Building " << results.snapshot_plans.size() << " snapshot plans.";
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, sstm.str());
 
-		PyObject * py_snapshot_plans = snapshot_plan::build_py_object(results.snapshot_plans_);
-		if (py_snapshot_plans == NULL)
-		{
-			//octolapse_log(SNAPSHOT_PLAN, ERROR, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Snapshot_plan::build_py_object returned Null");
-			//PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Snapshot_plan::build_py_object returned Null - Terminating");
-			return NULL;
-		}
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Creating return values.");
-		PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l)", results.success_, results.errors_.c_str(), py_snapshot_plans, results.seconds_elapsed_, results.gcodes_processed_, results.lines_processed_);
+		PyObject * py_results = results.to_py_object();
 		if (py_results == NULL)
 		{
-			octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to create a Tuple from the snapshot plan list.");
-			PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Error building callback arguments - Terminating");
 			return NULL;
 		}
-		// Bring the snapshot plan refcount to 1
-		Py_DECREF(py_snapshot_plans);
 		//Py_DECREF(py_position_args);
 		//Py_DECREF(py_stabilization_args);
 		//Py_DECREF(py_stabilization_type_args);

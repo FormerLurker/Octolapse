@@ -20,7 +20,7 @@
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "stabilization_results.h"
-
+#include "logging.h"
 stabilization_results::stabilization_results()
 {
 	bool success = false;
@@ -28,3 +28,26 @@ stabilization_results::stabilization_results()
 	long gcodes_processed = 0;
 	long lines_processed = 0;
 }
+
+PyObject* stabilization_results::to_py_object()
+{
+	PyObject * py_snapshot_plans = snapshot_plan::build_py_object(snapshot_plans);
+	if (py_snapshot_plans == NULL)
+	{
+		//octolapse_log(SNAPSHOT_PLAN, ERROR, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Snapshot_plan::build_py_object returned Null");
+		//PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Snapshot_plan::build_py_object returned Null - Terminating");
+		return NULL;
+	}
+	PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l,s)", success, errors.c_str(), py_snapshot_plans, seconds_elapsed, gcodes_processed, lines_processed, quality_issues.c_str());
+	if (py_results == NULL)
+	{
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to create a Tuple from the snapshot plan list.");
+		PyErr_SetString(PyExc_ValueError, "stabilization_results.ExecuteStabilizationCompleteCallback - Error building callback arguments - Terminating");
+		return NULL;
+	}
+	// Bring the snapshot plan refcount to 1
+	Py_DECREF(py_snapshot_plans);
+
+	return py_results;
+}
+

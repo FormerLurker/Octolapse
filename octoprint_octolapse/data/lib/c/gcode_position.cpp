@@ -832,3 +832,8 @@ void gcode_position::process_m208(position* pos, parsed_command& cmd)
 {
 	// Todo: implement firmware retract
 }
+
+gcode_comment_processor* gcode_position::get_gcode_comment_processor()
+{
+	return &comment_processor_;
+}

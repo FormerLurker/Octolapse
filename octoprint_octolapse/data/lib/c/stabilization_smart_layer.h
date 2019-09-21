@@ -38,6 +38,7 @@ private:
 	stabilization_smart_layer(const stabilization_smart_layer &source); // don't copy me
 	void process_pos(position& p_current_pos, position& p_previous_pos) override;
 	void on_processing_complete() override;
+	std::string get_quality_issues() override;
 	void add_plan();
 	void reset_saved_positions();
 	/**

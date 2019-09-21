@@ -97,8 +97,8 @@ stabilization_smart_layer::~stabilization_smart_layer()
 
 void stabilization_smart_layer::update_stabilization_coordinates()
 {
-	bool snap_to_print_smooth = p_smart_layer_args_->smart_layer_trigger_type == trigger_type_snap_to_print && p_smart_layer_args_->snap_to_print_smooth;
-	bool stabilization_disabled = p_stabilization_args_->x_stabilization_disabled && p_stabilization_args_->y_stabilization_disabled;
+	const bool snap_to_print_smooth = p_smart_layer_args_->smart_layer_trigger_type == trigger_type_snap_to_print && p_smart_layer_args_->snap_to_print_smooth;
+	const bool stabilization_disabled = p_stabilization_args_->x_stabilization_disabled && p_stabilization_args_->y_stabilization_disabled;
 	if (
 		(stabilization_disabled || snap_to_print_smooth)
 		&& !last_snapshot_initial_position_.is_empty
@@ -260,4 +260,26 @@ void stabilization_smart_layer::on_processing_complete()
 		add_plan();
 	}
 	//std::cout << "Complete.\r\n";
+}
+
+std::string stabilization_smart_layer::get_quality_issues()
+{
+	std::string message;
+	
+	// Detect quality issues and return as a human readable string.
+	gcode_comment_processor* p_comment_processor = gcode_position_->get_gcode_comment_processor();
+	if (this->p_smart_layer_args_->smart_layer_trigger_type == trigger_type_fast)
+	{
+		 message = "You are using the 'Fast' smart trigger.  This could lead to quality issues.  If you are having print quality issues, consider using a 'high quality' or 'snap to print' smart trigger.";
+	}
+	else if (this->p_smart_layer_args_->smart_layer_trigger_type == trigger_type_snap_to_print && !p_smart_layer_args_->snap_to_print_high_quality)
+	{
+		message = "In most cases using the 'High Quality' snap to print option will improve print quality, unless you are printing with vase mode enabled";
+	}
+	else if (p_comment_processor->get_comment_process_type() == comment_process_type_unknown)
+	{
+		message = "No print features were found in your gcode file.  This can reduce print quality significantly.  If you are using Slic3r or PrusaSlicer, please enable 'Verbose G-code' in 'Print Settings'->'Output Options'->'Output File'.";
+	}
+
+	return message;
 }

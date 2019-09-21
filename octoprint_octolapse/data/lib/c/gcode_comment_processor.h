@@ -49,6 +49,8 @@ public:
 	~gcode_comment_processor();
 	void update(position& pos);
 	void update(std::string & comment);
+	comment_process_type get_comment_process_type();
+
 private:
 	section_type current_section_;
 	comment_process_type processing_type_;

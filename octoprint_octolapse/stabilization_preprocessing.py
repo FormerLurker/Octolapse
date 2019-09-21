@@ -98,6 +98,7 @@ class StabilizationPreprocessingThread(Thread):
                 ret_val[3],  # seconds_elapsed
                 ret_val[4],  # gcodes processed
                 ret_val[5],  # lines_processed
+                ret_val[6],  # quality issues
                 options,
             )
 
@@ -111,6 +112,7 @@ class StabilizationPreprocessingThread(Thread):
                 [],
                 0,
                 0,
+                "",
                 0
             )
         logger.info("Unpacking results")
@@ -132,9 +134,10 @@ class StabilizationPreprocessingThread(Thread):
         seconds_elapsed = results[3]
         gcodes_processed = results[4]
         lines_processed = results[5]
+        quality_issues = results[6]
         self.complete_callback(
             success, errors, self.is_cancelled, snapshot_plans, seconds_elapsed, gcodes_processed, lines_processed,
-            self.timelapse_settings, self.parsed_command
+            quality_issues, self.timelapse_settings, self.parsed_command
         )
 
     def _create_stabilization_args(self):

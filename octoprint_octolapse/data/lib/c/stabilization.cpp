@@ -50,6 +50,7 @@ stabilization::stabilization(
 	file_size_ = 0;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
+	
 }
 
 stabilization::stabilization()
@@ -65,6 +66,7 @@ stabilization::stabilization()
 	file_size_ = 0;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
+	
 }
 
 stabilization::stabilization(gcode_position_args* position_args, stabilization_args* args, progressCallback progress)
@@ -80,6 +82,7 @@ stabilization::stabilization(gcode_position_args* position_args, stabilization_a
 	file_size_ = 0;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
+	
 }
 
 stabilization::stabilization(const stabilization &source)
@@ -198,17 +201,17 @@ stabilization_results stabilization::process_file()
 	const clock_t end_clock = clock();
 	const double total_seconds = static_cast<double>(end_clock - start_clock) / CLOCKS_PER_SEC;
 	stabilization_results results;
-	results.success_ = errors_.empty();
-	results.errors_ = errors_;
-	results.seconds_elapsed_ = total_seconds;
-	results.gcodes_processed_ = gcodes_processed_;
-	results.lines_processed_ = lines_processed_;
-	// Assignment apparently doesn't work everywhere :(  Use a loop
-	results.snapshot_plans_ = p_snapshot_plans_;
+	results.success = errors_.empty();
+	results.errors = errors_;
+	results.seconds_elapsed = total_seconds;
+	results.gcodes_processed = gcodes_processed_;
+	results.lines_processed = lines_processed_;
+	results.quality_issues = get_quality_issues();
+	results.snapshot_plans = p_snapshot_plans_;
 
 	std::stringstream sstm;
 	sstm << "Completed file processing\r\n";
-	sstm << "\tSnapshots Found: " << results.snapshot_plans_.size() << "\r\n";
+	sstm << "\tSnapshots Found: " << results.snapshot_plans.size() << "\r\n";
 	sstm << "\tTotal Seconds: " << total_seconds << "\r\n";
 	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, sstm.str());
 	return results;
@@ -234,6 +237,11 @@ void stabilization::process_pos(position& current_pos, position& previous_pos)
 }
 
 void stabilization::on_processing_complete()
+{
+	throw std::exception();
+}
+
+std::string stabilization::get_quality_issues()
 {
 	throw std::exception();
 }

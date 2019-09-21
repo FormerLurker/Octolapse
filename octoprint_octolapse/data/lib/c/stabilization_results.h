@@ -24,16 +24,17 @@
 #include <string>
 #include <vector>
 #include "snapshot_plan.h"
-class stabilization_results
+struct stabilization_results
 {
-public:
 	stabilization_results();
-	bool success_;
-	std::string errors_;
-	std::vector<snapshot_plan> snapshot_plans_;
-	double seconds_elapsed_;
-	long gcodes_processed_;
-	long lines_processed_;
+	PyObject * to_py_object();
+	bool success;
+	std::string errors;
+	std::vector<snapshot_plan> snapshot_plans;
+	double seconds_elapsed;
+	long gcodes_processed;
+	long lines_processed;
+	std::string quality_issues;
 };
 
 #endif
