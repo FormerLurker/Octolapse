@@ -228,7 +228,7 @@ stabilization_results stabilization::process_file()
 		else
 			feature_type_description = position_type_name[pPlan.triggering_command_type];
 		sstm << "\r\n";
-		sstm << "\t\tPlan # " << index + 1;
+		sstm << "\t\tPlan# " << index + 1;
 		sstm << ", Layer:" << pPlan.initial_position.layer;
 		sstm << ", Line:" << pPlan.file_line;
 		sstm << ", StartX:" << pPlan.initial_position.x;
@@ -236,7 +236,7 @@ stabilization_results stabilization::process_file()
 		sstm << ", StartZ:" << pPlan.initial_position.z;
 		sstm << ", Speed:" << pPlan.initial_position.f;
 		sstm << ", Travel Distance:" << pPlan.total_travel_distance;
-		sstm << " Type:" << feature_type_description;
+		sstm << ", Type:" << feature_type_description;
 		sstm << ", Gcode:" << utilities::trim(pPlan.start_command.gcode);
 		if (pPlan.start_command.comment.length() > 0)
 			sstm << ", Comment: " << pPlan.start_command.comment;
