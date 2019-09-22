@@ -438,8 +438,12 @@ class Position(object):
         self._gcode_generation_settings = printer_profile.get_current_state_detection_settings()
 
         cpp_position_args = printer_profile.get_position_args(overridable_printer_profile_settings)
+        try:
+            GcodePositionProcessor.Initialize(self.key, cpp_position_args)
+        except Exception as e:
+            logger.exception("An error occurred while initializing the GcodePositionProcessor!")
+            raise e
 
-        GcodePositionProcessor.Initialize(self.key, cpp_position_args)
         self._auto_detect_position = printer_profile.auto_detect_position
         self._priming_height = printer_profile.priming_height
         self._position_restrictions = None if trigger_profile is None else trigger_profile.position_restrictions

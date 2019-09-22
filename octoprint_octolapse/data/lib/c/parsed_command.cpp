@@ -53,32 +53,26 @@ PyObject * parsed_command::to_py_object()
 	
 	if (pyCommandName == NULL)
 	{
-		PyErr_Print();
 		std::string message = "Unable to convert the parameter name to unicode: ";
 		message += command;
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
 		return NULL;
 	}
 	PyObject * pyGcode = PyUnicode_SafeFromString(gcode.c_str());
 	if (pyGcode == NULL)
 	{
-		PyErr_Print();
 		std::string message = "Unable to convert the gcode to unicode: ";
 		message += gcode;
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
 		return NULL;
 	}
 
 	PyObject * pyComment = PyUnicode_SafeFromString(comment.c_str());
 	if (pyComment == NULL)
 	{
-		PyErr_Print();
 		std::string message = "Unable to convert the gocde comment to unicode: ";
 		message += comment;
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
 		return NULL;
 	}
 	
@@ -87,13 +81,11 @@ PyObject * parsed_command::to_py_object()
 		ret_val = PyTuple_Pack(3, pyCommandName, Py_None, pyGcode, pyComment);
 		if (ret_val == NULL)
 		{
-			PyErr_Print();
 			std::string message = "Unable to convert the parsed_command (no parameters) to a tuple.  Command: ";
 			message += command;
 			message += " Gcode: ";
 			message += gcode;
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
 			return NULL;
 		}
 		// We will need to decref pyCommandName and pyGcode later
@@ -105,10 +97,8 @@ PyObject * parsed_command::to_py_object()
 		// Create the parameters dictionary
 		if (pyParametersDict == NULL)
 		{
-			PyErr_Print();
 			std::string message = "ParsedCommand.to_py_object: Unable to create the parameters dict.";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
 			return NULL;
 		}
 		// Loop through our parameters vector and create and add PyDict items
@@ -118,14 +108,15 @@ PyObject * parsed_command::to_py_object()
 			PyObject * param_value = param.value_to_py_object();
 			// Errors here will be handled by value_to_py_object, just return NULL
 			if (param_value == NULL)
+			{
 				return NULL;
+			}
 			char temp_c_str[2];
 			temp_c_str[0] = param.name;
 			temp_c_str[1] = '\0';
 			const char * p_name = temp_c_str;
 			if (PyDict_SetItemString(pyParametersDict, p_name, param_value) != 0)
 			{
-				PyErr_Print();
 				// Handle error here, display detailed message
 				std::string message = "Unable to add the command parameter to the parameters dictionary.  Parameter Name: ";
 				message += param.name;
@@ -160,31 +151,28 @@ PyObject * parsed_command::to_py_object()
 				default:
 					break;
 				}
-				PyErr_SetString(PyExc_ValueError, message.c_str());
+				octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
 				return NULL;
 			}
 			// Todo: evaluate the effects of this
 			Py_DECREF(param_value);
-			//std::cout << "param_value refcount = " << param_value->ob_refcnt << "\r\n";
+			
 		}
 
 		ret_val = PyTuple_Pack(3, pyCommandName, pyParametersDict, pyGcode, pyComment);
 		if (ret_val == NULL)
 		{
-			PyErr_Print();
 			std::string message = "Unable to convert the parsed_command (with parameters) to a tuple.  Command: ";
 			message += command;
 			message += " Gcode: ";
 			message += gcode;
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
 			return NULL;
 		}
 		// PyTuple_Pack makes a reference of its own, decref pyParametersDict.  
 		// We will need to decref pyCommandName and pyGcode later
 		// Todo: evaluate the effects of this
 		Py_DECREF(pyParametersDict);
-		//std::cout << "pyParametersDict refcount = " << pyParametersDict->ob_refcnt << "\r\n";
 	}
 	// If we're here, we need to decref pyCommandName and pyGcode.
 	// Todo: evaluate the effects of this
@@ -192,8 +180,5 @@ PyObject * parsed_command::to_py_object()
 	// Todo: evaluate the effects of this
 	Py_DECREF(pyGcode);
 	Py_DECREF(pyComment);
-	//std::cout << "pyCommandName refcount = " << pyCommandName->ob_refcnt << "\r\n";
-	//std::cout << "pyGcode refcount = " << pyGcode->ob_refcnt << "\r\n";
-	//std::cout << "ret_val refcount = " << ret_val->ob_refcnt << "\r\n";
 	return ret_val;
 }

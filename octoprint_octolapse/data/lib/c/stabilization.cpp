@@ -26,6 +26,7 @@
 #include <vector>
 #include <sstream>
 #include "logging.h"
+#include "utilities.h"
 
 stabilization::stabilization(
 	gcode_position_args* position_args, stabilization_args* stab_args, pythonGetCoordinatesCallback get_coordinates_callback, pythonProgressCallback progress
@@ -211,8 +212,36 @@ stabilization_results stabilization::process_file()
 
 	std::stringstream sstm;
 	sstm << "Completed file processing\r\n";
-	sstm << "\tSnapshots Found: " << results.snapshot_plans.size() << "\r\n";
-	sstm << "\tTotal Seconds: " << total_seconds << "\r\n";
+	sstm << "\tSnapshots Found      : " << results.snapshot_plans.size() << "\r\n";
+	sstm << "\tTotal Seconds        : " << total_seconds << "\r\n";
+	sstm << "\tSnapshot Plan Details:";
+	for (unsigned int index = 0; index < results.snapshot_plans.size(); index++)
+	{
+		snapshot_plan pPlan = results.snapshot_plans[index];
+		std::string gcode = pPlan.start_command.gcode;
+		std::string feature_type_description = "unknown";
+		if (pPlan.triggering_command_feature_type != feature_type_unknown_feature)
+		{
+			feature_type_description = "feature-";
+			feature_type_description += feature_type_name[pPlan.triggering_command_feature_type];
+		}
+		else
+			feature_type_description = position_type_name[pPlan.triggering_command_type];
+		sstm << "\r\n";
+		sstm << "\t\tPlan # " << index + 1;
+		sstm << ", Layer:" << pPlan.initial_position.layer;
+		sstm << ", Line:" << pPlan.file_line;
+		sstm << ", StartX:" << pPlan.initial_position.x;
+		sstm << ", StartY:" << pPlan.initial_position.y;
+		sstm << ", StartZ:" << pPlan.initial_position.z;
+		sstm << ", Speed:" << pPlan.initial_position.f;
+		sstm << ", Travel Distance:" << pPlan.total_travel_distance;
+		sstm << " Type:" << feature_type_description;
+		sstm << ", Gcode:" << utilities::trim(pPlan.start_command.gcode);
+		if (pPlan.start_command.comment.length() > 0)
+			sstm << ", Comment: " << pPlan.start_command.comment;
+	}
+
 	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, sstm.str());
 	return results;
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+
 class utilities{
 public:
 	static int round_up_to_int(double x);
@@ -11,6 +12,11 @@ public:
 	static bool is_zero(double x);
 	static double get_cartesian_distance(double x1, double y1, double x2, double y2);
 	static std::string to_string(double value);
+	static std::string ltrim(const std::string& s);
+	static std::string rtrim(const std::string& s);
+	static std::string trim(const std::string& s);
+protected:
+	static const std::string WHITESPACE_;
 private:
 	utilities();
 

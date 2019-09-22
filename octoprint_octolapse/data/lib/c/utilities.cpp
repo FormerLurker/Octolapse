@@ -3,6 +3,7 @@
 #include <sstream>
 // Had to increase the zero tolerance because prusa slicer doesn't always retract enough while wiping.
 const double ZERO_TOLERANCE = 0.00005;
+const std::string utilities::WHITESPACE_ = " \n\r\t\f\v";
 
 int utilities::round_up_to_int(double x)
 {
@@ -54,4 +55,21 @@ std::string utilities::to_string(double value)
 	std::ostringstream os;
 	os << value;
 	return os.str();
+}
+
+std::string utilities::ltrim(const std::string& s)
+{
+	size_t start = s.find_first_not_of(WHITESPACE_);
+	return (start == std::string::npos) ? "" : s.substr(start);
+}
+
+std::string utilities::rtrim(const std::string& s)
+{
+	size_t end = s.find_last_not_of(WHITESPACE_);
+	return (end == std::string::npos) ? "" : s.substr(0, end + 1);
+}
+
+std::string utilities::trim(const std::string& s)
+{
+	return rtrim(ltrim(s));
 }

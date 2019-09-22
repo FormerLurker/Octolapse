@@ -9,6 +9,7 @@
 #include "logging.h"
 #include <string>
 #include "python_helpers.h"
+#include <iostream>
 
 static bool octolapse_loggers_created = false;
 static bool check_log_levels_real_time = true;
@@ -131,7 +132,17 @@ void set_internal_log_levels(bool check_real_time)
 	}
 }
 
+void octolapse_log_exception(const int logger_type, const std::string &message)
+{
+	octolapse_log(logger_type, octolapse_log::ERROR, message, true);
+}
+
 void octolapse_log(const int logger_type, const int log_level, const std::string& message)
+{
+	octolapse_log(logger_type, log_level, message, false);
+}
+
+void octolapse_log(const int logger_type, const int log_level, const std::string& message, bool is_exception)
 {
 
 	if (!octolapse_loggers_created)
@@ -169,13 +180,31 @@ void octolapse_log(const int logger_type, const int log_level, const std::string
 		}
 	}
 
-	PyObject * pyFunctionName;
-	switch (log_level)
+	PyObject * pyFunctionName = NULL;
+
+	PyObject* error_type = NULL;
+	PyObject* error_value = NULL;
+	PyObject* error_traceback = NULL;
+	bool error_occurred = false;
+	if (is_exception)
 	{
-	case octolapse_log::INFO:
+		// if an error has occurred, use the exception function to log the entire error
+		pyFunctionName = py_error_function_name;
+		if(PyErr_Occurred())
+		{
+			error_occurred = true;
+			PyErr_Fetch(&error_type, &error_value, &error_traceback);
+			PyErr_NormalizeException(&error_type, &error_value, &error_traceback);
+		}
+	}
+	else
+	{
+		switch (log_level)
+		{
+		case octolapse_log::INFO:
 			pyFunctionName = py_info_function_name;
 			break;
-	case octolapse_log::WARNING:
+		case octolapse_log::WARNING:
 			pyFunctionName = py_warn_function_name;
 			break;
 		case octolapse_log::ERROR:
@@ -192,15 +221,14 @@ void octolapse_log(const int logger_type, const int log_level, const std::string
 			break;
 		default:
 			return;
+		}
 	}
 	PyObject * pyMessage = PyUnicode_SafeFromString(message);
 	if (pyMessage == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, "");
+		
 		PyErr_Format(PyExc_ValueError,
 			"Unable to convert the log message '%s' to a PyString/Unicode message.", message.c_str());
-		// Todo:  What should I do if this fails??
 		return;
 	}
 	PyGILState_STATE state = PyGILState_Ensure();
@@ -221,5 +249,17 @@ void octolapse_log(const int logger_type, const int log_level, const std::string
 			PyErr_Clear();
 		}
 	}
+	else
+	{
+		// Set the exception if we are doing exception logging.
+		if (is_exception)
+		{
+			if (error_occurred)
+				PyErr_Restore(error_type, error_value, error_traceback);
+			else
+				PyErr_SetString(PyExc_Exception, message.c_str());
+		}
+	}
 	Py_XDECREF(ret_val);
 }
+

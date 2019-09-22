@@ -2,6 +2,7 @@
 #include "utilities.h"
 #include <iterator>
 #include "stabilization_smart_layer.h"
+#include "logging.h"
 
 position_type trigger_position::get_type(position& pos_)
 {

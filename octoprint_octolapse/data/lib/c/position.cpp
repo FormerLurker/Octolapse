@@ -54,6 +54,7 @@ void position::set_e_axis_mode(const std::string& e_axis_default_mode)
 
 	
 }
+
 void position::set_units_default(const std::string&	units_default)
 {
 	if (units_default == "inches")
@@ -67,7 +68,6 @@ void position::set_units_default(const std::string&	units_default)
 		is_metric_null = false;
 	}
 }
-
 
 position::position()
 { 
@@ -135,11 +135,49 @@ position::position()
 	is_in_bounds = true;
 }
 
+double position::get_offset_x()
+{
+	return x - x_offset;
+}
+
+double position::get_offset_y()
+{
+	return y - y_offset;
+}
+
+double position::get_offset_z()
+{
+	return z - z_offset;
+}
+
+double position::get_offset_e()
+{
+	return e - e_offset;
+}
+
+
+void position::reset_state()
+{
+	is_layer_change = false;
+	is_height_change = false;
+	is_xy_travel = false;
+	is_xyz_travel = false;
+	has_position_changed = false;
+	has_state_changed = false;
+	has_received_home_command = false;
+	gcode_ignored = true;
+	
+	//is_in_bounds = true; // I dont' think we want to reset this every time since it's only calculated if the current position
+	// changes.
+	e_relative = 0;
+	z_relative = 0;
+	feature_type_tag = 0;
+}
 
 PyObject* position::to_py_tuple()
 {
 	PyObject * py_command;
-	if(command.is_empty)
+	if (command.is_empty)
 	{
 		py_command = Py_None;
 	}
@@ -230,50 +268,13 @@ PyObject* position::to_py_tuple()
 	);
 	if (pyPosition == NULL)
 	{
-		std::string message = "Position.to_py_tuple - Unable to create the position.";
-		PyErr_Print();
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		std::string message = "position.to_py_tuple: Unable to convert position value to a PyObject tuple via Py_BuildValue.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return NULL;
 	}
 	Py_DECREF(py_command);
 	return pyPosition;
 
-}
-
-double position::get_offset_x()
-{
-	return x - x_offset;
-}
-double position::get_offset_y()
-{
-	return y - y_offset;
-}
-double position::get_offset_z()
-{
-	return z - z_offset;
-}
-double position::get_offset_e()
-{
-	return e - e_offset;
-}
-
-void position::reset_state()
-{
-	is_layer_change = false;
-	is_height_change = false;
-	is_xy_travel = false;
-	is_xyz_travel = false;
-	has_position_changed = false;
-	has_state_changed = false;
-	has_received_home_command = false;
-	gcode_ignored = true;
-	
-	//is_in_bounds = true; // I dont' think we want to reset this every time since it's only calculated if the current position
-	// changes.
-	e_relative = 0;
-	z_relative = 0;
-	feature_type_tag = 0;
 }
 
 PyObject* position::to_py_dict()
@@ -436,6 +437,8 @@ PyObject* position::to_py_dict()
 	);
 	if (p_position == NULL)
 	{
+		std::string message = "position.to_py_dict: Unable to convert position value to a dict PyObject via Py_BuildValue.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return NULL;
 	}
 	return p_position;

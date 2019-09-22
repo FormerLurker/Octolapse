@@ -46,14 +46,12 @@ PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan> &p_plans)
 	// Create each snapshot plan
 	for (unsigned int plan_index = 0; plan_index < p_plans.size(); plan_index++)
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Building Plan.");
 		PyObject * py_snapshot_plan = p_plans[plan_index].to_py_object();
 		if (py_snapshot_plan == NULL)
 		{
 			//PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.build_py_object: Unable to convert the snapshot plan to a PyObject.");
 			return NULL;
 		}
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding plan to list of plans.");
 		bool success = !(PyList_Append(py_snapshot_plans, py_snapshot_plan) < 0); // reference to pSnapshotPlan stolen
 		if (!success)
 		{
@@ -74,18 +72,14 @@ PyObject * snapshot_plan::to_py_object()
 	
 	if (triggering_command.is_empty)
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No triggering command for plan.");
 		py_triggering_command = Py_None;
 		Py_IncRef(py_triggering_command);
 	}
 	else
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding the triggering command.");
 		py_triggering_command = triggering_command.to_py_object();
 		if (py_triggering_command == NULL)
 		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the triggering_command to a PyObject.");
 			return NULL;
 		}
 	}
@@ -94,18 +88,14 @@ PyObject * snapshot_plan::to_py_object()
 	PyObject* py_start_command = NULL;
 	if (start_command.is_empty)
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No start command.");
 		py_start_command = Py_None;
 		Py_IncRef(Py_None);
 	}
 	else
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding the start command.");
 		py_start_command = start_command.to_py_object();
 		if (py_start_command == NULL)
 		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the start_command to a PyObject.");
 			return NULL;
 		}
 	}
@@ -113,18 +103,14 @@ PyObject * snapshot_plan::to_py_object()
 	PyObject * py_initial_position;
 	if (!has_initial_position)
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No initial position.");
 		py_initial_position = Py_None;
 		Py_IncRef(py_initial_position);
 	}
 	else
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding the initial position.");
 		py_initial_position = initial_position.to_py_tuple();
 		if (py_initial_position == NULL)
 		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to create InitialPosition PyObject.");
 			return NULL;
 		}
 	}
@@ -132,50 +118,38 @@ PyObject * snapshot_plan::to_py_object()
 	PyObject * py_steps = PyList_New(0);
 	if (py_steps == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to create a PyList object to hold the snapshot plan steps.");
 		return NULL;
 	}
 	for (unsigned int step_index = 0; step_index < steps.size(); step_index++)
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding snapshot step.");
 		// create the snapshot step object with build
 		PyObject * py_step = steps[step_index].to_py_object();
 		if (py_step == NULL)
 		{
-			PyErr_Print();
 			return NULL;
 		}
 		bool success = !(PyList_Append(py_steps, py_step) < 0); // reference to pSnapshotPlan stolen
 		if (!success)
 		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to append the snapshot plan step to the snapshot plan step list.");
+			std::string message = "Error executing SnapshotPlan.to_py_object: Unable to append the snapshot plan step to the snapshot plan step list via the PyList_Append method.";
+			octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 			return NULL;
 		}
 		// Need to decref after PyList_Append, since it increfs the PyObject
-		// Todo: evaluate the effect of this 
 		Py_DECREF(py_step);
-		//std::cout << "py_step refcount = " << py_step->ob_refcnt << "\r\n";
-
 	}
-
 	
 	PyObject * py_return_position;
 	if (return_position.is_empty)
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No return position.");
 		py_return_position = Py_None;
 		Py_IncRef(py_return_position);
 	}
 	else
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding return position.");
 		py_return_position = return_position.to_py_tuple();
 		if (py_return_position == NULL)
 		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the return position to a tuple.");
 			return NULL;
 		}
 	}
@@ -183,23 +157,18 @@ PyObject * snapshot_plan::to_py_object()
 	PyObject* py_end_command;
 	if (end_command.is_empty)
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "No end command.");
 		py_end_command = Py_None;
 		Py_IncRef(py_end_command);
 	}
 	else
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding the end command.");
 		py_end_command = end_command.to_py_object();
 		if (py_end_command == NULL)
 		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to convert the end_command to a PyObject.");
 			return NULL;
 		}
 	}
 
-	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Converting plan to py object.");
 	PyObject *py_snapshot_plan = Py_BuildValue(
 		"llddOOOOOO",
 		file_line,
@@ -215,8 +184,8 @@ PyObject * snapshot_plan::to_py_object()
 	);
 	if (py_snapshot_plan == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlan.to_py_object: Unable to create SnapshotPlan PyObject.");
+		std::string message = "Error executing SnapshotPlan.to_py_object: Unable to create SnapshotPlan PyObject with the Py_BuildValue function.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return NULL;
 	}
 	

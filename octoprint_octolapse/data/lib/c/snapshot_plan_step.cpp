@@ -22,6 +22,7 @@
 #include "snapshot_plan_step.h"
 #include "python_helpers.h"
 #include <iostream>
+#include "logging.h"
 snapshot_plan_step::snapshot_plan_step()
 {
 	p_x = NULL;
@@ -173,7 +174,7 @@ snapshot_plan_step::~snapshot_plan_step()
 	
 }
 
-PyObject * snapshot_plan_step::to_py_object()
+PyObject * snapshot_plan_step::to_py_object() const
 {
 	PyObject * py_x;
 	if(p_x == NULL)
@@ -187,8 +188,8 @@ PyObject * snapshot_plan_step::to_py_object()
 	}
 	if (py_x == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlanStep.to_py_object: Unable to convert the X value to a python object.");
+		std::string message = "snapshot_plan_step.to_py_object: Unable to convert the X value to a python object.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return NULL;
 	}
 	
@@ -204,8 +205,8 @@ PyObject * snapshot_plan_step::to_py_object()
 	}
 	if (py_y == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlanStep.to_py_object: Unable to convert the Y value to a python object.");
+		std::string message = "snapshot_plan_step.to_py_object: Unable to convert the Y value to a python object.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return NULL;
 	}
 
@@ -221,8 +222,8 @@ PyObject * snapshot_plan_step::to_py_object()
 	}
 	if (py_z == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlanStep.to_py_object: Unable to convert the Z value to a python object.");
+		std::string message = "snapshot_plan_step.to_py_object: Unable to convert the Z value to a python object.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return NULL;
 	}
 
@@ -238,8 +239,8 @@ PyObject * snapshot_plan_step::to_py_object()
 	}
 	if (py_e == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlanStep.to_py_object: Unable to convert the E value to a python object.");
+		std::string message = "snapshot_plan_step.to_py_object: Unable to convert the E value to a python object.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return NULL;
 	}
 
@@ -255,16 +256,16 @@ PyObject * snapshot_plan_step::to_py_object()
 	}
 	if (py_f == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlanStep.to_py_object: Unable to convert the F value to a python object.");
+		std::string message = "snapshot_plan_step.to_py_object: Unable to convert the F value to a python object.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return NULL;
 	}
 
 	PyObject * py_step = Py_BuildValue("sOOOOO", action.c_str(), py_x, py_y, py_z, py_e, py_f);
 	if (py_step == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, "Error executing SnapshotPlanStep.to_py_object: Unable to create the snapshot plan step PyObject.");
+		std::string message = "snapshot_plan_step.to_py_object: Unable to create the snapshot plan step PyObject.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return NULL;
 	}
 	Py_DecRef(py_x);

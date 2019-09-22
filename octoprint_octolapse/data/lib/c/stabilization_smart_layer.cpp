@@ -120,7 +120,7 @@ void stabilization_smart_layer::process_pos(position& p_current_pos, position& p
 	// if we're at a layer change, add the current saved plan
 	if (p_current_pos.is_layer_change && p_current_pos.layer > 1)
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Layer change detected.");
+		//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Layer change detected.");
 		is_layer_change_wait_ = true;
 		// get distance from current point to the stabilization point
 		

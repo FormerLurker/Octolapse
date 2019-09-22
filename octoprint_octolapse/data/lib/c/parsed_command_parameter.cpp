@@ -58,8 +58,7 @@ PyObject * parsed_command_parameter::value_to_py_object()
 		if (ret_val == NULL)
 		{
 			std::string message = "parsedCommandParameter.value_to_py_object: Unable to convert double value to a PyObject.";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
 			return NULL;
 		}
 	}
@@ -75,8 +74,7 @@ PyObject * parsed_command_parameter::value_to_py_object()
 		if (ret_val == NULL)
 		{
 			std::string message = "parsedCommandParameter.value_to_py_object: Unable to convert string value to a PyObject.";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
 			return NULL;
 		}
 		
@@ -87,8 +85,7 @@ PyObject * parsed_command_parameter::value_to_py_object()
 		if (ret_val == NULL)
 		{
 			std::string message = "parsedCommandParameter.value_to_py_object: Unable to convert unsigned long value to a PyObject.";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
 			return NULL;
 		}
 	}
@@ -98,7 +95,6 @@ PyObject * parsed_command_parameter::value_to_py_object()
 		message += value_type;
 		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
 		// There has been an error, we don't support this value_type!
-		PyErr_SetString(PyExc_ValueError, "Error creating ParsedCommand: Unknown value_type");
 		return NULL;
 	}
 

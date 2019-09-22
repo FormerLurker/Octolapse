@@ -171,19 +171,7 @@ extern "C" void initGcodePositionProcessor(void)
 
 extern "C"
 {
-	/*
-	void initGcodePositionProcessor(void)
-	{
-		
-		Py_Initialize();
-		//PyEval_InitThreads();
 
-		PyObject *m = Py_InitModule("GcodePositionProcessor", GcodePositionProcessorMethods);
-		octolapse_initialize_loggers();
-		gpp::parser = new gcode_parser();
-		std::cout << "complete\r\n";
-	}
-	*/
 	static PyObject * GetSnapshotPlans_SmartLayer(PyObject *self, PyObject *args)
 	{
 		set_internal_log_levels(true);
@@ -200,8 +188,8 @@ extern "C"
 			&py_stabilization_args,
 			&py_stabilization_type_args))
 		{
-			octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Error parsing parameters for GcodePositionProcessor.GetSnapshotPlans_LockToPrint.");
-			PyErr_SetString(PyExc_ValueError, "Error parsing parameters for GcodePositionProcessor.GetSnapshotPlans_LockToPrint.");
+			std::string message = "GcodePositionProcessor.GetSnapshotPlans_SmartLayer - Error parsing parameters.";
+			octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 			return NULL;
 		}
 		// Removed by BH on 4-28-2019
@@ -239,9 +227,7 @@ extern "C"
 		
 		stabilization_results results = stabilization.process_file();
 		set_internal_log_levels(true);
-		std::stringstream sstm;
-		sstm << "Building " << results.snapshot_plans.size() << " snapshot plans.";
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, sstm.str());
+		
 
 		PyObject * py_results = results.to_py_object();
 		if (py_results == NULL)
@@ -270,21 +256,18 @@ extern "C"
 			&py_position_args
 		))
 		{
-			std::string message = "GcodePositionProcessor.Initialize failed: unable to parse the initialization parameters.";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			std::string message = "GcodePositionProcessor.Initialize - Error parsing parameters.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return NULL;
 		}
 
 		gcode_position_args positionArgs;
 
 		// Create the gcode position object 
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Parsing initialization position args.");
+		octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::INFO, "Parsing initialization position args.");
 
 		if (!ParsePositionArgs(py_position_args, &positionArgs))
 		{
-			octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Error parsing initialization position args.");
 			return NULL; // The call failed, ParseInitializationArgs has taken care of the error message
 		}
 				
@@ -293,7 +276,7 @@ extern "C"
 		gcode_position* p_gcode_position = NULL;
 		if (gcode_position_iterator != gpp::gcode_positions.end())
 		{
-			octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Existing processor found, deleting.");
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::INFO, "Existing processor found, deleting.");
 			delete gcode_position_iterator->second;
 		}
 		// Separate delete step.  Something is going on here.
@@ -305,11 +288,12 @@ extern "C"
 		std::string message = "Adding processor with key:";
 		message.append(pKey).append("\r\n");
 
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, message);
+		octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::INFO, message);
 		// Create the new position object
 		gcode_position * p_new_position = new gcode_position(&positionArgs);
 		// add the new gcode position to our list of objects
 		gpp::gcode_positions.insert(std::pair<std::string, gcode_position*>(pKey, p_new_position));
+		// Return True
 		return Py_BuildValue("O", Py_True);
 	}
 
@@ -317,13 +301,14 @@ extern "C"
 	{
 		set_internal_log_levels(true);
 		octolapse_log(
-			octolapse_log::GCODE_POSITION, octolapse_log::VERBOSE,
+			octolapse_log::GCODE_POSITION, octolapse_log::DEBUG,
 			"Undoing the last gcode position update."
 		);
 		const char * key;
 		if (!PyArg_ParseTuple(args, "s", &key))
 		{
-			PyErr_SetString(PyExc_ValueError, "Undo requires at least one parameter: the gcode_position key");
+			std::string message = "GcodePositionProcessor.Undo - Error parsing parameters.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return NULL;
 		}
 		// Get the parser
@@ -350,18 +335,18 @@ extern "C"
 		const char* gcode;
 		if (!PyArg_ParseTuple(args, "ss", &key, &gcode))
 		{
-			std::string message = "GcodePositionProcessor.Update - requires at least two parameters: the key and the gcode string";
-			PyErr_Print();
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			std::string message = "GcodePositionProcessor.Update - Error parsing parameters.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return NULL;
-
 		}
 		
 		// Get the parser
 		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(key);
 		if (gcode_position_iterator == gpp::gcode_positions.end())
 		{
+			std::string message = "GcodePositionProcessor.Update - No position processor was found for the given key: ";
+			message += key;
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, message);
 			return Py_BuildValue("O", Py_False);
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
@@ -370,16 +355,7 @@ extern "C"
 		gpp::parser->try_parse_gcode(gcode, command);
 		p_gcode_position->update(command, -1, -1);
 
-		PyObject * py_position = p_gcode_position->get_current_position_ptr()->to_py_tuple();
-		if (py_position == NULL)
-		{
-			std::string message = "GcodePositionProcessor.Update - Unable to convert the position to a tuple.";
-			PyErr_Print();
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_SetString(PyExc_ValueError, message.c_str());
-			return NULL;
-		}
-		return py_position;
+		return p_gcode_position->get_current_position_ptr()->to_py_tuple();
 	}
 
 	static PyObject* UpdatePosition(PyObject* self, PyObject *args)
@@ -416,19 +392,17 @@ extern "C"
 			&update_f
 		))
 		{
-			std::string message = "Unable to parse the UpdatePosition argument list.";
-			PyErr_Print();
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			std::string message = "GcodePositionProcessor.UpdatePosition - Error parsing parameters.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return NULL;
 		}
 		// Get the parser
 		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(key);
 		if (gcode_position_iterator == gpp::gcode_positions.end())
 		{
-			std::string message = "No parser was found for the given key: ";
+			std::string message = "GcodePositionProcessor.UpdatePosition - No position processor was found for the given key: ";
 			message += key;
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, message);
 			return Py_BuildValue("O", Py_False);
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
@@ -448,13 +422,7 @@ extern "C"
 			true,
 			false);
 
-		PyObject * py_position = p_gcode_position->get_current_position_ptr()->to_py_tuple();
-		if (py_position == NULL)
-		{
-			return NULL;
-		}
-
-		return py_position;
+		return p_gcode_position->get_current_position_ptr()->to_py_tuple();
 	}
 
 	static PyObject* Parse(PyObject* self, PyObject *args)
@@ -467,10 +435,8 @@ extern "C"
 		const char* gcode;
 		if (!PyArg_ParseTuple(args, "s", &gcode))
 		{
-			std::string message = "Parse requires at least one parameter: the gcode string.  Either this parameter is missing or it is not a unicode string.";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			std::string message = "GcodePositionProcessor.Parse - Error parsing parameters.";
+			octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
 			return NULL;
 		}
 		parsed_command command;
@@ -494,22 +460,18 @@ extern "C"
 		const char * key;
 		if (!PyArg_ParseTuple(args, "s", &key))
 		{
-			std::string message = "GetCurrentPositionTuple requires at least one parameter: the gcode_position key";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			std::string message = "GcodePositionProcessor.Parse - Error parsing parameters.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return NULL;
 		}
 		// Get the parser
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Retrieving the current position processor for the supplied key.");
 		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(key);
 		if (gcode_position_iterator == gpp::gcode_positions.end())
 		{
-			octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Could not find a position processor with the given key.");
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "Could not find a position processor with the given key.");
 			return Py_BuildValue("O", Py_False);
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Creating and returning the current position tuple.");
 		return p_gcode_position->get_current_position().to_py_tuple();
 	}
 
@@ -523,10 +485,8 @@ extern "C"
 		char* key;
 		if (!PyArg_ParseTuple(args, "s", &key))
 		{
-			std::string message = "GetCurrentPositionTuple requires at least one parameter: the gcode_position key";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			std::string message = "GcodePositionProcessor.GetCurrentPositionDict - Error parsing parameters.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return NULL;
 		}
 
@@ -534,6 +494,7 @@ extern "C"
 		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(key);
 		if (gcode_position_iterator == gpp::gcode_positions.end())
 		{
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "Could not find a position processor with the given key.");
 			return Py_BuildValue("O", Py_False);
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
@@ -551,22 +512,18 @@ extern "C"
 		const char * key;
 		if (!PyArg_ParseTuple(args, "s", &key))
 		{
-			std::string message = "GetCurrentPositionTuple requires at least one parameter: the gcode_position key";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			std::string message = "GcodePositionProcessor.GetPreviousPositionTuple - Error parsing parameters.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return NULL;
 		}
 		// Get the position processor by key
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Retrieving the current position processor for the supplied key.");
 		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(key);
 		if (gcode_position_iterator == gpp::gcode_positions.end())
 		{
-			octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Could not find a position processor with the given key.");
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "GcodePositionProcessor.GetPreviousPositionTuple - Could not find a position processor with the given key.");
 			return Py_BuildValue("O", Py_False);
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Creating and returning the previous position tuple.");
 		return p_gcode_position->get_previous_position().to_py_tuple();
 	}
 
@@ -580,10 +537,8 @@ extern "C"
 		char* key;
 		if (!PyArg_ParseTuple(args, "s", &key))
 		{
-			std::string message = "GetCurrentPositionTuple requires at least one parameter: the gcode_position key";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			std::string message = "GcodePositionProcessor.GetPreviousPositionDict - Error parsing parameters.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return NULL;
 		}
 
@@ -591,6 +546,7 @@ extern "C"
 		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(key);
 		if (gcode_position_iterator == gpp::gcode_positions.end())
 		{
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "GcodePositionProcessor.GetPreviousPositionDict - Could not find a position processor with the given key.");
 			return Py_BuildValue("O", Py_False);
 		}
 		gcode_position* p_gcode_position = gcode_position_iterator->second;
@@ -605,10 +561,8 @@ static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, co
 	PyObject * funcArgs = Py_BuildValue("(d,d,d,i,i)", percent_complete, seconds_elapsed, estimated_seconds_remaining, gcodes_processed, lines_processed);
 	if (funcArgs == NULL)
 	{
-		std::string message = "GcodePositionProcessor.ExecuteStabilizationProgressCallback - Error building callback arguments - Terminating";
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		std::string message = "GcodePositionProcessor.ExecuteStabilizationProgressCallback - Error parsing parameters.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 
@@ -621,10 +575,8 @@ static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, co
 
 	if (pContinueProcessing == NULL)
 	{
-		std::string message = "GcodePositionProcessor.ExecuteStabilizationProgressCallback - Failed to call python - Terminating";
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		std::string message = "GcodePositionProcessor.ExecuteStabilizationProgressCallback - Failed to call python progress callback.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 
@@ -637,14 +589,12 @@ static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, co
 static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double* x_result, double* y_result )
 {
 	//std::cout << "Executing get_snapshot_position callback.\r\n";
-	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Executing the get_snapshot_position callback.");
+	//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Executing the get_snapshot_position callback.");
 	PyObject * funcArgs = Py_BuildValue("(d,d)", x_initial, y_initial);
 	if (funcArgs == NULL)
 	{
-		std::string message = "GcodePositionProcessor.ExecuteGetSnapshotPositionCallback - Error building callback arguments - Terminating";
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		std::string message = "GcodePositionProcessor.ExecuteGetSnapshotPositionCallback - Error parsing parameters.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 
@@ -657,20 +607,16 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 
 	if (pyCoordinates == NULL)
 	{
-		std::string message = "GcodePositionProcessor.ExecuteGetSnapshotPositionCallback - Failed to call python - Terminating";
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		std::string message = "GcodePositionProcessor.ExecuteGetSnapshotPositionCallback - Failed to call python get stabilization position callback.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	//std::cout << "Extracting X coordinate.\r\n";
 	PyObject * pyX = PyDict_GetItemString(pyCoordinates,"x");
 	if (pyX == NULL)
 	{
-		std::string message = "GcodePositionProcessor.ExecuteGetSnapshotPositionCallback - Failed to parse the return x value - Terminating";
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		std::string message = "GcodePositionProcessor.ExecuteGetSnapshotPositionCallback - Failed to parse the return x value.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	*x_result = PyFloatOrInt_AsDouble(pyX);
@@ -678,10 +624,8 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 	PyObject * pyY = PyDict_GetItemString(pyCoordinates, "y");
 	if (pyY == NULL)
 	{
-		std::string message = "GcodePositionProcessor.ExecuteGetSnapshotPositionCallback - Failed to parse the return y value - Terminating";
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		std::string message = "GcodePositionProcessor.ExecuteGetSnapshotPositionCallback - Failed to parse the return y value.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	*y_result = PyFloatOrInt_AsDouble(pyY);
@@ -695,7 +639,7 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 {
 	octolapse_log(
-		octolapse_log::GCODE_POSITION, octolapse_log::INFO,
+		octolapse_log::GCODE_POSITION, octolapse_log::DEBUG,
 		"Parsing Position Args."
 	);
 	// Here is the full structure of the position args:
@@ -703,8 +647,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_volume = PyDict_GetItemString(py_args, "volume");
 	if (py_volume == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve py_volume from the position args dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve volume from the position args dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 
@@ -713,32 +657,18 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_bed_type = PyDict_GetItemString(py_volume, "bed_type");
 	if (py_bed_type == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve py_bed_type from the position args dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve bed_type from the position args dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	// Extract the bed type string
 	args->is_circular_bed = strcmp(PyUnicode_SafeAsString(py_bed_type), "circular") == 0;
-	if (args->is_circular_bed)
-	{
-		octolapse_log(
-			octolapse_log::GCODE_PARSER, octolapse_log::INFO,
-			"Circular bed set."
-		);
-	}
-	else
-	{
-		octolapse_log(
-			octolapse_log::GCODE_PARSER, octolapse_log::INFO,
-			"Rectangular bed set"
-		);
-	}
 	// Get Build Plate Area
 	PyObject * py_x_min = PyDict_GetItemString(py_volume, "min_x");
 	if (py_x_min == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_x from the volume dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve min_x from the position args dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->x_min = PyFloatOrInt_AsDouble(py_x_min);
@@ -746,8 +676,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_x_max = PyDict_GetItemString(py_volume, "max_x");
 	if (py_x_max == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_x from the volume dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve max_x from the position args dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->x_max = PyFloatOrInt_AsDouble(py_x_max);
@@ -755,8 +685,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_y_min = PyDict_GetItemString(py_volume, "min_y");
 	if (py_y_min == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_y from the volume dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve min_y from the position args dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->y_min = PyFloatOrInt_AsDouble(py_y_min);
@@ -764,8 +694,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_y_max = PyDict_GetItemString(py_volume, "max_y");
 	if (py_y_max == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_y from the volume dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve max_y from the position args dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->y_max = PyFloatOrInt_AsDouble(py_y_max);
@@ -773,8 +703,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_z_min = PyDict_GetItemString(py_volume, "min_z");
 	if (py_z_min == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_z from the volume dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve min_z from the position args dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->z_min = PyFloatOrInt_AsDouble(py_z_min);
@@ -782,8 +712,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_z_max = PyDict_GetItemString(py_volume, "max_z");
 	if (py_z_max == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_z from the volume dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve max_z from the position args dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->z_max = PyFloatOrInt_AsDouble(py_z_max);
@@ -792,15 +722,15 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_bounds = PyDict_GetItemString(py_volume, "bounds");
 	if (py_bounds == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve bounds from the position args dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve bounds from the position args dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	// If py_bounds is a dict, we have no snapshot boundaries other than the printer volume
 	if (PyDict_Check(py_bounds)<1)
 	{
 		octolapse_log(
-			octolapse_log::GCODE_PARSER, octolapse_log::INFO,
+			octolapse_log::GCODE_PARSER, octolapse_log::DEBUG,
 			"No snapshot restrictions set."
 		);
 		args->is_bound_ = false;
@@ -816,8 +746,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		PyObject * py_snapshot_x_min = PyDict_GetItemString(py_bounds, "min_x");
 		if (py_snapshot_x_min == NULL)
 		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_x from the bounds dict.");
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve min_x from the bounds dict.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
 		}
 		args->snapshot_x_min = PyFloatOrInt_AsDouble(py_snapshot_x_min);
@@ -825,8 +755,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		PyObject * py_snapshot_x_max = PyDict_GetItemString(py_bounds, "max_x");
 		if (py_snapshot_x_max == NULL)
 		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_x from the bounds dict.");
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve max_x from the bounds dict.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
 		}
 		args->snapshot_x_max = PyFloatOrInt_AsDouble(py_snapshot_x_max);
@@ -834,8 +764,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		PyObject * py_snapshot_y_min = PyDict_GetItemString(py_bounds, "min_y");
 		if (py_snapshot_y_min == NULL)
 		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_y from the bounds dict.");
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve min_y from the bounds dict.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
 		}
 		args->snapshot_y_min = PyFloatOrInt_AsDouble(py_snapshot_y_min);
@@ -843,8 +773,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		PyObject * py_snapshot_y_max = PyDict_GetItemString(py_bounds, "max_y");
 		if (py_snapshot_y_max == NULL)
 		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_y from the bounds dict.");
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve max_y from the bounds dict.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
 		}
 		args->snapshot_y_max = PyFloatOrInt_AsDouble(py_snapshot_y_max);
@@ -852,8 +782,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		PyObject * py_snapshot_z_min = PyDict_GetItemString(py_bounds, "min_z");
 		if (py_snapshot_z_min == NULL)
 		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve min_z from the bounds dict.");
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve min_z from the bounds dict.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
 		}
 		args->snapshot_z_min = PyFloatOrInt_AsDouble(py_snapshot_z_min);
@@ -861,8 +791,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		PyObject * py_snapshot_z_max = PyDict_GetItemString(py_bounds, "max_z");
 		if (py_snapshot_z_max == NULL)
 		{
-			PyErr_Print();
-			PyErr_SetString(PyExc_TypeError, "Unable to retrieve max_z from the bounds dict.");
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve max_z from the bounds dict.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
 		}
 		args->snapshot_z_max = PyFloatOrInt_AsDouble(py_snapshot_z_max);
@@ -873,25 +803,23 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 			"X:(" << utilities::to_string(args->snapshot_x_min) << "," << utilities::to_string(args->snapshot_x_max) << ") " <<
 			"Y:(" << utilities::to_string(args->snapshot_y_min) << "," << utilities::to_string(args->snapshot_y_max) << ") " <<
 			"Z:(" << utilities::to_string(args->snapshot_z_min) << "," << utilities::to_string(args->snapshot_z_max) << ") ";
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::INFO, stream.str());
+		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::DEBUG, stream.str());
 	}
 
 	// Get LocationDetection Commands
 	PyObject * py_location_detection_commands = PyDict_GetItemString(py_args, "location_detection_commands");
 	if (py_location_detection_commands == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve py_location_detection_commands from the position args dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve location_detection_commands from the bounds dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	// Extract the elements from  the location detection command list pyobject
 	const int listSize = PyList_Size(py_location_detection_commands);
 	if (listSize < 0)
 	{
-		std::string message = "Unable to build position arguments, LocationDetectionCommands is not a list.";
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-		PyErr_Print();
-		PyErr_SetString(PyExc_ValueError, message.c_str());
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to build position arguments, LocationDetectionCommands is not a list.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 
@@ -899,18 +827,13 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		PyObject *pyListItem = PyList_GetItem(py_location_detection_commands, index);
 		if (pyListItem == NULL)
 		{
-			std::string message = "Could not extract a list item from index from the location detection commands.";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, message.c_str());
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Could not extract a list item from index from the location detection commands.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
 		}
 		if (!PyUnicode_SafeCheck(pyListItem)) {
-			std::string message = "Argument 16 (location_detection_commands) must be a list of strings.";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_Print();
-			PyErr_SetString(PyExc_ValueError, message.c_str());
-
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Argument 16 (location_detection_commands) must be a list of strings.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
 		}
 		std::string command = PyUnicode_SafeAsString(pyListItem);
@@ -921,8 +844,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_xyz_axis_default_mode = PyDict_GetItemString(py_args, "xyz_axis_default_mode");
 	if (py_xyz_axis_default_mode == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve xyz_axis_default_mode from the position dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve xyz_axis_default_mode from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->xyz_axis_default_mode = PyUnicode_SafeAsString(py_xyz_axis_default_mode);
@@ -931,8 +854,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_e_axis_default_mode = PyDict_GetItemString(py_args, "e_axis_default_mode");
 	if (py_e_axis_default_mode == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve e_axis_default_mode from the position dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve e_axis_default_mode from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->e_axis_default_mode = PyUnicode_SafeAsString(py_e_axis_default_mode);
@@ -941,8 +864,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_units_default = PyDict_GetItemString(py_args, "units_default");
 	if (py_units_default == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve units_default from the position dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve units_default from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->units_default = PyUnicode_SafeAsString(py_units_default);
@@ -951,8 +874,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_autodetect_position = PyDict_GetItemString(py_args, "autodetect_position");
 	if (py_autodetect_position == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve autodetect_position from the position dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve autodetect_position from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->autodetect_position = PyLong_AsLong(py_autodetect_position) > 0;
@@ -962,8 +885,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_home = PyDict_GetItemString(py_args, "home_position");
 	if (py_home == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve py_home from the position args dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve home_position from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 
@@ -971,8 +894,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_home_x = PyDict_GetItemString(py_home, "home_x");
 	if (py_home_x == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve home_x from the position dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve home_x from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	if (py_home_x == Py_None)
@@ -988,8 +911,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_home_y = PyDict_GetItemString(py_home, "home_y");
 	if (py_home_y == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve home_y from the position dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve home_y from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	if (py_home_y == Py_None)
@@ -1005,8 +928,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_home_z = PyDict_GetItemString(py_home, "home_z");
 	if (py_home_z == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve home_z from the position dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve home_z from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	if (py_home_z == Py_None)
@@ -1022,9 +945,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_slicer_settings_dict = PyDict_GetItemString(py_args, "slicer_settings");
 	if (py_slicer_settings_dict == NULL)
 	{
-		PyErr_Print();
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to retrieve slicer settings from the position dict.");
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve slicer settings from the position dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve slicer_settings from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	
@@ -1032,9 +954,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_retraction_length = PyDict_GetItemString(py_slicer_settings_dict, "retraction_length");
 	if (py_retraction_length == NULL)
 	{
-		PyErr_Print();
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to retrieve retraction_length from the slicer settings dict.");
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve retraction_length from the slicer settings dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve retraction_length from the slicer settings dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->retraction_length = PyFloatOrInt_AsDouble(py_retraction_length);
@@ -1043,8 +964,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_z_lift_height = PyDict_GetItemString(py_slicer_settings_dict, "z_lift_height");
 	if (py_z_lift_height == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve z_lift_height from the slicer settings dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve z_lift_height from the slicer settings dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->z_lift_height = PyFloatOrInt_AsDouble(py_z_lift_height);
@@ -1053,8 +974,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_priming_height = PyDict_GetItemString(py_args, "priming_height");
 	if (py_priming_height == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve priming_height from the position dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve priming_height from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->priming_height = PyFloatOrInt_AsDouble(py_priming_height);
@@ -1063,8 +984,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_minimum_layer_height = PyDict_GetItemString(py_args, "minimum_layer_height");
 	if (py_minimum_layer_height == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve minimum_layer_height from the position dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve minimum_layer_height from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->minimum_layer_height = PyFloatOrInt_AsDouble(py_minimum_layer_height);
@@ -1073,8 +994,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	PyObject * py_g90_influences_extruder = PyDict_GetItemString(py_args, "g90_influences_extruder");
 	if (py_g90_influences_extruder == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve g90_influences_extruder from the position dict.");
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve g90_influences_extruder from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
 	args->g90_influences_extruder = PyLong_AsLong(py_g90_influences_extruder) > 0;
@@ -1085,7 +1006,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 {
 	octolapse_log(
-		octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO,
+		octolapse_log::SNAPSHOT_PLAN, octolapse_log::DEBUG,
 		"Parsing Stabilization Args."
 	);
 	//std::cout << "Parsing Stabilization Args.\r\n";
@@ -1093,8 +1014,8 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 	PyObject * py_gcode_generator = PyDict_GetItemString(py_args, "gcode_generator");
 	if (py_gcode_generator == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve gcode_generator from the smart layer stabilization args.");
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve gcode_generator from the smart layer stabilization args.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	// Need to incref py_gcode_generator, borrowed ref and we're holding it!
@@ -1104,14 +1025,14 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 	PyObject * py_get_snapshot_position_callback = PyObject_GetAttrString(py_gcode_generator, "get_snapshot_position");
 	if (py_get_snapshot_position_callback == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve get_snapshot_position function from the gcode_generator object.");
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve get_snapshot_position function from the gcode_generator object.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	// make sure it is callable
 	if (!PyCallable_Check(py_get_snapshot_position_callback)) {
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "The get_snapshot_position attribute must be callable.");
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve get_snapshot_position function from the gcode_generator object.";
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, message);
 		return NULL;
 	}
 	// py_get_snapshot_position_callback is a new reference, no reason to incref
@@ -1121,8 +1042,8 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 	PyObject * py_height_increment = PyDict_GetItemString(py_args, "height_increment");
 	if (py_height_increment == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve height_increment from the stabilization args.");
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve height_increment from the stabilization args.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	args->height_increment = PyFloatOrInt_AsDouble(py_height_increment);
@@ -1131,8 +1052,8 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 	PyObject * py_x_stabilization_disabled = PyDict_GetItemString(py_args, "x_stabilization_disabled");
 	if (py_x_stabilization_disabled == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve x_stabilization_disabled from the stabilization args.");
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve x_stabilization_disabled from the stabilization args.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	args->x_stabilization_disabled = PyLong_AsLong(py_x_stabilization_disabled) > 0;
@@ -1141,8 +1062,8 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 	PyObject * py_y_stabilization_disabled = PyDict_GetItemString(py_args, "y_stabilization_disabled");
 	if (py_x_stabilization_disabled == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve y_stabilization_disabled from the stabilization args.");
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve y_stabilization_disabled from the stabilization args.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	args->y_stabilization_disabled = PyLong_AsLong(py_y_stabilization_disabled) > 0;
@@ -1151,8 +1072,8 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 	PyObject * py_notification_period_seconds = PyDict_GetItemString(py_args, "notification_period_seconds");
 	if (py_notification_period_seconds == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve notification_period_seconds from the stabilization args.");
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve notification_period_seconds from the stabilization args.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	args->notification_period_seconds = PyFloatOrInt_AsDouble(py_notification_period_seconds);
@@ -1161,8 +1082,8 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 	PyObject * py_on_progress_received = PyDict_GetItemString(py_args, "on_progress_received");
 	if (py_on_progress_received == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve on_progress_received from the stabilization args.");
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve on_progress_received from the stabilization args.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	// need to incref this so it doesn't vanish later (borrowed reference we are saving)
@@ -1173,8 +1094,8 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 	PyObject * py_file_path = PyDict_GetItemString(py_args, "file_path");
 	if (py_file_path == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve file_path from the stabilization args.");
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve file_path from the stabilization args.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	args->file_path = PyUnicode_SafeAsString(py_file_path);
@@ -1193,8 +1114,8 @@ static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_arg
 	PyObject * py_trigger_type = PyDict_GetItemString(py_args, "trigger_type");
 	if (py_trigger_type == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve trigger_type from the smart layer trigger stabilization args.");
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs_SmartLayer - Unable to retrieve trigger_type from the smart layer trigger stabilization args.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	args->smart_layer_trigger_type = static_cast<trigger_type>(PyLong_AsLong(py_trigger_type));
@@ -1202,8 +1123,8 @@ static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_arg
 	PyObject * py_snap_to_print_high_quality = PyDict_GetItemString(py_args, "snap_to_print_high_quality");
 	if (py_snap_to_print_high_quality == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve snap_to_print_high_quality from the position args dict.");
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs_SmartLayer - Unable to retrieve snap_to_print_high_quality from the smart layer trigger stabilization args.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	args->snap_to_print_high_quality = PyLong_AsLong(py_snap_to_print_high_quality) > 0;
@@ -1211,8 +1132,8 @@ static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_arg
 	PyObject * py_snap_to_print_smooth = PyDict_GetItemString(py_args, "snap_to_print_smooth");
 	if (py_snap_to_print_smooth == NULL)
 	{
-		PyErr_Print();
-		PyErr_SetString(PyExc_TypeError, "Unable to retrieve snap_to_print_smooth from the position args dict.");
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs_SmartLayer - Unable to retrieve snap_to_print_smooth from the smart layer trigger stabilization args.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
 	args->snap_to_print_smooth = PyLong_AsLong(py_snap_to_print_smooth) > 0;
