@@ -125,7 +125,7 @@ protected:
 	void get_next_xy_coordinates(double &x, double &y);
 	virtual void process_pos(position& p_current_pos, position& p_previous_pos);
 	virtual void on_processing_complete();
-	virtual std::string get_quality_issues();
+	virtual std::vector<stabilization_quality_issue> get_quality_issues();
 	std::vector<snapshot_plan> p_snapshot_plans_;
 	bool is_running_;
 	std::string errors_;

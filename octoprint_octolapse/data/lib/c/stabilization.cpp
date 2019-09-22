@@ -241,7 +241,7 @@ void stabilization::on_processing_complete()
 	throw std::exception();
 }
 
-std::string stabilization::get_quality_issues()
+std::vector<stabilization_quality_issue> stabilization::get_quality_issues()
 {
 	throw std::exception();
 }

@@ -34,6 +34,31 @@ logger = logging_configurator.get_logger(__name__)
 
 
 class StabilizationPreprocessingThread(Thread):
+    quality_issue_ids = {
+        1: {
+            'name': "Using Fast Trigger",
+            'help_link': "quality_issues_fast_trigger.md",
+            'cpp_name': "stabilization_quality_issue_fast_trigger",
+            'description': "You are using the 'Fast' smart trigger.  This could lead to quality issues.  If you are "
+                           "having print quality issues, consider using a 'high quality' or 'snap to print' smart "
+                           "trigger. "
+        },
+        2: {
+            'name': "Low Quality Snap-to-print",
+            'help_link': "quality_issues_low_quality_snap_to_print.md",
+            'cpp_name': "stabilization_quality_issue_snap_to_print_low_quality",
+            'description': "In most cases using the 'High Quality' snap to print option will improve print quality, "
+                           "unless you are printing with vase mode enabled. "
+        },
+        3: {
+            'name': "No Print Features Detected",
+            'help_link': "quality_issues_no_print_features_detected.md",
+            'cpp_name': "stabilization_quality_issue_no_print_features",
+            'description': "No print features were found in your gcode file.  This can reduce print quality "
+                           "significantly.  If you are using Slic3r or PrusaSlicer, please enable 'Verbose G-code' in "
+                           "'Print Settings'->'Output Options'->'Output File'. "
+        }
+    }
 
     def __init__(
         self,
@@ -112,7 +137,7 @@ class StabilizationPreprocessingThread(Thread):
                 [],
                 0,
                 0,
-                "",
+                [],
                 0
             )
         logger.info("Unpacking results")
@@ -134,11 +159,21 @@ class StabilizationPreprocessingThread(Thread):
         seconds_elapsed = results[3]
         gcodes_processed = results[4]
         lines_processed = results[5]
-        quality_issues = results[6]
+        quality_issues = self._get_quality_issues_from_cpp(results[6])
         self.complete_callback(
             success, errors, self.is_cancelled, snapshot_plans, seconds_elapsed, gcodes_processed, lines_processed,
             quality_issues, self.timelapse_settings, self.parsed_command
         )
+
+
+    def _get_quality_issues_from_cpp(self, issues):
+        quality_issues = []
+        for issue in issues:
+            if issue[0] in StabilizationPreprocessingThread.quality_issue_ids:
+                quality_issues.append(StabilizationPreprocessingThread.quality_issue_ids[issue[0]])
+
+        return quality_issues
+
 
     def _create_stabilization_args(self):
         # and vase mode is enabled, use the layer height setting if it exists
@@ -191,7 +226,8 @@ class StabilizationPreprocessingThread(Thread):
                 [],  # snapshot_plans
                 0,  # seconds_elapsed
                 0,  # gcodes_processed
-                0  # lines_processed
+                0,  # lines_processed
+                [], # quality_issues
             )
         if trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER:
             # run smart layer trigger
@@ -214,7 +250,8 @@ class StabilizationPreprocessingThread(Thread):
                 [],  # snapshot_plans
                 0,  # seconds_elapsed
                 0,  # gcodes_processed
-                0  # lines_processed
+                0,  # lines_processed
+                []  # quality_issues
             )
         logger.info("Stabilization results received, returning.")
         return results, options

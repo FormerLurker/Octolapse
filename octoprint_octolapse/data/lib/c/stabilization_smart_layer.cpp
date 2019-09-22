@@ -262,24 +262,37 @@ void stabilization_smart_layer::on_processing_complete()
 	//std::cout << "Complete.\r\n";
 }
 
-std::string stabilization_smart_layer::get_quality_issues()
+std::vector<stabilization_quality_issue> stabilization_smart_layer::get_quality_issues()
 {
-	std::string message;
-	
+	std::vector<stabilization_quality_issue> issues;
+
 	// Detect quality issues and return as a human readable string.
 	gcode_comment_processor* p_comment_processor = gcode_position_->get_gcode_comment_processor();
 	if (this->p_smart_layer_args_->smart_layer_trigger_type == trigger_type_fast)
 	{
-		 message = "You are using the 'Fast' smart trigger.  This could lead to quality issues.  If you are having print quality issues, consider using a 'high quality' or 'snap to print' smart trigger.";
+		stabilization_quality_issue issue;
+		issue.description = "You are using the 'Fast' smart trigger.  This could lead to quality issues.  If you are having print quality issues, consider using a 'high quality' or 'snap to print' smart trigger.";
+		issue.issue_type = stabilization_quality_issue_fast_trigger;
+		issues.push_back(issue);
 	}
-	else if (this->p_smart_layer_args_->smart_layer_trigger_type == trigger_type_snap_to_print && !p_smart_layer_args_->snap_to_print_high_quality)
+	else
 	{
-		message = "In most cases using the 'High Quality' snap to print option will improve print quality, unless you are printing with vase mode enabled";
-	}
-	else if (p_comment_processor->get_comment_process_type() == comment_process_type_unknown)
-	{
-		message = "No print features were found in your gcode file.  This can reduce print quality significantly.  If you are using Slic3r or PrusaSlicer, please enable 'Verbose G-code' in 'Print Settings'->'Output Options'->'Output File'.";
+		if (this->p_smart_layer_args_->smart_layer_trigger_type == trigger_type_snap_to_print && !p_smart_layer_args_->snap_to_print_high_quality)
+		{
+			stabilization_quality_issue issue;
+			issue.description = "In most cases using the 'High Quality' snap to print option will improve print quality, unless you are printing with vase mode enabled.";
+			issue.issue_type = stabilization_quality_issue_snap_to_print_low_quality;
+			issues.push_back(issue);
+		}
+
+		else if (p_comment_processor->get_comment_process_type() == comment_process_type_unknown)
+		{
+			stabilization_quality_issue issue;
+			issue.description = "No print features were found in your gcode file.  This can reduce print quality significantly.  If you are using Slic3r or PrusaSlicer, please enable 'Verbose G-code' in 'Print Settings'->'Output Options'->'Output File'.";
+			issue.issue_type = stabilization_quality_issue_no_print_features;
+			issues.push_back(issue);
+		}
 	}
 
-	return message;
+	return issues;
 }

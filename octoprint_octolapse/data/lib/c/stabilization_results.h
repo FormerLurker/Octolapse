@@ -24,6 +24,20 @@
 #include <string>
 #include <vector>
 #include "snapshot_plan.h"
+enum stabilization_quality_issue_type
+{
+	stabilization_quality_issue_fast_trigger = 1,
+	stabilization_quality_issue_snap_to_print_low_quality = 2,
+	stabilization_quality_issue_no_print_features = 3
+};
+
+struct stabilization_quality_issue
+{
+	std::string description;
+	stabilization_quality_issue_type issue_type;
+	PyObject * to_py_object();
+};
+
 struct stabilization_results
 {
 	stabilization_results();
@@ -34,7 +48,8 @@ struct stabilization_results
 	double seconds_elapsed;
 	long gcodes_processed;
 	long lines_processed;
-	std::string quality_issues;
+	std::vector<stabilization_quality_issue> quality_issues;
 };
+
 
 #endif

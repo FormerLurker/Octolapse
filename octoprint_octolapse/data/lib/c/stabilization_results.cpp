@@ -34,11 +34,37 @@ PyObject* stabilization_results::to_py_object()
 	PyObject * py_snapshot_plans = snapshot_plan::build_py_object(snapshot_plans);
 	if (py_snapshot_plans == NULL)
 	{
-		//octolapse_log(SNAPSHOT_PLAN, ERROR, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Snapshot_plan::build_py_object returned Null");
-		//PyErr_SetString(PyExc_ValueError, "GcodePositionProcessor.ExecuteStabilizationCompleteCallback - Snapshot_plan::build_py_object returned Null - Terminating");
 		return NULL;
 	}
-	PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l,s)", success, errors.c_str(), py_snapshot_plans, seconds_elapsed, gcodes_processed, lines_processed, quality_issues.c_str());
+
+	// Create stabilization quality issues list
+	PyObject *py_issues = PyList_New(0);
+	if (py_issues == NULL)
+	{
+		PyErr_SetString(PyExc_ValueError, "Error executing stabilization_quality_issue.to_py_object: Unable to create py_issues PyList object.");
+		return NULL;
+	}
+
+	// Create each issue and append to list
+	for (unsigned int issue_index = 0; issue_index < quality_issues.size(); issue_index++)
+	{
+		PyObject * py_issue = quality_issues[issue_index].to_py_object();
+		if (py_issue == NULL)
+		{
+			return NULL;
+		}
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding quality issue to the list of quality issues.");
+		bool success = !(PyList_Append(py_issues, py_issue) < 0); // reference to pSnapshotPlan stolen
+		if (!success)
+		{
+			PyErr_SetString(PyExc_ValueError, "Error executing stabilization_results::to_py_object: Unable to append the quality issue to the quality issues list.");
+			return NULL;
+		}
+		// Need to decref after PyList_Append, since it increfs the PyObject
+		Py_DECREF(py_issue);
+	}
+	
+	PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l,O)", success, errors.c_str(), py_snapshot_plans, seconds_elapsed, gcodes_processed, lines_processed, py_issues);
 	if (py_results == NULL)
 	{
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to create a Tuple from the snapshot plan list.");
@@ -47,7 +73,20 @@ PyObject* stabilization_results::to_py_object()
 	}
 	// Bring the snapshot plan refcount to 1
 	Py_DECREF(py_snapshot_plans);
+	Py_DECREF(py_issues);
 
 	return py_results;
 }
 
+
+PyObject * stabilization_quality_issue::to_py_object()
+{
+	PyObject * py_results = Py_BuildValue("(l,s)", static_cast<int>(issue_type), description.c_str() );
+	if (py_results == NULL)
+	{
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to create a Tuple from a stabilization_quality_issue.");
+		PyErr_SetString(PyExc_ValueError, "stabilization_quality_issue - Unable to create a Tuple from a stabilization_quality_issue.");
+		return NULL;
+	}
+	return py_results;
+}
