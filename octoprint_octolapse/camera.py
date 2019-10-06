@@ -673,7 +673,7 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
                 )
                 raise CameraError('webcam_settings_apply_error', message)
             try:
-                data = json.loads(r.text)
+                data = json.loads(r.text, strict=False)
             except ValueError as e:
                 raise CameraError('json_error', "Unable to read the input.json file from mjpg-streamer.  Please chack "
                                                 "your base address and try again.", cause=e)
