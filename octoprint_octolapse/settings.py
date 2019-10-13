@@ -309,9 +309,9 @@ class PrinterProfile(AutomaticConfigurationProfile):
         self.auto_position_detection_commands = ""
         self.priming_height = 0.75  # Extrusion must occur BELOW this level before layer tracking will begin
         self.minimum_layer_height = 0.05  # Layer tracking won't start until extrusion at this height is reached.
-        self.e_axis_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'
-        self.g90_influences_extruder = 'use-octoprint-settings'  # other values are 'true' and 'false'
-        self.xyz_axes_default_mode = 'require-explicit'  # other values are 'relative' and 'absolute'
+        self.e_axis_default_mode = 'absolute'  # other values are 'relative' and 'absolute'
+        self.g90_influences_extruder = 'false'  # other values are 'true' and 'false'
+        self.xyz_axes_default_mode = 'absolute'  # other values are 'relative' and 'absolute'
         self.units_default = 'millimeters'
         self.axis_speed_display_units = 'mm-min'
         self.default_firmware_retractions = False
