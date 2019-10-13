@@ -14,7 +14,6 @@ def get_printer_profile():
           "min_y": 0.0,
           "axis_speed_display_units": "mm-min",
           "auto_position_detection_commands": "",
-          "abort_out_of_bounds": True,
           "name": "Prusa Mk2/Mk2S Multi Material",
           "min_z": 0.0,
           "z_hop_speed": 7200.0,

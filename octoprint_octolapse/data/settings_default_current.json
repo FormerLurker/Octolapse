@@ -1034,7 +1034,6 @@
         "auto_position_detection_commands": "",
         "g90_influences_extruder": "use-octoprint-settings",
         "priming_height": 0.75,
-        "abort_out_of_bounds": true,
         "units_default": "millimeters",
         "default_firmware_retractions_zhop": false,
         "axis_speed_display_units": "mm-min",

@@ -124,7 +124,6 @@ $(function() {
         self.home_x = ko.observable(values.home_x);
         self.home_y = ko.observable(values.home_y);
         self.home_z = ko.observable(values.home_z);
-        self.abort_out_of_bounds = ko.observable(values.abort_out_of_bounds);
         self.override_octoprint_profile_settings = ko.observable(values.override_octoprint_profile_settings);
         self.bed_type = ko.observable(values.bed_type);
         self.diameter_xy = ko.observable(values.diameter_xy);
@@ -192,7 +191,6 @@ $(function() {
             self.home_x(server_profile.home_x);
             self.home_y(server_profile.home_y);
             self.home_z(server_profile.home_z);
-            self.abort_out_of_bounds(server_profile.abort_out_of_bounds);
             self.override_octoprint_profile_settings(server_profile.override_octoprint_profile_settings);
             self.bed_type(server_profile.bed_type);
             self.diameter_xy(server_profile.diameter_xy);

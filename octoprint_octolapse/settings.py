@@ -285,7 +285,6 @@ class PrinterProfile(AutomaticConfigurationProfile):
         self.home_x = None
         self.home_y = None
         self.home_z = None
-        self.abort_out_of_bounds = True
         self.override_octoprint_profile_settings = False
         self.bed_type = PrinterProfile.bed_type_rectangular
         self.diameter_xy = 0.0

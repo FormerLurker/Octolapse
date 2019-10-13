@@ -559,16 +559,6 @@
             </div>
             <div>
                 <div class="control-group">
-                    <label class="control-label" for="abort_out_of_bounds">Abort Snapshot When Out-Of-Bounds</label>
-                    <div class="controls">
-                        <label class="checkbox">
-                            <input name="abort_out_of_bounds" type="checkbox" data-bind="checked: abort_out_of_bounds" title="Abort snapshots when the position is out-of-bounds" />Enabled
-                            <a class="octolapse_help" data-help-url="profiles.printer.abort_out_of_bounds.md" data-help-title="Abort Snapshot When Out-Of-Bounds" />
-                        </label>
-                        <span class="help-inline">When enabled snapshots will be aborted if the snapshot position is out of bounds.  When disabled the closest in-bounds position will be used.  In either case an out-of-bounds error popup will display to let you know an error occurred.</span>
-                    </div>
-                </div>
-                <div class="control-group">
                     <label class="control-label" for="printer_profile_snapshot_command">Snapshot Command</label>
                     <div class="controls">
                         <input id="printer_profile_snapshot_command" name="snapshot_command" type="text" class="input-small text-right" data-bind="value: snapshot_command" required />
