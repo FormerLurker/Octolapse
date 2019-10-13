@@ -146,6 +146,7 @@ class StabilizationPreprocessingThread(Thread):
         errors = []
         if error:
             errors.append(error)
+
         # get snapshot plans
         cpp_snapshot_plans = results[2]
         if not cpp_snapshot_plans:

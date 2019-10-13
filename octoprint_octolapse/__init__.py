@@ -2112,11 +2112,12 @@ class OctolapsePlugin(
         self.preprocessing_job_guid = None
 
     def pre_processing_failed(self, errors):
+
         if self._printer.is_printing():
             if len(errors) > 0:
                 # display error messages if there are any
                 error_message = "\r\n".join(errors)
-                self.on_print_start_failed(error_message)
+                self.on_print_start_failed(error_message,  help_link="error_help_preprocessing_failed.md", error_code="proprocessing_failed")
         # cancel the print
         self._printer.cancel_print(tags={'octolapse-preprocessing-cancelled'})
         # inform the timelapse object that preprocessing has failed
