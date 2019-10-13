@@ -1,0 +1,20 @@
+Octolapse was started, but some required slicer settings do not exist in your Octolapse printer profile.  This most likely indicates that you upgraded Octolapse, but there was some problem migrating your settings.  Fortunately this is usually an easy problem to solve
+
+###Steps to Solve
+
+#### Use Automatic Slicer Configuration
+If you are using Cura, Slic3r, Slic3r PE, PrusaSlicer or Simplify 3D, Octolapse can extract your slicer settings automatically.  If you are using a different slicer, see the **I'm using another slicer** section below.
+
+##### Cura
+Cura does not output slicer settings by default.  <a href="https://github.com/FormerLurker/Octolapse/wiki/Automatic-Slicer-Settings#install-the-cura-settings-script" title="View the cura automatic slicer settings guide in a new window" target="_blank">See this guide</a> for enabling automatic slicer settings when using Cura.
+
+#### Slice3r, Slic3r PE, Prusa Slicer, or Simplify 3D
+Octolapse should work out of the box for these slicers.  Simply open your Octolapse printer profile and select **Automatic Configuration** from the **Slicer Type** dropdown box and save your changes.
+
+#### I'm using another slicer
+You are using a slicer that is not specifically supported by Octolapse.  [Use Manual Slicer Settings](#use-manual-slicer-settings) below for information on how to manually enter your slicer settings into Octolapse.
+
+If you would like for your slicer to work with **Automatic Slicer Configuration** feature, consider  <a href="https://github.com/FormerLurker/Octolapse/issues/new" title="Create an issue in the Octolapse github repository" target="_blank">creating an issue</a> in the Octolapse github repository.  Be sure to include some sample gcode (preferably using <a href="https://github.com/FormerLurker/Octolapse/issues/new" title="Upload you gcode to gist.github.com." target="_blank">gist.github.com</a>), and the exact slicer version, and a link to the slicer's homepage if possible.
+
+#### Use Manual Slicer Settings
+You can manually enter your slicer settings into Ocotlapse.  First, open your Octolapse printer profile and choose your slicer type from the **Slicer Type** drop down box.  If your slicer type dosen't appear in the list, choose **Other Slicer**.  You will then need to copy your slicer settings **EXACTLY** from your slicer to Octolapse.  If you are using the **Other Slicer** type, be very careful that you select the correct **Speed Display Units** (either mm/min or mm/sec) when entering any slicer speeds.  Any mistakes made while copying your slicer settings can reduce your print quality, and may even prevent Octolapse from working entirely.

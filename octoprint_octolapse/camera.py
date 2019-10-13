@@ -171,19 +171,16 @@ class CameraControl(object):
 
         # make sure the supplied cameras are enabled and either webcams or script cameras
         cameras = [x for x in cameras if x.camera_type in [
-            CameraProfile.camera_type_webcam,
-            CameraProfile.camera_type_script
+            CameraProfile.camera_type_webcam
         ]]
 
         # create the threads
         threads = []
         for current_camera in cameras:
             thread = None
-            if current_camera.camera_type == CameraProfile.camera_type_webcam:
-                if current_camera.webcam_settings.server_type == MjpgStreamer.server_type:
-                    thread = MjpgStreamerSettingsThread(profile=current_camera)
-            elif current_camera.camera_type == CameraProfile.camera_type_script:
-                thread = CameraSettingScriptThread(current_camera)
+
+            if current_camera.webcam_settings.server_type == MjpgStreamer.server_type:
+                thread = MjpgStreamerSettingsThread(profile=current_camera)
 
             if thread:
                 threads.append(thread)
@@ -204,6 +201,86 @@ class CameraControl(object):
                     errors.append(error)
 
         return len(errors) == 0, CameraControl._get_errors_string(errors)
+
+    @staticmethod
+    def run_on_print_start_script(cameras):
+        # build the arg list
+        args_list = []
+        for key, camera in six.iteritems(cameras):
+            script_path = camera.on_print_start_script.strip()
+            if not script_path or not camera.enabled:
+                # skip any cameras where there is no on print start script or the camera is disabled
+                continue
+            script_args = [camera.name]
+            script_type = 'on print start'
+
+            args = {
+                'camera': camera,
+                'script_path': script_path,
+                'script_args': script_args,
+                'script_type': script_type
+            }
+            args_list.append(args)
+
+        if len(args_list) > 0:
+            return CameraControl._run_camera_scripts(args_list)
+
+        return True, None
+
+    @staticmethod
+    def run_on_print_end_script(cameras):
+        # build the arg list
+        args_list = []
+        for key, camera in six.iteritems(cameras):
+            script_path = camera.on_print_end_script.strip()
+            if not script_path or not camera.enabled:
+                # skip any cameras where there is no on print start script or the camera is disabled
+                continue
+            script_args = [camera.name]
+            script_type = 'on print end'
+
+            args = {
+                'camera': camera,
+                'script_path': script_path,
+                'script_args': script_args,
+                'script_type': script_type
+            }
+            args_list.append(args)
+
+        if len(args_list) > 0:
+            return CameraControl._run_camera_scripts(args_list)
+        return True, None
+
+    @staticmethod
+    def _run_camera_scripts(args_list, timeout_seconds=5):
+        errors = []
+
+        # create the threads
+        threads = []
+        for args in args_list:
+            threads.append(CameraSettingScriptThread(
+                args['camera'],
+                args['script_path'],
+                args['script_args'],
+                args['script_type']
+            ))
+
+        # start the threads
+        for thread in threads:
+            thread.start()
+        start_time = time.time()
+        timeout_time = start_time + 5
+        # join the threads, but timeout in a reasonable way
+        for thread in threads:
+            timeout_sec = timeout_time - time.time()
+            if timeout_sec < 0:
+                timeout_sec = 0.001
+            thread.join(timeout_sec)
+            if thread.error:
+                errors.append(thread.error)
+
+        return len(errors) == 0, CameraControl._get_errors_string(errors)
+
 
     @staticmethod
     def _get_errors_string(errors):
@@ -889,61 +966,69 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
 
 
 class CameraSettingScriptThread(Thread):
-    def __init__(self, camera):
+    def __init__(self, camera, script_path, script_args, script_type):
         super(CameraSettingScriptThread, self).__init__()
         self.Camera = camera
         self.camera_name = camera.name
-        self.errors = []
+        self.script_path = script_path.strip()
+        self.script_type = script_type
+        self.script_args = script_args
+        self.console_output = ""
+        self.error = None
 
     def run(self):
         try:
             script = self.Camera.on_print_start_script.strip()
             logger.info(
-                "Executing the 'Before Print Starts' script at %s for the '%s' camera.", script, self.camera_name
+                "Executing the %s script at '%s' for the '%s' camera with the following arguments: %s.",
+                self.script_type,
+                self.script_path,
+                self.camera_name,
+                ' '.join(self.script_args)
             )
-            if not script:
-                message = "The Camera Initialization script is empty"
-                logger.error(message)
+
+            if not self.script_path:
+                message = "The {0} script for the {1} camera is empty".format(self.script_type, self.camera_name)
                 raise CameraError('no_camera_script_path', message)
             try:
-                script_args = [
-                    script,
-                    self.Camera.name
+                command_args = [
+                    script
                 ]
+                command_args = command_args + self.script_args
                 cmd = utility.POpenWithTimeout()
-                return_code = cmd.run(script_args, None)
-                console_output = cmd.stdout
+                return_code = cmd.run(command_args, None)
+                self.console_output = cmd.stdout
+                logger.debug(
+                    "The following console output was returned for the %s script at '%s' for the '%s' camera: %s.",
+                    self.script_type,
+                    self.script_path,
+                    self.camera_name,
+                    self.console_output
+                )
                 error_message = cmd.stderr
             except utility.POpenWithTimeout.ProcessError as e:
                 message = "An OS Error error occurred while executing the custom camera initialization script"
-                logger.exception(message)
                 raise CameraError('camera_initialization_error', message, cause=e)
 
             if error_message is not None:
                 if error_message.endswith("\r\n"):
                     error_message = error_message[:-2]
-            if not return_code == 0:
-                if error_message is not None:
-                    error_message = "The custom camera initialization script failed with the following error message: {0}" \
-                        .format(error_message)
-                else:
-                    error_message = (
-                        "The custom camera initialization script returned {0},"
-                        " which indicates an error.".format(return_code)
-                    )
-                logger.exception(error_message)
-            elif error_message is not None:
-                logger.warn(
-                    "The console returned an error while running the script at %s for the '%s' camera.  Details:%s",
-                    script, self.camera_name, error_message
-                )
             else:
-                logger.info(
-                    "The 'Before Print Starts' script for the %s camera completed successfully.", self.camera_name
+                error_message = "No error message was reported."
+            if not return_code == 0:
+                error_message = (
+                    "Error output was returned after executing executing the {0} script for the {1} camera.  "
+                    "Return Code: {2}, Error Message: {3}".format(
+                        self.script_type, self.camera_name, return_code, error_message
+                    )
                 )
-                raise CameraError('camera_initialization_error', error_message)
+                raise CameraError('error_code_returned', error_message)
+            elif error_message is not None:
+                raise CameraError('error_message_returned', error_message)
+
         except CameraError as e:
-            self.errors.append(e)
+            logger.exception(e)
+            self.error = e
 
 
 class CameraError(Exception):

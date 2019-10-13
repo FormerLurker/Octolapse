@@ -353,22 +353,6 @@ $(function () {
             }
     };
 
-    Octolapse.ConfirmDialogs = {};
-    Octolapse.closeConfirmDialogsForKeys = function(remove_keys) {
-        if (!$.isArray(remove_keys))
-        {
-            remove_keys = [remove_keys];
-        }
-        for (var index = 0; index < remove_keys.length; index++) {
-            var key = remove_keys[index];
-            if (key in Octolapse.ConfirmDialogs) {
-
-                Octolapse.ConfirmDialogs[key].remove();
-                delete Octolapse.ConfirmDialogs[key];
-            }
-        }
-    };
-
     Octolapse.checkPNotifyDefaultConfirmButtons = function()
     {
         // check to see if exactly two default pnotify confirm buttons exist.
@@ -401,6 +385,77 @@ $(function () {
                 }
             ];
             PNotify.prototype.options.confirm.buttons = buttons;
+        }
+    };
+
+    Octolapse.displayPopupForKeyWithHelp = function(options, popup_key, remove_keys, help_link)
+    {
+        if (!help_link)
+        {
+            Octolapse.displayPopupForKey(options, popup_key, remove_keys);
+            return;
+        }
+        Octolapse.closeConfirmDialogsForKeys([remove_keys]);
+        // Make sure that the default pnotify buttons exist
+        Octolapse.checkPNotifyDefaultConfirmButtons();
+        Octolapse.ConfirmDialogs[popup_key] = (
+            new PNotify({
+                title: options.title,
+                text: options.text,
+                icon: options.icon,
+                hide: options.hide,
+                desktop: options.desktop,
+                type: options.type,
+                addclass: options.addclass,
+                confirm: {
+                    confirm: true,
+                    buttons: [{
+                        text: 'Ok',
+                        addClass: 'remove_button',
+                    },{
+                        text: 'Cancel',
+                        addClass: 'remove_button',
+                    },{
+                        text: 'Close',
+                        click: function(){
+                            console.log("Closing popup with key: " + popup_key.toString());
+                            Octolapse.closeConfirmDialogsForKeys([popup_key]);
+                        }
+                    },{
+                        text: 'Help',
+                        click: function() {
+                            Octolapse.Help.showHelpForLink(help_link, options.title, "No help could be found for this error.");
+                        }
+                    }]
+                },
+                buttons: {
+                    closer: false,
+                    sticker: false
+                },
+                history: {
+                    history: false
+                },
+                before_open: function(notice) {
+                    notice.get().find(".remove_button").remove();
+
+                }
+            })
+        );
+    };
+
+    Octolapse.ConfirmDialogs = {};
+    Octolapse.closeConfirmDialogsForKeys = function(remove_keys) {
+        if (!$.isArray(remove_keys))
+        {
+            remove_keys = [remove_keys];
+        }
+        for (var index = 0; index < remove_keys.length; index++) {
+            var key = remove_keys[index];
+            if (key in Octolapse.ConfirmDialogs) {
+
+                Octolapse.ConfirmDialogs[key].remove();
+                delete Octolapse.ConfirmDialogs[key];
+            }
         }
     };
 
@@ -528,7 +583,7 @@ $(function () {
         else
             return null;
         return Octolapse.parseFloat(value)
-    }
+    };
 
     $.validator.addMethod('slic3rPEFloatOrPercent',
         function (value) {
@@ -1705,7 +1760,7 @@ $(function () {
                                 desktop: true
                             }
                         };
-                        Octolapse.displayPopupForKey(options,"print-start-error",["print-start-error"])
+                        Octolapse.displayPopupForKeyWithHelp(options,"print-start-error",["print-start-error"], data["help_link"]);
                         break;
                     }
                 case "timelapse-start":

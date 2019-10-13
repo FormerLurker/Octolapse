@@ -39,6 +39,7 @@ $(function() {
         self.on_after_snapshot_script = ko.observable(values.on_after_snapshot_script);
         self.on_before_render_script = ko.observable(values.on_before_render_script);
         self.on_after_render_script = ko.observable(values.on_after_render_script);
+        self.on_print_end_script = ko.observable(values.on_print_end_script);
         self.delay = ko.observable(values.delay);
         self.timeout_ms = ko.observable(values.timeout_ms);
         self.enable_custom_image_preferences = ko.observable(values.enable_custom_image_preferences);

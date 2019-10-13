@@ -1377,6 +1377,7 @@ class CameraProfile(AutomaticConfigurationProfile):
         self.on_after_snapshot_script = ""
         self.on_before_render_script = ""
         self.on_after_render_script = ""
+        self.on_print_end_script = ""
         self.delay = 125
         self.timeout_ms = 5000
         self.snapshot_transpose = ""
@@ -2626,7 +2627,7 @@ class OtherSlicerSettings(SlicerSettings):
             return self.speed_tolerance * 60.0
         return self.speed_tolerance
 
-    def get_gcode_generation_settings(self, slicer_typ=None):
+    def get_gcode_generation_settings(self, slicer_type=None):
         """Returns OctolapseSlicerSettings"""
         settings = OctolapseGcodeSettings()
         settings.retraction_length = self.get_retract_length()
