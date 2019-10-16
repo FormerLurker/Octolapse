@@ -31,6 +31,7 @@ import time
 import traceback
 import threading
 import psutil
+import octoprint.filemanager
 from threading import Timer
 
 # create the module level logger
@@ -182,6 +183,21 @@ def round_to_value(value, rounding_increment=0.0000001):
 
 def round_up(value):
     return -(-value // 1.0)
+
+
+def get_clean_filename(filename):
+
+    if filename is None:
+        return None
+
+    if u"/" in filename or u"\\" in filename:
+        raise ValueError("name must not contain / or \\")
+
+    result = octoprint.filemanager.LocalFileStorage._slugify(filename).replace(u" ", u"_")
+    if result and result != u"." and result != u".." and result[0] == u".":
+        # hidden files under *nix
+        result = result[1:]
+    return result
 
 
 def get_temp_snapshot_driectory_template():
@@ -771,7 +787,6 @@ class TimelapseJobInfo(object):
             self.PrintEndState = print_end_state
             self.PrintFileName = print_file_name
             self.PrintFileExtension = print_file_extension
-
         else:
             self.JobGuid = job_info.JobGuid
             self.PrintStartTime = job_info.PrintStartTime
