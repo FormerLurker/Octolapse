@@ -49,9 +49,12 @@
                            options: Octolapse.Status.printers_sorted,
                            optionsText: 'name',
                            optionsValue: 'guid',
+                           optionsAfterRender: setDescriptionAsTitle,
                            value: Octolapse.Status.current_printer_profile_guid,
                            event: {change: Octolapse.Status.defaultPrinterChanged},
-                           optionsCaption: 'Please select...'"></select>
+                           optionsCaption: 'Please select...',
+                           attr: {title: Octolapse.Status.getPrinterProfileTitle}">
+                </select>
                 <div data-bind="visible: !hasPrinterSelected()" class="text-error">
                     <p data-bind="visible: hasPrinters()" class="text-error">
                         No printer is selected.  Either select a printer from the drop down box, or add a new printer profile by clicking the plus sign to the right.
@@ -88,8 +91,11 @@
                         options: Octolapse.Status.stabilizations_sorted,
                         optionsText: 'name',
                         optionsValue: 'guid',
+                        optionsAfterRender: setDescriptionAsTitle,
                         event: {change: Octolapse.Status.defaultStabilizationChanged},
-                        value: Octolapse.Status.current_stabilization_profile_guid"></select>
+                        value: Octolapse.Status.current_stabilization_profile_guid,
+                        attr: {title: Octolapse.Status.getStabilizationProfileTitle}">
+                </select>
 
             </div>
             <div class="span1 text-right">
@@ -114,8 +120,11 @@
                         options: Octolapse.Status.triggers_sorted,
                         optionsText: 'name',
                         optionsValue: 'guid',
+                        optionsAfterRender: setDescriptionAsTitle,
                         event: {change: Octolapse.Status.defaultTriggerChanged},
-                        value: Octolapse.Status.current_trigger_profile_guid"></select>
+                        value: Octolapse.Status.current_trigger_profile_guid,
+                        attr: {title: Octolapse.Status.getTriggerProfileTitle}">
+                </select>
 
             </div>
             <div class="span1 text-right">
@@ -140,8 +149,11 @@
                         options: Octolapse.Status.renderings_sorted,
                         optionsText: 'name',
                         optionsValue: 'guid',
+                        optionsAfterRender: setDescriptionAsTitle,
                         event: {change: Octolapse.Status.defaultRenderingChanged},
-                        value: Octolapse.Status.current_rendering_profile_guid"></select>
+                        value: Octolapse.Status.current_rendering_profile_guid,
+                        attr: {title: Octolapse.Status.getRenderingProfileTitle}">
+                </select>
 
             </div>
             <div class="span1 text-right">
@@ -177,9 +189,22 @@
                     options: Octolapse.Status.debug_sorted,
                     optionsText: 'name',
                     optionsValue: 'guid',
+                    optionsAfterRender: setDescriptionAsTitle,
                     event: {change: Octolapse.Status.defaultDebugProfileChanged},
-                    value: Octolapse.Status.current_debug_profile_guid"></select>
-
+                    value: Octolapse.Status.current_debug_profile_guid,
+                        attr: {title: Octolapse.Status.getDebugProfileTitle}">
+                </select>
+                <div class="text-warning">
+                    <p data-bind="visible: Octolapse.Status.is_test_mode_active() && !Octolapse.Status.getCurrentDebugProfileIsTestMode()">
+                        Test mode is currently active and will end once the print is finished.  Your printer will not warm up or extrude plastic while test mode is enabled.
+                    </p>
+                    <p data-bind="visible: Octolapse.Status.is_test_mode_active() && Octolapse.Status.getCurrentDebugProfileIsTestMode()">
+                        Test mode is currently active.  Your printer will not warm up or extrude plastic while test mode is enabled.
+                    </p>
+                    <p data-bind="visible: !Octolapse.Status.is_test_mode_active() && Octolapse.Status.getCurrentDebugProfileIsTestMode()">
+                        This profile has test mode enabled.  Your printer will not warm up or extrude plastic while test mode is enabled.
+                    </p>
+                </div>
             </div>
             <div class="span1 text-right">
                 <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_debug_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentDebugProfile" title="Edit this debug profile.">

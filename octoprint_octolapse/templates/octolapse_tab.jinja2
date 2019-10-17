@@ -31,11 +31,11 @@
 
             return "{{ url_for('plugin.octolapse.snapshot_request',file_type='snapshot') }}" + "&camera_guid=" + camera_guid + "&apikey=" + UI_API_KEY;
             //return "{{ url_for('plugin.octolapse.snapshot_request',file_type='snapshot',camera_guid=camera_guid, apikey='') }}" + UI_API_KEY;
-        }
+        };
         getLatestSnapshotThumbnailUrl = function (camera_guid) {
             return "{{ url_for('plugin.octolapse.snapshot_request',file_type='thumbnail') }}" + "&camera_guid=" + camera_guid + "&apikey=" + UI_API_KEY;
             //return "{{ url_for('plugin.octolapse.snapshot_request',file_type='thumbnail', camera_guid=camera_guid, apikey='') }}" + UI_API_KEY;
-        }
+        };
     </script>
     <div data-bind="visible:Octolapse.Globals.has_loaded_state" style="display:none">
         <div class="panel panel-default">
@@ -45,6 +45,7 @@
                         <h4 data-bind="text: getStatusText">
                             Octolapse
                         </h4>
+                        <p data-bind="visible: is_test_mode_active" class="text-error">Test mode is enabled</p>
                     </div>
                     <div class="span4 text-center">
                         <div>

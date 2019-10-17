@@ -35,7 +35,7 @@ from csv import DictReader
 # sarge was added to the additional requirements for the plugin
 import datetime
 from tempfile import mkdtemp
-
+import uuid
 import sarge
 from PIL import Image, ImageDraw, ImageFont
 
@@ -196,6 +196,7 @@ class RenderJobInfo(object):
             "DATETIMESTAMP": "{0:d}".format(math.trunc(round(time.time(), 2) * 100)),
             "DATADIRECTORY": data_directory,
             "SNAPSHOTCOUNT": 0,
+            "CAMERANAME": self.camera.name,
             "FPS": 0,
         }
 
@@ -651,6 +652,8 @@ class TimelapseRenderJob(object):
         )
         try:
             self._output_filename = self._rendering.output_template.format(**self.render_job_info.output_tokens)
+            # clean the filename
+            self._output_filename = utility.get_clean_filename(self._output_filename)
         except ValueError as e:
             logger.exception("Failed to format the rendering output template.")
             self._output_filename = "RenderingFilenameTemplateError"
@@ -777,18 +780,26 @@ class TimelapseRenderJob(object):
             # Add pre and post roll.
             self._apply_pre_post_roll(self.temp_rendering_dir)
 
+            # render to a temp filepath because ffmpeg doesn't handle unicode names well
+            temp_filepath = os.path.join(
+                self._output_directory, "{0}.{1}".format(str(uuid.uuid4()), self._output_extension)
+            )
+
             # prepare ffmpeg command
             command_str = self._create_ffmpeg_command_string(
                 os.path.join(self.temp_rendering_dir, self.render_job_info.snapshot_filename_format),
-                self._rendering_output_file_path,
+                temp_filepath,
                 watermark=watermark_path
             )
+            # rename the output file
+
             logger.info("Running ffmpeg with command string: %s", command_str)
 
             with self.render_job_lock:
                 try:
                     p = sarge.run(
                         command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
+                    os.rename(temp_filepath, self._rendering_output_file_path)
                 except Exception as e:
                     raise RenderError('rendering-exception', "ffmpeg failed during rendering of movie. "
                                                              "Please check plugin_octolapse.log for details.",

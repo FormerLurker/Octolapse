@@ -62,7 +62,9 @@ def take_in_memory_snapshot(settings, current_camera):
         temp_snapshot_dir = mkdtemp()
 
         snapshot_job_info = SnapshotJobInfo(
-            TimelapseJobInfo(job_guid=uuid4(), print_start_time=time(), print_file_name='overlay_preview'),
+            TimelapseJobInfo(job_guid=uuid4(),
+                             print_start_time=time(),
+                             print_file_name='overlay_preview'),
             temp_snapshot_dir, 0, current_camera)
         if current_camera.camera_type == "script":
             snapshot_job = ExternalScriptSnapshotJob(snapshot_job_info, settings)

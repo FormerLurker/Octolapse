@@ -42,15 +42,16 @@ $(function () {
             self.current_debug_profile_guid = ko.observable();
             self.current_settings_showing = ko.observable(true);
             self.profiles = ko.observable({
-                'printers': ko.observableArray([{name: "Unknown", guid: "", has_been_saved_by_user: false}]),
-                'stabilizations': ko.observableArray([{name: "Unknown", guid: ""}]),
-                'triggers': ko.observableArray([{name: "Unknown", guid: ""}]),
-                'snapshots': ko.observableArray([{name: "Unknown", guid: ""}]),
-                'renderings': ko.observableArray([{name: "Unknown", guid: ""}]),
-                'cameras': ko.observableArray([{name: "Unknown", guid: "", enabled: false}]),
-                'debug_profiles': ko.observableArray([{name: "Unknown", guid: ""}])
+                'printers': ko.observableArray([{name: "Unknown", guid: "", description:"",has_been_saved_by_user: false}]),
+                'stabilizations': ko.observableArray([{name: "Unknown", guid: "", description:""}]),
+                'triggers': ko.observableArray([{name: "Unknown", guid: "", description:""}]),
+                'snapshots': ko.observableArray([{name: "Unknown", guid: "", description:""}]),
+                'renderings': ko.observableArray([{name: "Unknown", guid: "", description:""}]),
+                'cameras': ko.observableArray([{name: "Unknown", guid: "", description:"", enabled: false}]),
+                'debug_profiles': ko.observableArray([{name: "Unknown", guid: "", description:"", is_test_mode:false}])
             });
             self.is_real_time = ko.observable(true);
+            self.is_test_mode_active = ko.observable(false);
             self.current_camera_guid = ko.observable(null);
             self.PrinterState = new Octolapse.printerStateViewModel();
             self.Position = new Octolapse.positionViewModel();
@@ -136,6 +137,60 @@ $(function () {
                 });
             };
 
+            // Update the current tab state
+            self.updateState = function(state){
+                //console.log("octolapse.status.js - Updating State")
+                if (state.trigger_type != null)
+                    self.is_real_time(state.trigger_type == "real-time");
+
+                if (state.position != null) {
+                    self.Position.update(state.position);
+                }
+                if (state.printer_state != null) {
+                    self.PrinterState.update(state.printer_state);
+                }
+                if (state.extruder != null) {
+                    self.ExtruderState.update(state.extruder);
+                }
+                if (state.trigger_state != null) {
+                    self.TriggerState.update(state.trigger_state);
+                }
+                if (state.snapshot_plan != null) {
+                    self.SnapshotPlanState.update(state.snapshot_plan);
+                }
+
+            };
+
+            self.update = function (settings) {
+                //console.log("octolapse.status.js - Updating main settings.");
+                self.is_timelapse_active(settings.is_timelapse_active);
+                self.snapshot_count(settings.snapshot_count);
+                self.is_taking_snapshot(settings.is_taking_snapshot);
+                self.is_rendering(settings.is_rendering);
+                self.waiting_to_render(settings.waiting_to_render);
+                self.is_test_mode_active(settings.is_test_mode_active);
+                //console.log("Updating Profiles");
+                self.profiles().printers(settings.profiles.printers);
+                self.profiles().stabilizations(settings.profiles.stabilizations);
+                self.profiles().triggers(settings.profiles.triggers);
+                self.profiles().renderings(settings.profiles.renderings);
+                self.profiles().cameras(settings.profiles.cameras);
+                self.profiles().debug_profiles(settings.profiles.debug_profiles);
+                self.current_printer_profile_guid(settings.profiles.current_printer_profile_guid);
+                self.current_stabilization_profile_guid(settings.profiles.current_stabilization_profile_guid);
+                self.current_trigger_profile_guid(settings.profiles.current_trigger_profile_guid);
+                self.current_snapshot_profile_guid(settings.profiles.current_snapshot_profile_guid);
+                self.current_rendering_profile_guid(settings.profiles.current_rendering_profile_guid);
+                self.current_debug_profile_guid(settings.profiles.current_debug_profile_guid);
+
+                self.is_real_time(self.getCurrentTriggerProfileIsRealTime());
+                self.current_camera_guid(self.getInitialCameraSelection());
+                self.set_current_camera_enabled();
+                // Update snapshots
+                //self.updateLatestSnapshotImage(true);
+                //self.updateLatestSnapshotThumbnail(true, false);
+            };
+
             // Subscribe to current camera guid changes
             self.current_camera_guid.subscribe(function(newValue){
                 self.snapshotCameraChanged();
@@ -201,7 +256,15 @@ $(function () {
                 return true;
             },this);
 
-            self.is_current_trigger_real_time = function(){
+            self.getCurrentDebugProfileIsTestMode = ko.pureComputed(function(){
+                var current_debug_profile = self.getCurrentProfileByGuid(self.profiles().debug_profiles(),Octolapse.Status.current_debug_profile_guid());
+                if (current_debug_profile != null) {
+                    return current_debug_profile.is_test_mode;
+                }
+                return false;
+            },this);
+
+            self.getCurrentTriggerProfileIsRealTime = function(){
                 var current_trigger = self.getCurrentProfileByGuid(self.profiles().triggers(),Octolapse.Status.current_trigger_profile_guid());
                 if (current_trigger  != null)
                     //console.log(current_trigger.trigger_type);
@@ -569,30 +632,6 @@ $(function () {
                 return 'Octolapse - Disabled';
             }, self);
 
-            self.updateState = function(state)
-            {
-
-                //console.log("octolapse.status.js - Updating State")
-                if (state.trigger_type != null)
-                    self.is_real_time(state.trigger_type == "real-time");
-
-                if (state.position != null) {
-                    self.Position.update(state.position);
-                }
-                if (state.printer_state != null) {
-                    self.PrinterState.update(state.printer_state);
-                }
-                if (state.extruder != null) {
-                    self.ExtruderState.update(state.extruder);
-                }
-                if (state.trigger_state != null) {
-                    self.TriggerState.update(state.trigger_state);
-                }
-                if (state.snapshot_plan != null) {
-                    self.SnapshotPlanState.update(state.snapshot_plan);
-                }
-
-            };
             self.previewSnapshotPlans = function(data)
             {
                 //console.log("Updating snapshot plan state with a preview of the snapshot plans");
@@ -600,35 +639,6 @@ $(function () {
                 self.SnapshotPlanState.update(data);
                 self.SnapshotPlanPreview.openDialog();
 
-            };
-
-            self.update = function (settings) {
-                //console.log("octolapse.status.js - Updating main settings.");
-                self.is_timelapse_active(settings.is_timelapse_active);
-                self.snapshot_count(settings.snapshot_count);
-                self.is_taking_snapshot(settings.is_taking_snapshot);
-                self.is_rendering(settings.is_rendering);
-                self.waiting_to_render(settings.waiting_to_render);
-                //console.log("Updating Profiles");
-                self.profiles().printers(settings.profiles.printers);
-                self.profiles().stabilizations(settings.profiles.stabilizations);
-                self.profiles().triggers(settings.profiles.triggers);
-                self.profiles().renderings(settings.profiles.renderings);
-                self.profiles().cameras(settings.profiles.cameras);
-                self.profiles().debug_profiles(settings.profiles.debug_profiles);
-                self.current_printer_profile_guid(settings.profiles.current_printer_profile_guid);
-                self.current_stabilization_profile_guid(settings.profiles.current_stabilization_profile_guid);
-                self.current_trigger_profile_guid(settings.profiles.current_trigger_profile_guid);
-                self.current_snapshot_profile_guid(settings.profiles.current_snapshot_profile_guid);
-                self.current_rendering_profile_guid(settings.profiles.current_rendering_profile_guid);
-                self.current_debug_profile_guid(settings.profiles.current_debug_profile_guid);
-
-                self.is_real_time(self.is_current_trigger_real_time());
-                self.current_camera_guid(self.getInitialCameraSelection());
-                self.set_current_camera_enabled();
-                // Update snapshots
-                //self.updateLatestSnapshotImage(true);
-                //self.updateLatestSnapshotThumbnail(true, false);
             };
 
             self.onTimelapseStart = function () {
@@ -700,6 +710,7 @@ $(function () {
             };
             // Printer Profile Settings
             self.printers_sorted = ko.computed(function() { return self.nameSort(self.profiles().printers) });
+
             self.openCurrentPrinterProfile = function () {
                 //console.log("Opening current printer profile from tab.")
                 Octolapse.Printers.showAddEditDialog(self.current_printer_profile_guid(), false);
@@ -841,6 +852,43 @@ $(function () {
                     }
                 }
             };
+
+            self.setDescriptionAsTitle = function(option, item) {
+                if (!item)
+                    return;
+                ko.applyBindingsToNode(option, {attr: {title: item.description}}, item);
+            };
+
+            self.getPrinterProfileTitle = ko.computed(function () {
+                var currentProfile = self.getCurrentProfileByGuid(self.profiles().printers(),Octolapse.Status.current_printer_profile_guid());
+                if (currentProfile == null)
+                    return "";
+                return currentProfile.description;
+            });
+            self.getStabilizationProfileTitle = ko.computed(function () {
+                var currentProfile = self.getCurrentProfileByGuid(self.profiles().stabilizations(),Octolapse.Status.current_stabilization_profile_guid());
+                if (currentProfile == null)
+                    return "";
+                return currentProfile.description;
+            });
+            self.getTriggerProfileTitle = ko.computed(function () {
+                var currentProfile = self.getCurrentProfileByGuid(self.profiles().triggers(),Octolapse.Status.current_trigger_profile_guid());
+                if (currentProfile == null)
+                    return "";
+                return currentProfile.description;
+            });
+            self.getRenderingProfileTitle = ko.computed(function () {
+                var currentProfile = self.getCurrentProfileByGuid(self.profiles().renderings(),Octolapse.Status.current_rendering_profile_guid());
+                if (currentProfile == null)
+                    return "";
+                return currentProfile.description;
+            });
+            self.getDebugProfileTitle = ko.computed(function () {
+                var currentProfile = self.getCurrentProfileByGuid(self.profiles().debug_profiles(),Octolapse.Status.current_debug_profile_guid());
+                if (currentProfile == null)
+                    return "";
+                return currentProfile.description;
+            });
 
         };
         /*

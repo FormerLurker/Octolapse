@@ -1462,12 +1462,14 @@ class OctolapsePlugin(
             is_waiting_to_render = False
             profiles_dict = self._octolapse_settings.profiles.get_profiles_dict()
             debug_dict = profiles_dict["debug"]
+            is_test_mode_active = False
+
             if self._timelapse is not None:
                 snapshot_count = self._timelapse.get_snapshot_count()
                 is_timelapse_active = self._timelapse.is_timelapse_active()
                 if is_timelapse_active:
                     profiles_dict = self._timelapse.get_current_profiles()
-
+                    is_test_mode_active = self._timelapse.get_is_test_mode_active()
                 # Always get the current debug settings, else they won't update from the tab while a timelapse is
                 # running.
                 profiles_dict["current_debug_profile_guid"] = (
@@ -1489,6 +1491,7 @@ class OctolapsePlugin(
                 'is_timelapse_active': is_timelapse_active,
                 'is_taking_snapshot': is_taking_snapshot,
                 'is_rendering': is_rendering,
+                'is_test_mode_active': is_test_mode_active,
                 'waiting_to_render': is_waiting_to_render,
                 'state': current_timelapse_state,
                 'profiles': profiles_dict

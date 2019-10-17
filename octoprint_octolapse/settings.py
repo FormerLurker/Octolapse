@@ -1106,7 +1106,8 @@ class RenderingProfile(AutomaticConfigurationProfile):
                 "PRINTSTARTTIME",
                 "PRINTSTARTTIMESTAMP",
                 "SNAPSHOTCOUNT",
-                "FPS"
+                "FPS",
+                "CAMERANAME"
             ],
             'overlay_text_templates': [
                 "snapshot_number",
@@ -1606,6 +1607,7 @@ class Profiles(Settings):
             profiles_dict["printers"].append({
                 "name": printer.name,
                 "guid": printer.guid,
+                "description": printer.description,
                 "has_been_saved_by_user": printer.has_been_saved_by_user,
                 "slicer_type": printer.slicer_type
             })
@@ -1613,26 +1615,30 @@ class Profiles(Settings):
         for key, stabilization in self.stabilizations.items():
             profiles_dict["stabilizations"].append({
                 "name": stabilization.name,
-                "guid": stabilization.guid
+                "guid": stabilization.guid,
+                "description": stabilization.description,
             })
 
         for key, trigger in self.triggers.items():
             profiles_dict["triggers"].append({
                 "name": trigger.name,
                 "guid": trigger.guid,
+                "description": trigger.description,
                 "trigger_type": trigger.trigger_type
             })
 
         for key, rendering in self.renderings.items():
             profiles_dict["renderings"].append({
                 "name": rendering.name,
-                "guid": rendering.guid
+                "guid": rendering.guid,
+                "description": rendering.description,
             })
 
         for key, camera in self.cameras.items():
             profiles_dict["cameras"].append({
                 "name": camera.name,
                 "guid": camera.guid,
+                "description": camera.description,
                 "enabled": camera.enabled,
                 "enable_custom_image_preferences": camera.enable_custom_image_preferences
             })
@@ -1640,7 +1646,9 @@ class Profiles(Settings):
         for key, debugProfile in self.debug.items():
             profiles_dict["debug"].append({
                 "name": debugProfile.name,
-                "guid": debugProfile.guid
+                "guid": debugProfile.guid,
+                "description": debugProfile.description,
+                "is_test_mode": debugProfile.is_test_mode
             })
         return profiles_dict
 

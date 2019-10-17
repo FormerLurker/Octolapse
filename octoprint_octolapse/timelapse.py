@@ -588,6 +588,9 @@ class Timelapse(object):
             return False
         return True
 
+    def get_is_test_mode_active(self):
+        return self._is_test_mode
+
     def get_is_rendering(self):
         if self._rendering_processor is None:
             return False
