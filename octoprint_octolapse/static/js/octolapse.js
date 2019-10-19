@@ -329,7 +329,9 @@ $(function () {
     Octolapse.Popups = {};
     Octolapse.displayPopupForKey = function (options, popup_key, remove_keys) {
         Octolapse.closePopupsForKeys(remove_keys);
-        Octolapse.Popups[popup_key] = new PNotify(options);
+        var popup = new PNotify(options);
+        Octolapse.Popups[popup_key] = popup;
+        return popup;
     };
 
     Octolapse.closePopupsForKeys = function(remove_keys) {
@@ -443,6 +445,34 @@ $(function () {
         );
     };
 
+    Octolapse.displayPopupForKeyWithHelpForErrors = function(title, message, popup_key, remove_keys, errors)
+    {
+        var messageHtml = "";
+
+        for (var index=0; index < errors.length; index++)
+        {
+            var error = errors[index];
+            var help_link = "<a class=\"octolapse_help\" data-help-url=\"" + error.help_link + "\" data-help-title=\"" + error.name + "\" title=\"Click for help with this\"><span class=\"fa fa-question-circle fa-lg\"></span></a>";
+            if (index>0)
+                messageHtml = messageHtml + "<br><br>";
+
+            messageHtml += error.description + " " + help_link;
+        }
+        var options = {
+            title: title,
+            text: messageHtml,
+            type: 'error',
+            hide: false,
+            addclass: "octolapse octolapse-pnotify-help",
+            desktop: {
+                desktop: true
+            },
+            after_open: function(notice) {
+                Octolapse.Help.bindHelpLinks(".octolapse-pnotify-help");
+            }
+        };
+        Octolapse.displayPopupForKey(options, popup_key, remove_keys);
+    };
     Octolapse.ConfirmDialogs = {};
     Octolapse.closeConfirmDialogsForKeys = function(remove_keys) {
         if (!$.isArray(remove_keys))
@@ -1615,21 +1645,32 @@ $(function () {
                     // clear the job guid
                     //console.log("Gcode preprocessing failed.");
                     self.preprocessing_job_guid = null;
-                    // report the issue
-                    var options = {
-                        title: 'Preprocessing Error',
-                        text: data.errors,
-                        type: 'error',
-                        hide: false,
-                        addclass: "octolapse",
-                        desktop: {
-                            desktop: true
-                        }
-                    };
-                    Octolapse.displayPopupForKey(
-                        options,['gcode-preprocessing-failed'],['gcode-preprocessing-failed']
-                    );
+                    self.updateState(data);
+                    if (!data.errors) {
+
+                        var options = {
+                            title: 'Gcode Processing Failed',
+                            text: data.msg,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopupForKeyWithHelp(options, "print-start-error", ["print-start-error"], data["help_link"]);
+                    }
+                    else {
+                        Octolapse.displayPopupForKeyWithHelpForErrors(
+                            "Gcode Processing Failed",
+                            data.msg,
+                            "gcode-preprocessing-failed",
+                            ["gcode-preprocessing-failed"],
+                            data.errors
+                        );
+                    }
                     break;
+
                 case "updated-profiles-available":
                     if (self.is_admin())
                     {
@@ -1697,9 +1738,6 @@ $(function () {
                         }
 
                     }
-                    //else
-                    //    console.log("Slicer settings detected but not saved.");
-                    // Disable the error notification for profiles that haven't been configured
                 case "state-loaded":
                     {
                         //console.log('octolapse.js - state-loaded');
@@ -1750,6 +1788,7 @@ $(function () {
                     {
                         //console.log('octolapse.js - print-start-error');
                         self.updateState(data);
+                        self.preprocessing_job_guid = null;
                         var options = {
                             title: 'Octolapse Startup Failed',
                             text: data.msg,

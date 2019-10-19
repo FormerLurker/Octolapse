@@ -55,11 +55,13 @@ private:
 	// Layer/height tracking variables
 	bool is_layer_change_wait_;
 	int current_layer_;
+	int last_snapshot_layer_;
+	unsigned int current_height_increment_;
+	unsigned int last_snapshot_height_increment_;
 	int last_tested_gcode_number_;
 	double fastest_extrusion_speed_;
 	double slowest_extrusion_speed_;
 	bool has_one_extrusion_speed_;
-	unsigned int current_height_increment_;
 	double stabilization_x_;
 	double stabilization_y_;
 	double current_layer_saved_extrusion_speed_;

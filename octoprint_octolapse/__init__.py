@@ -2057,13 +2057,22 @@ class OctolapsePlugin(
     def on_print_start_failed(self, error, help_link=None, error_code=None):
         # see if there is a job lock, if you find one release it
         self._timelapse.release_job_on_hold_lock()
+
         if self._octolapse_settings.main_settings.cancel_print_on_startup_error:
             message = "Unable to start the timelapse.  Cancelling print.  Error:  {0}".format(error)
             self._printer.cancel_print(tags={'startup-failed'})
         else:
             message = "Unable to start the timelapse.  Continuing print without Octolapse.  Error: {0}".format(error)
         logger.error(message)
+
         self.send_plugin_message("print-start-error", message, help_link=help_link, error_code=error_code)
+
+    def on_preprocessing_failed(self, message, help_link=None, error_code=None, errors=None):
+        message_type = "gcode-preprocessing-failed"
+        if errors is None:
+            self.send_plugin_message(message_type, message, help_link=help_link, error_code=error_code)
+        else:
+            self.send_plugin_message(message_type, message, errors=errors)
 
     def pre_process_stabilization(
         self, timelapse_settings,  parsed_command
@@ -2083,10 +2092,11 @@ class OctolapsePlugin(
         preprocessor.start()
 
     def pre_preocessing_complete(self, success, errors, is_cancelled, snapshot_plans, seconds_elapsed,
-                                 gcodes_processed, lines_processed, quality_issues, timelapse_settings, parsed_command):
+                                 gcodes_processed, lines_processed, missed_snapshots, quality_issues,
+                                 processing_issues, timelapse_settings, parsed_command):
         if not success:
             # An error occurred
-            self.pre_processing_failed(errors)
+            self.pre_processing_failed(errors, processing_issues)
         else:
             if is_cancelled:
                 self._timelapse.preprocessing_finished(None)
@@ -2114,13 +2124,20 @@ class OctolapsePlugin(
             100, 0, 0, 0, 0)
         self.preprocessing_job_guid = None
 
-    def pre_processing_failed(self, errors):
+    def pre_processing_failed(self, errors, preprocessing_issues):
 
         if self._printer.is_printing():
-            if len(errors) > 0:
+            if len(errors) > 0 and len(preprocessing_issues) == 0:
                 # display error messages if there are any
                 error_message = "\r\n".join(errors)
-                self.on_print_start_failed(error_message,  help_link="error_help_preprocessing_failed.md", error_code="proprocessing_failed")
+                self.self._plugin_manager.send_plugin_message(
+                self._identifier, dict(type=message_type, msg=msg, help_link=help_link, error_code=error_code))(
+                    error_message,  help_link="error_help_preprocessing_failed.md", error_code="proprocessing_failed"
+                )
+            elif len(preprocessing_issues) > 0:
+                self.on_preprocessing_failed(
+                    "Errors were detected during preprocessing.", errors=preprocessing_issues
+                )
         # cancel the print
         self._printer.cancel_print(tags={'octolapse-preprocessing-cancelled'})
         # inform the timelapse object that preprocessing has failed
@@ -2308,9 +2325,13 @@ class OctolapsePlugin(
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_plugin_message(self, message_type, msg, help_link=None, error_code=None):
-        self._plugin_manager.send_plugin_message(
-            self._identifier, dict(type=message_type, msg=msg, help_link=help_link, error_code=error_code))
+    def send_plugin_message(self, message_type, msg, help_link=None, error_code=None, errors=None):
+        if errors is None:
+            self._plugin_manager.send_plugin_message(
+                self._identifier, dict(type=message_type, msg=msg, help_link=help_link, error_code=error_code))
+        else:
+            self._plugin_manager.send_plugin_message(
+                self._identifier, dict(type=message_type, msg=msg, errors=errors))
 
     def send_prerender_start_message(self, payload):
         data = {

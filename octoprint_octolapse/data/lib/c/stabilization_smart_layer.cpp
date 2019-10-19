@@ -20,7 +20,8 @@ stabilization_smart_layer::stabilization_smart_layer()
 	standard_layer_trigger_distance_ = 0.0;
 	fastest_extrusion_speed_ = -1;
 	slowest_extrusion_speed_ = -1;
-
+	last_snapshot_layer_ = 0;
+	last_snapshot_height_increment_ = 0;
 	trigger_position_args default_args;
 	closest_positions_.initialize(default_args);
 }
@@ -32,6 +33,8 @@ stabilization_smart_layer::stabilization_smart_layer(
 	is_layer_change_wait_ = false;
 	current_layer_ = 0;
 	current_height_increment_ = 0;
+	last_snapshot_layer_ = 0;
+	last_snapshot_height_increment_ = 0;
 	has_one_extrusion_speed_ = true;
 	last_tested_gcode_number_ = -1;
 	fastest_extrusion_speed_ = -1;
@@ -62,6 +65,8 @@ stabilization_smart_layer::stabilization_smart_layer(
 	is_layer_change_wait_ = false;
 	current_layer_ = 0;
 	current_height_increment_ = 0;
+	last_snapshot_layer_ = 0;
+	last_snapshot_height_increment_ = 0;
 	has_one_extrusion_speed_ = true;
 	last_tested_gcode_number_ = -1;
 	fastest_extrusion_speed_ = -1;
@@ -229,6 +234,21 @@ void stabilization_smart_layer::add_plan()
 		reset_saved_positions();
 		// Need to set the initial position after resetting the saved positions
 		closest_positions_.set_previous_initial_position(last_snapshot_initial_position_);
+		// Determine if we've missed a snapshot layer or height increment
+		if(p_stabilization_args_->height_increment != 0)
+		{
+			if (current_height_increment_ - 1 > last_snapshot_height_increment_)
+				missed_snapshots_++;
+		}
+		else
+		{
+			if (current_layer_ - 1 > last_snapshot_layer_)
+				missed_snapshots_++;
+		}
+
+		// update the last snapshot layer and increment
+		last_snapshot_layer_ = current_layer_;
+		last_snapshot_height_increment_ = current_height_increment_;
 	}
 	else
 	{

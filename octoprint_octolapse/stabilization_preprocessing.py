@@ -60,6 +60,40 @@ class StabilizationPreprocessingThread(Thread):
         }
     }
 
+    processing_issue_ids = {
+        1: {
+            'name': "XYZ Axis Mode Unknown",
+            'help_link': "processing_issues_xyz_axis_mode_unknown.md",
+            'cpp_name': "stabilization_processing_issue_type_xyz_axis_mode_unknown",
+            'description': "The XYZ axis mode was not set."
+        },
+        2: {
+            'name': "E axis Mode Unknown",
+            'help_link': "processing_issues_e_axis_mode_unknown.md",
+            'cpp_name': "stabilization_processing_issue_type_e_axis_mode_unknown",
+            'description': "The E axis mode was not set"
+        },
+        3: {
+            'name': "No Definite Position",
+            'help_link': "processing_issues_no_definite_position.md",
+            'cpp_name': "stabilization_processing_issue_type_no_definite_position",
+            'description': "Unable to find a definite position."
+        }
+        ,
+        4: {
+            'name': "Printer Not Primed",
+            'help_link': "processing_issues_printer_not_primed.md",
+            'cpp_name': "stabilization_processing_issue_type_printer_not_primed",
+            'description': "Priming was not detected."
+        },
+        5: {
+            'name': "No Metric Units",
+            'help_link': "processing_issues_no_metric_units.md",
+            'cpp_name': "stabilization_processing_issue_type_no_metric_units",
+            'description': "Gcode unites are not in millimeters."
+        }
+    }
+
     def __init__(
         self,
         timelapse_settings,
@@ -123,7 +157,9 @@ class StabilizationPreprocessingThread(Thread):
                 ret_val[3],  # seconds_elapsed
                 ret_val[4],  # gcodes processed
                 ret_val[5],  # lines_processed
-                ret_val[6],  # quality issues
+                ret_val[6],  # snapshots_missed
+                ret_val[7],  # quality issues
+                ret_val[8],  # processing issues
                 options,
             )
 
@@ -134,12 +170,15 @@ class StabilizationPreprocessingThread(Thread):
                 False,  # success
                 self.error,
                 False,
-                [],
+                0,
+                0,
                 0,
                 0,
                 [],
-                0
+                [],
+                None
             )
+
         logger.info("Unpacking results")
         success = results[0]
         error = results[1]
@@ -160,10 +199,12 @@ class StabilizationPreprocessingThread(Thread):
         seconds_elapsed = results[3]
         gcodes_processed = results[4]
         lines_processed = results[5]
-        quality_issues = self._get_quality_issues_from_cpp(results[6])
+        missed_snapshots = results[6]
+        quality_issues = self._get_quality_issues_from_cpp(results[7])
+        processing_issues = self._get_processing_issues_from_cpp(results[8])
         self.complete_callback(
             success, errors, self.is_cancelled, snapshot_plans, seconds_elapsed, gcodes_processed, lines_processed,
-            quality_issues, self.timelapse_settings, self.parsed_command
+            missed_snapshots, quality_issues, processing_issues, self.timelapse_settings, self.parsed_command
         )
 
 
@@ -174,6 +215,15 @@ class StabilizationPreprocessingThread(Thread):
                 quality_issues.append(StabilizationPreprocessingThread.quality_issue_ids[issue[0]])
 
         return quality_issues
+
+
+    def _get_processing_issues_from_cpp(self, issues):
+        processing_issues = []
+        for issue in issues:
+            if issue[0] in StabilizationPreprocessingThread.processing_issue_ids:
+                processing_issues.append(StabilizationPreprocessingThread.processing_issue_ids[issue[0]])
+
+        return processing_issues
 
 
     def _create_stabilization_args(self):
@@ -228,7 +278,9 @@ class StabilizationPreprocessingThread(Thread):
                 0,  # seconds_elapsed
                 0,  # gcodes_processed
                 0,  # lines_processed
+                0,  # missed_snapshots
                 [], # quality_issues
+                [], # processing_issues
             )
         if trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER:
             # run smart layer trigger
@@ -251,8 +303,9 @@ class StabilizationPreprocessingThread(Thread):
                 [],  # snapshot_plans
                 0,  # seconds_elapsed
                 0,  # gcodes_processed
-                0,  # lines_processed
-                []  # quality_issues
+                0,  # missed_snapshots
+                [],  # quality_issues
+                [],  # processing_issues
             )
         logger.info("Stabilization results received, returning.")
         return results, options

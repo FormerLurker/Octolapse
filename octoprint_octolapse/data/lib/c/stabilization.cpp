@@ -22,7 +22,6 @@
 #include "stabilization.h"
 #include <fstream>
 #include <time.h>
-#include <iostream>
 #include <vector>
 #include <sstream>
 #include "logging.h"
@@ -51,6 +50,10 @@ stabilization::stabilization(
 	file_size_ = 0;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
+	missed_snapshots_ = 0;
+	stabilization_x_ = 0;
+	stabilization_y_ = 0;
+	p_args_ = NULL;
 	
 }
 
@@ -67,6 +70,11 @@ stabilization::stabilization()
 	file_size_ = 0;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
+	missed_snapshots_ = 0;
+	stabilization_x_ = 0;
+	stabilization_y_ = 0;
+	_get_coordinates_callback = NULL;
+	p_args_ = NULL;
 	
 }
 
@@ -83,12 +91,18 @@ stabilization::stabilization(gcode_position_args* position_args, stabilization_a
 	file_size_ = 0;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
+	missed_snapshots_ = 0;
+	stabilization_x_ = 0;
+	stabilization_y_ = 0;
+	_get_coordinates_callback = NULL;
+	p_args_ = NULL;
 	
 }
 
 stabilization::stabilization(const stabilization &source)
 {
 	// Private copy constructor, don't copy me!	
+	throw std::exception();
 }
 
 stabilization::~stabilization()
@@ -209,6 +223,8 @@ stabilization_results stabilization::process_file()
 	results.lines_processed = lines_processed_;
 	results.quality_issues = get_quality_issues();
 	results.snapshot_plans = p_snapshot_plans_;
+	results.processing_issues = get_processing_issues();
+
 
 	std::stringstream sstm;
 	sstm << "Completed file processing\r\n";
@@ -275,7 +291,63 @@ std::vector<stabilization_quality_issue> stabilization::get_quality_issues()
 	throw std::exception();
 }
 
-void stabilization::get_next_xy_coordinates(double &x, double&y)
+std::vector<stabilization_processing_issue> stabilization::get_processing_issues()
+{
+	// Create a vector to hold the processing issue
+	std::vector<stabilization_processing_issue> issues;
+	// retrieve the current position object;
+	position pos = gcode_position_->get_current_position();
+
+	if (pos.is_relative_null)
+	{
+		// Add issue for missing xyz axis type
+		stabilization_processing_issue issue;
+		issue.description = "The XYZ axis mode was not set in the gcode file.";
+		issue.issue_type = stabilization_processing_issue_type_xyz_axis_mode_unknown;
+		issues.push_back(issue);
+	}
+
+	if (pos.is_extruder_relative_null)
+	{
+		// Add issue for missing e axis type
+		stabilization_processing_issue issue;
+		issue.description = "The E axis mode was not set in the gcode file.";
+		issue.issue_type = stabilization_processing_issue_type_e_axis_mode_unknown;
+		issues.push_back(issue);
+	}
+
+	if (!pos.has_definite_position)
+	{
+		// Add issue for no definite position
+		stabilization_processing_issue issue;
+		issue.description = "No definite position found.";
+		issue.issue_type = stabilization_processing_issue_type_no_definite_position;
+		issues.push_back(issue);
+	}
+
+	if (!pos.is_printer_primed)
+	{
+		// Add issue for no prime detected
+		stabilization_processing_issue issue;
+		issue.description = "Priming was not detected.";
+		issue.issue_type = stabilization_processing_issue_type_printer_not_primed;
+		issues.push_back(issue);
+	}
+
+	if (pos.is_metric_null)
+	{
+		// Add issue for metri  null
+		stabilization_processing_issue issue;
+		issue.description = "Units are not metric.";
+		issue.issue_type = stabilization_processing_issue_type_no_metric_units;
+		issues.push_back(issue);
+	}
+	
+	return issues;
+}
+
+
+void stabilization::get_next_xy_coordinates(double &x, double&y) const
 {
 	//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Getting stabilization coordinates.");
 	//std::cout << "Getting XY stabilization coordinates...";

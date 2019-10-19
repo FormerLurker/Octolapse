@@ -1,6 +1,7 @@
 $(function () {
     OctolapseHelp = function () {
         var self = this;
+        self.html_text = "unknown";
         self.popup_margin = 15;
         self.popup_width_with_margin = 900;
         self.popup_width = self.popup_width_with_margin - self.popup_margin*2;
@@ -47,6 +48,21 @@ $(function () {
 
             },
             after_open: function(notice) {
+
+                var $popup_item = $(notice.elem);
+                var $help_container = $popup_item.find("div.ui-pnotify-container");
+                var $help_text = $popup_item.find(".ui-pnotify-text");
+                $help_text.html(self.options.text);
+                var body_color = $("body").css('color');
+                var body_background_color = $("body").css('background-color');
+                var body_font_weight = $("body").css('font-weight');
+
+                $help_container.css("background-color", body_background_color)
+                    .css("border-color", "#000000")
+                    .css("border-width", "3px")
+                    .css("color", body_color)
+                    .css("font-weight", body_font_weight);
+
                 // Now we want to put the notice inside another div so we can add an overlay effect
                 // since modal doesn't seem to be working in this version of pnotify (I could be wrong
                 // but the docs I can find are definitely not for this version.)
@@ -61,8 +77,8 @@ $(function () {
                     notice.remove();
                 });
                 //console.log("Adding resize handler.");
-                self.resize_handler(null, null);
-                window.addEventListener('resize', self.resize_handler)
+                self.resize_handler(null, notice.elem);
+                window.addEventListener('resize', function() { self.resize_handler(this, notice.elem);})
             },
             after_close: function(notice){
                 var $overlay = $(notice.elem).parent().find(".octolapse-pnotify-overlay");
@@ -96,9 +112,9 @@ $(function () {
                 // get the left position
                 var left = (document.body.clientWidth - width)/2;
 
-                var $help = $(".octolapse-pnotify-help");
+                //var $help = $(".octolapse-pnotify-help");
 
-                $help.css("width", width)
+                $(elem).css("width", width)
                     .css("left", left)
                     .css("top", "15px")
 
@@ -121,19 +137,18 @@ $(function () {
                 type: "GET",
                 dataType: "text",
                 success: function (results) {
-                    var body_color = $("body").css('color');
-                    var body_background_color = $("body").css('background-color');
-                    var body_font_weight = $("body").css('font-weight');
+
                     //console.log(results);
                     //var text = Octolapse.replaceAll(self.converter.makeHtml(results), '</p>\n','</p>');
-                    var help_html = self.converter.makeHtml(results);
+                    self.options.text = self.converter.makeHtml(results);
                     // Set the option text to a known token so that we can replace it with our markdown
                     self.options.title = title;
 
 
                     Octolapse.displayPopupForKey(self.options, "octolapse-help", ["octolapse-help"]);
-
-                    var $help_container = $(".octolapse-pnotify-help div.ui-pnotify-container");
+                    /*
+                    var popup_item = popup.get();
+                    var $help_container = popup_item.find(".octolapse-pnotify-help div.ui-pnotify-container");
                     var $help_text = $help_container.find(".ui-pnotify-text");
                     $help_text.html(help_html);
                     // Replace the token with the help HTML.  This will preserve our title!
@@ -143,7 +158,7 @@ $(function () {
                         .css("border-width", "3px")
                         .css("color", body_color)
                         .css("font-weight", body_font_weight);
-
+                    */
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     if (errorThrown === "NOT FOUND")
@@ -161,8 +176,9 @@ $(function () {
 
                         self.options.title = "Help Could Not Be Found";
 
-                        Octolapse.displayPopupForKey(self.options, "octolapse-help", ["octolapse-help"]);
-                        $(".octolapse-pnotify-help div.ui-pnotify-container")
+                        var popup = Octolapse.displayPopupForKey(self.options, "octolapse-help", ["octolapse-help"]);
+                        var $popup_item = $(popup.elem);
+                        $popup_item.find(".octolapse-pnotify-help div.ui-pnotify-container")
                             .css("background-color", body_background_color)
                             .css("border-color", "#000000")
                             .css("border-width", "3px")

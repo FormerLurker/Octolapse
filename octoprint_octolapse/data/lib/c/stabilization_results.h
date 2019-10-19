@@ -31,11 +31,27 @@ enum stabilization_quality_issue_type
 	stabilization_quality_issue_no_print_features = 3
 };
 
+enum stabilization_processing_issue_type
+{
+	stabilization_processing_issue_type_xyz_axis_mode_unknown = 1,
+	stabilization_processing_issue_type_e_axis_mode_unknown = 2,
+	stabilization_processing_issue_type_no_definite_position = 3,
+	stabilization_processing_issue_type_printer_not_primed = 4,
+	stabilization_processing_issue_type_no_metric_units = 5,
+};
+
 struct stabilization_quality_issue
 {
 	std::string description;
 	stabilization_quality_issue_type issue_type;
-	PyObject * to_py_object();
+	PyObject * to_py_object() const;
+};
+
+struct stabilization_processing_issue
+{
+	std::string description;
+	stabilization_processing_issue_type issue_type;
+	PyObject * to_py_object() const;
 };
 
 struct stabilization_results
@@ -48,7 +64,9 @@ struct stabilization_results
 	double seconds_elapsed;
 	long gcodes_processed;
 	long lines_processed;
+	int missed_layer_count;
 	std::vector<stabilization_quality_issue> quality_issues;
+	std::vector<stabilization_processing_issue> processing_issues;
 };
 
 
