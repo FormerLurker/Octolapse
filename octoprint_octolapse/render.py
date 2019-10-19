@@ -41,7 +41,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.snapshot import SnapshotMetadata
-
+from octoprint_octolapse.settings import RenderingProfile
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -156,7 +156,8 @@ def preview_overlay(rendering_profile, image=None):
 
 class RenderJobInfo(object):
     def __init__(
-        self, timelapse_job_info, data_directory, current_camera, rendering, ffmpeg_path, job_number=0, jobs_remaining=0
+        self, timelapse_job_info, data_directory, octoprint_timelapse_directory, current_camera, rendering, ffmpeg_path,
+        job_number=0, jobs_remaining=0
     ):
         self.timelapse_job_info = timelapse_job_info
         self.job_id = timelapse_job_info.JobGuid
@@ -173,7 +174,21 @@ class RenderJobInfo(object):
         self.pre_roll_snapshot_filename_format = utility.get_pre_roll_snapshot_filename(
             timelapse_job_info.PrintFileName, timelapse_job_info.PrintStartTime, utility.SnapshotNumberFormat
         )
+
+        extension = RenderJobInfo._get_extension_from_output_format(rendering.output_format)
         self.output_tokens = self._get_output_tokens(data_directory)
+        filename = "{0}.{1}".format(rendering.output_template.format(**self.output_tokens), extension)
+        filename = utility.sanitize_filename(filename)
+        self.rendering_path = os.path.join(
+            data_directory, "timelapse", filename
+        )
+
+        synchronized_filename = "{0}.{1}".format(rendering.output_template.format(**self.output_tokens), extension)
+        self.synchronized_timelapse_path = os.path.join(
+            octoprint_timelapse_directory,
+            synchronized_filename
+        )
+
         self.rendering = rendering.clone()
         self.ffmpeg_path = ffmpeg_path
         self.cleanup_after_complete = rendering.cleanup_after_render_complete
@@ -200,6 +215,16 @@ class RenderJobInfo(object):
             "FPS": 0,
         }
 
+    @staticmethod
+    def _get_extension_from_output_format(output_format):
+        EXTENSIONS = {"avi": "avi",
+                      "flv": "flv",
+                      "h264": "mp4",
+                      "vob": "vob",
+                      "mp4": "mp4",
+                      "mpeg": "mpeg",
+                      "gif": "gif"}
+        return EXTENSIONS.get(output_format.lower(), "mp4")
 
 class RenderingProcessor(threading.Thread):
     def __init__(
@@ -342,9 +367,10 @@ class TimelapseRenderJob(object):
         self._output_directory = ""
         self._output_filename = ""
         self._output_extension = ""
-        self._rendering_output_file_path = ""
+        self._output_filepath = ""
         self._synchronized_directory = ""
         self._synchronized_filename = ""
+        self._synchronized_filepath = ""
         self._synchronize = self._rendering.sync_with_timelapse
         # render script errors
         self.before_render_error = None
@@ -468,7 +494,7 @@ class TimelapseRenderJob(object):
                     self._output_directory,
                     self._output_filename,
                     self._output_extension,
-                    self._rendering_output_file_path,
+                    self._output_filepath,
                     self._synchronized_directory,
                     self._synchronized_filename,
 
@@ -647,48 +673,23 @@ class TimelapseRenderJob(object):
         self.render_job_info.output_tokens["FPS"] = "{0}".format(int(math.ceil(self._fps)))
 
     def _set_outputs(self):
-        self._output_directory = "{0}{1}{2}{3}".format(
-            self.render_job_info.output_tokens["DATADIRECTORY"], os.sep, "timelapse", os.sep
+        # Rendering path info
+        self._output_filepath = utility.get_collision_free_filepath(self.render_job_info.rendering_path)
+        self._output_filename = utility.get_filename_from_full_path(self._output_filepath)
+        self._output_directory = utility.get_directory_from_full_path(self._output_filepath)
+        self._output_extension = utility.get_extension_from_full_path(self._output_filepath)
+        # Synchronization path info
+        self._synchronized_filepath = utility.get_collision_free_filepath(
+            self.render_job_info.synchronized_timelapse_path
         )
-        try:
-            self._output_filename = self._rendering.output_template.format(**self.render_job_info.output_tokens)
-            # clean the filename
-            self._output_filename = utility.get_clean_filename(self._output_filename)
-        except ValueError as e:
-            logger.exception("Failed to format the rendering output template.")
-            self._output_filename = "RenderingFilenameTemplateError"
-        self._output_extension = self._get_extension_from_output_format(self._rendering.output_format)
-
-        # check for a rendered timelapse file collision
-        original_output_filename = self._output_filename
-        file_number = 0
-        while os.path.isfile(
-            "{0}{1}.{2}".format(
-                self._output_directory,
-                self._output_filename,
-                self._output_extension)
-        ):
-            file_number += 1
-            self._output_filename = "{0}_{1}".format(original_output_filename, file_number)
-
-        self._rendering_output_file_path = "{0}{1}.{2}".format(
-            self._output_directory, self._output_filename, self._output_extension
+        self._synchronized_directory = utility.get_directory_from_full_path(self._synchronized_filepath)
+        self._synchronized_filename = utility.get_filename_from_full_path(
+            self._synchronized_filepath
+        )
+        self._synchronized_directory = utility.get_directory_from_full_path(
+            self._synchronized_filepath
         )
 
-        synchronized_output_filename = original_output_filename
-        # check for a synchronized timelapse file collision
-        file_number = 0
-        while os.path.isfile("{0}{1}{2}.{3}".format(
-            self._octoprintTimelapseFolder,
-            os.sep,
-            synchronized_output_filename,
-            self._output_extension
-        )):
-            file_number += 1
-            synchronized_output_filename = "{0}_{1}".format(original_output_filename, file_number)
-
-        self._synchronized_directory = "{0}{1}".format(self._octoprintTimelapseFolder, os.sep)
-        self._synchronized_filename = synchronized_output_filename
 
     #####################
     # Event Notification
@@ -799,7 +800,7 @@ class TimelapseRenderJob(object):
                 try:
                     p = sarge.run(
                         command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
-                    os.rename(temp_filepath, self._rendering_output_file_path)
+                    os.rename(temp_filepath, self._output_filepath)
                 except Exception as e:
                     raise RenderError('rendering-exception', "ffmpeg failed during rendering of movie. "
                                                              "Please check plugin_octolapse.log for details.",
@@ -828,15 +829,15 @@ class TimelapseRenderJob(object):
                         "Synchronizing timelapse with the built in "
                         "timelapse plugin, copying %s to %s"
                     )
-                    logger.info(message, self._rendering_output_file_path, synchronization_path)
-                    shutil.move(self._rendering_output_file_path, synchronization_path)
+                    logger.info(message, self._output_filepath, synchronization_path)
+                    shutil.move(self._output_filepath, synchronization_path)
                     # we've renamed the output due to a sync, update the member
                 except Exception as e:
                     raise RenderError('synchronizing-exception',
                                       "Octolapse has failed to synchronize the default timelapse plugin due"
                                       " to an unexpected exception.  Check plugin_octolapse.log for more "
                                       " information.  You should be able to find your video within your "
-                                      " OctoPrint  server here:<br/> '{0}'".format(self._rendering_output_file_path),
+                                      " OctoPrint  server here:<br/> '{0}'".format(self._output_filepath),
                                       cause=e)
         except Exception as e:
             logger.exception("Rendering Error")
@@ -1077,17 +1078,6 @@ class TimelapseRenderJob(object):
             # pre or post roll frames were added, so we need to rename all of our images
             self._rename_images(image_dir)
         logger.info("Pre/post roll generated successfully.")
-
-    @staticmethod
-    def _get_extension_from_output_format(output_format):
-        EXTENSIONS = {"avi": "avi",
-                      "flv": "flv",
-                      "h264": "mp4",
-                      "vob": "vob",
-                      "mp4": "mp4",
-                      "mpeg": "mpeg",
-                      "gif": "gif"}
-        return EXTENSIONS.get(output_format.lower(), "mp4")
 
     @staticmethod
     def _get_vcodec_from_output_format(output_format):

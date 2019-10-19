@@ -31,7 +31,7 @@ import time
 import traceback
 import threading
 import psutil
-import octoprint.filemanager
+from slugify import Slugify
 from threading import Timer
 
 # create the module level logger
@@ -39,8 +39,8 @@ from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 
-
 FLOAT_MATH_EQUALITY_RANGE = 0.0000001
+
 
 def get_float(value, default):
     if value is None:
@@ -106,6 +106,25 @@ def is_sequence(arg):
             hasattr(arg, "__iter__"))
 
 
+_SLUGIFY = Slugify()
+_SLUGIFY.safe_chars = "-_.()[] "
+
+def sanitize_filename(filename):
+    if filename is None:
+        return None
+    if u"/" in filename or u"\\" in filename:
+        raise ValueError("name must not contain / or \\")
+
+    result = _SLUGIFY(filename).replace(u" ", u"_")
+    if result and result != u"." and result != u".." and result[0] == u".":
+        # hidden files under *nix
+        result = result[1:]
+    return result
+
+def get_directory_from_full_path(path):
+    return os.path.dirname(path)
+
+
 def get_filename_from_full_path(path):
 
     basename = ntpath.basename(path)
@@ -127,6 +146,25 @@ def get_extension_from_full_path(path):
         if len(split_filename) > 1:
             return extension[1:]
     return ""
+
+def get_collision_free_filepath(path):
+    filename = get_filename_from_full_path(path)
+    directory = get_directory_from_full_path(path)
+    extension = get_extension_from_full_path(path)
+
+    original_filename = filename
+    file_number = 0
+    # Check to see if the file exists, if it does add a number to the end and continue
+    while os.path.isfile(
+        os.path.join(
+            directory,
+            "{0}.{1}".format(original_filename, extension)
+        )
+    ):
+        file_number += 1
+        filename = "{0}_{1}".format(original_filename, file_number)
+
+    return os.path.join(directory, "{0}.{1}".format(filename, extension))
 
 def greater_than_or_close(a, b, abs_tol):
     return a - b > abs_tol

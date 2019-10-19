@@ -28,7 +28,8 @@ plugin_url = "https://github.com/FormerLurker/Octolapse"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["pillow", "sarge", "six", "OctoPrint>1.3.8", "psutil", "file_read_backwards", "setuptools>=6.0"]
+plugin_requires = ["pillow", "sarge", "six", "OctoPrint>1.3.8", "psutil", "file_read_backwards", "setuptools>=6.0",
+                   "awesome-slugify>=1.6.5,<1.7"]
 
 # uncomment to enable faulthandler.
 # Also need to uncomment faulthandler lines on the top of plugin_octolapse/__init__.py

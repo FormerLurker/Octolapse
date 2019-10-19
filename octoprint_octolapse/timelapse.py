@@ -1266,6 +1266,7 @@ class Timelapse(object):
                     rendering_job_info = RenderJobInfo(
                         self._current_job_info,
                         self._data_folder,
+                        self._default_timelapse_directory,
                         camera,
                         self._settings.profiles.current_rendering(),
                         self._ffmpeg_path
