@@ -85,7 +85,7 @@ PyObject* stabilization_results::to_py_object()
 		Py_DECREF(py_issue);
 	}
 	
-	PyObject * py_results = Py_BuildValue("(l,s,O,d,l,l,l,O,O)", success, errors.c_str(), py_snapshot_plans, seconds_elapsed, gcodes_processed, lines_processed, missed_layer_count, py_quality_issues, py_processing_issues);
+	PyObject * py_results = Py_BuildValue("(O,d,l,l,l,O,O)", py_snapshot_plans, seconds_elapsed, gcodes_processed, lines_processed, missed_layer_count, py_quality_issues, py_processing_issues);
 	if (py_results == NULL)
 	{
 		std::string message = "stabilization_results.to_py_object - Unable to create a Tuple from the snapshot plan list.";

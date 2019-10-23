@@ -129,8 +129,7 @@ $(function () {
 
         self.converter.setFlavor('github');
 
-        self.showHelpForLink = function (doc, title, custom_not_found_message)
-        {
+        self.showHelpForLink = function (doc, title, custom_not_found_message){
             url = "/plugin/octolapse/static/docs/help/" + doc + "?nonce=" + Date.now().toString();
             $.ajax({
                 url: url,
@@ -144,21 +143,7 @@ $(function () {
                     // Set the option text to a known token so that we can replace it with our markdown
                     self.options.title = title;
 
-
                     Octolapse.displayPopupForKey(self.options, "octolapse-help", ["octolapse-help"]);
-                    /*
-                    var popup_item = popup.get();
-                    var $help_container = popup_item.find(".octolapse-pnotify-help div.ui-pnotify-container");
-                    var $help_text = $help_container.find(".ui-pnotify-text");
-                    $help_text.html(help_html);
-                    // Replace the token with the help HTML.  This will preserve our title!
-
-                    $help_container.css("background-color", body_background_color)
-                        .css("border-color", "#000000")
-                        .css("border-width", "3px")
-                        .css("color", body_color)
-                        .css("font-weight", body_font_weight);
-                    */
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     if (errorThrown === "NOT FOUND")
@@ -199,8 +184,7 @@ $(function () {
             });
         };
 
-        self.bindHelpLinks = function(selector)
-        {
+        self.bindHelpLinks = function(selector){
             var default_selector = ".octolapse_help[data-help-url]";
             selector = selector + " " + default_selector;
 
@@ -225,6 +209,204 @@ $(function () {
                 self.showHelpForLink(url, title, custom_not_found_error);
                 e.preventDefault();
             });
+        };
+
+        self.showPopupForErrors = function(options, popup_key, remove_keys, errors)
+        {
+            var error_popup = this;
+            error_popup.original_title = options.title;
+            error_popup.errors = errors;
+            error_popup.current_error_index = 0;
+            error_popup.$error_element = null;
+            error_popup.$error_title = "";
+            error_popup.$error_text = null;
+            error_popup.$previous_button = null;
+            error_popup.$next_button = null;
+            error_popup.$help_button = null;
+            error_popup.$close_button = null;
+            error_popup.$button_container = null;
+            error_popup.$button_row = null;
+            error_popup.$button_left_column = null;
+            error_popup.$button_right_column = null;
+
+            error_popup.configure_notice = function(notice){
+                // Find notification elements for later use
+                error_popup.$error_element = notice.get();
+                error_popup.$error_title = error_popup.$error_element.find(".ui-pnotify-title");
+                error_popup.$error_text = error_popup.$error_element.find("div.ui-pnotify-text");
+                error_popup.$previous_button = error_popup.$error_element.find("button.error_previous");
+                error_popup.$next_button = error_popup.$error_element.find("button.error_next");
+                error_popup.$help_button = error_popup.$error_element.find("button.error_help");
+                error_popup.$close_button = error_popup.$error_element.find("button.error_close");
+                error_popup.$button_container = error_popup.$close_button.parent();
+                // create the button row, left column and right column
+                error_popup.$button_row = $('<div class="row-fluid"></div>');
+                error_popup.$button_left_column = $('<div class="span6 text-left"></div>');
+                error_popup.$button_right_column = $('<div class="span6 text-right"></div>');
+                // add the button row
+                error_popup.$button_container.append(error_popup.$button_row);
+                // Add the columns
+                error_popup.$button_row.append(error_popup.$button_left_column);
+                error_popup.$button_row.append(error_popup.$button_right_column);
+                // add the buttons to the columns
+                error_popup.$button_left_column.append(error_popup.$previous_button);
+
+                if(error_popup.errors.length == 1) {
+                    // If there is only one error, add the help button to the right column
+                    error_popup.$button_right_column.append(error_popup.$help_button);
+                }
+                else {
+                    // If there are multiple errors, add the help button to the left column.
+                    error_popup.$button_left_column.append(error_popup.$help_button);
+                }
+                error_popup.$button_left_column.append(error_popup.$next_button);
+                error_popup.$button_right_column.append(error_popup.$close_button);
+
+                // configure next/previous button icons
+                error_popup.$previous_button.html('<span class="fa fa-caret-left"></span>');
+                error_popup.$next_button.html('<span class="fa fa-caret-right"></span>');
+
+                // Show/Hide next/previous buttons as required
+                if(error_popup.errors.length == 1)
+                {
+                    // hide next/previous buttons
+                    error_popup.$previous_button.hide();
+                    error_popup.$next_button.hide();
+                }
+                else {
+                    // show next/previous buttons
+                    error_popup.$previous_button.show();
+                    error_popup.$next_button.show();
+                }
+            };
+
+            error_popup.current_error = function()
+            {
+                return errors[error_popup.current_error_index];
+            };
+
+            error_popup.set_title = function(){
+                var title_html = "";
+                //var title_text = error_popup.original_title;
+                var current_error = error_popup.current_error();
+                var error_title_text = current_error.name;
+                if (error_popup.errors.length == 1)
+                {
+                    title_html = '<h4>' + error_popup.original_title + '<h4/><h5>'+ error_title_text +'</h5>';
+                }
+                else
+                {
+                    title_html =
+                        '<h4>' + error_popup.original_title +
+                        ' - ' + (error_popup.current_error_index+1).toString() + ' of ' + error_popup.errors.length +
+                        '<h4/><h5>'+ error_title_text +'</h5>';
+                }
+                error_popup.$error_title.html(title_html);
+            };
+            error_popup.show_current_error = function()
+            {
+                var current_error = error_popup.current_error();
+                error_popup.$error_text.text(current_error.description);
+                error_popup.set_title();
+                // enable/disable buttons
+                // if we only have 1 error we don't want any previous/next buttons
+                if(error_popup.errors.length > 1)
+                {
+                    // disable buttons as necessary
+                    error_popup.$previous_button.prop('disabled', error_popup.current_error_index == 0);
+                    error_popup.$next_button.prop('disabled', error_popup.current_error_index + 1 == self.errors.length);
+                }
+            };
+            error_popup.display_help_for_current_error = function()
+            {
+                var current_error = error_popup.current_error();
+                showHelpForLink(
+                    current_error.help_link,
+                    current_error.name,
+                    "No help could be found for this error.");
+            };
+
+            error_popup.next_error = function()
+            {
+                error_popup.current_error_index = (error_popup.errors.length+error_popup.current_error_index+1) % error_popup.errors.length;
+                error_popup.show_current_error();
+            };
+
+            error_popup.previous_error = function()
+            {
+                error_popup.current_error_index = (error_popup.errors.length+error_popup.current_error_index-1) % error_popup.errors.length;
+                error_popup.show_current_error();
+            };
+
+            Octolapse.closeConfirmDialogsForKeys([remove_keys]);
+            // Make sure that the default pnotify buttons exist
+            Octolapse.checkPNotifyDefaultConfirmButtons();
+            Octolapse.ConfirmDialogs[popup_key] = (
+                new PNotify({
+                    title: options.title,
+                    text: options.text,
+                    icon: options.icon,
+                    hide: options.hide,
+                    desktop: options.desktop,
+                    type: options.type,
+                    addclass: options.addclass,
+                    confirm: {
+                        confirm: true,
+                        buttons: [{
+                            text: 'Ok',
+                            addClass: 'remove_button',
+                        },{
+                            text: 'Cancel',
+                            addClass: 'remove_button',
+                        },{
+                            // Previous Error
+                            text: '',
+                            addClass: 'error_previous',
+                            click: function(){
+                                console.log("Showing the previous error");
+                                error_popup.previous_error();
+                            }
+                        },{
+                            text: 'Help',
+                            addClass: 'error_help',
+                            click: function() {
+                                var current_error = error_popup.current_error();
+                                Octolapse.Help.showHelpForLink(
+                                    current_error.help_link,
+                                    current_error.name,
+                                    "No help could be found for this error.");
+                            }
+                        },{
+                            // Next Error
+                            text: '',
+                            addClass: 'error_next',
+                            click: function(){
+                                console.log("Showing the next error");
+                                error_popup.next_error();
+                            }
+                        },{
+                            text: 'Close',
+                            addClass: 'error_close',
+                            click: function(){
+                                console.log("Closing popup with key: " + popup_key.toString());
+                                Octolapse.closeConfirmDialogsForKeys([popup_key]);
+                            }
+                        }]
+                    },
+                    buttons: {
+                        closer: false,
+                        sticker: false
+                    },
+                    history: {
+                        history: false
+                    },
+                    before_open: function(notice) {
+                        notice.get().find(".remove_button").remove();
+                        error_popup.configure_notice(notice);
+                        error_popup.show_current_error();
+                    }
+                })
+            );
         };
     }
 });

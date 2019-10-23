@@ -26,7 +26,7 @@ from six.moves import queue
 from octoprint_octolapse.gcode import SnapshotPlan, SnapshotGcodeGenerator
 from octoprint_octolapse.settings import PrinterProfile, TriggerProfile, StabilizationProfile
 import GcodePositionProcessor
-
+import octoprint_octolapse.error_messages as error_messages
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
@@ -34,65 +34,6 @@ logger = logging_configurator.get_logger(__name__)
 
 
 class StabilizationPreprocessingThread(Thread):
-    quality_issue_ids = {
-        1: {
-            'name': "Using Fast Trigger",
-            'help_link': "quality_issues_fast_trigger.md",
-            'cpp_name': "stabilization_quality_issue_fast_trigger",
-            'description': "You are using the 'Fast' smart trigger.  This could lead to quality issues.  If you are "
-                           "having print quality issues, consider using a 'high quality' or 'snap to print' smart "
-                           "trigger. "
-        },
-        2: {
-            'name': "Low Quality Snap-to-print",
-            'help_link': "quality_issues_low_quality_snap_to_print.md",
-            'cpp_name': "stabilization_quality_issue_snap_to_print_low_quality",
-            'description': "In most cases using the 'High Quality' snap to print option will improve print quality, "
-                           "unless you are printing with vase mode enabled. "
-        },
-        3: {
-            'name': "No Print Features Detected",
-            'help_link': "quality_issues_no_print_features_detected.md",
-            'cpp_name': "stabilization_quality_issue_no_print_features",
-            'description': "No print features were found in your gcode file.  This can reduce print quality "
-                           "significantly.  If you are using Slic3r or PrusaSlicer, please enable 'Verbose G-code' in "
-                           "'Print Settings'->'Output Options'->'Output File'. "
-        }
-    }
-
-    processing_issue_ids = {
-        1: {
-            'name': "XYZ Axis Mode Unknown",
-            'help_link': "processing_issues_xyz_axis_mode_unknown.md",
-            'cpp_name': "stabilization_processing_issue_type_xyz_axis_mode_unknown",
-            'description': "The XYZ axis mode was not set."
-        },
-        2: {
-            'name': "E axis Mode Unknown",
-            'help_link': "processing_issues_e_axis_mode_unknown.md",
-            'cpp_name': "stabilization_processing_issue_type_e_axis_mode_unknown",
-            'description': "The E axis mode was not set"
-        },
-        3: {
-            'name': "No Definite Position",
-            'help_link': "processing_issues_no_definite_position.md",
-            'cpp_name': "stabilization_processing_issue_type_no_definite_position",
-            'description': "Unable to find a definite position."
-        }
-        ,
-        4: {
-            'name': "Printer Not Primed",
-            'help_link': "processing_issues_printer_not_primed.md",
-            'cpp_name': "stabilization_processing_issue_type_printer_not_primed",
-            'description': "Priming was not detected."
-        },
-        5: {
-            'name': "No Metric Units",
-            'help_link': "processing_issues_no_metric_units.md",
-            'cpp_name': "stabilization_processing_issue_type_no_metric_units",
-            'description': "Gcode unites are not in millimeters."
-        }
-    }
 
     def __init__(
         self,
@@ -148,27 +89,25 @@ class StabilizationPreprocessingThread(Thread):
             ret_val, options = self._run_stabilization()
             logger.info(
                 "Received %s snapshot plans from the GcodePositionProcessor stabilization in %s seconds.",
-                len(ret_val[2]), ret_val[3]
+                len(ret_val[1]), ret_val[2]
             )
             results = (
                 ret_val[0],  # success
-                ret_val[1],  # errors
-                ret_val[2],  # snapshot_plans
-                ret_val[3],  # seconds_elapsed
-                ret_val[4],  # gcodes processed
-                ret_val[5],  # lines_processed
-                ret_val[6],  # snapshots_missed
-                ret_val[7],  # quality issues
-                ret_val[8],  # processing issues
+                ret_val[1],  # snapshot_plans
+                ret_val[2],  # seconds_elapsed
+                ret_val[3],  # gcodes processed
+                ret_val[4],  # lines_processed
+                ret_val[5],  # snapshots_missed
+                ret_val[6],  # quality issues
+                ret_val[7],  # processing errors from c++
+                ret_val[8],  # preprocessing errors from StabilizationPreprocessingThread
                 options,
             )
-
         except Exception as e:
-            logger.exception("Gcode preprocessing failed.")
-            self.error = "There was a problem preprocessing your gcode file.  See plugin_octolapse.log for details"
+            logger.exception("An error occurred while running the gcode preprocessor.")
+            error = error_messages.OctolapseErrors["preprocessor"]["preprocessor_errors"]['unhandled_exception']
             results = (
                 False,  # success
-                self.error,
                 False,
                 0,
                 0,
@@ -176,55 +115,61 @@ class StabilizationPreprocessingThread(Thread):
                 0,
                 [],
                 [],
+                [error],
                 None
             )
 
         logger.info("Unpacking results")
         success = results[0]
-        error = results[1]
-        errors = []
-        if error:
-            errors.append(error)
-
         # get snapshot plans
-        cpp_snapshot_plans = results[2]
-        if not cpp_snapshot_plans:
-            snapshot_plans = []
-            success = False
-            error_message = "No snapshots were detected in the Gcode.  This is probably either a problem with your " \
-                            "printer settings, an issue with the gcode file, or a bug in Octolapse. "
-            errors.insert(0, error_message)
-        else:
-            snapshot_plans = SnapshotPlan.create_from_cpp_snapshot_plans(cpp_snapshot_plans)
-        seconds_elapsed = results[3]
-        gcodes_processed = results[4]
-        lines_processed = results[5]
-        missed_snapshots = results[6]
-        quality_issues = self._get_quality_issues_from_cpp(results[7])
-        processing_issues = self._get_processing_issues_from_cpp(results[8])
-        self.complete_callback(
-            success, errors, self.is_cancelled, snapshot_plans, seconds_elapsed, gcodes_processed, lines_processed,
-            missed_snapshots, quality_issues, processing_issues, self.timelapse_settings, self.parsed_command
-        )
+        cpp_snapshot_plans = results[1]
+        seconds_elapsed = results[2]
+        gcodes_processed = results[3]
+        lines_processed = results[4]
+        missed_snapshots = results[5]
+        quality_issues = self._get_quality_issues_from_cpp(results[6])
+        processing_issues = self._get_processing_issues_from_cpp(results[7])
+        other_errors = results[8]
 
+        snapshot_plans = []
+        if success and not cpp_snapshot_plans:
+            success = False
+            # see if there were any fatal processing issues
+            has_fatal_issues = False
+            for issue in processing_issues:
+                if issue["is_fatal"]:
+                    has_fatal_issues = True
+                    break
+            # only append the no snapshot plan error if there are no fatal processing issues and no other errors
+            if not has_fatal_issues and len(other_errors) == 0:
+                error = error_messages.OctolapseErrors["preprocessor"]["preprocessor_errors"]["no_snapshot_plans_returned"]
+                other_errors.append(error)
+        elif cpp_snapshot_plans:
+            snapshot_plans = SnapshotPlan.create_from_cpp_snapshot_plans(cpp_snapshot_plans)
+
+        errors = other_errors + processing_issues
+        self.complete_callback(
+            success, self.is_cancelled, snapshot_plans, seconds_elapsed, gcodes_processed, lines_processed,
+            missed_snapshots, quality_issues, errors, self.timelapse_settings, self.parsed_command
+        )
 
     def _get_quality_issues_from_cpp(self, issues):
         quality_issues = []
         for issue in issues:
-            if issue[0] in StabilizationPreprocessingThread.quality_issue_ids:
-                quality_issues.append(StabilizationPreprocessingThread.quality_issue_ids[issue[0]])
+            if issue[0] in error_messages.OctolapseErrors["preprocessor"]["cpp_quality_issues"]:
+                quality_issues.append(error_messages.OctolapseErrors["preprocessor"]["cpp_quality_issues"][issue[0]])
 
         return quality_issues
-
 
     def _get_processing_issues_from_cpp(self, issues):
         processing_issues = []
         for issue in issues:
-            if issue[0] in StabilizationPreprocessingThread.processing_issue_ids:
-                processing_issues.append(StabilizationPreprocessingThread.processing_issue_ids[issue[0]])
+            if issue[0] in error_messages.OctolapseErrors["preprocessor"]["cpp_processing_errors"]:
+                processing_issues.append(
+                    error_messages.OctolapseErrors["preprocessor"]["cpp_processing_errors"][issue[0]]
+                )
 
         return processing_issues
-
 
     def _create_stabilization_args(self):
         # and vase mode is enabled, use the layer height setting if it exists
@@ -268,46 +213,62 @@ class StabilizationPreprocessingThread(Thread):
         is_precalculated = (
             self.trigger_profile.trigger_type in TriggerProfile.get_precalculated_trigger_types()
         )
-        # If the current trigger is not precalculated, return an error
         if not is_precalculated:
-            self.error = "The current trigger is not a pre-calculated trigger."
+            # If the current trigger is not precalculated, return an error
+            # note that this would mean a programming error
+            logger.error("The current trigger is not precalculated!")
+
+            other_error = error_messages.OctolapseErrors["preprocessor"]["preprocessor_errors"]['incorrect_trigger_type']
             results = (
                 False,  # success
-                self.error,  # errors
                 [],  # snapshot_plans
                 0,  # seconds_elapsed
                 0,  # gcodes_processed
                 0,  # lines_processed
                 0,  # missed_snapshots
-                [], # quality_issues
-                [], # processing_issues
+                [],  # quality_issues
+                [],  # processing_issues
+                [other_error]  # other_errors
             )
-        if trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER:
+        elif trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER:
             # run smart layer trigger
             smart_layer_args = {
                 'trigger_type': int(self.trigger_profile.smart_layer_trigger_type),
                 'snap_to_print_high_quality': self.trigger_profile.smart_layer_snap_to_print_high_quality,
                 'snap_to_print_smooth': self.trigger_profile.smart_layer_snap_to_print_smooth
             }
-            results = GcodePositionProcessor.GetSnapshotPlans_SmartLayer(
+            ret_val = list(GcodePositionProcessor.GetSnapshotPlans_SmartLayer(
                 self.cpp_position_args,
                 stabilization_args,
                 smart_layer_args
-            )
+            ))
+            # add the success indicator
+            ret_val.insert(0,True)
+            # add the 'other' errors (errors not related to the C++ call)
+            ret_val.append([])
+            # set the results as the ret_val in tuple form
+            results = tuple(ret_val)
+            logger.info("Stabilization results received, returning.")
         else:
-            self.error = "Can't find a preprocessor named {0}, unable to preprocess gcode.".format(
+            # If this is an unknown trigger type, report the error
+            # This could happen if there is settings corruption, manual edits, or profile repo errors
+            other_error = error_messages.OctolapseErrors["preprocessor"]["preprocessor_errors"]['unknown_trigger_type']
+            other_error['description'] = other_error['description'].format(
                 self.trigger_profile.trigger_type)
             results = (
                 False,  # success
-                self.error,  # errors
                 [],  # snapshot_plans
                 0,  # seconds_elapsed
                 0,  # gcodes_processed
+                0,  # lines processed
                 0,  # missed_snapshots
                 [],  # quality_issues
                 [],  # processing_issues
+                [other_error]
             )
-        logger.info("Stabilization results received, returning.")
+            logger.error("The current precalculated trigger type is unknown.")
+
+
         return results, options
 
     def on_progress_received(self, percent_progress, seconds_elapsed, seconds_to_complete, gcodes_processed,

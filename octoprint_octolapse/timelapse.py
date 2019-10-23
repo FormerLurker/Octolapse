@@ -34,6 +34,7 @@ from octoprint_octolapse.render import RenderError, RenderingProcessor, Renderin
 from octoprint_octolapse.settings import PrinterProfile, OctolapseSettings
 from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotJobInfo, SnapshotError
 from octoprint_octolapse.trigger import Triggers
+import octoprint_octolapse.error_messages as error_messages
 import octoprint_octolapse.stabilization_preprocessing as preprocessing
 import GcodePositionProcessor
 # create the module level logger
@@ -863,7 +864,7 @@ class Timelapse(object):
                     return None,
             else:
                 self.on_print_start_failed(
-                    "Unable to start timelapse, failed to acquire a job lock.  Print start failed."
+                    error_messages['timelapse']['cannot_aquire_job_lock']
                 )
         return None
 

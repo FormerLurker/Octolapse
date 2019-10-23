@@ -355,8 +355,7 @@ $(function () {
             }
     };
 
-    Octolapse.checkPNotifyDefaultConfirmButtons = function()
-    {
+    Octolapse.checkPNotifyDefaultConfirmButtons = function(){
         // check to see if exactly two default pnotify confirm buttons exist.
         // If we keep running into problems we might need to inspect the buttons to make sure they
         // really are the defaults.
@@ -390,89 +389,6 @@ $(function () {
         }
     };
 
-    Octolapse.displayPopupForKeyWithHelp = function(options, popup_key, remove_keys, help_link)
-    {
-        if (!help_link)
-        {
-            Octolapse.displayPopupForKey(options, popup_key, remove_keys);
-            return;
-        }
-        Octolapse.closeConfirmDialogsForKeys([remove_keys]);
-        // Make sure that the default pnotify buttons exist
-        Octolapse.checkPNotifyDefaultConfirmButtons();
-        Octolapse.ConfirmDialogs[popup_key] = (
-            new PNotify({
-                title: options.title,
-                text: options.text,
-                icon: options.icon,
-                hide: options.hide,
-                desktop: options.desktop,
-                type: options.type,
-                addclass: options.addclass,
-                confirm: {
-                    confirm: true,
-                    buttons: [{
-                        text: 'Ok',
-                        addClass: 'remove_button',
-                    },{
-                        text: 'Cancel',
-                        addClass: 'remove_button',
-                    },{
-                        text: 'Close',
-                        click: function(){
-                            console.log("Closing popup with key: " + popup_key.toString());
-                            Octolapse.closeConfirmDialogsForKeys([popup_key]);
-                        }
-                    },{
-                        text: 'Help',
-                        click: function() {
-                            Octolapse.Help.showHelpForLink(help_link, options.title, "No help could be found for this error.");
-                        }
-                    }]
-                },
-                buttons: {
-                    closer: false,
-                    sticker: false
-                },
-                history: {
-                    history: false
-                },
-                before_open: function(notice) {
-                    notice.get().find(".remove_button").remove();
-
-                }
-            })
-        );
-    };
-
-    Octolapse.displayPopupForKeyWithHelpForErrors = function(title, message, popup_key, remove_keys, errors)
-    {
-        var messageHtml = "";
-
-        for (var index=0; index < errors.length; index++)
-        {
-            var error = errors[index];
-            var help_link = "<a class=\"octolapse_help\" data-help-url=\"" + error.help_link + "\" data-help-title=\"" + error.name + "\" title=\"Click for help with this\"><span class=\"fa fa-question-circle fa-lg\"></span></a>";
-            if (index>0)
-                messageHtml = messageHtml + "<br><br>";
-
-            messageHtml += error.description + " " + help_link;
-        }
-        var options = {
-            title: title,
-            text: messageHtml,
-            type: 'error',
-            hide: false,
-            addclass: "octolapse octolapse-pnotify-help",
-            desktop: {
-                desktop: true
-            },
-            after_open: function(notice) {
-                Octolapse.Help.bindHelpLinks(".octolapse-pnotify-help");
-            }
-        };
-        Octolapse.displayPopupForKey(options, popup_key, remove_keys);
-    };
     Octolapse.ConfirmDialogs = {};
     Octolapse.closeConfirmDialogsForKeys = function(remove_keys) {
         if (!$.isArray(remove_keys))
@@ -1646,29 +1562,22 @@ $(function () {
                     //console.log("Gcode preprocessing failed.");
                     self.preprocessing_job_guid = null;
                     self.updateState(data);
-                    if (!data.errors) {
 
-                        var options = {
-                            title: 'Gcode Processing Failed',
-                            text: data.msg,
-                            type: 'error',
-                            hide: false,
-                            addclass: "octolapse",
-                            desktop: {
-                                desktop: true
-                            }
-                        };
-                        Octolapse.displayPopupForKeyWithHelp(options, "print-start-error", ["print-start-error"], data["help_link"]);
-                    }
-                    else {
-                        Octolapse.displayPopupForKeyWithHelpForErrors(
-                            "Gcode Processing Failed",
-                            data.msg,
-                            "gcode-preprocessing-failed",
-                            ["gcode-preprocessing-failed"],
-                            data.errors
-                        );
-                    }
+                    var options = {
+                        title: 'Gcode Processing Failed',
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.Help.showPopupForErrors(
+                        options,
+                        "gcode-preprocessing-failed",
+                        ["gcode-preprocessing-failed"],
+                        data.errors
+                    );
                     break;
 
                 case "updated-profiles-available":
@@ -1799,7 +1708,7 @@ $(function () {
                                 desktop: true
                             }
                         };
-                        Octolapse.displayPopupForKeyWithHelp(options,"print-start-error",["print-start-error"], data["help_link"]);
+                        Octolapse.Help.showPopupForErrors(options,"print-start-error",["print-start-error"], data["errors"]);
                         break;
                     }
                 case "timelapse-start":

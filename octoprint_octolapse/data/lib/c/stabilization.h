@@ -129,7 +129,6 @@ protected:
 	virtual std::vector<stabilization_processing_issue> get_processing_issues();
 	std::vector<snapshot_plan> p_snapshot_plans_;
 	bool is_running_;
-	std::string errors_;
 	stabilization_args* p_stabilization_args_;
 	progressCallback native_progress_callback_;
 	pythonProgressCallback progress_callback_;

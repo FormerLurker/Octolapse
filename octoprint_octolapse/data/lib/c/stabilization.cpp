@@ -216,8 +216,6 @@ stabilization_results stabilization::process_file()
 	const clock_t end_clock = clock();
 	const double total_seconds = static_cast<double>(end_clock - start_clock) / CLOCKS_PER_SEC;
 	stabilization_results results;
-	results.success = errors_.empty();
-	results.errors = errors_;
 	results.seconds_elapsed = total_seconds;
 	results.gcodes_processed = gcodes_processed_;
 	results.lines_processed = lines_processed_;

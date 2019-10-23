@@ -58,8 +58,6 @@ struct stabilization_results
 {
 	stabilization_results();
 	PyObject * to_py_object();
-	bool success;
-	std::string errors;
 	std::vector<snapshot_plan> snapshot_plans;
 	double seconds_elapsed;
 	long gcodes_processed;
