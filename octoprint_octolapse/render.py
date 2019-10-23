@@ -674,6 +674,7 @@ class TimelapseRenderJob(object):
 
     def _set_outputs(self):
         # Rendering path info
+        logger.info("Setting output paths.")
         self._output_filepath = utility.get_collision_free_filepath(self.render_job_info.rendering_path)
         self._output_filename = utility.get_filename_from_full_path(self._output_filepath)
         self._output_directory = utility.get_directory_from_full_path(self._output_filepath)
@@ -822,8 +823,9 @@ class TimelapseRenderJob(object):
                 # Move the timelapse to the Octoprint timelapse folder.
                 try:
                     # get the timelapse folder for the Octoprint timelapse plugin
-                    synchronization_path = "{0}{1}.{2}".format(
-                        self._synchronized_directory, self._synchronized_filename, self._output_extension
+                    synchronization_path = os.path.join(
+                        self._synchronized_directory,
+                        "{0}.{1}".format(self._synchronized_filename, self._output_extension)
                     )
                     message = (
                         "Synchronizing timelapse with the built in "
@@ -1112,11 +1114,11 @@ class TimelapseRenderJob(object):
         filter_string = self._create_filter_string(watermark=watermark, pix_fmt=pix_fmt)
 
         if filter_string is not None:
-            logger.debug("Applying video filter chain: %s".format(filter_string))
+            logger.debug("Applying video filter chain: %s", filter_string)
             command.extend(["-vf", sarge.shell_quote(filter_string)])
 
         # finalize command with output file
-        logger.debug("Rendering movie to %s".format(output_file))
+        logger.debug("Rendering movie to %s", output_file)
         command.append('"{}"'.format(output_file))
 
         return " ".join(command)

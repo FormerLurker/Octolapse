@@ -158,7 +158,7 @@ def get_collision_free_filepath(path):
     while os.path.isfile(
         os.path.join(
             directory,
-            "{0}.{1}".format(original_filename, extension)
+            "{0}.{1}".format(filename, extension)
         )
     ):
         file_number += 1
