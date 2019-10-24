@@ -1,8 +1,9 @@
 #include "trigger_position.h"
 #include "utilities.h"
-#include <iterator>
+//#include <iterator>
+//#include <iostream>
 #include "stabilization_smart_layer.h"
-#include "logging.h"
+//#include "logging.h"
 
 position_type trigger_position::get_type(position& pos_)
 {
@@ -211,11 +212,9 @@ bool trigger_positions::get_snap_to_print_position(trigger_position &pos)
 		pos = position_list_[position_type_fastest_extrusion];
 		return true;
 	}
-
-	// We have both!
-		
-	// if the p_extrusion distance is less than the p_fastest_extrusion distance, return that.
-	if (utilities::less_than(position_list_[position_type_extrusion].distance, position_list_[position_type_fastest_extrusion].distance))
+	
+	// if the p_extrusion distance is less than or equal to the p_fastest_extrusion distance, return that.
+	if (utilities::less_than_or_equal(position_list_[position_type_extrusion].distance, position_list_[position_type_fastest_extrusion].distance))
 	{
 		pos = position_list_[position_type_extrusion];
 	}
@@ -303,19 +302,20 @@ bool trigger_positions::get_high_quality_position(trigger_position &pos)
 	return false;
 }
 
-void trigger_positions::save_retracted_position(position& retracted_pos)
+void trigger_positions::try_save_retracted_position(position& current_pos)
 {
-	if (!retracted_pos.is_retracted)
-		return;
-
-	previous_retracted_pos_ = retracted_pos;
+	if (current_pos.is_retracted)
+		previous_retracted_pos_ = current_pos;
+	else if (current_pos.is_extruding && !current_pos.is_extruding_start)
+		previous_retracted_pos_.is_empty = true;
 }
 
-void trigger_positions::save_primed_position(position& primed_pos)
+void trigger_positions::try_save_primed_position(position& current_pos)
 {
-	if (!primed_pos.is_primed)
-		return;
-	p_previous_primed_pos_ = primed_pos;
+	if (current_pos.is_primed)
+		previous_primed_pos_ = current_pos;
+	else if (current_pos.is_extruding && !current_pos.is_extruding_start)
+		previous_primed_pos_.is_empty = true;
 }
 
 void trigger_positions::clear()
@@ -325,7 +325,7 @@ void trigger_positions::clear()
 	slowest_extrusion_speed_ = -1;
 	previous_initial_pos_.is_empty = true;
 	previous_retracted_pos_.is_empty = true;
-	p_previous_primed_pos_.is_empty = true;
+	previous_primed_pos_.is_empty = true;
 
 	// clear out any saved positions
 	for (unsigned int index = 0; index < trigger_position::num_position_types; index++)
@@ -431,7 +431,7 @@ void trigger_positions::try_add(position &current_pos, position &previous_pos)
 				if (!previous_retracted_pos_.is_empty)
 					start_pos = &previous_retracted_pos_;
 				else
-					start_pos = &p_previous_primed_pos_;
+					start_pos = &previous_primed_pos_;
 				
 				if (
 					start_pos != NULL &&
@@ -452,24 +452,31 @@ void trigger_positions::try_add(position &current_pos, position &previous_pos)
 	{
 		// Do special things for snap to print trigger
 
-		if (type != position_type_extrusion)
-		{
-			// If this isn't an extrusion, we might need to save some of the positions for future reference
-			save_retracted_position(current_pos);
-			save_primed_position(current_pos);
-			return;
-		}
+		
+		// If this isn't an extrusion, we might need to save some of the positions for future reference
+		try_save_retracted_position(current_pos);
+		try_save_primed_position(current_pos);
 		
 	}
-		
-	try_add_internal(current_pos, get_stabilization_distance(current_pos), type);
+	const double distance = get_stabilization_distance(current_pos);
+	//std::cout << "Distance:" << distance << "\r\n";
+	try_add_internal(current_pos, distance, type);
 
 	// If we are using snap to print, and the current position is = is_extruding_start
-	if (args_.type == trigger_type_snap_to_print && current_pos.is_extruding_start)
+	if (args_.type == trigger_type_snap_to_print)
 	{
-		// try to add the snap_to_print starting position
-		try_add_extrusion_start_positions(previous_pos);
+		if (current_pos.is_extruding_start)
+		{
+			// try to add the snap_to_print starting position
+			try_add_extrusion_start_positions(previous_pos);
+		}
+		else if (current_pos.is_extruding)
+		{
+			previous_retracted_pos_.is_empty = true;
+			previous_primed_pos_.is_empty = true;
+		}
 	}
+	
 }
 
 void trigger_positions::try_add_feature_position_internal(position & pos)
@@ -530,8 +537,8 @@ void trigger_positions::try_add_extrusion_start_positions(position& extrusion_st
 	// Try to add the start of the extrusion to the snap to print stabilization
 	if (!previous_retracted_pos_.is_empty)
 		try_add_extrusion_start_position(extrusion_start_pos, previous_retracted_pos_);
-	else if (!p_previous_primed_pos_.is_empty)
-		try_add_extrusion_start_position( extrusion_start_pos, p_previous_primed_pos_);
+	else if (!previous_primed_pos_.is_empty)
+		try_add_extrusion_start_position( extrusion_start_pos, previous_primed_pos_);
 
 }
 
@@ -561,7 +568,7 @@ void trigger_positions::try_add_extrusion_start_position(position & extrusion_st
 
 	
 	bool add_position = false;
-	if (!position_list_[position_type_extrusion].is_empty)
+	if (position_list_[position_type_extrusion].is_empty)
 	{
 		add_position = true;
 	}
@@ -609,7 +616,7 @@ void trigger_positions::try_add_internal(position & pos, double distance, positi
 		}
 		
 		// See if the feedrate is faster than our minimum speed.
-		if (args_.minimum_speed > -1)
+		if (args_.minimum_speed > 0)
 		{
 			// see if we should filter out this position due to the feedrate
 			if (utilities::less_than_or_equal(pos.f, args_.minimum_speed))

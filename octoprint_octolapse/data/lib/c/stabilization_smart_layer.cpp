@@ -160,6 +160,7 @@ void stabilization_smart_layer::process_pos(position& p_current_pos, position& p
 		if (can_add_saved_plan)
 		{
 			add_plan();
+
 		}
 
 	}
@@ -187,6 +188,7 @@ void stabilization_smart_layer::add_plan()
 
 		p_plan.total_travel_distance = total_travel_distance;
 		p_plan.saved_travel_distance = (standard_layer_trigger_distance_ * 2) - total_travel_distance;
+		p_plan.distance_from_stabilization_point = p_closest.distance;
 		p_plan.triggering_command_type = p_closest.type_position;
 		p_plan.triggering_command_feature_type = p_closest.type_feature;
 		// create the initial position
@@ -237,7 +239,7 @@ void stabilization_smart_layer::add_plan()
 		// Determine if we've missed a snapshot layer or height increment
 		if(p_stabilization_args_->height_increment != 0)
 		{
-			if (current_height_increment_ - 1 > last_snapshot_height_increment_)
+			if (current_height_increment_ > 2 && current_height_increment_ - 1 > last_snapshot_height_increment_)
 				missed_snapshots_++;
 		}
 		else

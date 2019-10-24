@@ -125,8 +125,8 @@ private:
 	double get_stabilization_distance(position& pos) const;
 
 	//trigger_position* get_normal_quality_position();
-	void save_retracted_position(position& retracted_pos);
-	void save_primed_position(position& primed_pos);
+	void try_save_retracted_position(position& current_pos);
+	void try_save_primed_position(position& current_pos);
 	static bool can_process_position(position& pos, position_type type);
 	void add_internal(position& pos, double distance, position_type type);
 	void try_add_feature_position_internal(position & pos);
@@ -146,7 +146,7 @@ private:
 	double slowest_extrusion_speed_;
 	position previous_initial_pos_;
 	position previous_retracted_pos_;
-	position p_previous_primed_pos_;
+	position previous_primed_pos_;
 	
 };
 

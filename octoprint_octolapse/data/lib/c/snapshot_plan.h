@@ -43,6 +43,7 @@ struct snapshot_plan
 	std::vector<snapshot_plan_step> steps;
 	position return_position;
 	parsed_command end_command;
+	double distance_from_stabilization_point;
 	double total_travel_distance;
 	double saved_travel_distance;
 };

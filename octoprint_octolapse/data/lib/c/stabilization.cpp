@@ -249,6 +249,7 @@ stabilization_results stabilization::process_file()
 		sstm << ", StartY:" << pPlan.initial_position.y;
 		sstm << ", StartZ:" << pPlan.initial_position.z;
 		sstm << ", Speed:" << pPlan.initial_position.f;
+		sstm << ", Distance:" << pPlan.distance_from_stabilization_point;
 		sstm << ", Travel Distance:" << pPlan.total_travel_distance;
 		sstm << ", Type:" << feature_type_description;
 		sstm << ", Gcode:" << utilities::trim(pPlan.start_command.gcode);

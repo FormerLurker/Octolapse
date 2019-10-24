@@ -28,6 +28,7 @@ snapshot_plan::snapshot_plan()
 	file_gcode_number = 0;
 	total_travel_distance = 0;
 	saved_travel_distance = 0;
+	distance_from_stabilization_point = 0;
 	triggering_command_type = position_type_unknown; // unknown
 	has_initial_position = false;
 }
