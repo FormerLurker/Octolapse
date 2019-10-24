@@ -262,19 +262,19 @@ class Timelapse(object):
         if self._position_signal.is_set():
             self._position_signal.clear()
 
-            # build the staret commands
-            commands_to_send = ["M400", "M114"]
-            # send any code that is to be run before the position request
-            if start_gcode is not None and len(start_gcode) > 0:
-                commands_to_send = start_gcode + commands_to_send
-
             if self._state in [
                 TimelapseState.TakingSnapshot, TimelapseState.AcquiringLocation, TimelapseState.WaitingToEndTimelapse,
                 TimelapseState.WaitingToRender
             ]:
                 if tags is None:
-                    tags = {'current-position'}
-                self.send_snapshot_gcode_array(commands_to_send, tags)
+                    tags = {}
+
+                # send any code that is to be run before the position request
+                if start_gcode is not None and len(start_gcode) > 0:
+                    self.send_snapshot_gcode_array(start_gcode, tags)
+                    tags = {'wait-for-position'}
+
+                self.send_snapshot_gcode_array(["M400", "M114"], tags)
             else:
                 logger.warning(
                     "Warning:  The printer was not in the expected state to send octolapse gcode.  State:%s",
@@ -334,9 +334,7 @@ class Timelapse(object):
 
         return snapshot_payload
 
-    def _take_timelapse_snapshot_precalculated(
-        self, parsed_command
-    ):
+    def _take_timelapse_snapshot_precalculated(self):
         timelapse_snapshot_payload = {
             "snapshot_position": None,
             "return_position": None,
@@ -365,18 +363,29 @@ class Timelapse(object):
             assert (isinstance(snapshot_gcode, SnapshotGcode))
 
             # If we have any initialization gcodes, send them before waiting for moves to finish
-            # (in case we are tracking item)
             if len(snapshot_gcode.InitializationGcode) > 0:
-                logger.info("Sending initialization gcode.")
-                self.send_snapshot_gcode_array(snapshot_gcode.InitializationGcode, {'snapshot-start'})
+                logger.info("Queuing %d initialization commands.", len(snapshot_gcode.InitializationGcode))
+                self.send_snapshot_gcode_array(snapshot_gcode.InitializationGcode, {'snapshot-init'})
 
-            # start building up a list of gcodes to send, starting with (appropriately) the start gcode
-            gcodes_to_send = snapshot_gcode.StartGcode
+            # If we have any start gcodes (lift/retract), send them before waiting for moves to finish
+            if len(snapshot_gcode.StartGcode) > 0:
+                logger.info("Queuing %d start commands.", len(snapshot_gcode.StartGcode))
+                self.send_snapshot_gcode_array(snapshot_gcode.StartGcode, {'snapshot-start'})
 
+            ## Send the snapshot gcodes, making sure to send an M400+M114 before taking any snapshots
+            gcodes_to_send = []
+            # loop through the snapshot commands and build up gocdes_to_send array, only sending the current commands
+            # once we hit the snapshot command.
             for gcode in snapshot_gcode.snapshot_commands:
                 if utility.is_snapshot_command(gcode, self._printer.snapshot_command):
                     snapshot_position = None
                     if len(gcodes_to_send) > 0:
+                        logger.info(
+                            "Queuing %d snapshot commands.  Note that the actual snapshot command is never sent.",
+                            len(gcodes_to_send),
+                            len(snapshot_gcode.snapshot_commands)
+                        )
+
                         snapshot_position = self.get_position_async(
                             start_gcode=gcodes_to_send,
                             tags={'snapshot-gcode'}
@@ -398,14 +407,24 @@ class Timelapse(object):
                 else:
                     gcodes_to_send.append(gcode)
 
-            # return the printhead to the start position
-            gcodes_to_send.extend(snapshot_gcode.ReturnCommands + snapshot_gcode.EndGcode)
             if len(gcodes_to_send) > 0:
-                if self._state == TimelapseState.TakingSnapshot:
-                    logger.info(
-                        "Sending snapshot return and end gcode.")
-                    self.send_snapshot_gcode_array(gcodes_to_send, {"snapshot-end"})
+                logger.info("Queuing remaining %d snapshot commands.", len(snapshot_gcode.StartGcode))
+                self.send_snapshot_gcode_array(gcodes_to_send, {"snapshot-gcode"})
 
+            # return the printhead to the starting position by sending the return commands
+            if len(snapshot_gcode.ReturnCommands) > 0:
+                logger.info("Queuing %d return commands.", len(snapshot_gcode.ReturnCommands))
+                self.send_snapshot_gcode_array(snapshot_gcode.ReturnCommands, {"snapshot-return"})
+
+            # send any end gcodes, including deretract, delift, axis mode corrections, etc
+            if len(snapshot_gcode.EndGcode) > 0:
+                logger.info("Queuing %d end commands.", len(snapshot_gcode.EndGcode))
+                self.send_snapshot_gcode_array(snapshot_gcode.EndGcode, {"snapshot-end"})
+
+            if self._state != TimelapseState.TakingSnapshot:
+                logger.warning(
+                    "The timelapse state was expected to TakingSnapshots, but was equal to {0}".format(self._state)
+                )
             # we've completed the procedure, set success
             timelapse_snapshot_payload["success"] = not has_error and not self._gcode.has_snapshot_position_errors
 
@@ -1007,9 +1026,7 @@ class Timelapse(object):
                 snapshot_callback_thread.start()
 
             # take the snapshot
-            self._most_recent_snapshot_payload = self._take_timelapse_snapshot_precalculated(
-                parsed_command
-            )
+            self._most_recent_snapshot_payload = self._take_timelapse_snapshot_precalculated()
 
             if self._most_recent_snapshot_payload is None:
                 logger.error("acquire_snapshot received a null payload.")
@@ -1067,12 +1084,18 @@ class Timelapse(object):
     def log_octolapse_gcode(self, logf, msg, cmd, tags):
         if "acquire-position" in tags:
             logf("Acquire snapshot position gcode - %s: %s", msg, cmd)
+        elif "snapshot-init" in tags:
+            logf("Snapshot gcode     INIT - %s: %s", msg, cmd)
         elif "snapshot-start" in tags:
-            logf("Snapshot gcode START - %s: %s", msg, cmd)
+            logf("Snapshot gcode    START - %s: %s", msg, cmd)
         elif "snapshot-gcode" in tags:
-            logf("Snapshot gcode       - %s: %s", msg, cmd)
+            logf("Snapshot gcode SNAPSHOT - %s: %s", msg, cmd)
+        elif "snapshot-return" in tags:
+            logf("Snapshot gcode   RETURN - %s: %s", msg, cmd)
         elif "snapshot-end" in tags:
-            logf("Snapshot gcode END   - %s: %s", msg, cmd)
+            logf("Snapshot gcode      END - %s: %s", msg, cmd)
+        if "wait-for-position" in tags:
+            logf("Waiting for moves to complete before continuing - %s: %s", msg, cmd)
         elif "pre-processing-end" in tags:
             logf("Pre processing finished gcode - %s: %s", msg, cmd)
         elif "current-position" in tags:
