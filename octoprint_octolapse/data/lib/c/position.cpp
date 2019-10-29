@@ -22,7 +22,7 @@
 
 #include "position.h"
 #include "logging.h"
-
+#include <iostream>
 void position::set_xyz_axis_mode(const std::string& xyz_axis_default_mode)
 {
 	if (xyz_axis_default_mode == "relative" || xyz_axis_default_mode == "force-relative")
@@ -70,6 +70,57 @@ void position::set_units_default(const std::string&	units_default)
 }
 
 position::position()
+{
+	is_empty = true;
+	feature_type_tag = 0;
+	f = 0;
+	f_null = true;
+	x = 0;
+	x_null = true;
+	x_offset = 0;
+	x_homed = false;
+	y = 0;
+	y_null = true;
+	y_offset = 0;
+	y_homed = false;
+	z = 0;
+	z_null = true;
+	z_offset = 0;
+	z_homed = false;
+	is_relative = false;
+	is_relative_null = true;
+	is_extruder_relative = false;
+	is_extruder_relative_null = true;
+	is_metric = true;
+	is_metric_null = true;
+	last_extrusion_height = 0;
+	last_extrusion_height_null = true;
+	layer = 0;
+	height = 0;
+	current_height_increment = 0;
+	is_printer_primed = false;
+	has_definite_position = false;
+	z_relative = 0;
+	is_in_position = false;
+	in_path_position = false;
+	is_zhop = false;
+	is_layer_change = false;
+	is_height_change = false;
+	is_xy_travel = false;
+	is_xyz_travel = false;
+	has_xy_position_changed = false;
+	has_position_changed = false;
+	has_received_home_command = false;
+	file_line_number = -1;
+	gcode_number = -1;
+	gcode_ignored = true;
+	is_in_bounds = true;
+	current_tool = -1;
+	p_extruders = NULL;
+	set_num_extruders(0);
+}
+
+position::position(int extruder_count)
 { 
 	is_empty = true;
 	feature_type_tag = 0;
@@ -87,8 +138,6 @@ position::position()
 	z_null = true;
 	z_offset = 0;
 	z_homed = false;
-	e = 0;
-	e_offset = 0;
 	is_relative = false;
 	is_relative_null = true;
 	is_extruder_relative = false;
@@ -102,22 +151,7 @@ position::position()
 	current_height_increment = 0;
 	is_printer_primed = false;
 	has_definite_position = false;
-	e_relative = 0;
 	z_relative = 0;
-	extrusion_length = 0;
-	extrusion_length_total = 0;
-	retraction_length = 0;
-	deretraction_length = 0;
-	is_extruding_start = false;
-	is_extruding = false;
-	is_primed = false;
-	is_retracting_start = false;
-	is_retracting = false;
-	is_retracted = false;
-	is_partially_retracted = false;
-	is_deretracting_start = false;
-	is_deretracting = false;
-	is_deretracted = false;
 	is_in_position = false;
 	in_path_position = false;
 	is_zhop = false;
@@ -127,34 +161,174 @@ position::position()
 	is_xyz_travel = false;
 	has_xy_position_changed = false;
 	has_position_changed = false;
-	has_state_changed = false;
 	has_received_home_command = false;
 	file_line_number = -1;
 	gcode_number = -1;
 	gcode_ignored = true;
 	is_in_bounds = true;
+	current_tool = 0;
+	p_extruders = NULL;
+	set_num_extruders(extruder_count);
+	
 }
 
-double position::get_offset_x()
+position::position(const position &pos)
+{
+	is_empty = pos.is_empty;
+	feature_type_tag = pos.feature_type_tag;
+	f = pos.f;
+	f_null = pos.f_null;
+	x = pos.x;
+	x_null = pos.x_null;
+	x_offset = pos.x_offset;
+	x_homed = pos.x_homed;
+	y = pos.y;
+	y_null = pos.y_null;
+	y_offset = pos.y_offset;
+	y_homed = pos.y_homed;
+	z = pos.z;
+	z_null = pos.z_null;
+	z_offset = pos.z_offset;
+	z_homed = pos.z_homed;
+	is_relative = pos.is_relative;
+	is_relative_null = pos.is_relative_null;
+	is_extruder_relative = pos.is_extruder_relative;
+	is_extruder_relative_null = pos.is_extruder_relative_null;
+	is_metric = pos.is_metric;
+	is_metric_null = pos.is_metric_null;
+	last_extrusion_height = pos.last_extrusion_height;
+	last_extrusion_height_null = pos.last_extrusion_height_null;
+	layer = pos.layer;
+	height = pos.height;
+	current_height_increment = pos.current_height_increment;
+	is_printer_primed = pos.is_printer_primed;
+	has_definite_position = pos.has_definite_position;
+	z_relative = pos.z_relative;
+	is_in_position = pos.is_in_position;
+	in_path_position = pos.in_path_position;
+	is_zhop = pos.is_zhop;
+	is_layer_change = pos.is_layer_change;
+	is_height_change = pos.is_height_change;
+	is_xy_travel = pos.is_xy_travel;
+	is_xyz_travel = pos.is_xyz_travel;
+	has_xy_position_changed = pos.has_xy_position_changed;
+	has_position_changed = pos.has_position_changed;
+	has_received_home_command = pos.has_received_home_command;
+	file_line_number = pos.file_line_number;
+	gcode_number = pos.gcode_number;
+	gcode_ignored = pos.gcode_ignored;
+	is_in_bounds = pos.is_in_bounds;
+	current_tool = pos.current_tool;
+	p_extruders = NULL;
+	command = pos.command;
+	set_num_extruders(pos.num_extruders);
+	for(int index=0; index < pos.num_extruders; index++)
+	{
+		p_extruders[index] = pos.p_extruders[index];
+	}
+}
+
+position::~position()
+{
+	delete_extruders();
+}
+
+position& position::operator=(const position& pos) {
+	is_empty = pos.is_empty;
+	feature_type_tag = pos.feature_type_tag;
+	f = pos.f;
+	f_null = pos.f_null;
+	x = pos.x;
+	x_null = pos.x_null;
+	x_offset = pos.x_offset;
+	x_homed = pos.x_homed;
+	y = pos.y;
+	y_null = pos.y_null;
+	y_offset = pos.y_offset;
+	y_homed = pos.y_homed;
+	z = pos.z;
+	z_null = pos.z_null;
+	z_offset = pos.z_offset;
+	z_homed = pos.z_homed;
+	is_relative = pos.is_relative;
+	is_relative_null = pos.is_relative_null;
+	is_extruder_relative = pos.is_extruder_relative;
+	is_extruder_relative_null = pos.is_extruder_relative_null;
+	is_metric = pos.is_metric;
+	is_metric_null = pos.is_metric_null;
+	last_extrusion_height = pos.last_extrusion_height;
+	last_extrusion_height_null = pos.last_extrusion_height_null;
+	layer = pos.layer;
+	height = pos.height;
+	current_height_increment = pos.current_height_increment;
+	is_printer_primed = pos.is_printer_primed;
+	has_definite_position = pos.has_definite_position;
+	z_relative = pos.z_relative;
+	is_in_position = pos.is_in_position;
+	in_path_position = pos.in_path_position;
+	is_zhop = pos.is_zhop;
+	is_layer_change = pos.is_layer_change;
+	is_height_change = pos.is_height_change;
+	is_xy_travel = pos.is_xy_travel;
+	is_xyz_travel = pos.is_xyz_travel;
+	has_xy_position_changed = pos.has_xy_position_changed;
+	has_position_changed = pos.has_position_changed;
+	has_received_home_command = pos.has_received_home_command;
+	file_line_number = pos.file_line_number;
+	gcode_number = pos.gcode_number;
+	gcode_ignored = pos.gcode_ignored;
+	is_in_bounds = pos.is_in_bounds;
+	current_tool = pos.current_tool;
+	command = pos.command;
+	if (num_extruders != pos.num_extruders)
+	{
+		set_num_extruders(pos.num_extruders);
+	}
+	for (int index = 0; index < pos.num_extruders; index++)
+	{
+		p_extruders[index] = pos.p_extruders[index];
+	}
+	return *this;
+}
+
+void position::set_num_extruders(int num_extruders_)
+{
+	delete_extruders();
+	num_extruders = num_extruders_;
+	if (num_extruders_ > 0)
+	{
+		p_extruders = new extruder[num_extruders_];
+	}
+}
+
+void position::delete_extruders()
+{
+	if (p_extruders != NULL)
+	{
+		delete[] p_extruders;
+		p_extruders = NULL;
+	}
+}
+
+double position::get_offset_x() const
 {
 	return x - x_offset;
 }
 
-double position::get_offset_y()
+double position::get_offset_y() const
 {
 	return y - y_offset;
 }
 
-double position::get_offset_z()
+double position::get_offset_z() const
 {
 	return z - z_offset;
 }
 
-double position::get_offset_e()
+extruder& position::get_current_extruder() const
 {
-	return e - e_offset;
+	return p_extruders[current_tool];
 }
-
 
 void position::reset_state()
 {
@@ -163,19 +337,19 @@ void position::reset_state()
 	is_xy_travel = false;
 	is_xyz_travel = false;
 	has_position_changed = false;
-	has_state_changed = false;
 	has_received_home_command = false;
 	gcode_ignored = true;
 	
 	//is_in_bounds = true; // I dont' think we want to reset this every time since it's only calculated if the current position
 	// changes.
-	e_relative = 0;
+	p_extruders[current_tool].e_relative = 0;
 	z_relative = 0;
 	feature_type_tag = 0;
 }
 
 PyObject* position::to_py_tuple()
 {
+	std::cout << "Building position py_object.\r\n";
 	PyObject * py_command;
 	if (command.is_empty)
 	{
@@ -184,95 +358,94 @@ PyObject* position::to_py_tuple()
 	else
 	{
 		py_command = command.to_py_object();
+		if (py_command == NULL)
+		{
+			return NULL;
+		}
 	}
+	PyObject * py_extruders = extruder::build_py_object(p_extruders, num_extruders);
+	if (py_extruders == NULL)
+	{
+		return NULL;
+	}
+	std::cout << "Building position py_tuple.\r\n";
 	PyObject* pyPosition = Py_BuildValue(
 		// ReSharper disable once StringLiteralTypo
-		"ddddddddddddddddddddddlllllllllllllllllllllllllllllllllllllllllllllllO",
+		"dddddddddddddddlllllllllllllllllllllllllllllllllllllOO",
 		// Floats
 		x, // 0
 		y, // 1
 		z, // 2
 		f, // 3
-		e, // 4
-		x_offset, // 5
-		y_offset, // 6
-		z_offset, // 7
-		e_offset, // 8
-		e_relative, // 9
-		z_relative, // 10
-		extrusion_length, // 11
-		extrusion_length_total, // 12
-		retraction_length, // 13
-		deretraction_length, // 14
-		last_extrusion_height, // 15
-		height, // 16
-		0.0, // 17
-		0.0, // 18
-		0.0, // 19
-		0.0, // 20
-		0.0, // 21
+		x_offset, // 4
+		y_offset, // 5
+		z_offset, // 6
+		z_relative, // 7
+		last_extrusion_height, // 8
+		height, // 9
+		0.0, // 10 - Firmware Retraction Length
+		0.0, // 11 - Firmware Unretraction Additional Length
+		0.0, // 12 - Firmware Retraction Feedrate
+		0.0, // 13 - Firmware Unretraction Feedrate
+		0.0, // 14 - Firmware Unretraction ZLift
 		// Int
-		layer, // 22
+		layer, // 15
+		current_tool, // 16
+		num_extruders, // 17
 		// Bool (represented as an integer)
-		x_homed, // 23
-		y_homed, // 24
-		z_homed, // 25
-		is_relative, // 26
-		is_extruder_relative, // 27
-		is_metric, // 28
-		is_printer_primed, // 29
-		false,
-		has_definite_position, // 31
-		is_extruding_start, // 32
-		is_extruding, // 33
-		is_primed, // 34
-		is_retracting_start, // 35
-		is_retracting, // 36
-		is_retracted, // 37
-		is_partially_retracted, // 38
-		is_deretracting_start, // 39
-		is_deretracting, // 40
-		is_deretracted, // 41
-		is_layer_change, // 42
-		is_height_change, // 43
-		is_xy_travel, // 44
-		is_xyz_travel, // 45
-		is_zhop, // 46
-		has_xy_position_changed, // 47
-		has_position_changed, // 48
-		has_state_changed, // 49
-		has_received_home_command, // 50
-		is_in_position, // 51
-		in_path_position, // 52
+		x_homed, // 18
+		y_homed, // 19
+		z_homed, // 20
+		is_relative, // 21
+		is_extruder_relative, // 22
+		is_metric, // 23
+		is_printer_primed, // 24
+		has_definite_position, // 25
+		is_layer_change, // 26
+		is_height_change, // 27
+		is_xy_travel, // 28
+		is_xyz_travel, // 29
+		is_zhop, // 30
+		has_xy_position_changed, // 31
+		has_position_changed, // 32
+		has_received_home_command, // 33
+		is_in_position, // 34
+		in_path_position, // 35
+		is_in_bounds, // 36
 		// Null bool, represented as integers
-		x_null, // 53
-		y_null, // 54
-		z_null, // 55
-		f_null, // 56
-		is_relative_null, // 57
-		is_extruder_relative_null, // 58
-		last_extrusion_height_null, // 59
-		is_metric_null, // 60
-		true, // 61
-		true, // 62
-		true, // 63
-		true, // 64
-		true,  // 65
+		x_null, // 37
+		y_null, // 38
+		z_null, // 39
+		f_null, // 40
+		is_relative_null, // 41
+		is_extruder_relative_null, // 42
+		last_extrusion_height_null, // 43
+		is_metric_null, // 44
+		true, // 45 - Firmware retraction length null
+		true, // 46 - Firmware unretraction additional length null
+		true, // 47 - Firmware retraction feedrate null
+		true, // 48 - Firmware unretraction feedrate null
+		true, // 49 - Firmware ZLift Null
 		// file statistics
-		file_line_number, // 66
-		gcode_number, // 67
-		// is in bounds
-		is_in_bounds, // 68
+		file_line_number, // 50
+		gcode_number, // 51
+		
 		// Objects
-		py_command // 69
+		py_command, // 52
+		py_extruders // 53
+
 	);
 	if (pyPosition == NULL)
 	{
+		std::cout << "No py_object returned for position!\r\n";
 		std::string message = "position.to_py_tuple: Unable to convert position value to a PyObject tuple via Py_BuildValue.";
 		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return NULL;
 	}
+	std::cout << "Finished building pyPosition.\r\n";
 	Py_DECREF(py_command);
+	Py_DECREF(py_extruders);
+	std::cout << "Returning pyPosition.\r\n";
 	return pyPosition;
 
 }
@@ -288,11 +461,17 @@ PyObject* position::to_py_dict()
 	{
 		py_command = command.to_py_object();
 	}
-
+	PyObject * py_extruders = extruder::build_py_object(p_extruders, num_extruders);
+	if (py_extruders == NULL)
+	{
+		return NULL;
+	}
 	PyObject * p_position = Py_BuildValue(
-		"{s:O,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
+		"{s:O,s:O, s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
 		"parsed_command",
 		py_command,
+		"extruders",
+		py_extruders,
 		// FLOATS
 		"x",
 		x,
@@ -303,15 +482,11 @@ PyObject* position::to_py_dict()
 		"f",
 		f,
 		"e",
-		e,
-		"x_offset",
 		x_offset,
 		"y_offset",
 		y_offset,
 		"z_offset",
 		z_offset,
-		"e_offset",
-		e_offset,
 		"last_extrusion_height",
 		last_extrusion_height,
 		"height",
@@ -328,20 +503,16 @@ PyObject* position::to_py_dict()
 		0.0,
 		"firmware_z_lift",
 		0.0,
-		"e_relative",
-		e_relative,
 		"z_relative",
 		z_relative,
-		"extrusion_length",
-		extrusion_length,
-		"extrusion_length_total",
-		extrusion_length_total,
-		"retraction_length",
-		retraction_length,
-		"deretraction_length",
-		deretraction_length,
+		// Ints
 		"layer", 
 		layer,
+		"current_tool",
+		current_tool,
+		"num_extruders",
+		num_extruders,
+		// Bools
 		"x_null",
 		x_null,
 		"y_null",
@@ -386,26 +557,6 @@ PyObject* position::to_py_dict()
 		false,
 		"has_definite_position",
 		has_definite_position,
-		"is_extruding_start",
-		is_extruding_start,
-		"is_extruding",
-		is_extruding,
-		"is_primed",
-		is_primed,
-		"is_retracting_start",
-		is_retracting_start,
-		"is_retracting",
-		is_retracting,
-		"is_retracted",
-		is_retracted,
-		"is_partially_retracted",
-		is_partially_retracted,
-		"is_deretracting_start",
-		is_deretracting_start,
-		"is_deretracting",
-		is_deretracting,
-		"is_deretracted",
-		is_deretracted,
 		"is_layer_change",
 		is_layer_change,
 		"is_height_change",
@@ -420,8 +571,6 @@ PyObject* position::to_py_dict()
 		has_xy_position_changed,
 		"has_position_changed",
 		has_position_changed,
-		"has_state_changed",
-		has_state_changed,
 		"has_received_home_command",
 		has_received_home_command,
 		"is_in_position",
@@ -441,5 +590,8 @@ PyObject* position::to_py_dict()
 		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return NULL;
 	}
+	Py_DECREF(py_command);
+	Py_DECREF(py_extruders);
+
 	return p_position;
 }

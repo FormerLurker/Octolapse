@@ -201,18 +201,18 @@ $(function () {
                 messages: Octolapse.SettingsImportValidationRules.messages,
                 ignore: ".ignore_hidden_errors:hidden, .ignore_hidden_errors.hiding",
                 errorPlacement: function (error, element) {
-                    var error_id = $(element).attr("id");
-                    var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
+                    var error_id = $(element).attr("name");
+                    var $field_error = self.$dialog.$editDialog.find(".error_label_container[data-error-for='" + error_id + "']");
                     $field_error.html(error);
                 },
                 highlight: function (element, errorClass) {
-                    var error_id = $(element).attr("id");
-                    var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
+                    var error_id = $(element).attr("name");
+                    var $field_error = self.$dialog.$editDialog.find(".error_label_container[data-error-for='" + error_id + "']");
                     $field_error.removeClass("checked");
                     $field_error.addClass(errorClass);
                 },
                 unhighlight: function (element, errorClass) {
-                    var error_id = $(element).attr("id");
+                    var error_id = self.$dialog.$editDialog.find(element).attr("name");
                     var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
                     $field_error.addClass("checked");
                     $field_error.removeClass(errorClass);

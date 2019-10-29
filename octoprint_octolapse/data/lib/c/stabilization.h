@@ -123,7 +123,7 @@ protected:
 	 * \param y The current y stabilization point, will be replaced with the next y point
 	 */
 	void get_next_xy_coordinates(double &x, double &y) const;
-	virtual void process_pos(position& p_current_pos, position& p_previous_pos);
+	virtual void process_pos(position* p_current_pos, position* p_previous_pos);
 	virtual void on_processing_complete();
 	virtual std::vector<stabilization_quality_issue> get_quality_issues();
 	virtual std::vector<stabilization_processing_issue> get_processing_issues();

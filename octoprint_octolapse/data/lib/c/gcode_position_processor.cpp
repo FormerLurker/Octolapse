@@ -806,6 +806,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::DEBUG, stream.str());
 	}
 
+	#pragma region location_detection_commands
 	// Get LocationDetection Commands
 	PyObject * py_location_detection_commands = PyDict_GetItemString(py_args, "location_detection_commands");
 	if (py_location_detection_commands == NULL)
@@ -839,7 +840,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		std::string command = PyUnicode_SafeAsString(pyListItem);
 		args->location_detection_commands.push_back(command);
 	}
-	
+	#pragma endregion Parse the list of location detection commands
+
 	// xyz_axis_default_mode
 	PyObject * py_xyz_axis_default_mode = PyDict_GetItemString(py_args, "xyz_axis_default_mode");
 	if (py_xyz_axis_default_mode == NULL)
@@ -940,8 +942,38 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	{
 		args->home_z = PyFloatOrInt_AsDouble(py_home_z);
 	}
-	// get the slicer settings dictionary
 
+	// num_extruders
+	PyObject * py_num_extruders = PyDict_GetItemString(py_args, "num_extruders");
+	if (py_num_extruders == NULL)
+	{
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve num_extruders from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+		return false;
+	}
+	args->set_num_extruders(PyLong_AsLong(py_num_extruders));
+
+	// py_shared_extruder
+	PyObject * py_shared_extruder = PyDict_GetItemString(py_args, "shared_extruder");
+	if (py_shared_extruder == NULL)
+	{
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve shared_extruder from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+		return false;
+	}
+	args->shared_extruder = PyLong_AsLong(py_shared_extruder) > 0;
+
+	// zero_based_extruder
+	PyObject * py_zero_based_extruder = PyDict_GetItemString(py_args, "zero_based_extruder");
+	if (py_zero_based_extruder == NULL)
+	{
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve zero_based_extruder from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+		return false;
+	}
+	args->zero_based_extruder = PyLong_AsLong(py_zero_based_extruder) > 0;
+
+	// get the slicer settings dictionary
 	PyObject * py_slicer_settings_dict = PyDict_GetItemString(py_args, "slicer_settings");
 	if (py_slicer_settings_dict == NULL)
 	{
@@ -949,26 +981,94 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
-	
-	// retraction_length
-	PyObject * py_retraction_length = PyDict_GetItemString(py_slicer_settings_dict, "retraction_length");
-	if (py_retraction_length == NULL)
-	{
-		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve retraction_length from the slicer settings dict.";
-		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
-		return false;
-	}
-	args->retraction_length = PyFloatOrInt_AsDouble(py_retraction_length);
 
-	// z_lift_height
-	PyObject * py_z_lift_height = PyDict_GetItemString(py_slicer_settings_dict, "z_lift_height");
-	if (py_z_lift_height == NULL)
+	#pragma region Extract Extruder SEttings
+	PyObject * py_extruders = PyDict_GetItemString(py_slicer_settings_dict, "extruders");
+	if (py_extruders == NULL)
 	{
-		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve z_lift_height from the slicer settings dict.";
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve extruders list from the slicer settings dict.";
 		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return false;
 	}
-	args->z_lift_height = PyFloatOrInt_AsDouble(py_z_lift_height);
+	if (!PyList_Check(py_extruders))
+	{
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - The extruders object in the slicer settings dict is not a list.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+		return false;
+	}
+	const int extruder_list_size = PyList_Size(py_extruders);
+	std::cout << "Found " << extruder_list_size << " extruders.\r\n";
+	// make sure there is at lest one item in the list
+	if (extruder_list_size < 1)
+	{
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to build a list of extruders from the slicer settings dict arguments.  There are no extruders in the list.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+		return false;
+	}
+	if (extruder_list_size < args->num_extruders)
+	{
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Too few extruders were detected.  There must be at least as many extruders in the list the num_extruders variable.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+		return false;
+	}
+	for (int index = 0; index < extruder_list_size; index++) {
+		std::cout << "Extracting the current extruder #" << index << ".\r\n";
+		PyObject *py_extruder = PyList_GetItem(py_extruders, index);
+		if (py_extruder == NULL)
+		{
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Could not extract an extruder from index from the extruders list.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+			return false;
+		}
+		// Extract the z_lift_height from the current extruder
+		PyObject * py_z_lift_height = PyDict_GetItemString(py_extruder, "z_lift_height");
+		if (py_z_lift_height == NULL)
+		{
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve z_lift_height list from the current extruder.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+			return false;
+		}
+		if (!(PyFloat_Check(py_z_lift_height) || PyLong_Check(py_z_lift_height) || py_z_lift_height == Py_None)) {
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - The z_lift_height object must a float or int.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+			return false;
+		}
+		if (py_z_lift_height == Py_None)
+		{
+			args->z_lift_heights[index] = 0;
+		}
+		else
+		{
+			double height = PyFloatOrInt_AsDouble(py_z_lift_height);
+			args->z_lift_heights[index] = height;
+		}
+		
+
+		// Extract the retraction_length from the current extruder
+		PyObject * py_retraction_length = PyDict_GetItemString(py_extruder, "retraction_length");
+		if (py_retraction_length == NULL)
+		{
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve retraction_length list from the current extruder.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+			return false;
+		}
+		if (!(PyFloat_Check(py_retraction_length) || PyLong_Check(py_retraction_length) || py_z_lift_height == Py_None)) {
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - The z_lift_height object must a float or int.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+			return false;
+		}
+		if (py_z_lift_height == Py_None)
+		{
+			args->retraction_lengths[index] = 0;
+		}
+		else
+		{
+			double length = PyFloatOrInt_AsDouble(py_retraction_length);
+			args->retraction_lengths[index] = length;
+		}
+	}
+	
+	#pragma endregion Parse the list of z lift heights
 
 	// priming_height
 	PyObject * py_priming_height = PyDict_GetItemString(py_args, "priming_height");

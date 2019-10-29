@@ -483,7 +483,6 @@ $(function () {
                 }
             });
         };
-
         /*
             Profile Add/Update routine for showAddEditDialog
         */
@@ -522,9 +521,7 @@ $(function () {
                     Octolapse.displayPopup(options);
                     break;
             }
-
         };
-
         /*
             Modal Dialog Functions
         */
@@ -571,24 +568,24 @@ $(function () {
             dialog.$modalFooter = dialog.$addEditDialog.find(".modal-footer");
 
             // Create all of the validation rules
-            var rules = {
+            dialog.rules = {
                 rules: options.validationRules.rules,
                 messages: options.validationRules.messages,
                 ignore: ".ignore_hidden_errors:hidden, .ignore_hidden_errors.hiding",
                 errorPlacement: function (error, element) {
-                    var error_id = $(element).attr("id");
-                    var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
+                    var error_id = $(element).attr("name");
+                    var $field_error = dialog.$addEditDialog.find(".error_label_container[data-error-for='" + error_id + "']");
                     $field_error.html(error);
                 },
                 highlight: function (element, errorClass) {
-                    var error_id = $(element).attr("id");
-                    var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
+                    var error_id = $(element).attr("name");
+                    var $field_error = dialog.$addEditDialog.find(".error_label_container[data-error-for='" + error_id + "']");
                     $field_error.removeClass("checked");
                     $field_error.addClass(errorClass);
                 },
                 unhighlight: function (element, errorClass) {
-                    var error_id = $(element).attr("id");
-                    var $field_error = $(".error_label_container[data-error-for='" + error_id + "']");
+                    var error_id = $(element).attr("name");
+                    var $field_error = dialog.$addEditDialog.find(".error_label_container[data-error-for='" + error_id + "']");
                     $field_error.addClass("checked");
                     $field_error.removeClass(errorClass);
                 },
@@ -643,10 +640,7 @@ $(function () {
                 dialog.$errorList.empty();
                 dialog.$summary.hide();
                 // Destroy the validator if it exists, both to save on resources, and to clear out any leftover junk.
-                if (dialog.validator != null) {
-                    dialog.validator.destroy();
-                    dialog.validator = null;
-                }
+                dialog.unbind_validation();
                 // see if the current viewmodel has an on_closed function
                 if (typeof self.profileObservable().on_closed === 'function')
                 {
@@ -698,15 +692,15 @@ $(function () {
                 // Unbind all click events
                 dialog.$addEditDialog.unbind('click');
                 // bind any help links
-                Octolapse.Help.bindHelpLinks("#octolapse_add_edit_profile_dialog");
-                dialog.validator = dialog.$addEditForm.validate(rules);
+                dialog.bind_help_links();
+
                 dialog.IsValid = function()
                 {
                     if (dialog.validator != null)
                         return dialog.validator.numberOfInvalids() == 0;
                     return true;
                 };
-                dialog.validator.form();
+                dialog.bind_validation();
                 // Remove any click event bindings from the cancel button
                 dialog.$cancelButton.unbind("click");
                 dialog.$closeIcon.unbind("click");
@@ -750,7 +744,6 @@ $(function () {
                                         $(container).show();
                                     });
                             }
-
                         });
 
                         // The form is invalid, add a shake animation to inform the user
@@ -768,10 +761,29 @@ $(function () {
                 // see if the current viewmodel has an on_opened function
                 if (typeof self.profileObservable().on_opened === 'function'){
                     // call the function
-                    self.profileObservable().on_opened();
+                    self.profileObservable().on_opened(dialog);
                 }
 
             });
+            dialog.unbind_validation = function()
+            {
+                if (dialog.validator != null) {
+                    console.log("octolapse.settings.js - Unbinding validation.");
+                    dialog.validator.destroy();
+                    dialog.validator = null;
+                }
+            };
+            dialog.bind_validation = function()
+            {
+                console.log("octolapse.settings.js - Binding validation.");
+                dialog.unbind_validation();
+                dialog.validator = dialog.$addEditForm.validate(dialog.rules);
+                dialog.validator.form();
+            };
+            dialog.bind_help_links = function()
+            {
+                Octolapse.Help.bindHelpLinks("#octolapse_add_edit_profile_dialog");
+            };
             // Open the add/edit profile dialog
             dialog.$addEditDialog.modal({
                 backdrop: 'static',

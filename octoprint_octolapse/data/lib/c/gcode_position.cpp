@@ -22,6 +22,35 @@
 #include "gcode_position.h"
 #include "utilities.h"
 #include "logging.h"
+#include <algorithm>
+#include <iterator>
+
+void gcode_position_args::set_num_extruders(int num_extruders_)
+{
+	delete_retraction_lengths();
+	delete_z_lift_heights();
+	num_extruders = num_extruders_;
+	retraction_lengths = new double[num_extruders_];
+	z_lift_heights = new double[num_extruders_];
+}
+
+void gcode_position_args::delete_retraction_lengths()
+{
+	if (retraction_lengths != NULL)
+	{
+		delete[] retraction_lengths;
+		retraction_lengths = NULL;
+	}
+}
+
+void gcode_position_args::delete_z_lift_heights()
+{
+	if (z_lift_heights != NULL)
+	{
+		delete[] z_lift_heights;
+		z_lift_heights = NULL;
+	}
+}
 
 gcode_position::gcode_position()
 {
@@ -33,9 +62,13 @@ gcode_position::gcode_position()
 	home_x_none_ = true;
 	home_y_none_ = true;
 	home_z_none_ = true;
-
-	retraction_length_ = 0;
-	z_lift_height_ = 0;
+	retraction_lengths_ = NULL;
+	z_lift_heights_ = NULL;
+	shared_extruder_ = false;
+	set_num_extruders(0);
+	zero_based_extruder_ = true;
+	current_extruder_ = 0;
+	
 	priming_height_ = 0;
 	minimum_layer_height_ = 0;
 	g90_influences_extruder_ = false;
@@ -61,16 +94,15 @@ gcode_position::gcode_position()
 	is_circular_bed_ = false;
 
 	cur_pos_ = 0;
-	position initial_pos;
-	initial_pos.set_xyz_axis_mode(xyz_axis_default_mode_);
-	initial_pos.set_e_axis_mode(e_axis_default_mode_);
-	initial_pos.set_units_default(units_default_);
+	
 	for(int index = 0; index < NUM_POSITIONS; index ++)
 	{
+		position initial_pos(num_extruders_);
+		initial_pos.set_xyz_axis_mode(xyz_axis_default_mode_);
+		initial_pos.set_e_axis_mode(e_axis_default_mode_);
+		initial_pos.set_units_default(units_default_);
 		add_position(initial_pos);
 	}
-	
-	
 }
 
 gcode_position::gcode_position(gcode_position_args* args)
@@ -82,9 +114,26 @@ gcode_position::gcode_position(gcode_position_args* args)
 	home_x_none_ = args->home_x_none;
 	home_y_none_ = args->home_y_none;
 	home_z_none_ = args->home_z_none;
+	retraction_lengths_ = NULL;
+	z_lift_heights_ = NULL;
+	// Configure Extruders
+	shared_extruder_ = args->shared_extruder;
+	set_num_extruders(args->num_extruders);
+	zero_based_extruder_ = args->zero_based_extruder;
 
-	retraction_length_ = args->retraction_length;
-	z_lift_height_ = args->z_lift_height;
+	current_extruder_ = 0;
+	
+	// copy the retraction lengths array
+	for (int index=0; index < args->num_extruders; index++)
+	{
+		retraction_lengths_[index] = args->retraction_lengths[index];
+	}
+	// Copy the z_lift_heights array from the arguments
+	for (int index = 0; index < args->num_extruders; index++)
+	{
+		z_lift_heights_[index] = args->z_lift_heights[index];
+	}
+
 	priming_height_ = args->priming_height;
 	minimum_layer_height_ = args->minimum_layer_height;
 	g90_influences_extruder_ = args->g90_influences_extruder;
@@ -111,15 +160,15 @@ gcode_position::gcode_position(gcode_position_args* args)
 	is_circular_bed_ = args->is_circular_bed;
 
 	cur_pos_ = -1;
-	position initial_pos;
-	initial_pos.set_xyz_axis_mode(xyz_axis_default_mode_);
-	initial_pos.set_e_axis_mode(e_axis_default_mode_);
-	initial_pos.set_units_default(units_default_);
+	
 	for (int index = 0; index < NUM_POSITIONS; index++)
 	{
+		position initial_pos(num_extruders_);
+		initial_pos.set_xyz_axis_mode(xyz_axis_default_mode_);
+		initial_pos.set_e_axis_mode(e_axis_default_mode_);
+		initial_pos.set_units_default(units_default_);
 		add_position(initial_pos);
 	}
-
 }
 
 gcode_position::gcode_position(const gcode_position &source)
@@ -127,6 +176,45 @@ gcode_position::gcode_position(const gcode_position &source)
 	// Private copy constructor - you can't copy this class
 }
 
+gcode_position::~gcode_position()
+{
+	delete_retraction_lengths_();
+	delete_z_lift_heights_();
+}
+
+void gcode_position::set_num_extruders(int num_extruders)
+{
+	delete_retraction_lengths_();
+	delete_z_lift_heights_();
+	if (shared_extruder_)
+	{
+		num_extruders_ = 1;
+	}
+	else
+	{
+		num_extruders_ = num_extruders;
+	}
+	retraction_lengths_ = new double[num_extruders];
+	z_lift_heights_ = new double[num_extruders];
+}
+
+void gcode_position::delete_retraction_lengths_()
+{
+	if (retraction_lengths_ != NULL)
+	{
+		delete[] retraction_lengths_;
+		retraction_lengths_ = NULL;
+	}
+}
+
+void gcode_position::delete_z_lift_heights_()
+{
+	if (z_lift_heights_ != NULL)
+	{
+		delete[] z_lift_heights_;
+		z_lift_heights_ = NULL;
+	}
+}
 
 void gcode_position::add_position(position& pos)
 {
@@ -195,7 +283,7 @@ void gcode_position::update(parsed_command& command, const int file_line_number,
 		const pos_function_type func = gcode_functions_iterator_->second;
 		(this->*func)(p_current_pos, command);
 		// calculate z and e relative distances
-		p_current_pos->e_relative = (p_current_pos->e - p_previous_pos->e);
+		p_current_pos->get_current_extruder().e_relative = (p_current_pos->get_current_extruder().e - p_previous_pos->get_current_extruder().e);
 		p_current_pos->z_relative = (p_current_pos->z - p_previous_pos->z);
 		// Have the XYZ positions changed after processing a command ?
 
@@ -206,7 +294,7 @@ void gcode_position::update(parsed_command& command, const int file_line_number,
 		p_current_pos->has_position_changed = (
 			p_current_pos->has_xy_position_changed ||
 			!utilities::is_equal(p_current_pos->z, p_previous_pos->z) ||
-			!utilities::is_zero(p_current_pos->e_relative) ||
+			!utilities::is_zero(p_current_pos->get_current_extruder().e_relative) ||
 			p_current_pos->x_null != p_previous_pos->x_null ||
 			p_current_pos->y_null != p_previous_pos->y_null ||
 			p_current_pos->z_null != p_previous_pos->z_null);
@@ -230,49 +318,49 @@ void gcode_position::update(parsed_command& command, const int file_line_number,
 
 	if (p_current_pos->has_position_changed)
 	{
-		p_current_pos->extrusion_length_total += p_current_pos->e_relative;
+		p_current_pos->get_current_extruder().extrusion_length_total += p_current_pos->get_current_extruder().e_relative;
 
-		if (utilities::greater_than(p_current_pos->e_relative, 0) && p_previous_pos->is_extruding && !p_previous_pos->is_extruding_start)
+		if (utilities::greater_than(p_current_pos->get_current_extruder().e_relative, 0) && p_previous_pos->get_current_extruder().is_extruding && !p_previous_pos->get_current_extruder().is_extruding_start)
 		{
 			// A little shortcut if we know we were extruding (not starting extruding) in the previous command
 			// This lets us skip a lot of the calculations for the extruder, including the state calculation
-			p_current_pos->extrusion_length = p_current_pos->e_relative;
+			p_current_pos->get_current_extruder().extrusion_length = p_current_pos->get_current_extruder().e_relative;
 		}
 		else
 		{
 
 			// Update retraction_length and extrusion_length
-			p_current_pos->retraction_length = p_current_pos->retraction_length - p_current_pos->e_relative;
-			if (utilities::less_than_or_equal(p_current_pos->retraction_length, 0))
+			p_current_pos->get_current_extruder().retraction_length = p_current_pos->get_current_extruder().retraction_length - p_current_pos->get_current_extruder().e_relative;
+			if (utilities::less_than_or_equal(p_current_pos->get_current_extruder().retraction_length, 0))
 			{
 				// we can use the negative retraction length to calculate our extrusion length!
-				p_current_pos->extrusion_length = -1.0 * p_current_pos->retraction_length;
+				p_current_pos->get_current_extruder().extrusion_length = -1.0 * p_current_pos->get_current_extruder().retraction_length;
 				// set the retraction length to 0 since we are extruding
-				p_current_pos->retraction_length = 0;
+				p_current_pos->get_current_extruder().retraction_length = 0;
 			}
 			else
-				p_current_pos->extrusion_length = 0;
+				p_current_pos->get_current_extruder().extrusion_length = 0;
 
 			// calculate deretraction length
-			if (utilities::greater_than(p_previous_pos->retraction_length, p_current_pos->retraction_length))
+			if (utilities::greater_than(p_previous_pos->get_current_extruder().retraction_length, p_current_pos->get_current_extruder().retraction_length))
 			{
-				p_current_pos->deretraction_length = p_previous_pos->retraction_length - p_current_pos->retraction_length;
+				p_current_pos->get_current_extruder().deretraction_length = p_previous_pos->get_current_extruder().retraction_length - p_current_pos->get_current_extruder().retraction_length;
 			}
 			else
-				p_current_pos->deretraction_length = 0;
+				p_current_pos->get_current_extruder().deretraction_length = 0;
 
 			// *************Calculate extruder state*************
 			// rounding should all be done by now
-			p_current_pos->is_extruding_start = utilities::greater_than(p_current_pos->extrusion_length, 0) && !p_previous_pos->is_extruding;
-			p_current_pos->is_extruding = utilities::greater_than(p_current_pos->extrusion_length, 0);
-			p_current_pos->is_primed = utilities::is_zero(p_current_pos->extrusion_length) && utilities::is_zero(p_current_pos->retraction_length);
-			p_current_pos->is_retracting_start = !p_previous_pos->is_retracting && utilities::greater_than(p_current_pos->retraction_length, 0);
-			p_current_pos->is_retracting = utilities::greater_than(p_current_pos->retraction_length, p_previous_pos->retraction_length);
-			p_current_pos->is_partially_retracted = utilities::greater_than(p_current_pos->retraction_length, 0) && utilities::less_than(p_current_pos->retraction_length, retraction_length_);
-			p_current_pos->is_retracted = utilities::greater_than_or_equal(p_current_pos->retraction_length, retraction_length_);
-			p_current_pos->is_deretracting_start = utilities::greater_than(p_current_pos->deretraction_length, 0) && !p_previous_pos->is_deretracting;
-			p_current_pos->is_deretracting = utilities::greater_than(p_current_pos->deretraction_length, p_previous_pos->deretraction_length);
-			p_current_pos->is_deretracted = utilities::greater_than(p_previous_pos->retraction_length, 0) && utilities::is_zero(p_current_pos->retraction_length);
+			p_current_pos->get_current_extruder().is_extruding_start = utilities::greater_than(p_current_pos->get_current_extruder().extrusion_length, 0) && !p_previous_pos->get_current_extruder().is_extruding;
+			p_current_pos->get_current_extruder().is_extruding = utilities::greater_than(p_current_pos->get_current_extruder().extrusion_length, 0);
+			p_current_pos->get_current_extruder().is_primed = utilities::is_zero(p_current_pos->get_current_extruder().extrusion_length) && utilities::is_zero(p_current_pos->get_current_extruder().retraction_length);
+			p_current_pos->get_current_extruder().is_retracting_start = !p_previous_pos->get_current_extruder().is_retracting && utilities::greater_than(p_current_pos->get_current_extruder().retraction_length, 0);
+			p_current_pos->get_current_extruder().is_retracting = utilities::greater_than(p_current_pos->get_current_extruder().retraction_length, p_previous_pos->get_current_extruder().retraction_length);
+			p_current_pos->get_current_extruder().is_partially_retracted = utilities::greater_than(p_current_pos->get_current_extruder().retraction_length, 0) && utilities::less_than(p_current_pos->get_current_extruder().retraction_length, retraction_lengths_[p_current_pos->current_tool]);
+			p_current_pos->get_current_extruder().is_retracted = utilities::greater_than_or_equal(p_current_pos->get_current_extruder().retraction_length, retraction_lengths_[p_current_pos->current_tool]);
+			p_current_pos->get_current_extruder().is_deretracting_start = utilities::greater_than(p_current_pos->get_current_extruder().deretraction_length, 0) && !p_previous_pos->get_current_extruder().is_deretracting;
+			p_current_pos->get_current_extruder().is_deretracting = utilities::greater_than(p_current_pos->get_current_extruder().deretraction_length, p_previous_pos->get_current_extruder().deretraction_length);
+			p_current_pos->get_current_extruder().is_deretracted = utilities::greater_than(p_previous_pos->get_current_extruder().retraction_length, 0) && utilities::is_zero(p_current_pos->get_current_extruder().retraction_length);
 			// *************End Calculate extruder state*************
 		}
 
@@ -314,7 +402,7 @@ void gcode_position::update(parsed_command& command, const int file_line_number,
 			{
 				// detect layer changes/ printer priming/last extrusion height and height 
 				// Normally we would only want to use is_extruding, but we can also use is_deretracted if the layer is greater than 0
-				if (p_current_pos->is_extruding || (p_current_pos->layer >0 && p_current_pos->is_deretracted))
+				if (p_current_pos->get_current_extruder().is_extruding || (p_current_pos->layer >0 && p_current_pos->get_current_extruder().is_deretracted))
 				{
 					// Is Primed
 					if (!p_current_pos->is_printer_primed)
@@ -348,10 +436,10 @@ void gcode_position::update(parsed_command& command, const int file_line_number,
 				}
 
 				// calculate is_zhop
-				if (p_current_pos->is_extruding || p_current_pos->z_null || p_current_pos->last_extrusion_height_null)
+				if (p_current_pos->get_current_extruder().is_extruding || p_current_pos->z_null || p_current_pos->last_extrusion_height_null)
 					p_current_pos->is_zhop = false;
 				else
-					p_current_pos->is_zhop = utilities::greater_than_or_equal(p_current_pos->z - p_current_pos->last_extrusion_height, z_lift_height_);
+					p_current_pos->is_zhop = utilities::greater_than_or_equal(p_current_pos->z - p_current_pos->last_extrusion_height, z_lift_heights_[p_current_pos->current_tool]);
 			}
 
 		}
@@ -386,6 +474,9 @@ std::map<std::string, gcode_position::pos_function_type> gcode_position::get_gco
 	newMap.insert(std::make_pair("M83", &gcode_position::process_m83));
 	newMap.insert(std::make_pair("M207", &gcode_position::process_m207));
 	newMap.insert(std::make_pair("M208", &gcode_position::process_m208));
+	newMap.insert(std::make_pair("M208", &gcode_position::process_m208));
+	newMap.insert(std::make_pair("M563", &gcode_position::process_m563));
+	newMap.insert(std::make_pair("T", &gcode_position::process_t));
 	return newMap;
 }
 
@@ -402,7 +493,7 @@ void gcode_position::update_position(
 	const double f, 
 	const bool update_f, 
 	const bool force, 
-	const bool is_g1_g0)
+	const bool is_g1_g0) const
 {
 	if (is_g1_g0)
 	{
@@ -444,7 +535,7 @@ void gcode_position::update_position(
 		}
 		// note that e cannot be null and starts at 0
 		if (update_e)
-			pos->e = e + pos->e_offset;
+			pos->get_current_extruder().e = e + pos->get_current_extruder().e_offset;
 		return;
 	}
 
@@ -510,11 +601,11 @@ void gcode_position::update_position(
 		{
 			if (pos->is_extruder_relative)
 			{
-				pos->e = e + pos->e;
+				pos->get_current_extruder().e = e + pos->get_current_extruder().e;
 			}
 			else
 			{
-				pos->e = e + pos->e_offset;
+				pos->get_current_extruder().e = e + pos->get_current_extruder().e_offset;
 			}
 		}
 		else
@@ -761,7 +852,7 @@ void gcode_position::process_g92(position* pos, parsed_command& cmd)
 		if (!pos->z_null)
 			pos->z_offset = pos->z;
 		// Todo:  Does this reset E too?  Figure that $#$$ out Formerlurker!
-		pos->e_offset = pos->e;
+		pos->get_current_extruder().e_offset = pos->get_current_extruder().e;
 	}
 	else
 	{
@@ -800,7 +891,7 @@ void gcode_position::process_g92(position* pos, parsed_command& cmd)
 		}
 		if (update_e)
 		{
-			pos->e_offset = pos->e - e;
+			pos->get_current_extruder().e_offset = pos->get_current_extruder().e - e;
 		}
 	}
 }
@@ -831,6 +922,37 @@ void gcode_position::process_m207(position* pos, parsed_command& cmd)
 void gcode_position::process_m208(position* pos, parsed_command& cmd)
 {
 	// Todo: implement firmware retract
+}
+
+void gcode_position::process_m563(position* pos, parsed_command& cmd)
+{
+	// Todo:  Work on this command, which defines tools and will affect which tool is selected.
+}
+
+void gcode_position::process_t(position* pos, parsed_command& cmd)
+{
+	for (unsigned int index = 0; index < cmd.parameters.size(); index++)
+	{
+		parsed_command_parameter p_cur_param = cmd.parameters[index];
+		if (p_cur_param.name == 'T' && p_cur_param.value_type == 'U')
+		{
+			current_extruder_ = p_cur_param.unsigned_long_value;
+			if (!zero_based_extruder_)
+			{
+				current_extruder_--;
+			}
+			if (current_extruder_ < 0)
+			{
+				current_extruder_ = 0;
+			}
+			else if (current_extruder_ > num_extruders_ - 1)
+			{
+				current_extruder_ = num_extruders_ - 1;
+			}
+
+			break;
+		}
+	}
 }
 
 gcode_comment_processor* gcode_position::get_gcode_comment_processor()

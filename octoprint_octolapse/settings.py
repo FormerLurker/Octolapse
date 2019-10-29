@@ -28,6 +28,7 @@ import os
 import uuid
 import tempfile
 import sys
+import re
 from distutils.version import LooseVersion
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.log as log
@@ -318,6 +319,10 @@ class PrinterProfile(AutomaticConfigurationProfile):
         self.default_firmware_retractions_zhop = False
         self.gocde_axis_compatibility_mode_enabled = True
         self.home_axis_gcode = "G90; Switch to Absolute XYZ\r\nG28 X Y; Home XY Axis"
+        self.num_extruders = 1
+        self.shared_extruder = False
+        self.zero_based_extruder = True
+        self.extruder_offsets = []
 
     @classmethod
     def update_from_server_profile(cls, current_profile, server_profile_dict):
@@ -555,7 +560,6 @@ class PrinterProfile(AutomaticConfigurationProfile):
     def get_current_state_detection_settings(self):
         if self.slicer_type == 'automatic':
             return None
-
         return self.get_current_slicer_settings().get_gcode_generation_settings(slicer_type=self.slicer_type)
 
     def get_gcode_settings_from_file(self, gcode_file_path):
@@ -635,16 +639,26 @@ class PrinterProfile(AutomaticConfigurationProfile):
         return super(PrinterProfile, cls).try_convert_value(destination, value, key)
 
     def get_position_args(self, overridable_profile_settings):
+
         # get the settings that cannot be overridden by Octoprint settings
+
+        # Get the number of extruders from the current gocode generation settings
+        gcode_generation_settings = self.get_current_state_detection_settings()
+        num_extruders = gcode_generation_settings.get_num_extruders()
+
         position_args = {
             "location_detection_commands": self.get_location_detection_command_list(),
             "xyz_axis_default_mode": self.xyz_axes_default_mode,
             "e_axis_default_mode": self.e_axis_default_mode,
             "units_default": self.units_default,
             "autodetect_position": self.auto_detect_position,
-            "slicer_settings": self.gcode_generation_settings.to_dict(),
+            "slicer_settings": gcode_generation_settings.to_dict(),
+            "zero_based_extruder": self.zero_based_extruder,
             "priming_height": self.priming_height,
             "minimum_layer_height": self.minimum_layer_height,
+            "num_extruders": num_extruders,
+            "shared_extruder": self.shared_extruder,
+            "extruder_offsets": self.extruder_offsets,
             "home_position": {
                 "home_x": None if self.home_x is None else float(self.home_x),
                 "home_y": None if self.home_y is None else float(self.home_y),
@@ -2202,19 +2216,45 @@ class OctolapseSettings(Settings):
         return new_object
 
 
-class OctolapseGcodeSettings(Settings):
+class OctolapseExtruderGcodeSettings(Settings):
     def __init__(self):
         self.retract_before_move = None
         self.retraction_length = None
         self.retraction_speed = None
         self.deretraction_speed = None
-        self.x_y_travel_speed = None
-        self.first_layer_travel_speed = None
         self.lift_when_retracted = None
         self.z_lift_height = None
+        self.x_y_travel_speed = None
+        self.first_layer_travel_speed = None
         self.z_lift_speed = None
+
+
+class OctolapseGcodeSettings(Settings):
+    def __init__(self):
+        # Per Extruder Settings
+        self.extruders = []
+        # Print Settings
         self.vase_mode = None
         self.layer_height = None
+        # Calculated Settings
+
+    def get_num_extruders(self):
+        return len(self.extruders)
+
+    def to_dict(self):
+        extruders_list = []
+        for extruder in self.extruders:
+            extruders_list.append(extruder.to_dict())
+        return {
+            "vase_mode": self.vase_mode,
+            "layer_height": self.layer_height,
+            "extruders": extruders_list,
+        }
+
+
+class SlicerExtruder(Settings):
+    def __init__(self):
+        pass
 
 
 class SlicerSettings(Settings):
@@ -2226,6 +2266,7 @@ class SlicerSettings(Settings):
     def __init__(self, slicer_type, version):
         self.slicer_type = slicer_type
         self.version = version
+        self.extruders = []
 
     def get_speed_tolerance(self):
         raise NotImplementedError("You must implement get_speed_tolerance")
@@ -2238,22 +2279,36 @@ class SlicerSettings(Settings):
         settings = self.get_gcode_generation_settings(slicer_type=slicer_type)
         assert(isinstance(settings, OctolapseGcodeSettings))
         issue_list = []
-        if settings.retraction_length is None:
-            issue_list.append("Retraction Length")
-        if settings.retraction_speed is None:
-            issue_list.append("Retraction Speed")
-        if settings.deretraction_speed is None:
-            issue_list.append("Deretraction Speed")
-        if settings.x_y_travel_speed is None:
-            issue_list.append("X/Y Travel Speed")
-        if settings.z_lift_height is None:
-            issue_list.append("Z Lift Height")
-        if settings.z_lift_speed is None:
-            issue_list.append("Z Travel Speed")
-        if settings.retract_before_move is None:
-            issue_list.append("Retract Before Move")
-        if settings.lift_when_retracted is None:
-            issue_list.append("Lift When Retracted")
+        extruder_number = 1
+        for extruder in settings.extruders:
+            if len(settings.extruders) == 1:
+                extruder_label = ""
+            else:
+                extruder_label = "Extruder {0} - ".format(extruder_number)
+                # Per Extruder Settings
+            if extruder.retract_before_move is None:
+                issue_list.append("{}Retract Before Move".format(extruder_label))
+            if extruder.retraction_length is None:
+                issue_list.append("{}Retraction Length".format(extruder_label))
+            if extruder.retraction_speed is None:
+                issue_list.append("{}Retraction Speed".format(extruder_label))
+            if extruder.deretraction_speed is None:
+                issue_list.append("{}Deretraction Speed".format(extruder_label))
+            if extruder.lift_when_retracted is None:
+                issue_list.append("{}Lift When Retracted".format(extruder_label))
+            if extruder.z_lift_height is None:
+                issue_list.append("{}Z Lift Height".format(extruder_label))
+            if extruder.x_y_travel_speed is None:
+                issue_list.append("{}X/Y Travel Speed".format(extruder_label))
+            if extruder.z_lift_speed is None:
+                issue_list.append("{}Z Travel Speed".format(extruder_label))
+            extruder_number += 1
+
+        # Print Settings
+        if settings.vase_mode is None:
+            issue_list.append("Is Vase Mode")
+        if settings.layer_height is None:
+            issue_list.append("Layer Height")
         return issue_list
 
     def get_speed_mm_min(self, speed, multiplier=None, speed_name=None):
@@ -2264,47 +2319,48 @@ class SlicerSettings(Settings):
         raise NotImplementedError("You must implement update_settings_from_gcode")
 
 
-class CuraSettings(SlicerSettings):
-    def __init__(self, version="unknown"):
-        super(CuraSettings, self).__init__(SlicerSettings.SlicerTypeCura, version)
+class CuraExtruder(SlicerExtruder):
+    def __init__(self):
+        super(CuraExtruder, self).__init__()
+        self.version = None
+        self.speed_z_hop = None
+        self.max_feedrate_z_override = None
         self.retraction_amount = None
+        self.retraction_hop = None
+        self.retraction_hop_enabled = None
+        self.retraction_enable = None
         self.retraction_speed = None
         self.retraction_retract_speed = None
         self.retraction_prime_speed = None
-        self.retraction_hop_enabled = None  # new setting
-        self.retraction_enable = None  # new setting
         self.speed_travel = None
-        self.max_feedrate_z_override = None
-        self.speed_z_hop = None
-        self.retraction_hop = None
-        self.axis_speed_display_settings = 'mm-sec'
-        self.layer_height = None
-        self.smooth_spiralized_contours = None
-        self.magic_mesh_surface_mode = None
 
-    def get_speed_tolerance(self):
-        return 0.1 / 60.0 / 2.0
+    def get_extruder(self, slicer_settings):
+        extruder = OctolapseExtruderGcodeSettings()
+        extruder.retract_before_move = self.get_retract_before_move()
+        extruder.retraction_length = self.get_retraction_amount()
+        extruder.retraction_speed = self.get_retraction_retract_speed()
+        extruder.deretraction_speed = self.get_retraction_prime_speed()
+        extruder.lift_when_retracted = self.get_lift_when_retracted()
+        extruder.z_lift_height = self.get_retraction_hop()
+        extruder.x_y_travel_speed = self.get_speed_travel()
+        extruder.first_layer_travel_speed = self.get_speed_travel()
+        extruder.z_lift_speed = self.get_speed_travel_z()
+        return extruder
 
-    def get_gcode_generation_settings(self, slicer_type="cura"):
-        settings = OctolapseGcodeSettings()
-        settings.retraction_length = self.get_retraction_amount()
-        settings.retraction_speed = self.get_retraction_retract_speed()
-        settings.deretraction_speed = self.get_retraction_prime_speed()
-        settings.x_y_travel_speed = self.get_speed_travel()
-        settings.z_lift_height = self.get_retraction_hop()
-        settings.z_lift_speed = self.get_speed_travel_z(slicer_type=slicer_type)
-        settings.retract_before_move = (
-            self.retraction_enable and settings.retraction_length is not None and settings.retraction_length > 0
+    def get_retract_before_move(self):
+        retraction_amount = self.get_retraction_amount()
+        return (
+            self.retraction_enable and retraction_amount is not None and retraction_amount > 0
         )
-        settings.lift_when_retracted = (
-            settings.retract_before_move and
+
+    def get_lift_when_retracted(self):
+        retraction_hop = self.get_retraction_hop()
+        return (
+            self.get_retract_before_move() and
             self.retraction_hop_enabled and
-            settings.retraction_length is not None
-            and settings.retraction_length > 0
+            retraction_hop is not None and
+            retraction_hop > 0
         )
-        settings.layer_height = self.layer_height
-        settings.vase_mode = self.smooth_spiralized_contours and self.magic_mesh_surface_mode == "surface"
-        return settings
 
     def get_retraction_amount(self):
         if self.retraction_amount is None or len("{}".format(self.retraction_amount).strip()) == 0:
@@ -2318,16 +2374,16 @@ class CuraSettings(SlicerSettings):
 
     def get_retraction_retract_speed(self):
         if self.retraction_retract_speed:
-            return self.get_speed_mm_min(self.retraction_retract_speed)
-        return self.get_speed_mm_min(self.retraction_speed)
+            return CuraSettings.get_speed_mm_min(self.retraction_retract_speed)
+        return CuraSettings.get_speed_mm_min(self.retraction_speed)
 
     def get_retraction_prime_speed(self):
         if self.retraction_prime_speed:
-            return self.get_speed_mm_min(self.retraction_prime_speed)
-        return self.get_speed_mm_min(self.retraction_speed)
+            return CuraSettings.get_speed_mm_min(self.retraction_prime_speed)
+        return CuraSettings.get_speed_mm_min(self.retraction_speed)
 
     def get_speed_travel(self):
-        return self.get_speed_mm_min(self.speed_travel)
+        return CuraSettings.get_speed_mm_min(self.speed_travel)
 
     def get_speed_travel_z(self, slicer_type=None):
         if slicer_type == "cura_4_2" or (
@@ -2335,48 +2391,237 @@ class CuraSettings(SlicerSettings):
             self.version != 'unknown' and
             LooseVersion(self.version) >= LooseVersion("4.2.0")
         ):
-            return self.get_speed_mm_min(self.speed_z_hop)
+            return CuraSettings.get_speed_mm_min(self.speed_z_hop)
 
         z_max_feedrate = 0
         if self.max_feedrate_z_override:
-            z_max_feedrate = self.get_speed_mm_min(self.max_feedrate_z_override)
-        travel_feedrate = self.get_speed_mm_min(self.speed_travel)
+            z_max_feedrate = CuraSettings.get_speed_mm_min(self.max_feedrate_z_override)
+        travel_feedrate = CuraSettings.get_speed_mm_min(self.speed_travel)
         if z_max_feedrate == 0:
             return travel_feedrate
         return min(z_max_feedrate, travel_feedrate)
 
-    def get_speed_mm_min(self, speed, multiplier=None, speed_name=None):
+    def update(self, iterable, **kwargs):
+            item_to_iterate = iterable
+            if not isinstance(iterable, collections.Iterable):
+                item_to_iterate = iterable.__dict__
+            for key, value in item_to_iterate.items():
+                class_item = getattr(self, key, '{octolapse_no_property_found}')
+                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                    try:
+                        if key in ['retraction_enable', 'retraction_hop_enabled']:
+                            self.__dict__[key] = None if value is None else bool(value)
+                        elif key == "version":
+                            self.__dict__[key] = None if value is None else str(value)
+                        else:
+                            self.__dict__[key] = None if value is None else float(value)
+                    except ValueError as e:
+                        logger.exception(
+                            "Unable to update the current Cura extruder profile.  Key:{}, Value:{}".format(key, value))
+                        continue
+
+
+class CuraSettings(SlicerSettings):
+    ExtruderNumberSearchRegex = "([\w\W]*)_(\d+)$"
+
+    def __init__(self, version="unknown"):
+        super(CuraSettings, self).__init__(SlicerSettings.SlicerTypeCura, version)
+        self.axis_speed_display_settings = 'mm-sec'
+        self.layer_height = None
+        self.smooth_spiralized_contours = None
+        self.magic_mesh_surface_mode = None
+        self.machine_extruder_count = 1
+
+    def get_extruders(self):
+        extruders = []
+        for extruder in self.extruders:
+            extruders.append(extruder.get_extruder(self))
+        return extruders
+
+    def get_speed_tolerance(self):
+        return 0.1 / 60.0 / 2.0
+
+    def get_gcode_generation_settings(self, slicer_type="cura"):
+        settings = OctolapseGcodeSettings()
+        settings.layer_height = self.layer_height
+        settings.vase_mode = self.smooth_spiralized_contours and self.magic_mesh_surface_mode == "surface"
+        # Get All Extruder Settings
+        settings.extruders = self.get_extruders()
+        return settings
+
+    @staticmethod
+    def get_speed_mm_min(speed, multiplier=None, speed_name=None):
         if speed is None or len("{}".format(speed).strip()) == 0:
             return None
-
         # Convert speed to mm/min
         speed = float(speed) * 60.0
         # round to .1
         return utility.round_to(speed, 0.1)
 
     def update_settings_from_gcode(self, settings_dict):
-        # for cura we can just call the regular update function for most things
-        self.update(settings_dict)
 
-        # if this is version 4.2.0 or greater, blank out max_feedrate_z_override
-        if self.version and LooseVersion(self.version) >= LooseVersion("4.2.0"):
-            self.max_feedrate_z_override = None
+        # get the version if it's in the settings dict
+        version = "unknown"
+        if 'version' in settings_dict:
+            version = settings_dict["version"]
+
+        # clear out the extruders
+        self.extruders = []
+        # extract the extruder count if it can be found
+        num_extruders = 1
+        if 'machine_extruder_count' in settings_dict:
+            num_extruders = int(settings_dict["machine_extruder_count"])
+
+        if num_extruders > 8:
+            num_extruders = 8
+
+        # add the appropriate number of extruders according to the settings
+        for i in range(0, num_extruders):
+            new_extruder = CuraExtruder()
+            new_extruder.version = version
+            self.extruders.append(new_extruder)
+
+        for key, value in settings_dict.items():
+            try:
+                # first see if this is an extruder setting.  To do that let's look for an underscore then a number
+                # at the end of the setting value, remove it
+                matches = re.search(CuraSettings.ExtruderNumberSearchRegex, key)
+                if matches and len(matches.groups()) == 2:
+                    extruder_setting_name = matches.groups()[0]
+                    extruder_index = int(matches.groups()[1])
+                    if -1 < extruder_index < 8 and extruder_index < num_extruders and extruder_setting_name in [
+                        "speed_z_hop",
+                        "retraction_amount",
+                        "retraction_hop",
+                        "retraction_hop_enabled",
+                        "retraction_enable",
+                        "retraction_speed",
+                        "retraction_retract_speed",
+                        "retraction_prime_speed",
+                        "speed_travel",
+                        "max_feedrate_z_override"
+                    ]:
+                        # convert the type as needed
+                        if extruder_setting_name in ['retraction_hop_enabled','retraction_enable']:
+                            value = None if value is None else bool(value)
+                        else:
+                            value = None if value is None else float(value)
+                        # get the current extruder
+                        extruder = self.extruders[extruder_index]
+                        # for fun, make sure the setting exists in the extruder class
+                        class_item = getattr(extruder, extruder_setting_name, '{octolapse_no_property_found}')
+                        if not (
+                            isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'
+                        ):
+                            extruder.__dict__[extruder_setting_name] = value
+                        continue
+                class_item = getattr(self, key, '{octolapse_no_property_found}')
+                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                    if key == 'version':
+                        self.version = value
+                    elif isinstance(class_item, Settings):
+                        class_item.update(value)
+                    else:
+                        self.__dict__[key] = self.try_convert_value(class_item, value, key)
+            except ValueError:
+                logger.exception("An error occurred while updating cura settings from the extracted gcode settings")
+                continue
+
+    def update(self, iterable, **kwargs):
+        try:
+            item_to_iterate = iterable
+            if not isinstance(iterable, collections.Iterable):
+                item_to_iterate = iterable.__dict__
+            for key, value in item_to_iterate.items():
+                class_item = getattr(self, key, '{octolapse_no_property_found}')
+                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                    if key == "extruders":
+                        self.extruders = []
+                        for extruder in value:
+                            new_extruder = CuraExtruder()
+                            new_extruder.update(extruder)
+                            self.extruders.append(new_extruder)
+                    elif isinstance(class_item, Settings):
+                        class_item.update(value)
+                    elif isinstance(class_item, StaticSettings):
+                        # don't update any static settings, those come from the class itself!
+                        continue
+                    else:
+                        self.__dict__[key] = self.try_convert_value(class_item, value, key)
+        except Exception as e:
+            raise e
+
+
+class Simplify3DExtruder(SlicerExtruder):
+    def __init__(self):
+        super(Simplify3DExtruder, self).__init__()
+        self.retraction_distance = None
+        self.retraction_vertical_lift = None
+        self.retraction_speed = None
+        self.extruder_use_retract = None
+
+    def get_extruder(self, slicer_settings):
+        extruder = OctolapseExtruderGcodeSettings()
+        extruder.retraction_length = self.get_retraction_distance()
+        extruder.retraction_speed = self.get_retract_speed(slicer_settings)
+        extruder.deretraction_speed = self.get_deretract_speed(slicer_settings)
+        extruder.x_y_travel_speed = slicer_settings.get_x_y_axis_movement_speed()
+        extruder.z_lift_height = self.get_retraction_vertical_lift()
+        extruder.z_lift_speed = slicer_settings.get_z_axis_movement_speed()
+        extruder.retract_before_move = (
+            self.extruder_use_retract and extruder.retraction_length is not None and extruder.retraction_length > 0
+        )
+        extruder.lift_when_retracted = (
+            extruder.retract_before_move and extruder.z_lift_height is not None and extruder.z_lift_height > 0
+        )
+        return extruder
+
+    def get_retraction_distance(self):
+        return None if self.retraction_distance is None else float(self.retraction_distance)
+
+    def get_retraction_vertical_lift(self):
+        return None if self.retraction_vertical_lift is None else float(self.retraction_vertical_lift)
+
+    def get_retract_speed(self, slicer_settings):
+        return slicer_settings.get_speed_mm_min(self.retraction_speed)
+
+    def get_deretract_speed(self, slicer_settings):
+        return self.get_retract_speed(slicer_settings)
+
+    def update(self, iterable, **kwargs):
+        item_to_iterate = iterable
+        if not isinstance(iterable, collections.Iterable):
+            item_to_iterate = iterable.__dict__
+        for key, value in item_to_iterate.items():
+            class_item = getattr(self, key, '{octolapse_no_property_found}')
+            if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                try:
+                    if key in ['extruder_use_retract']:
+                        self.__dict__[key] = None if value is None else bool(value)
+                    else:
+                        self.__dict__[key] = None if value is None else float(value)
+                except ValueError as e:
+                    logger.exception(
+                        "Unable to update the current Cura extruder profile.  Key:{}, Value:{}".format(key, value))
+                    continue
 
 
 class Simplify3dSettings(SlicerSettings):
 
     def __init__(self, version="unknown"):
         super(Simplify3dSettings, self).__init__(SlicerSettings.SlicerTypeSimplify3D, version)
-        self.retraction_distance = None
-        self.retraction_vertical_lift = None
-        self.retraction_speed = None
         self.x_y_axis_movement_speed = None
         self.z_axis_movement_speed = None
-        self.extruder_use_retract = None
         self.spiral_vase_mode = None
         self.layer_height = None
         # simplify has a fixed speed tolerance
         self.axis_speed_display_settings = 'mm-min'
+
+    def get_extruders(self):
+        extruders = []
+        for extruder in self.extruders:
+            extruders.append(extruder.get_extruder(self))
+        return extruders
 
     def get_speed_tolerance(self):
         return 1
@@ -2384,20 +2629,9 @@ class Simplify3dSettings(SlicerSettings):
     def get_gcode_generation_settings(self, slicer_type=None):
         """Returns OctolapseSlicerSettings"""
         settings = OctolapseGcodeSettings()
-        settings.retraction_length = self.get_retraction_distance()
-        settings.retraction_speed = self.get_retract_speed()
-        settings.deretraction_speed = self.get_deretract_speed()
-        settings.x_y_travel_speed = self.get_x_y_axis_movement_speed()
-        settings.z_lift_height = self.get_retraction_vertical_lift()
-        settings.z_lift_speed = self.get_z_axis_movement_speed()
-        settings.retract_before_move = (
-            self.extruder_use_retract and settings.retraction_length is not None and settings.retraction_length > 0
-        )
-        settings.lift_when_retracted = (
-            settings.retract_before_move and settings.z_lift_height is not None and settings.z_lift_height > 0
-        )
         settings.vase_mode = self.spiral_vase_mode
         settings.layer_height = self.layer_height
+        settings.extruders = self.get_extruders()
         return settings
 
     def get_speed_mm_min(self, speed, multiplier=None, speed_name=None, is_half_speed_multiplier=False):
@@ -2412,18 +2646,6 @@ class Simplify3dSettings(SlicerSettings):
 
         return utility.round_to(speed, 0.1)
 
-    def get_retraction_distance(self):
-        return float(self.retraction_distance)
-
-    def get_retraction_vertical_lift(self):
-        return float(self.retraction_vertical_lift)
-
-    def get_retract_speed(self):
-        return self.get_speed_mm_min(self.retraction_speed)
-
-    def get_deretract_speed(self):
-        return self.get_retract_speed()
-
     def get_x_y_axis_movement_speed(self):
         return self.get_speed_mm_min(self.x_y_axis_movement_speed)
 
@@ -2431,49 +2653,211 @@ class Simplify3dSettings(SlicerSettings):
         return self.get_speed_mm_min(self.z_axis_movement_speed)
 
     def update_settings_from_gcode(self, settings_dict):
-
-        def _primary_extruder():
-            return settings_dict["primary_extruder"]
-
-        def _retraction_distance():
-            return settings_dict["extruder_retraction_distance"][_primary_extruder()]
-
-        def _retraction_vertical_lift():
-            return settings_dict["extruder_retraction_z_lift"][_primary_extruder()]
-
-        def _retraction_speed():
-            return settings_dict["extruder_retraction_speed"][_primary_extruder()]
-
+        # per print settings extraction functions
         def _x_y_axis_movement_speed():
             return settings_dict["rapid_xy_speed"]
 
         def _z_axis_movement_speed():
             return settings_dict["rapid_z_speed"]
 
-        def _extruder_use_retract():
-            return settings_dict["extruder_use_retract"][_primary_extruder()]
-
-        # for simplify we need to manually update the settings :(
-        self.retraction_distance = _retraction_distance()
-        self.retraction_vertical_lift = _retraction_vertical_lift()
-        self.retraction_speed = _retraction_speed()
+        # update non-extruder settings
         self.x_y_axis_movement_speed = _x_y_axis_movement_speed()
         self.z_axis_movement_speed = _z_axis_movement_speed()
-        self.extruder_use_retract = _extruder_use_retract()
+        self.spiral_vase_mode = settings_dict['spiral_vase_mode']
+        self.layer_height = settings_dict['layer_height']
+        # clear existing extruders
+        self.extruders = []
+        # get the toolhead numbers, which is a list of ints that determine the T gcode number for each extruder
+        toolhead_numbers = settings_dict["extruder_tool_number"]
+        # Simplify 3D has a very odd method of defining extruders.  You can define any number of
+        # extruders and assign them to a tool number (0 based).  Multiple extruders can use the same tool number.
+        # Due to this there are some limitations to how Octolaspe can implement multi-extruder setups in
+        # simplify.
+        #
+        # First, we need to check for duplicate indexes.  If we find any, throw an error
+        duplicate_extruder_toolhead_numbers = set([x for x in toolhead_numbers if toolhead_numbers.count(x) > 1])
+        if len(duplicate_extruder_toolhead_numbers) > 0:
+            raise Exception(
+                "Multiple extruders are defined with the same toolhead number in simplify, which is not "
+                "supported by Octolapse.  Duplicated toolhead numbers: {0}".format(
+                    ','.join([str(x) for x in duplicate_extruder_toolhead_numbers])
+                )
+            )
+        #
+        # To get the number of extruders use extruder_tool_number (extruderToolheadNumber in the file),
+        # and select the max int in the list.
+
+        num_extruders = max(toolhead_numbers)
+        if num_extruders > 8:
+            num_extruders = 8
+        # create num_extruders extruders for this profile
+        for i in range(0, num_extruders):
+            extruder = Simplify3DExtruder()
+            self.extruders.append(extruder)
+        # create a lookup of the index in extruder_toolhead_number for each toolhead by looking at the first index
+        # of each unique toolhead number.
+        # the lookup will be dictionary that takes the toolhead number (T0-T5) and returns the index of the tool
+        # in a given setting.  Null is returned if there is no index for a toolhead number
+        toolhead_index_lookup = dict()
+        for toolhead_number in range(0, num_extruders):
+            try:
+                toolhead_index = toolhead_numbers.index(toolhead_number)
+                toolhead_index_lookup[toolhead_number] = toolhead_index
+            except ValueError:
+                toolhead_index_lookup[toolhead_number] = None
+
+        # extract all per-extruder settings for each toolhead
+        for toolhead_number in range(0, num_extruders):
+            toolhead_index = toolhead_index_lookup[toolhead_number]
+            if toolhead_index is None:
+                continue
+            # get the extruder for the toolhead
+            extruder = self.extruders[toolhead_number]
+            # per defined extruder settings extraction functions
+
+            def _retraction_distance(index):
+                return settings_dict["extruder_retraction_distance"][index]
+
+            def _retraction_vertical_lift(index):
+                return settings_dict["extruder_retraction_z_lift"][index]
+
+            def _retraction_speed(index):
+                return settings_dict["extruder_retraction_speed"][index]
+
+            def _extruder_use_retract(index):
+                return settings_dict["extruder_use_retract"][index]
+
+            # set all extruder based settings
+            extruder.retraction_distance = _retraction_distance(toolhead_index)
+            extruder.retraction_vertical_lift = _retraction_vertical_lift(toolhead_index)
+            extruder.retraction_speed = _retraction_speed(toolhead_index)
+            extruder.extruder_use_retract = _extruder_use_retract(toolhead_index)
+
+    def update(self, iterable, **kwargs):
+        try:
+            item_to_iterate = iterable
+            if not isinstance(iterable, collections.Iterable):
+                item_to_iterate = iterable.__dict__
+            for key, value in item_to_iterate.items():
+                class_item = getattr(self, key, '{octolapse_no_property_found}')
+                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                    if key == "extruders":
+                        self.extruders = []
+                        for extruder in value:
+                            new_extruder = Simplify3DExtruder()
+                            new_extruder.update(extruder)
+                            self.extruders.append(new_extruder)
+                    elif isinstance(class_item, Settings):
+                        class_item.update(value)
+                    elif isinstance(class_item, StaticSettings):
+                        # don't update any static settings, those come from the class itself!
+                        continue
+                    else:
+                        self.__dict__[key] = self.try_convert_value(class_item, value, key)
+        except Exception as e:
+            raise e
+
+
+class Slic3rPeExtruder(SlicerExtruder):
+    def __init__(self):
+        super(Slic3rPeExtruder, self).__init__()
+        self.retract_length = None
+        self.retract_lift = None
+        self.retract_speed = None
+        self.deretract_speed = None
+
+    def get_retract_length(self):
+        if self.retract_length is None:
+            return None
+        else:
+            return utility.round_to(float(self.retract_length), 0.00001)
+
+    def get_retract_before_move(self):
+        retract_length = self.get_retract_length()
+        if (
+            retract_length is not None and
+            retract_length > 0
+        ):
+            return True
+        else:
+            return False
+
+    def get_retract_lift_height(self):
+        if self.retract_lift is None:
+            return None
+        return utility.round_to(float(self.retract_lift), 0.001)
+
+    def get_lift_when_retracted(self):
+        get_retract_before_move = self.get_retract_before_move()
+        retract_lift_height = self.get_retract_lift_height()
+        if (
+            get_retract_before_move
+            and retract_lift_height is not None
+            and retract_lift_height > 0
+        ):
+            return True
+        return False
+
+    def get_retract_speed(self):
+
+        if self.retract_speed is None or len("{}".format(self.retract_speed).strip()) == 0:
+            return None
+        else:
+            return Slic3rPeSettings.get_speed_from_setting(self.retract_speed, round_to=1)
+
+    def get_deretract_speed(self):
+        retract_speed = self.get_retract_speed()
+        deretract_speed = self.deretract_speed
+        if deretract_speed is None or len("{}".format(deretract_speed).strip()) == 0:
+            return None
+        deretract_speed = float(deretract_speed)
+        if deretract_speed == 0:
+            return retract_speed
+        else:
+            return Slic3rPeSettings.get_speed_from_setting(deretract_speed, round_to=1)
+
+    def get_extruder(self, slicer_settings):
+        extruder = OctolapseExtruderGcodeSettings()
+        extruder.retract_before_move = self.get_retract_before_move()
+        extruder.retraction_length = self.get_retract_length()
+        extruder.retraction_speed = self.get_retract_speed()
+        extruder.deretraction_speed = self.get_deretract_speed()
+        extruder.lift_when_retracted = self.get_lift_when_retracted()
+        extruder.z_lift_height = self.get_retract_lift_height()
+        extruder.x_y_travel_speed = slicer_settings.get_travel_speed()
+        extruder.first_layer_travel_speed = slicer_settings.get_travel_speed()
+        extruder.z_lift_speed = slicer_settings.get_travel_speed()
+        return extruder
+
+    def update(self, iterable, **kwargs):
+            item_to_iterate = iterable
+            if not isinstance(iterable, collections.Iterable):
+                item_to_iterate = iterable.__dict__
+            for key, value in item_to_iterate.items():
+                class_item = getattr(self, key, '{octolapse_no_property_found}')
+                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                    try:
+                        self.__dict__[key] = None if value is None else float(value)
+                    except ValueError as e:
+                        logger.exception(
+                            "Unable to update the current Slic3r extruder profile.  Key:{}, Value:{}".format(key, value))
+                        continue
 
 
 class Slic3rPeSettings(SlicerSettings):
     def __init__(self, version="unknown"):
         super(Slic3rPeSettings, self).__init__(SlicerSettings.SlicerTypeSlic3rPe, version)
-        self.retract_before_travel = None
-        self.retract_length = None
-        self.retract_lift = None
-        self.deretract_speed = None
-        self.retract_speed = None
         self.axis_speed_display_units = 'mm-sec'
         self.layer_height = None
         self.spiral_vase = None
         self.travel_speed = None
+        self.single_extruder_multi_material = False
+
+    def get_extruders(self):
+        extruders = []
+        for extruder in self.extruders:
+            extruders.append(extruder.get_extruder(self))
+        return extruders
 
     def get_speed_mm_min(self, speed, multiplier=None, setting_name=None):
         if speed is None:
@@ -2485,55 +2869,15 @@ class Slic3rPeSettings(SlicerSettings):
 
     def get_gcode_generation_settings(self, slicer_type=None):
         settings = OctolapseGcodeSettings()
-        settings.retraction_length = self.get_retract_length()
-        settings.retraction_speed = self.get_retract_speed()
-        settings.deretraction_speed = self.get_deretract_speed()
-        settings.x_y_travel_speed = self.get_travel_speed()
-        settings.first_layer_travel_speed = self.get_travel_speed()
-        settings.z_lift_height = self.get_retract_lift()
-        settings.z_lift_speed = self.get_z_travel_speed()
-        # calculate retract before travel and lift when retracted
-        settings.retract_before_move = self.get_retract_before_travel()
-        settings.lift_when_retracted = self.get_lift_when_retracted()
+        # get print settings
         settings.layer_height = self.layer_height
-        settings.vase_mode = self.spiral_vase
+        settings.vase_mode = self.spiral_vase if self.spiral_vase is not None else False
+        # Get All Extruder Settings
+        settings.extruders = self.get_extruders()
         return settings
-
-    def get_retract_before_travel(self):
-        retract_length = self.get_retract_length()
-        if (
-            self.retract_before_travel is not None and
-            float(self.retract_before_travel) > 0 and
-            retract_length is not None and
-            retract_length > 0
-        ):
-            return True
-        return False
-
-    def get_lift_when_retracted(self):
-        retract_lift = self.get_retract_lift()
-        if (
-            self.get_retract_before_travel()
-            and retract_lift is not None
-            and retract_lift > 0
-        ):
-            return True
-        return False
 
     def get_z_travel_speed(self):
         return self.get_travel_speed()
-
-    def get_retract_length(self):
-        if self.retract_length is None:
-            return None
-
-        return utility.round_to(float(self.retract_length), 0.00001)
-
-    def get_retract_lift(self):
-        if self.retract_lift is None:
-            return None
-
-        return utility.round_to(float(self.retract_lift), 0.001)
 
     @staticmethod
     def parse_percent(parse_string):
@@ -2553,8 +2897,9 @@ class Slic3rPeSettings(SlicerSettings):
         except Exception as e:
             raise e
 
+    @staticmethod
     def get_speed_from_setting(
-        self, speed_setting, round_to=0.01
+        speed_setting, round_to=0.01
     ):
         if speed_setting is None or len("{}".format(speed_setting).strip()) == 0:
             return None
@@ -2566,30 +2911,32 @@ class Slic3rPeSettings(SlicerSettings):
             self.travel_speed
         )
 
-    def get_retract_speed(self):
-        return self.get_speed_from_setting(
-            self.retract_speed,
-            round_to=1
-        )
-
-    def get_deretract_speed(self):
-        if self.deretract_speed is None or len("{}".format(self.deretract_speed).strip()) == 0:
-            return None
-        deretract_speed = self.deretract_speed
-
-        if float(self.deretract_speed) == 0:
-            if self.retract_speed is None or len("{}".format(self.retract_speed).strip()) == 0:
-                return None
-            deretract_speed = self.retract_speed
-
-        return self.get_speed_from_setting(
-            deretract_speed,
-            round_to=1
-        )
-
     def update_settings_from_gcode(self, settings_dict):
         try:
+            # clear out the extruders
+            self.extruders = []
             for key, value in settings_dict.items():
+                # first see if this is an extruder setting
+                if isinstance(value, list) and key in [
+                    "retract_length",
+                    "retract_lift",
+                    "retract_speed",
+                    "deretract_speed"
+                ]:
+                    # expand the extruders list if necessary
+                    while len(value) > len(self.extruders):
+                        self.extruders.append(Slic3rPeExtruder())
+                    extruder_index = 0
+                    for extruder_value in value:
+                        extruder = self.extruders[extruder_index]
+                        class_item = getattr(extruder, key, '{octolapse_no_property_found}')
+                        if not (
+                            isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'
+                        ):
+                            # All of the extruder values are floats
+                            extruder.__dict__[key] = float(extruder_value)
+                        extruder_index += 1
+                    continue
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
                 if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                     if key == 'version':
@@ -2605,21 +2952,92 @@ class Slic3rPeSettings(SlicerSettings):
     def try_convert_value(cls, destination, value, key):
         if value is None or (isinstance(value, six.string_types) and value == 'None'):
             return None
+
         return super(Slic3rPeSettings, cls).try_convert_value(destination, value, key)
+
+    def update(self, iterable, **kwargs):
+        try:
+            item_to_iterate = iterable
+            if not isinstance(iterable, collections.Iterable):
+                item_to_iterate = iterable.__dict__
+            for key, value in item_to_iterate.items():
+                class_item = getattr(self, key, '{octolapse_no_property_found}')
+                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                    if key == "extruders":
+                        self.extruders = []
+                        for extruder in value:
+                            new_extruder = Slic3rPeExtruder()
+                            new_extruder.update(extruder)
+                            self.extruders.append(new_extruder)
+                    elif isinstance(class_item, Settings):
+                        class_item.update(value)
+                    elif isinstance(class_item, StaticSettings):
+                        # don't update any static settings, those come from the class itself!
+                        continue
+                    else:
+                        self.__dict__[key] = self.try_convert_value(class_item, value, key)
+        except Exception as e:
+            raise e
+
+
+class OtherSlicerExtruder(SlicerExtruder):
+    def __init__(self):
+        super(OtherSlicerExtruder, self).__init__()
+        self.retract_length = None
+        self.z_hop = None
+        self.retract_speed = None
+        self.deretract_speed = None
+        self.lift_when_retracted = None
+        self.retract_before_move = None
+        self.travel_speed = None
+        self.z_travel_speed = None
+
+    def get_travel_speed(self, slicer_settings):
+        return slicer_settings.get_speed_mm_min(self.travel_speed)
+
+    def get_z_travel_speed(self, slicer_settings):
+        return slicer_settings.get_speed_mm_min(self.z_travel_speed)
+
+    def get_retract_speed(self, slicer_settings):
+        return slicer_settings.get_speed_mm_min(self.retract_speed)
+
+    def get_deretract_speed(self, slicer_settings):
+        return slicer_settings.get_speed_mm_min(self.deretract_speed)
+
+    def get_extruder(self, slicer_settings):
+        extruder = OctolapseExtruderGcodeSettings()
+        extruder.retract_before_move = self.retract_before_move
+        extruder.retraction_length = self.retract_length
+        extruder.retraction_speed = self.get_retract_speed(slicer_settings)
+        extruder.deretraction_speed = self.get_deretract_speed(slicer_settings)
+        extruder.lift_when_retracted = self.lift_when_retracted
+        extruder.z_lift_height = self.z_hop
+        extruder.x_y_travel_speed = self.get_travel_speed(slicer_settings)
+        extruder.first_layer_travel_speed = self.get_travel_speed(slicer_settings)
+        extruder.z_lift_speed = self.get_z_travel_speed(slicer_settings)
+        return extruder
+
+    def update(self, iterable, **kwargs):
+            item_to_iterate = iterable
+            if not isinstance(iterable, collections.Iterable):
+                item_to_iterate = iterable.__dict__
+            for key, value in item_to_iterate.items():
+                class_item = getattr(self, key, '{octolapse_no_property_found}')
+                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                    try:
+                        if key in ['retract_before_move','lift_when_retracted']:
+                            self.__dict__[key] = None if value is None else bool(value)
+                        else:
+                            self.__dict__[key] = None if value is None else float(value)
+                    except ValueError as e:
+                        logger.exception(
+                            "Unable to update the current Slic3r extruder profile.  Key:{}, Value:{}".format(key, value))
+                        continue
 
 
 class OtherSlicerSettings(SlicerSettings):
     def __init__(self, version="unknown"):
         super(OtherSlicerSettings, self).__init__(SlicerSettings.SlicerTypeOther, version)
-        self.retract_length = None
-        self.z_hop = None
-        self.travel_speed = None
-        self.retract_speed = None
-        self.deretract_speed = None
-        self.print_speed = None
-        self.z_travel_speed = None
-        self.lift_when_retracted = None
-        self.retract_before_move = None
         self.speed_tolerance = 1
         self.axis_speed_display_units = 'mm-min'
         self.vase_mode = None
@@ -2629,6 +3047,12 @@ class OtherSlicerSettings(SlicerSettings):
         raise Exception("Cannot update 'Other Slicer' from gcode file!  Please select another slicer type to use this "
                         "function.")
 
+    def get_extruders(self):
+        extruders = []
+        for extruder in self.extruders:
+            extruders.append(extruder.get_extruder(self))
+        return extruders
+
     def get_speed_tolerance(self):
         if self.axis_speed_display_units == 'mm-sec':
             return self.speed_tolerance * 60.0
@@ -2637,26 +3061,10 @@ class OtherSlicerSettings(SlicerSettings):
     def get_gcode_generation_settings(self, slicer_type=None):
         """Returns OctolapseSlicerSettings"""
         settings = OctolapseGcodeSettings()
-        settings.retraction_length = self.get_retract_length()
-        settings.retraction_speed = self.get_retract_speed()
-        settings.deretraction_speed = self.get_deretract_speed()
-        settings.x_y_travel_speed = self.get_travel_speed()
-        settings.z_lift_height = self.get_z_hop()
-        settings.z_lift_speed = self.get_z_hop_speed()
-        settings.lift_when_retracted = self.lift_when_retracted
-        settings.retract_before_move = self.retract_before_move
         settings.layer_height = self.layer_height
         settings.vase_mode = self.vase_mode
+        settings.extruders = self.get_extruders()
         return settings
-
-    def get_retract_length(self):
-        return self.retract_length
-
-    def get_z_hop(self):
-        return self.z_hop
-
-    def get_z_hop_speed(self):
-        return self.get_travel_speed()
 
     def get_speed_mm_min(self, speed, multiplier=None, setting_name=None):
         if speed is None:
@@ -2667,14 +3075,26 @@ class OtherSlicerSettings(SlicerSettings):
         # Todo - Look at this, we need to round prob.
         return speed
 
-    def get_travel_speed(self):
-        return self.get_speed_mm_min(self.travel_speed)
-
-    def get_z_travel_speed(self):
-        return self.get_speed_mm_min(self.z_travel_speed)
-
-    def get_retract_speed(self):
-        return self.get_speed_mm_min(self.retract_speed)
-
-    def get_deretract_speed(self):
-        return self.get_speed_mm_min(self.deretract_speed)
+    def update(self, iterable, **kwargs):
+        try:
+            item_to_iterate = iterable
+            if not isinstance(iterable, collections.Iterable):
+                item_to_iterate = iterable.__dict__
+            for key, value in item_to_iterate.items():
+                class_item = getattr(self, key, '{octolapse_no_property_found}')
+                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                    if key == "extruders":
+                        self.extruders = []
+                        for extruder in value:
+                            new_extruder = OtherSlicerExtruder()
+                            new_extruder.update(extruder)
+                            self.extruders.append(new_extruder)
+                    elif isinstance(class_item, Settings):
+                        class_item.update(value)
+                    elif isinstance(class_item, StaticSettings):
+                        # don't update any static settings, those come from the class itself!
+                        continue
+                    else:
+                        self.__dict__[key] = self.try_convert_value(class_item, value, key)
+        except Exception as e:
+            raise e

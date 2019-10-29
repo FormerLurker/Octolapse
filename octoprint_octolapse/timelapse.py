@@ -52,7 +52,7 @@ class Timelapse(object):
             on_prerender_start=None, on_render_start=None, on_render_success=None, on_render_error=None,
             on_render_end=None, on_timelapse_stopping=None, on_timelapse_stopped=None,
             on_state_changed=None, on_timelapse_end=None,
-            on_snapshot_position_error=None, on_position_error=None
+            on_snapshot_position_error=None
     ):
         # config variables - These don't change even after a reset
         self.state_update_period_seconds = 1
@@ -76,15 +76,10 @@ class Timelapse(object):
         self._state_changed_callback = on_state_changed
         self._timelapse_end_callback = on_timelapse_end
         self._snapshot_position_error_callback = on_snapshot_position_error
-        self._position_error_callback = on_position_error
         self._commands = Commands()  # used to parse and generate gcode
         self._triggers = None
         self._print_end_status = "Unknown"
         self._last_state_changed_message_time = None
-        self._last_position_error_message_time = None
-        self._position_error_message_thread = None
-        self.has_position_errors_to_report = False
-        self.position_errors_to_report = None
         # Settings that may be different after StartTimelapse is called
 
         self._octoprint_printer_profile = None
@@ -378,10 +373,9 @@ class Timelapse(object):
             # once we hit the snapshot command.
             for gcode in snapshot_gcode.snapshot_commands:
                 if utility.is_snapshot_command(gcode, self._printer.snapshot_command):
-                    logger.info(
-                        "Queuing %d snapshot commands.  Note that the actual snapshot command is never sent.",
-                        len(gcodes_to_send),
-                        len(snapshot_gcode.snapshot_commands)
+                    logger.debug(
+                        "Queuing %d snapshot commands, an M400 and an M114 command.  Note that the actual snapshot command is never sent.",
+                        len(gcodes_to_send)
                     )
 
                     snapshot_position = self.get_position_async(
@@ -772,15 +766,8 @@ class Timelapse(object):
                             thread.daemon = True
                             thread.start()
                             return None,
-                    elif (
-                        self._position.current_pos.has_position_error and
-                        self._state != TimelapseState.AcquiringLocation
-                    ):
-                        # There are position errors, report them!
-                        self._on_position_error()
                     elif (self._state == TimelapseState.WaitingForTrigger
-                          and self._octoprint_printer.is_printing()
-                          and not self._position.current_pos.has_position_error):
+                          and self._octoprint_printer.is_printing()):
                         # update the triggers with the current position
                         self._triggers.update(self._position, parsed_command)
 
@@ -920,13 +907,13 @@ class Timelapse(object):
         is_metric = self._position.current_pos.is_metric
         has_error = False
         error_message = ""
-        if is_metric is None and self._position.current_pos.has_position_error:
+        if is_metric is None:
             has_error = True
             error_message = "The printer profile requires an explicit G21 command before any position " \
                             "altering/setting commands, including any home commands.  Stopping timelapse, " \
                             "but continuing the print. "
 
-        elif not is_metric and self._position.current_pos.has_position_error:
+        elif not is_metric:
             has_error = True
             if self._printer.units_default == "inches":
                 error_message = "The printer profile uses 'inches' as the default unit of measurement.  In order to" \
@@ -1089,7 +1076,7 @@ class Timelapse(object):
             logf("Snapshot gcode   RETURN - %s: %s", msg, cmd)
         elif "snapshot-end" in tags:
             logf("Snapshot gcode      END - %s: %s", msg, cmd)
-        if "wait-for-position" in tags:
+        elif "wait-for-position" in tags:
             logf("Waiting for moves to complete before continuing - %s: %s", msg, cmd)
         elif "pre-processing-end" in tags:
             logf("Pre processing finished gcode - %s: %s", msg, cmd)
@@ -1114,22 +1101,11 @@ class Timelapse(object):
         """Notifies any callbacks about any changes contained in the dictionaries.
         If you send a dict here the client will get a message, so check the
         settings to see if they are subscribed to notifications before populating the dictinaries!"""
-
-        if self._last_state_changed_message_time is not None and self._state != TimelapseState.Idle:
-            # do not send more than 1 per second
-
-            time_since_last_update = time.time() - self._last_state_changed_message_time
-            if time_since_last_update < self.state_update_period_seconds:
-                if self._position.current_pos.has_position_error:
-                    self.has_position_errors_to_report = True
-                    self.position_errors_to_report = self._position.current_pos.has_position_error
-                return
-
         try:
             # Notify any callbacks
             if self._state_changed_callback is not None:
 
-                def send_real_time_change_message(has_printer_state_error):
+                def send_real_time_change_message():
                     trigger_change_list = None
                     position_change_dict = None
                     printer_state_change_dict = None
@@ -1144,7 +1120,6 @@ class Timelapse(object):
 
                     update_printer_state = (
                         self._settings.main_settings.show_printer_state_changes
-                        or has_printer_state_error
                     )
 
                     if update_printer_state:
@@ -1198,12 +1173,7 @@ class Timelapse(object):
                     self._state_changed_callback(change_dict)
 
                 if self.is_realtime:
-                    position_errors = False
-                    if self.has_position_errors_to_report:
-                        position_errors = self.position_errors_to_report
-                    elif self._position.current_pos.has_position_error:
-                        position_errors = self._position.current_pos.position_error
-                    send_real_time_change_message(position_errors)
+                    send_real_time_change_message()
                 else:
                     send_pre_calculated_change_message()
 
@@ -1222,38 +1192,6 @@ class Timelapse(object):
         if waiting_trigger is not None:
             return True
         return False
-
-    def _on_position_error(self):
-        # rate limited position error notification
-        delay_seconds = 0
-        # if another thread is trying to send the message, stop it
-        if self._position_error_message_thread is not None and self._position_error_message_thread.isAlive():
-            self._position_error_message_thread.cancel()
-
-        if self._last_position_error_message_time is not None:
-            # do not send more than 1 per second
-            time_since_last_update = time.time() - self._last_position_error_message_time
-            if time_since_last_update < 1:
-                delay_seconds = 1 - time_since_last_update
-                if delay_seconds < 0:
-                    delay_seconds = 0
-
-        message = self._position.current_pos.position_error
-        logger.error(message)
-
-        def _send_position_error(position_error_message):
-            self._position_error_callback(position_error_message)
-            self._last_position_error_message_time = time.time()
-
-        # Send a delayed message
-        self._position_error_message_thread = threading.Timer(
-            delay_seconds,
-            _send_position_error,
-            [message]
-
-        )
-        self._position_error_message_thread.daemon = True
-        self._position_error_message_thread.start()
 
     def _on_trigger_snapshot_complete(self, snapshot_payload):
         if self._snapshot_complete_callback is not None:

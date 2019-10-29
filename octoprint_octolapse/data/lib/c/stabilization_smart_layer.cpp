@@ -119,18 +119,18 @@ void stabilization_smart_layer::update_stabilization_coordinates()
 	}
 	closest_positions_.set_stabilization_coordinates(stabilization_x_, stabilization_y_);
 }
-void stabilization_smart_layer::process_pos(position& p_current_pos, position& p_previous_pos)
+void stabilization_smart_layer::process_pos(position* p_current_pos, position* p_previous_pos)
 {
 	//std::cout << "StabilizationSmartLayer::process_pos - Processing Position...";
 	// if we're at a layer change, add the current saved plan
-	if (p_current_pos.is_layer_change && p_current_pos.layer > 1)
+	if (p_current_pos->is_layer_change && p_current_pos->layer > 1)
 	{
 		//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Layer change detected.");
 		is_layer_change_wait_ = true;
 		// get distance from current point to the stabilization point
 		
 		standard_layer_trigger_distance_ = utilities::get_cartesian_distance(
-			p_current_pos.x, p_current_pos.y,
+			p_current_pos->x, p_current_pos->y,
 			stabilization_x_, stabilization_y_
 		);
 	}
@@ -141,7 +141,7 @@ void stabilization_smart_layer::process_pos(position& p_current_pos, position& p
 		if (p_stabilization_args_->height_increment != 0)
 		{
 			can_add_saved_plan = false;
-			const double increment_double = p_current_pos.height / p_stabilization_args_->height_increment;
+			const double increment_double = p_current_pos->height / p_stabilization_args_->height_increment;
 			unsigned const int increment = utilities::round_up_to_int(increment_double);
 			if (increment > current_height_increment_)
 			{
@@ -166,7 +166,7 @@ void stabilization_smart_layer::process_pos(position& p_current_pos, position& p
 	}
 	//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding closest position.");
 	closest_positions_.try_add(p_current_pos, p_previous_pos);
-	last_tested_gcode_number_ = p_current_pos.gcode_number;
+	last_tested_gcode_number_ = p_current_pos->gcode_number;
 }
 
 void stabilization_smart_layer::add_plan()

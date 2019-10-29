@@ -348,7 +348,7 @@ $(function() {
             });
         };
 
-        self.on_opened = function() {
+        self.on_opened = function(dialog) {
             console.log("Opening camera profile");
             if (self.enable_custom_image_preferences())
                 self.updateImagePreferencesFromServer(false);

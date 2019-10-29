@@ -39,8 +39,8 @@ struct gcode_position_args {
 		home_x_none = false;
 		home_y_none = false;
 		home_z_none = false;
-		retraction_length = 0;
-		z_lift_height = 0;
+		retraction_lengths = NULL;
+		z_lift_heights = NULL;
 		priming_height = 0;
 		minimum_layer_height = 0;
 		g90_influences_extruder = false;
@@ -60,7 +60,14 @@ struct gcode_position_args {
 		snapshot_y_max = 0;
 		snapshot_z_min = 0;
 		snapshot_z_max = 0;
+		num_extruders = 1;
+		zero_based_extruder = true;
 		std::vector<std::string> location_detection_commands; // Final list of location detection commands
+	}
+	~gcode_position_args()
+	{
+		delete_retraction_lengths();
+		delete_z_lift_heights();
 	}
 	bool autodetect_position;
 	bool is_circular_bed;
@@ -71,8 +78,8 @@ struct gcode_position_args {
 	bool home_x_none;
 	bool home_y_none;
 	bool home_z_none;
-	double retraction_length;
-	double z_lift_height;
+	double* retraction_lengths;
+	double* z_lift_heights;
 	double priming_height;
 	double minimum_layer_height;
 	bool g90_influences_extruder;
@@ -89,10 +96,17 @@ struct gcode_position_args {
 	double y_max;
 	double z_min;
 	double z_max;
+	bool shared_extruder;
+	bool zero_based_extruder;
+	int num_extruders;
 	std::string xyz_axis_default_mode;
 	std::string e_axis_default_mode;
 	std::string units_default;
 	std::vector<std::string> location_detection_commands; // Final list of location detection commands
+
+	void set_num_extruders(int num_extruders);
+	void delete_retraction_lengths();
+	void delete_z_lift_heights();
 };
 
 class gcode_position
@@ -101,9 +115,10 @@ public:
 	typedef void(gcode_position::*pos_function_type)(position*, parsed_command&);
 	gcode_position(gcode_position_args* args);
 	gcode_position();
+	virtual ~gcode_position();
 
 	void update(parsed_command &command, int file_line_number, int gcode_number);
-	void update_position(position *position, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1_g0);
+	void update_position(position *position, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1_g0) const;
 	void undo_update();
 	position get_current_position() const;
 	position get_previous_position() const;
@@ -124,8 +139,8 @@ private:
 	bool home_x_none_;
 	bool home_y_none_;
 	bool home_z_none_;
-	double retraction_length_;
-	double z_lift_height_;
+	double * retraction_lengths_;
+	double * z_lift_heights_;
 	double minimum_layer_height_;
 	bool g90_influences_extruder_;
 	std::string e_axis_default_mode_;
@@ -145,6 +160,10 @@ private:
 	double snapshot_y_max_;
 	double snapshot_z_min_;
 	double snapshot_z_max_;
+	int num_extruders_;
+	bool shared_extruder_;
+	int current_extruder_;
+	bool zero_based_extruder_;
 
 	std::map<std::string, pos_function_type> gcode_functions_;
 	std::map<std::string, pos_function_type>::iterator gcode_functions_iterator_;
@@ -166,9 +185,13 @@ private:
 	void process_m83(position*, parsed_command&);
 	void process_m207(position*, parsed_command&);
 	void process_m208(position*, parsed_command&);
+	void process_m563(position* pos, parsed_command& cmd);
+	void process_t(position*, parsed_command&);
 
 	gcode_comment_processor comment_processor_;
-
+	void delete_retraction_lengths_();
+	void delete_z_lift_heights_();
+	void set_num_extruders(int num_extruders);
 };
 
 #endif

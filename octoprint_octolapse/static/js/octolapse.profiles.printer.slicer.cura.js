@@ -1,16 +1,44 @@
-Octolapse.CuraViewmodel = function (values) {
-    var self = this;
+Octolapse.CuraExtruderViewModel = function (values, extruder_index) {
+    var self=this;
+    self.index = extruder_index;
+    self.speed_z_hop = ko.observable(null);
+    self.max_feedrate_z_override = ko.observable(null);
+    self.retraction_amount = ko.observable(null);
+    self.retraction_hop = ko.observable(null);
+    self.retraction_hop_enabled = ko.observable(null);
+    self.retraction_enable = ko.observable(null);
+    self.retraction_speed = ko.observable(null);
+    self.retraction_retract_speed = ko.observable(null);
+    self.retraction_prime_speed = ko.observable(null);
+    self.speed_travel = ko.observable(null);
 
-    // Create Observables
-    self.retraction_amount = ko.observable(values.retraction_amount);
-    self.retraction_retract_speed = ko.observable(values.retraction_retract_speed);
-    self.retraction_prime_speed = ko.observable(values.retraction_prime_speed);
-    self.speed_travel = ko.observable(values.speed_travel);
-    self.max_feedrate_z_override = ko.observable(values.max_feedrate_z_override);
-    self.speed_z_hop = ko.observable(values.speed_z_hop);
-    self.retraction_hop = ko.observable(values.retraction_hop);
-    self.retraction_hop_enabled = ko.observable(values.retraction_hop_enabled);
-    self.retraction_enable = ko.observable(values.retraction_enable);
+    if (values && values.extruders.length > self.index) {
+        var extruder = values.extruders[self.index];
+        if (!extruder)
+            return;
+        self.speed_z_hop(extruder.speed_z_hop);
+        self.max_feedrate_z_override(extruder.max_feedrate_z_override);
+        self.retraction_amount(extruder.retraction_amount);
+        self.retraction_hop(extruder.retraction_hop);
+        self.retraction_hop_enabled(extruder.retraction_hop_enabled);
+        self.retraction_enable(extruder.retraction_enable);
+        self.retraction_speed(extruder.retraction_speed);
+        self.retraction_retract_speed(extruder.retraction_retract_speed);
+        self.retraction_prime_speed(extruder.retraction_prime_speed);
+        self.speed_travel(extruder.speed_travel);
+    }
+};
+
+Octolapse.CuraViewmodel = function (values, num_extruders_observable) {
+    var self = this;
+    // Observables
+    self.num_extruders_observable = num_extruders_observable;
+    self.extruders = ko.observableArray();
+    for (var index = 0; index < self.num_extruders_observable(); index++)
+    {
+        self.extruders.push(new Octolapse.CuraExtruderViewModel(values, index))
+    }
+
     self.layer_height = ko.observable(values.layer_height);
     self.smooth_spiralized_contours = ko.observable(values.smooth_spiralized_contours);
     self.magic_mesh_surface_mode = ko.observable(values.magic_mesh_surface_mode);
@@ -21,13 +49,22 @@ Octolapse.CuraViewmodel = function (values) {
     self.round_to_increment_length = 0.0001;
     self.round_to_increment_num_layers = 1;
 
-    self.get_all_speed_settings = function()
-    {
-        return [
-            self.retraction_retract_speed,
-            self.retraction_prime_speed,
-            self.speed_travel,
-            self.max_feedrate_z_override,
-        ]
-    }
+    self.num_extruders_observable.subscribe(function() {
+        var num_extruders = self.num_extruders_observable();
+        if (num_extruders < 1) {
+            num_extruders = 1;
+        }
+        else if (num_extruders > 16){
+            num_extruders = 16;
+        }
+        while(self.extruders().length < num_extruders)
+        {
+            var new_extruder = new Octolapse.CuraExtruderViewModel(null, self.extruders().length-1);
+            self.extruders.push(new_extruder);
+        }
+        while(self.extruders().length > num_extruders)
+        {
+             self.extruders.pop();
+        }
+    });
 };

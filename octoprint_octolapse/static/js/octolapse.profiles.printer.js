@@ -24,78 +24,93 @@
 $(function() {
     Octolapse.PrinterProfileValidationRules = {
         rules: {
-            min_x: { lessThanOrEqual: "#octolapse_printer_max_x" },
-            max_x: { greaterThanOrEqual: "#octolapse_printer_min_x"},
-            min_y: { lessThanOrEqual: "#octolapse_printer_max_y" },
-            max_y: { greaterThanOrEqual: "#octolapse_printer_min_y" },
-            min_z: { lessThanOrEqual: "#octolapse_printer_max_z" },
-            max_z: { greaterThanOrEqual: "#octolapse_printer_min_z" },
-            snapshot_min_x: { lessThanOrEqual: "#octolapse_printer_snapshot_max_x" },
-            snapshot_max_x: { greaterThanOrEqual: "#octolapse_printer_snapshot_min_x"},
-            snapshot_min_y: { lessThanOrEqual: "#octolapse_printer_snapshot_max_y" },
-            snapshot_max_y: { greaterThanOrEqual: "#octolapse_printer_snapshot_min_y" },
-            snapshot_min_z: { lessThanOrEqual: "#octolapse_printer_snapshot_max_z" },
-            snapshot_max_z: { greaterThanOrEqual: "#octolapse_printer_snapshot_min_z" },
-            minimum_layer_height: { lessThanOrEqual: "#printer_profile_priming_height" },
-            priming_height: { greaterThanOrEqual: "#printer_profile_minimum_layer_height" },
-            auto_position_detection_commands: { csvString: true },
-            printer_profile_other_slicer_retract_length: {required: true},
-            printer_profile_slicer_other_z_hop: {required: true},
-            slicer_cura_smooth_spiralized_contours: {ifCheckedEnsureNonNull: ["#slicer_cura_layer_height"] },
-            slicer_other_vase_mode: {ifCheckedEnsureNonNull: ["#slicer_other_slicer_layer_height"] },
-            slicer_simplify_3d_vase_mode: {ifCheckedEnsureNonNull: ["#slicer_simplify_3d_layer_height"] },
-            slicer_slic3r_pe_vase_mode: {ifCheckedEnsureNonNull: ["#slicer_slic3r_pe_layer_height"] },
-            slicer_cura_layer_height: {ifOtherCheckedEnsureNonNull: '#slicer_cura_smooth_spiralized_contours'},
-            slicer_other_slicer_layer_height: {ifOtherCheckedEnsureNonNull: '#slicer_other_vase_mode'},
-            slicer_simplify_3d_layer_height: {ifOtherCheckedEnsureNonNull: '#slicer_simplify_3d_vase_mode'},
-            slicer_slic3r_pe_layer_height: {ifOtherCheckedEnsureNonNull: '#slicer_slic3r_pe_vase_mode'}
+            octolapse_printer_min_x: { lessThanOrEqual: "#octolapse_printer_max_x" },
+            octolapse_printer_max_x: { greaterThanOrEqual: "#octolapse_printer_min_x"},
+            octolapse_printer_min_y: { lessThanOrEqual: "#octolapse_printer_max_y" },
+            octolapse_printer_max_y: { greaterThanOrEqual: "#octolapse_printer_min_y" },
+            octolapse_printer_min_z: { lessThanOrEqual: "#octolapse_printer_max_z" },
+            octolapse_printer_max_z: { greaterThanOrEqual: "#octolapse_printer_min_z" },
+            octolapse_printer_snapshot_min_x: { lessThanOrEqual: "#octolapse_printer_snapshot_max_x" },
+            octolapse_printer_snapshot_max_x: { greaterThanOrEqual: "#octolapse_printer_snapshot_min_x"},
+            octolapse_printer_snapshot_min_y: { lessThanOrEqual: "#octolapse_printer_snapshot_max_y" },
+            octolapse_printer_snapshot_max_y: { greaterThanOrEqual: "#octolapse_printer_snapshot_min_y" },
+            octolapse_printer_snapshot_min_z: { lessThanOrEqual: "#octolapse_printer_snapshot_max_z" },
+            octolapse_printer_snapshot_max_z: { greaterThanOrEqual: "#octolapse_printer_snapshot_min_z" },
+            octolapse_printer_minimum_layer_height: { lessThanOrEqual: "#octolapse_printer_priming_height" },
+            octolapse_printer_priming_height: { greaterThanOrEqual: "#octolapse_printer_minimum_layer_height" },
+            octolapse_printer_auto_position_detection_commands: { csvString: true },
+            octolapse_other_slicer_retract_length: {required: true},
+            octolapse_other_slicer_z_hop: {required: true},
+            octolapse_other_slicer_vase_mode: {ifCheckedEnsureNonNull: ["#octolapse_other_slicer_layer_height"] },
+            octolapse_other_slicer_layer_height: {ifOtherCheckedEnsureNonNull: '#octolapse_other_slicer_vase_mode'},
+            octolapse_cura_smooth_spiralized_contours: {ifCheckedEnsureNonNull: ["#octolapse_cura_layer_height"] },
+            octolapse_cura_layer_height: {ifOtherCheckedEnsureNonNull: '#octolapse_cura_smooth_spiralized_contours'},
+            octolapse_cura_4_2_smooth_spiralized_contours: {ifCheckedEnsureNonNull: ["#octolapse_cura_4_2_layer_height"] },
+            octolapse_cura_4_2_layer_height: {ifOtherCheckedEnsureNonNull: '#octolapse_cura_4_2_smooth_spiralized_contours'},
+            slicer_simplify_3d_vase_mode: {ifCheckedEnsureNonNull: ["#octolapse_simplify_3d_layer_height"] },
+            slicer_simplify_3d_layer_height: {ifOtherCheckedEnsureNonNull: '#octolapse_simplify_3d_vase_mode'},
+            octolapse_slic3r_pe_spiral_vase: {ifCheckedEnsureNonNull: ["#octolapse_slic3r_pe_layer_height"] },
+            octolapse_slic3r_pe_layer_height: {ifOtherCheckedEnsureNonNull: '#octolapse_slic3r_pe_spiral_vase'}
 
         },
         messages: {
-            name: "Please enter a name for your profile",
-            min_x : { lessThanOrEqual: "Must be less than or equal to the 'X - Width Max' field." },
-            max_x : { greaterThanOrEqual: "Must be greater than or equal to the ''X - Width Min'' field." },
-            min_y : { lessThanOrEqual: "Must be less than or equal to the 'Y - Width Max' field." },
-            max_y : { greaterThanOrEqual: "Must be greater than or equal to the ''Y - Width Min'' field." },
-            min_z : { lessThanOrEqual: "Must be less than or equal to the 'Z - Width Max' field." },
-            max_z: { greaterThanOrEqual: "Must be greater than or equal to the ''Z - Width Min'' field." },
-            snapshot_min_x : { lessThanOrEqual: "Must be less than or equal to the ''Snapshot Max X'' field." },
-            snapshot_max_x : { greaterThanOrEqual: "Must be greater than or equal to the ''Snapshot Min X'' field." },
-            snapshot_min_y : { lessThanOrEqual: "Must be less than or equal to the 'Snapshot Max Y' field." },
-            snapshot_max_y : { greaterThanOrEqual: "Must be greater than or equal to the ''Snapshot Min Y'' field." },
-            snapshot_min_z : { lessThanOrEqual: "Must be less than or equal to the 'Snapshot Max Z' field." },
-            snapshot_max_z: { greaterThanOrEqual: "Must be greater than or equal to the ''Snapshot Min Z'' field." },
-            minimum_layer_height: { lessThanOrEqual: "Must be less than or equal to the ''Priming Height'' field." },
-            priming_height: { greaterThanOrEqual: "Must be greater than or equal to the ''Minimum Layer Height'' field." },
-            auto_position_detection_commands: { csvString:"Please enter a series of gcode commands (without parameters) separated by commas, or leave this field blank." },
-            slicer_cura_smooth_spiralized_contours: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
-            slicer_other_vase_mode: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
-            slicer_simplify_3d_vase_mode: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
-            slicer_slic3r_pe_vase_mode: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
-            slicer_cura_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
-            slicer_other_slicer_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
-            slicer_simplify_3d_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
-            slicer_slic3r_pe_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'}
+            octolapse_printer_name: "Please enter a name for your profile",
+            octolapse_printer_min_x : { lessThanOrEqual: "Must be less than or equal to the 'X - Width Max' field." },
+            octolapse_printer_max_x : { greaterThanOrEqual: "Must be greater than or equal to the ''X - Width Min'' field." },
+            octolapse_printer_min_y : { lessThanOrEqual: "Must be less than or equal to the 'Y - Width Max' field." },
+            octolapse_printer_max_y : { greaterThanOrEqual: "Must be greater than or equal to the ''Y - Width Min'' field." },
+            octolapse_printer_min_z : { lessThanOrEqual: "Must be less than or equal to the 'Z - Width Max' field." },
+            octolapse_printer_max_z: { greaterThanOrEqual: "Must be greater than or equal to the ''Z - Width Min'' field." },
+            octolapse_printer_snapshot_min_x : { lessThanOrEqual: "Must be less than or equal to the ''Snapshot Max X'' field." },
+            octolapse_printer_snapshot_max_x : { greaterThanOrEqual: "Must be greater than or equal to the ''Snapshot Min X'' field." },
+            octolapse_printer_snapshot_min_y : { lessThanOrEqual: "Must be less than or equal to the 'Snapshot Max Y' field." },
+            octolapse_printer_snapshot_max_y : { greaterThanOrEqual: "Must be greater than or equal to the ''Snapshot Min Y'' field." },
+            octolapse_printer_snapshot_min_z : { lessThanOrEqual: "Must be less than or equal to the 'Snapshot Max Z' field." },
+            octolapse_printer_snapshot_max_z: { greaterThanOrEqual: "Must be greater than or equal to the ''Snapshot Min Z'' field." },
+            octolapse_printer_minimum_layer_height: { lessThanOrEqual: "Must be less than or equal to the ''Priming Height'' field." },
+            octolapse_printer_priming_height: { greaterThanOrEqual: "Must be greater than or equal to the ''Minimum Layer Height'' field." },
+            octolapse_printer_auto_position_detection_commands: { csvString:"Please enter a series of gcode commands (without parameters) separated by commas, or leave this field blank." },
+            octolapse_cura_smooth_spiralized_contours: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
+            octolapse_cura_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
+            octolapse_cura_4_2_smooth_spiralized_contours: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
+            octolapse_cura_4_4_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
+            octolapse_other_slicer_vase_mode: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
+            octolapse_other_slicer_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
+            octolapse_simplify_3d_vase_mode: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
+            octolapse_simplify_3d_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
+            octolapse_slic3r_pe_vase_mode: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
+            octolapse_slic3r_pe_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'}
         }
     };
 
     Octolapse.OctolapseGcodeSettings = function(values){
+        /*
         var self = this;
         self.retraction_length = ko.observable(values.retraction_length);
         self.retraction_speed = ko.observable(values.retraction_speed);
         self.deretraction_speed = ko.observable(values.deretraction_speed);
         self.x_y_travel_speed = ko.observable(values.x_y_travel_speed);
         self.z_lift_height = ko.observable(values.z_lift_height);
-        self.z_lift_speed = ko.observable(values.z_lift_speed);
+        self.z_lift_speed = ko.observable(values.z_lift_speed);*/
     };
 
-    Octolapse.Slicers = function(values) {
+    Octolapse.Slicers = function(values, num_extruders_observable) {
         //console.log("Creating Slicers");
         var self = this;
-        self.cura = new Octolapse.CuraViewmodel(values.cura);
-        self.other = new Octolapse.OtherSlicerViewModel(values.other);
-        self.simplify_3d = new Octolapse.Simplify3dViewModel(values.simplify_3d);
-        self.slic3r_pe = new Octolapse.Slic3rPeViewModel(values.slic3r_pe);
+        self.cura = new Octolapse.CuraViewmodel(values.cura, num_extruders_observable);
+        self.other = new Octolapse.OtherSlicerViewModel(values.other, num_extruders_observable);
+        self.simplify_3d = new Octolapse.Simplify3dViewModel(values.simplify_3d, num_extruders_observable);
+        self.slic3r_pe = new Octolapse.Slic3rPeViewModel(values.slic3r_pe, num_extruders_observable);
+/*
+        self.toJS = function()
+        {
+            var copy = ko.toJS(self);
+            copy.cura = cura.toJS();
+            copy.other = other.toJS();
+            copy.simplify_3d = simplify_3d.toJS();
+            copy.slic3r_pe = slic3r_pe.toJS();
+            return copy;
+        } */
     };
 
     Octolapse.PrinterProfileViewModel = function (values) {
@@ -109,13 +124,18 @@ $(function() {
             values.automatic_configuration, self
         );
         */
+        self.num_extruders = ko.observable(values.num_extruders);
+        self.shared_extruder = ko.observable(values.shared_extruder);
+        self.extruder_offsets = ko.observableArray(values.extruder_offsets);
+        self.zero_based_extruder = ko.observable(values.zero_based_extruder);
 
-        self.gcode_generation_settings = new Octolapse.OctolapseGcodeSettings(values.gcode_generation_settings);
-        self.slicers = new Octolapse.Slicers(values.slicers);
+        //self.gcode_generation_settings = new Octolapse.OctolapseGcodeSettings(values.gcode_generation_settings);
+        self.slicers = new Octolapse.Slicers(values.slicers, self.num_extruders);
         // has_been_saved_by_user profile setting, computed and always returns true
         // This will switch has_been_saved_by_user from false to true
         // after any user save
-        self.has_been_saved_by_user = ko.observable(values.has_been_saved_by_user);
+        self.has_been_saved_by_user = ko.observable(true);
+
         self.slicer_type = ko.observable(values.slicer_type);
         self.snapshot_command = ko.observable(values.snapshot_command);
         self.auto_detect_position = ko.observable(values.auto_detect_position);
@@ -160,6 +180,34 @@ $(function() {
         self.gocde_axis_compatibility_mode_enabled = ko.observable(values.gocde_axis_compatibility_mode_enabled);
         self.home_axis_gcode = ko.observable(values.home_axis_gcode);
 
+        self.dialog = null;
+
+        self.num_extruders.subscribe(function() {
+            var num_extruders = self.num_extruders();
+            if (num_extruders < 1) {
+                num_extruders = 1;
+            }
+            else if (num_extruders > 16){
+                num_extruders = 16;
+            }
+
+            var has_changed = false;
+            while(self.extruder_offsets().length < num_extruders)
+            {
+                has_changed = true;
+                self.extruder_offsets.push({x:0,y:0});
+            }
+            while(self.extruder_offsets().length > num_extruders)
+            {
+                has_changed = true;
+                self.extruder_offsets.pop();
+            }
+            if (has_changed) {
+                self.dialog.bind_validation();
+                self.dialog.bind_help_links();
+            }
+        });
+
         self.origin_type_options = ko.pureComputed(function(){
             var options = [];
             if (self.bed_type() == 'circular')
@@ -184,6 +232,10 @@ $(function() {
             self.name(server_profile.name);
             self.description(server_profile.description);
             self.has_been_saved_by_user(true);
+            self.num_extruders(server_profile.num_extruders);
+            self.shared_extruder(server_profile.shared_extruder);
+            self.extruder_offsets(server_profile.extruder_offsets);
+            self.zero_based_extruder(server_profile.zero_based_extruder);
             self.snapshot_command(server_profile.snapshot_command);
             self.auto_detect_position(server_profile.auto_detect_position);
             self.auto_position_detection_commands(server_profile.auto_position_detection_commands);
@@ -226,6 +278,10 @@ $(function() {
             self.home_axis_gcode(server_profile.home_axis_gcode);
         };
 
+        self.on_opened = function(dialog)
+        {
+            self.dialog = dialog;
+        };
         self.on_closed = function()
         {
             self.automatic_configuration.on_closed();
@@ -233,9 +289,10 @@ $(function() {
 
         self.toJS = function()
         {
-            // need to remove the parent link from the automatic configuration to prevent a cyclic copy
+            var dialog = self.dialog;
+            self.dialog = null;
             var copy = ko.toJS(self);
-            delete copy.helpers;
+            self.dialog = dialog;
             return copy;
 
         };

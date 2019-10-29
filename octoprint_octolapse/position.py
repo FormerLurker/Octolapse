@@ -21,271 +21,285 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from __future__ import unicode_literals
-import math
 import octoprint_octolapse.utility as utility
-from octoprint_octolapse.settings import OctolapseGcodeSettings, PrinterProfile
+from octoprint_octolapse.settings import OctolapseGcodeSettings
 from octoprint_octolapse.gcode_parser import ParsedCommand
 import GcodePositionProcessor
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
-import collections
+
+
+class Extruder(object):
+    __slots__ = [
+        "e",
+        "e_offset",
+        "e_relative",
+        "extrusion_length",
+        "extrusion_length_total",
+        "retraction_length",
+        "deretraction_length",
+        "is_extruding_start",
+        "is_extruding",
+        "is_primed",
+        "is_retracting_start",
+        "is_retracting",
+        "is_retracted",
+        "is_partially_retracted",
+        "is_deretracting_start",
+        "is_deretracting",
+        "is_deretracted"
+    ]
+
+    def __init__(self, copy_from=None):
+        if copy_from is None:
+            e = 0
+            e_offset = 0
+            e_relative = False
+            extrusion_length = 0
+            extrusion_length_total = 0
+            retraction_length = 0
+            deretraction_length = 0
+            is_extruding_start = False
+            is_extruding = False
+            is_primed = False
+            is_retracting_start = False
+            is_retracting = False
+            is_retracted = False
+            is_partially_retracted = False
+            is_deretracting_start = False
+            is_deretracting = False
+            is_deretracted = False
+        else:
+            e = copy_from.e
+            e_offset = copy_from.e_offset
+            e_relative = copy_from.e_relative
+            extrusion_length = copy_from.extrusion_length
+            extrusion_length_total = copy_from.extrusion_length_total
+            retraction_length = copy_from.retraction_length
+            deretraction_length = copy_from.deretraction_length
+            is_extruding_start = copy_from.is_extruding_start
+            is_extruding = copy_from.is_extruding
+            is_primed = copy_from.is_primed
+            is_retracting_start = copy_from.is_retracting_start
+            is_retracting = copy_from.is_retracting
+            is_retracted = copy_from.is_retracted
+            is_partially_retracted = copy_from.is_partially_retracted
+            is_deretracting_start = copy_from.is_deretracting_start
+            is_deretracting = copy_from.is_deretracting
+            is_deretracted = copy_from.is_deretracted
+
+    @staticmethod
+    def copy_from_cpp_extruder(cpp_extruder, target):
+        target.e = cpp_extruder[0]
+        target.e_offset = cpp_extruder[1]
+        target.e_relative = cpp_extruder[2]
+        target.extrusion_length = cpp_extruder[3]
+        target.extrusion_length_total = cpp_extruder[4]
+        target.retraction_length = cpp_extruder[5]
+        target.deretraction_length = cpp_extruder[6]
+        target.is_extruding_start = cpp_extruder[7] > 0
+        target.is_extruding = cpp_extruder[8] > 0
+        target.is_primed = cpp_extruder[9] > 0
+        target.is_retracting_start = cpp_extruder[10] > 0
+        target.is_retracting = cpp_extruder[11] > 0
+        target.is_retracted = cpp_extruder[12] > 0
+        target.is_partially_retracted = cpp_extruder[13] > 0
+        target.is_deretracting_start = cpp_extruder[14] > 0
+        target.is_deretracting = cpp_extruder[15] > 0
+        target.is_deretracted = cpp_extruder[16] > 0
+
+    @staticmethod
+    def create_from_cpp_extruder(cpp_extruder):
+        extruder = Extruder()
+        Extruder.copy_from_cpp_extruder(cpp_extruder, extruder)
+        return extruder
+
 
 class Pos(object):
     # Add slots for faster copy and init
     __slots__ = [
-        "parsed_command", "f", "x", "x_offset", "x_homed", "y", "y_offset", "y_homed", "z", "z_offset", "z_homed",
-        "e", "e_offset", "is_relative", "is_extruder_relative", "is_metric", "last_extrusion_height", "layer",
-        "height", "is_printer_primed", "is_in_position", "in_path_position",
-        "is_xy_travel", "is_xyz_travel","firmware_retraction_length",
-        "firmware_unretraction_additional_length", "firmware_retraction_feedrate", "firmware_unretraction_feedrate", 
-        "firmware_z_lift", "has_definite_position", "is_layer_change", "is_height_change", "is_zhop",
-        "has_xy_position_changed", "has_position_changed", "has_state_changed", "has_received_home_command",
-        "has_position_error", "position_error", 'e_relative', 'z_relative', 'extrusion_length', 'extrusion_length_total',
-        'retraction_length','deretraction_length', 'is_extruding_start', 'is_extruding', 'is_primed',
-        'is_retracting_start', 'is_retracting', 'is_retracted', 'is_partially_retracted', 'is_deretracting_start',
-        'is_deretracting', 'is_deretracted', 'file_line_number', 'gcode_number', "is_in_bounds"
+        "x",
+        "y",
+        "z",
+        "f",
+
+        "x_offset",
+        "y_offset",
+        "z_offset",
+        "z_relative",
+        "last_extrusion_height",
+        "height",
+        "firmware_retraction_length",
+        "firmware_unretraction_additional_length",
+        "firmware_retraction_feedrate",
+        "firmware_unretraction_feedrate",
+        "firmware_z_lift",
+        "layer",
+        "current_tool",
+        "num_extruders",
+        "x_homed",
+        "y_homed",
+        "z_homed",
+        "is_relative",
+        "is_extruder_relative",
+        "is_metric",
+        "is_printer_primed",
+        "has_definite_position",
+        "is_layer_change",
+        "is_height_change",
+        "is_xy_travel",
+        "is_xyz_travel",
+        "is_zhop",
+        "has_xy_position_changed",
+        "has_position_changed",
+        "has_received_home_command",
+        "is_in_position",
+        "in_path_position",
+        "file_line_number",
+        "gcode_number",
+        "is_in_bounds",
+        "parsed_command",
+        "extruders"
     ]
 
     min_length_to_retract = 0.0001
 
-    def __init__(self, copy_from_pos=None, reset_state=False):
+    def __init__(self):
+        self.parsed_command = None
+        self.f = None
+        self.x = None
+        self.x_offset = 0
+        self.x_homed = False
+        self.y = None
+        self.y_offset = 0
+        self.y_homed = False
+        self.z = None
+        self.z_offset = 0
+        self.z_homed = False
+        self.z_relative = 0
+        self.is_relative = False
+        self.is_extruder_relative = False
+        self.is_metric = True
+        self.last_extrusion_height = None
+        self.layer = 0
+        self.height = 0
+        self.is_printer_primed = False
+        self.firmware_retraction_length = None
+        self.firmware_unretraction_additional_length = None
+        self.firmware_retraction_feedrate = None
+        self.firmware_unretraction_feedrate = None
+        self.firmware_z_lift = None
+        self.has_definite_position = False
+        # Extruders
+        self.current_tool = None
+        self.extruders = []
 
-        if copy_from_pos is not None:
-            self.parsed_command = copy_from_pos.parsed_command
-            self.f = copy_from_pos.f
-            self.x = copy_from_pos.x
-            self.x_offset = copy_from_pos.x_offset
-            self.x_homed = copy_from_pos.x_homed
-            self.y = copy_from_pos.y
-            self.y_offset = copy_from_pos.y_offset
-            self.y_homed = copy_from_pos.y_homed
-            self.z = copy_from_pos.z
-            self.z_offset = copy_from_pos.z_offset
-            self.z_homed = copy_from_pos.z_homed
-            self.e = copy_from_pos.e
-            self.e_offset = copy_from_pos.e_offset
-            self.is_relative = copy_from_pos.is_relative
-            self.is_extruder_relative = copy_from_pos.is_extruder_relative
-            self.is_metric = copy_from_pos.is_metric
-            self.last_extrusion_height = copy_from_pos.last_extrusion_height
-            self.layer = copy_from_pos.layer
-            self.height = copy_from_pos.height
-            self.is_printer_primed = copy_from_pos.is_printer_primed
-            self.firmware_retraction_length = copy_from_pos.firmware_retraction_length
-            self.firmware_unretraction_additional_length = copy_from_pos.firmware_unretraction_additional_length
-            self.firmware_retraction_feedrate = copy_from_pos.firmware_retraction_feedrate
-            self.firmware_unretraction_feedrate = copy_from_pos.firmware_unretraction_feedrate
-            self.firmware_z_lift = copy_from_pos.firmware_z_lift
-            self.has_position_error = copy_from_pos.has_position_error
-            self.position_error = copy_from_pos.position_error
-            self.has_definite_position = copy_from_pos.has_definite_position
+        # State
+        self.is_layer_change = False
+        self.is_height_change = False
+        self.is_xy_travel = False
+        self.is_xyz_travel = False
+        self.is_zhop = False
+        self.has_xy_position_changed = False
+        self.has_position_changed = False
+        self.has_received_home_command = False
+        self.is_in_position = False
+        self.in_path_position = False
+        self.is_in_bounds = True
+        # Gcode File Tracking
+        self.file_line_number = -1
+        self.gcode_number = -1
 
-            # Extruder Tracking
-            self.e_relative = copy_from_pos.e_relative
-            self.z_relative = copy_from_pos.z_relative
-            self.extrusion_length = copy_from_pos.extrusion_length
-            self.extrusion_length_total = copy_from_pos.extrusion_length_total
-            self.retraction_length = copy_from_pos.retraction_length
-            self.deretraction_length = copy_from_pos.deretraction_length
-            self.is_extruding_start = copy_from_pos.is_extruding_start
-            self.is_extruding = copy_from_pos.is_extruding
-            self.is_primed = copy_from_pos.is_primed
-            self.is_retracting_start = copy_from_pos.is_retracting_start
-            self.is_retracting = copy_from_pos.is_retracting
-            self.is_retracted = copy_from_pos.is_retracted
-            self.is_partially_retracted = copy_from_pos.is_partially_retracted
-            self.is_deretracting_start = copy_from_pos.is_deretracting_start
-            self.is_deretracting = copy_from_pos.is_deretracting
-            self.is_deretracted = copy_from_pos.is_deretracted
-            self.is_in_position = copy_from_pos.is_in_position
+    @staticmethod
+    def copy_from_cpp_pos(cpp_pos, target):
+        target.x = None if cpp_pos[37] > 0 else cpp_pos[0]
+        target.y = None if cpp_pos[38] > 0 else cpp_pos[1]
+        target.z = None if cpp_pos[39] > 0 else cpp_pos[2]
+        target.f = None if cpp_pos[40] > 0 else cpp_pos[3]
+        target.x_offset = cpp_pos[4]
+        target.y_offset = cpp_pos[5]
+        target.z_offset = cpp_pos[6]
+        target.z_relative = cpp_pos[7]
+        target.last_extrusion_height = None if cpp_pos[43] > 0 else cpp_pos[8]
+        target.height = cpp_pos[9]
+        target.firmware_retraction_length = None if cpp_pos[45] > 0 else cpp_pos[10]
+        target.firmware_unretraction_additional_length = None if cpp_pos[46] > 0 else cpp_pos[11]
+        target.firmware_retraction_feedrate = None if cpp_pos[47] > 0 else cpp_pos[12]
+        target.firmware_unretraction_feedrate = None if cpp_pos[48] > 0 else cpp_pos[13]
+        target.firmware_z_lift = None if cpp_pos[49] > 0 else cpp_pos[14]
+        target.layer = cpp_pos[15]
+        target.current_tool = cpp_pos[16]
+        target.num_extruders = cpp_pos[17]
+        target.x_homed = cpp_pos[18] > 0
+        target.y_homed = cpp_pos[19] > 0
+        target.z_homed = cpp_pos[20] > 0
+        target.is_relative = None if cpp_pos[41] > 0 else cpp_pos[21] > 0
+        target.is_extruder_relative = None if cpp_pos[42] > 0 else cpp_pos[22] > 0
+        target.is_metric = None if cpp_pos[44] > 0 else cpp_pos[23] > 0
+        target.is_printer_primed = cpp_pos[24] > 0
+        target.has_definite_position = cpp_pos[25] > 0
 
-            self.is_zhop = copy_from_pos.is_zhop
-            self.file_line_number = copy_from_pos.file_line_number
-            self.gcode_number = copy_from_pos.gcode_number
-            #######
-            if reset_state:
-                # Resets state changes
-                self.is_layer_change = False
-                self.is_height_change = False
-                self.is_xy_travel = False
-                self.is_xyz_travel = False
-                self.has_xy_position_changed = False
-                self.has_position_changed = False
-                self.has_state_changed = False
-                self.has_received_home_command = False
-                self.is_in_bounds = True
-                self.in_path_position = False
-            else:
-                # Copy or default states
-                self.is_layer_change = copy_from_pos.is_layer_change
-                self.is_height_change = copy_from_pos.is_height_change
-                self.is_xy_travel = copy_from_pos.is_xy_travel
-                self.is_xyz_travel = copy_from_pos.is_xyz_travel
-                self.has_xy_position_changed = copy_from_pos.has_xy_position_changed
-                self.has_position_changed = copy_from_pos.has_position_changed
-                self.has_state_changed = copy_from_pos.has_state_changed
-                self.has_received_home_command = copy_from_pos.has_received_home_command
-                self.is_in_bounds = copy_from_pos.is_in_bounds
-                self.in_path_position = copy_from_pos.in_path_position
-
-        else:
-            self.parsed_command = None
-            self.f = None
-            self.x = None
-            self.x_offset = 0
-            self.x_homed = False
-            self.y = None
-            self.y_offset = 0
-            self.y_homed = False
-            self.z = None
-            self.z_offset = 0
-            self.z_homed = False
-            self.z_relative = 0
-            self.e = 0
-            self.e_offset = 0
-            self.e_relative = 0
-            self.is_relative = False
-            self.is_extruder_relative = False
-            self.is_metric = True
-            self.last_extrusion_height = None
-            self.layer = 0
-            self.height = 0
-            self.is_printer_primed = False
-            self.firmware_retraction_length = None
-            self.firmware_unretraction_additional_length = None
-            self.firmware_retraction_feedrate = None
-            self.firmware_unretraction_feedrate = None
-            self.firmware_z_lift = None
-            self.has_position_error = False
-            self.position_error = None
-            self.has_definite_position = False
-
-            # Extruder Tracking
-
-            self.extrusion_length = 0.0
-            self.extrusion_length_total = 0.0
-            self.retraction_length = 0.0
-            self.deretraction_length = 0.0
-            self.is_extruding_start = False
-            self.is_extruding = False
-            self.is_primed = False
-            self.is_retracting_start = False
-            self.is_retracting = False
-            self.is_retracted = False
-            self.is_partially_retracted = False
-            self.is_deretracting_start = False
-            self.is_deretracting = False
-            self.is_deretracted = False
-
-            # Resets state changes
-            self.is_layer_change = False
-            self.is_height_change = False
-            self.is_xy_travel = False
-            self.is_xyz_travel = False
-            self.is_zhop = False
-            self.has_xy_position_changed = False
-            self.has_position_changed = False
-            self.has_state_changed = False
-            self.has_received_home_command = False
-            self.is_in_position = False
-            self.in_path_position = False
-            self.file_line_number = -1
-            self.gcode_number = -1
-            self.is_in_bounds = True
-
-    @classmethod
-    def copy_from_cpp_pos(cls, cpp_pos, target):
-        target.x = None if cpp_pos[53] > 0 else cpp_pos[0]
-        target.y = None if cpp_pos[54] > 0 else cpp_pos[1]
-        target.z = None if cpp_pos[55] > 0 else cpp_pos[2]
-        target.f = None if cpp_pos[56] > 0 else cpp_pos[3]
-        target.e = cpp_pos[4]
-        target.x_offset = cpp_pos[5]
-        target.y_offset = cpp_pos[6]
-        target.z_offset = cpp_pos[7]
-        target.e_offset = cpp_pos[8]
-        target.e_relative = cpp_pos[9]
-        target.z_relative = cpp_pos[10]
-        target.extrusion_length = cpp_pos[11]
-        target.extrusion_length_total = cpp_pos[12]
-        target.retraction_length = cpp_pos[13]
-        target.deretraction_length = cpp_pos[14]
-        target.last_extrusion_height = None if cpp_pos[59] > 0 else cpp_pos[15]
-        target.height = cpp_pos[16]
-        target.firmware_retraction_length = None if cpp_pos[61] > 0 else cpp_pos[17]
-        target.firmware_unretraction_additional_length = None if cpp_pos[62] > 0 else cpp_pos[18]
-        target.firmware_retraction_feedrate = None if cpp_pos[63] > 0 else cpp_pos[19]
-        target.firmware_unretraction_feedrate = None if cpp_pos[64] > 0 else cpp_pos[20]
-        target.firmware_z_lift = None if cpp_pos[66] > 0 else cpp_pos[21]
-        target.layer = cpp_pos[22]
-        target.x_homed = cpp_pos[23] > 0
-        target.y_homed = cpp_pos[24] > 0
-        target.z_homed = cpp_pos[25] > 0
-        target.is_relative = None if cpp_pos[57] > 0 else cpp_pos[26] > 0
-        target.is_extruder_relative = None if cpp_pos[58] > 0 else cpp_pos[27] > 0
-        target.is_metric = None if cpp_pos[60] > 0 else cpp_pos[28] > 0
-        target.is_printer_primed = cpp_pos[29] > 0
-        target.has_position_error = cpp_pos[30] > 0
-        target.has_definite_position = cpp_pos[31] > 0
-        target.is_extruding_start = cpp_pos[32] > 0
-        target.is_extruding = cpp_pos[33] > 0
-        target.is_primed = cpp_pos[34] > 0
-        target.is_retracting_start = cpp_pos[35] > 0
-        target.is_retracting = cpp_pos[36] > 0
-        target.is_retracted = cpp_pos[37] > 0
-        target.is_partially_retracted = cpp_pos[38] > 0
-        target.is_deretracting_start = cpp_pos[39] > 0
-        target.is_deretracting = cpp_pos[40] > 0
-        target.is_deretracted = cpp_pos[41] > 0
-        target.is_layer_change = cpp_pos[42] > 0
-        target.is_height_change = cpp_pos[43] > 0
-        target.is_xy_travel = cpp_pos[44] > 0
-        target.is_xyz_travel = cpp_pos[45] > 0
-        target.is_zhop = cpp_pos[46] > 0
-        target.has_xy_position_changed = cpp_pos[47] > 0
-        target.has_position_changed = cpp_pos[48] > 0
-        target.has_state_changed = cpp_pos[49] > 0
-        target.has_received_home_command = cpp_pos[50] > 0
+        target.is_layer_change = cpp_pos[26] > 0
+        target.is_height_change = cpp_pos[27] > 0
+        target.is_xy_travel = cpp_pos[28] > 0
+        target.is_xyz_travel = cpp_pos[29] > 0
+        target.is_zhop = cpp_pos[30] > 0
+        target.has_xy_position_changed = cpp_pos[31] > 0
+        target.has_position_changed = cpp_pos[32] > 0
+        target.has_received_home_command = cpp_pos[33] > 0
         # Todo:  figure out how to deal with these things which must be currently ignored
-        #target.is_in_position = cpp_pos[51] > 0
-        #target.in_path_position = cpp_pos[52] > 0
-        target.file_line_number = cpp_pos[66]
-        target.gcode_number = cpp_pos[67]
-        target.is_in_bounds = cpp_pos[68] > 0
-        fast_position = cpp_pos[69]
-        if fast_position is not None:
-            target.parsed_command = ParsedCommand(fast_position[0], fast_position[1], fast_position[2])
+        target.is_in_position = cpp_pos[34] > 0
+        target.in_path_position = cpp_pos[35] > 0
+        target.is_in_bounds = cpp_pos[36] > 0
+        target.file_line_number = cpp_pos[50]
+        target.gcode_number = cpp_pos[51]
+
+        parsed_command = cpp_pos[52]
+        if parsed_command is not None:
+            target.parsed_command = ParsedCommand(parsed_command[0], parsed_command[1], parsed_command[2])
         else:
             target.parsed_command = None
 
+        extruders = cpp_pos[53]
+        if extruders is not None:
+            target.extruders = []
+            for extruder in extruders:
+                target.extruders.append(Extruder.create_from_cpp_extruder(extruder))
+        else:
+            target.extruders = None
+
         return target
 
-    @classmethod
-    def create_from_cpp_pos(cls, cpp_pos):
+    @staticmethod
+    def create_from_cpp_pos(cpp_pos):
         pos = Pos()
         Pos.copy_from_cpp_pos(cpp_pos, pos)
         return pos
 
+    def get_current_extruder(self):
+        return self.extruders[self.current_tool]
+
     def to_extruder_state_dict(self):
+        extruder = self.get_current_extruder()
         return {
-            "e": self.e_relative,
-            "extrusion_length": self.extrusion_length,
-            "extrusion_length_total": self.extrusion_length_total,
-            "retraction_length": self.retraction_length,
-            "deretraction_length": self.deretraction_length,
-            "is_extruding_start": self.is_extruding_start,
-            "is_extruding": self.is_extruding,
-            "is_primed": self.is_primed,
-            "is_retracting_start": self.is_retracting_start,
-            "is_retracting": self.is_retracting,
-            "is_retracted": self.is_retracted,
-            "is_partially_retracted": self.is_partially_retracted,
-            "is_deretracting_start": self.is_deretracting_start,
-            "is_deretracting": self.is_deretracting,
-            "is_deretracted": self.is_deretracted,
-            "has_changed": self.has_state_changed
+            "current_tool": self.current_tool,
+            "e": extruder.e_relative,
+            "extrusion_length": extruder.extrusion_length,
+            "extrusion_length_total": extruder.extrusion_length_total,
+            "retraction_length": extruder.retraction_length,
+            "deretraction_length": extruder.deretraction_length,
+            "is_extruding_start": extruder.is_extruding_start,
+            "is_extruding": extruder.is_extruding,
+            "is_primed": extruder.is_primed,
+            "is_retracting_start": extruder.is_retracting_start,
+            "is_retracting": extruder.is_retracting,
+            "is_retracted": extruder.is_retracted,
+            "is_partially_retracted": extruder.is_partially_retracted,
+            "is_deretracting_start": extruder.is_deretracting_start,
+            "is_deretracting": extruder.is_deretracting,
+            "is_deretracted": extruder.is_deretracted
         }
 
     def to_state_dict(self):
@@ -307,28 +321,30 @@ class Pos(object):
             "is_in_position": self.is_in_position,
             "in_path_position": self.in_path_position,
             "is_printer_primed": self.is_printer_primed,
-            "has_position_error": self.has_position_error,
-            "position_error": self.position_error,
             "has_received_home_command": self.has_received_home_command,
             "is_xy_travel": self.is_xy_travel,
             "is_in_bounds": self.is_in_bounds
         }
 
     def to_position_dict(self):
+        extruder = self.get_current_extruder()
         return {
-            "F": self.f,
+            "current_tool": self.current_tool,
+            "f": self.f,
             "x": self.x,
             "x_offset": self.x_offset,
             "y": self.y,
             "y_offset": self.y_offset,
             "z": self.z,
             "z_offset": self.z_offset,
-            "e": self.e,
-            "e_offset": self.e_offset
+            "e": extruder.e,
+            "e_offset": extruder.e_offset
         }
 
     def to_dict(self):
+        extruder = self.get_current_extruder()
         return {
+            "current_tool": self.current_tool,
             "gcode": "" if self.parsed_command is None else self.parsed_command.gcode,
             "f": self.f,
             "x": self.x,
@@ -341,8 +357,8 @@ class Pos(object):
             "z_offset": self.z_offset,
             "z_homed": self.z_homed,
             "z_relative": self.z_relative,
-            "e": self.e,
-            "e_offset": self.e_offset,
+            "e": extruder.e,
+            "e_offset": extruder.e_offset,
             "is_relative": self.is_relative,
             "is_extruder_relative": self.is_extruder_relative,
             "is_metric": self.is_metric,
@@ -351,12 +367,9 @@ class Pos(object):
             "is_zhop": self.is_zhop,
             "is_in_position": self.is_in_position,
             "in_path_position": self.in_path_position,
-            "is_primed": self.is_primed,
-            "has_position_error": self.has_position_error,
-            "position_error": self.position_error,
+            "is_primed": self.is_printer_primed,
             "has_xy_position_changed": self.has_xy_position_changed,
             "has_position_changed": self.has_position_changed,
-            "has_state_changed": self.has_state_changed,
             "layer": self.layer,
             "height": self.height,
             "has_received_home_command": self.has_received_home_command,
@@ -379,9 +392,10 @@ class Pos(object):
         return utility.round_to(amount_to_lift, utility.FLOAT_MATH_EQUALITY_RANGE)
 
     def length_to_retract(self, amount_to_retract):
+        extruder = self.get_current_extruder()
         # if we don't have any history, we want to retract
         retract_length = utility.round_to_float_equality_range(
-            utility.round_to_float_equality_range(amount_to_retract - self.retraction_length)
+            utility.round_to_float_equality_range(amount_to_retract - extruder.retraction_length)
         )
         if retract_length < 0:
             retract_length = 0
@@ -404,7 +418,9 @@ class Pos(object):
         return self.z - self.z_offset
 
     def offset_e(self):
-        return self.e - self.e_offset
+        extruder = self.get_current_extruder()
+        return extruder.e - extruder.e_offset
+
 
 class Position(object):
     def __init__(self, printer_profile, trigger_profile, overridable_printer_profile_settings):
@@ -501,27 +517,6 @@ class Position(object):
     def length_to_retract(self):
         return self.current_pos.length_to_retract(self._retraction_length)
 
-    # TODO: do we need this?
-    def x_relative_to_current(self, x):
-        if x:
-            return x - self.current_pos.x + self.current_pos.x_offset
-        else:
-            return self.current_pos.x - self.previous_pos.x
-
-    # TODO: do we need this?
-    def y_relative_to_current(self, y):
-        if y:
-            return y - self.current_pos.y + self.current_pos.y_offset
-        else:
-            return self.current_pos.y - self.previous_pos.y
-
-    # TODO: do we need this?
-    def e_relative_to_current(self, e):
-        if e:
-            return e - self.current_pos.e + self.current_pos.e_offset
-        else:
-            return self.current_pos.e - self.previous_pos.e
-
     def command_requires_location_detection(self, cmd):
         if self._auto_detect_position:
             if cmd in self._location_detection_commands:
@@ -544,6 +539,9 @@ class Position(object):
     @staticmethod
     def copy_pos(source, target):
         """does not copy all items, only what is necessary for the Position.Update command"""
+        assert(isinstance(source, Pos))
+        assert (isinstance(target, Pos))
+
         target.f = source.f
         target.x = source.x
         target.x_offset = source.x_offset
@@ -554,8 +552,6 @@ class Position(object):
         target.z = source.z
         target.z_offset = source.z_offset
         target.z_homed = source.z_homed
-        target.e = source.e
-        target.e_offset = source.e_offset
         target.is_relative = source.is_relative
         target.is_extruder_relative = source.is_extruder_relative
         target.is_metric = source.is_metric
@@ -568,36 +564,21 @@ class Position(object):
         target.firmware_retraction_feedrate = source.firmware_retraction_feedrate
         target.firmware_unretraction_feedrate = source.firmware_unretraction_feedrate
         target.firmware_z_lift = source.firmware_z_lift
-        target.has_position_error = source.has_position_error
-        target.position_error = source.position_error
         target.has_definite_position = source.has_definite_position
         target.in_path_position = source.in_path_position
         target.is_zhop = source.is_zhop
-
-        # Extruder Tracking
-        target.e_relative = source.e_relative
-        target.extrusion_length = source.extrusion_length
-        target.extrusion_length_total = source.extrusion_length_total
-        target.retraction_length = source.retraction_length
-        target.deretraction_length = source.deretraction_length
-        target.is_extruding_start = source.is_extruding_start
-        target.is_extruding = source.is_extruding
-        target.is_primed = source.is_primed
-        target.is_retracting_start = source.is_retracting_start
-        target.is_retracting = source.is_retracting
-        target.is_retracted = source.is_retracted
-        target.is_partially_retracted = source.is_partially_retracted
-        target.is_deretracting_start = source.is_deretracting_start
-        target.is_deretracting = source.is_deretracting
-        target.is_deretracted = source.is_deretracted
         target.is_in_position = source.is_in_position
+
+        # copy extruders
+        target.extruders = []
+        for extruder in source.extruders:
+            target.extruders.append(Extruder(copy_from=extruder))
 
         # Resets state changes
         target.is_layer_change = False
         target.is_height_change = False
         target.is_xy_travel = False
         target.has_position_changed = False
-        target.has_state_changed = False
         target.has_received_home_command = False
         target.is_in_bounds = True
 
@@ -610,7 +591,7 @@ class Position(object):
         self.undo_pos = self.previous_pos
         self.previous_pos = self.current_pos
         self.current_pos = old_undo_pos
-        # TODO:  We probably don't need to copy previous since we'll get the current pos from 'Update' below
+
         Position.copy_pos(self.previous_pos, self.current_pos)
 
         # parse the gcode command
@@ -848,8 +829,6 @@ class Position(object):
     #
     #     self._logger.log_position_command_received(
     #         "Received G161 - ".format(" ".join(home_strings)))
-    #     pos.has_position_error = False
-    #     pos.position_error = None
     #
     # def _g162_received(self, pos):
     #     # Home
@@ -906,8 +885,6 @@ class Position(object):
     #
     #     self._logger.log_position_command_received(
     #         "Received G162 - ".format(" ".join(home_strings)))
-    #     pos.has_position_error = False
-    #     pos.position_error = None
 
     def calculate_path_intersections(self, restrictions, x, y, previous_x, previous_y, can_calculate_intersections):
 
@@ -1001,6 +978,8 @@ class Position(object):
 
     @staticmethod
     def _is_extruder_triggered(pos, options):
+        assert(isinstance(pos, Pos))
+        extruder = pos.get_current_extruder()
         # if there are no extruder trigger options, return true.
         if options is None:
             return True
@@ -1009,34 +988,34 @@ class Position(object):
         # extruder state.  Returns true if triggering, false if not.
 
         extruding_start_triggered = Position._extruder_state_triggered(
-            options.on_extruding_start, pos.is_extruding_start
+            options.on_extruding_start, extruder.is_extruding_start
         )
         extruding_triggered = Position._extruder_state_triggered(
-            options.on_extruding, pos.is_extruding
+            options.on_extruding, extruder.is_extruding
         )
         primed_triggered = Position._extruder_state_triggered(
-            options.on_primed, pos.is_primed
+            options.on_primed, extruder.is_primed
         )
         retracting_start_triggered = Position._extruder_state_triggered(
-            options.on_retracting_start, pos.is_retracting_start
+            options.on_retracting_start, extruder.is_retracting_start
         )
         retracting_triggered = Position._extruder_state_triggered(
-            options.on_retracting, pos.is_retracting
+            options.on_retracting, extruder.is_retracting
         )
         partially_retracted_triggered = Position._extruder_state_triggered(
-            options.on_partially_retracted, pos.is_partially_retracted
+            options.on_partially_retracted, extruder.is_partially_retracted
         )
         retracted_triggered = Position._extruder_state_triggered(
-            options.on_retracted, pos.is_retracted
+            options.on_retracted, extruder.is_retracted
         )
         deretracting_start_triggered = Position._extruder_state_triggered(
-            options.on_deretracting_start, pos.is_deretracting_start
+            options.on_deretracting_start, extruder.is_deretracting_start
         )
         deretracting_triggered = Position._extruder_state_triggered(
-            options.on_deretracting, pos.is_deretracting
+            options.on_deretracting, extruder.is_deretracting
         )
         deretracted_triggered = Position._extruder_state_triggered(
-            options.on_deretracted, pos.is_deretracted
+            options.on_deretracted, extruder.is_deretracted
         )
 
         ret_value = False

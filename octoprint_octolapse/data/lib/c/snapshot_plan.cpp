@@ -69,6 +69,7 @@ PyObject * snapshot_plan::build_py_object(std::vector<snapshot_plan> &p_plans)
 
 PyObject * snapshot_plan::to_py_object()
 {
+	std::cout << "Building Snapshot Plan Pyobject.\r\n";
 	PyObject* py_triggering_command;
 	
 	if (triggering_command.is_empty)
@@ -100,7 +101,7 @@ PyObject * snapshot_plan::to_py_object()
 			return NULL;
 		}
 	}
-
+	std::cout << "Building initial position..\r\n";
 	PyObject * py_initial_position;
 	if (!has_initial_position)
 	{
@@ -115,7 +116,7 @@ PyObject * snapshot_plan::to_py_object()
 			return NULL;
 		}
 	}
-
+	std::cout << "Building snapshot plan steps.\r\n";
 	PyObject * py_steps = PyList_New(0);
 	if (py_steps == NULL)
 	{
@@ -169,7 +170,6 @@ PyObject * snapshot_plan::to_py_object()
 			return NULL;
 		}
 	}
-
 	PyObject *py_snapshot_plan = Py_BuildValue(
 		"llddOOOOOO",
 		file_line,

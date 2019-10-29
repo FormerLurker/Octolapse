@@ -24,6 +24,7 @@
 #define POSITION_H
 #include <string>
 #include "parsed_command.h"
+#include "extruder.h"
 #ifdef _DEBUG
 #undef _DEBUG
 #include <Python.h>
@@ -35,6 +36,10 @@
 struct position
 {
 	position();
+	position(int extruder_count);
+	position(const position &pos); // Copy Constructor
+	virtual ~position();
+	position& operator=(const position& pos);
 	void reset_state();
 	PyObject * to_py_tuple();
 	PyObject * to_py_dict();
@@ -54,12 +59,6 @@ struct position
 	bool z_null;
 	double z_offset;
 	bool z_homed;
-	double e;
-	double e_offset;
-	bool is_relative;
-	bool is_relative_null;
-	bool is_extruder_relative;
-	bool is_extruder_relative_null;
 	bool is_metric;
 	bool is_metric_null;
 	double last_extrusion_height;
@@ -69,22 +68,11 @@ struct position
 	int current_height_increment;
 	bool is_printer_primed;
 	bool has_definite_position;
-	double e_relative;
 	double z_relative;
-	double extrusion_length;
-	double extrusion_length_total;
-	double retraction_length;
-	double deretraction_length;
-	bool is_extruding_start;
-	bool is_extruding;
-	bool is_primed;
-	bool is_retracting_start;
-	bool is_retracting;
-	bool is_retracted;
-	bool is_partially_retracted;
-	bool is_deretracting_start;
-	bool is_deretracting;
-	bool is_deretracted;
+	bool is_relative;
+	bool is_relative_null;
+	bool is_extruder_relative;
+	bool is_extruder_relative_null;
 	bool is_layer_change;
 	bool is_height_change;
 	bool is_xy_travel;
@@ -92,7 +80,6 @@ struct position
 	bool is_zhop;
 	bool has_position_changed;
 	bool has_xy_position_changed;
-	bool has_state_changed;
 	bool has_received_home_command;
 	bool is_in_position;
 	bool in_path_position;
@@ -101,10 +88,15 @@ struct position
 	bool gcode_ignored;
 	bool is_in_bounds;
 	bool is_empty;
-	double get_offset_x();
-	double get_offset_y();
-	double get_offset_z();
-	double get_offset_e();
+	int current_tool;
+	int num_extruders;
+	extruder * p_extruders;
+	extruder& get_current_extruder() const;
+	void set_num_extruders(int num_extruders_);
+	void delete_extruders();
+	double get_offset_x() const;
+	double get_offset_y() const;
+	double get_offset_z() const;
 	void set_xyz_axis_mode(const std::string& xyz_axis_default_mode);
 	void set_e_axis_mode(const std::string& e_axis_default_mode);
 	void set_units_default(const std::string& units_default);

@@ -21,7 +21,7 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from __future__ import unicode_literals
-from octoprint_octolapse.position import Pos, Position
+from octoprint_octolapse.position import Pos
 from octoprint_octolapse.gcode_parser import ParsedCommand
 from octoprint_octolapse.settings import *
 from octoprint_octolapse.trigger import Triggers
@@ -66,7 +66,13 @@ class SnapshotGcode(object):
             self.EndGcode.append(command)
 
     def end_index(self):
-        return len(self.InitializationGcode) + len(self.StartGcode) + len(self.snapshot_commands) + len(self.ReturnCommands) + len(self.EndGcode) - 1
+        return (
+            len(self.InitializationGcode) +
+            len(self.StartGcode) +
+            len(self.snapshot_commands) +
+            len(self.ReturnCommands) +
+            len(self.EndGcode) - 1
+        )
 
     def snapshot_index(self):
         return len(self.InitializationGcode) + len(self.StartGcode) + len(self.snapshot_commands) - 1
@@ -178,8 +184,12 @@ class SnapshotPlan(object):
                 file_gcode_number = cpp_plan[1]
                 travel_distance = cpp_plan[2]
                 saved_travel_distance = cpp_plan[3]
-                triggering_command = None if cpp_plan[4] is None else ParsedCommand.create_from_cpp_parsed_command(cpp_plan[4])
-                start_command = None if cpp_plan[5] is None else ParsedCommand.create_from_cpp_parsed_command(cpp_plan[5])
+                triggering_command = (
+                    None if cpp_plan[4] is None else ParsedCommand.create_from_cpp_parsed_command(cpp_plan[4])
+                )
+                start_command = (
+                    None if cpp_plan[5] is None else ParsedCommand.create_from_cpp_parsed_command(cpp_plan[5])
+                )
                 initial_position = Pos.create_from_cpp_pos(cpp_plan[6])
                 steps = []
                 for step in cpp_plan[7]:
@@ -244,7 +254,20 @@ class SnapshotGcodeGenerator(object):
         self.distance_to_lift = None
         self.axis_mode_compatibility = self.Printer.gocde_axis_compatibility_mode_enabled
 
-        #Snapshot Gcode Variable
+        # Gcode Generation Settings
+        self.x_y_travel_speed = None
+        self.z_lift_speed = None
+        #   Extruder Settings
+        self.current_tool = None
+        self.current_extruder = None
+        self.retract_before_move = None
+        self.retraction_length = None
+        self.retraction_speed = None
+        self.deretraction_speed = None
+        self.lift_when_retracted = None
+        self.z_lift_height = None
+
+        # Snapshot Gcode Variable
         self.snapshot_gcode = None
         # state flags
         self.retracted_by_start_gcode = None
@@ -258,6 +281,7 @@ class SnapshotGcodeGenerator(object):
         self, snapshot_plan, g90_influences_extruder, options=None
     ):
         assert(isinstance(snapshot_plan, SnapshotPlan))
+        assert(isinstance(snapshot_plan.initial_position, Pos))
         # reset any errors
         self.has_snapshot_position_errors = False
         self.snapshot_position_errors = ""
@@ -277,21 +301,30 @@ class SnapshotGcodeGenerator(object):
         self.x_current = snapshot_plan.initial_position.x
         self.y_current = snapshot_plan.initial_position.y
         self.z_current = snapshot_plan.initial_position.z
-        self.e_current = snapshot_plan.initial_position.e
+        self.e_current = snapshot_plan.initial_position.get_current_extruder().e
         self.f_current = snapshot_plan.initial_position.f
         self.is_relative_current = snapshot_plan.initial_position.is_relative
         self.is_extruder_relative_current = snapshot_plan.initial_position.is_extruder_relative
+        self.current_tool = snapshot_plan.initial_position.current_tool
+        self.current_extruder = self.Printer.gcode_generation_settings.extruders[self.current_tool]
+        # Get per extruder settings for convenience
+        self.x_y_travel_speed = self.current_extruder.x_y_travel_speed
+        self.z_lift_speed = self.current_extruder.z_lift_speed
+        self.retraction_speed = self.current_extruder.retraction_speed
+        self.deretraction_speed = self.current_extruder.deretraction_speed
+        self.retract_before_move = self.current_extruder.retract_before_move
+        self.retraction_length = self.current_extruder.retraction_length
+        self.lift_when_retracted = self.current_extruder.lift_when_retracted
+        self.z_lift_height = self.current_extruder.z_lift_height
 
         if options is not None and "disable_z_lift" in options and options["disable_z_lift"]:
             self.distance_to_lift = 0
         else:
-            z_lift_height = self.Printer.gcode_generation_settings.z_lift_height
-            self.distance_to_lift = snapshot_plan.initial_position.distance_to_zlift(z_lift_height)
+            self.distance_to_lift = snapshot_plan.initial_position.distance_to_zlift(self.z_lift_height)
             if self.distance_to_lift is None:
                 self.distance_to_lift = 0
 
-        retraction_length = self.Printer.gcode_generation_settings.retraction_length
-        self.length_to_retract = snapshot_plan.initial_position.length_to_retract(retraction_length)
+        self.length_to_retract = snapshot_plan.initial_position.length_to_retract(self.retraction_length)
         if self.length_to_retract is None:
             self.length_to_retract = 0
 
@@ -470,12 +503,12 @@ class SnapshotGcodeGenerator(object):
         return feedrate
 
     def can_retract(self):
-        return self.gcode_generation_settings.retract_before_move and self.length_to_retract > 0
+        return self.retract_before_move and self.length_to_retract > 0
 
     def can_zhop(self):
         if not (
-            self.gcode_generation_settings.retract_before_move and
-            self.gcode_generation_settings.lift_when_retracted and self.distance_to_lift > 0
+            self.retract_before_move and
+            self.lift_when_retracted and self.distance_to_lift > 0
         ):
             return False
         max_z = self.overridable_printer_profile_settings["volume"]["max_z"]
@@ -493,7 +526,7 @@ class SnapshotGcodeGenerator(object):
             SnapshotGcode.START_GCODE,
             self.get_gcode_retract(
                 length_to_retract,
-                self.get_altered_feedrate(self.gcode_generation_settings.retraction_speed)
+                self.get_altered_feedrate(self.retraction_speed)
             )
         )
         self.retracted_by_start_gcode = True
@@ -508,7 +541,7 @@ class SnapshotGcodeGenerator(object):
                 SnapshotGcode.END_GCODE,
                 self.get_gcode_retract(
                     length_to_deretract,
-                    self.get_altered_feedrate(self.gcode_generation_settings.deretraction_speed)
+                    self.get_altered_feedrate(self.deretraction_speed)
                 )
             )
 
@@ -522,7 +555,7 @@ class SnapshotGcodeGenerator(object):
             SnapshotGcode.START_GCODE,
             self.get_gcode_z_lift(
                 distance_to_lift,
-                self.get_altered_feedrate(self.gcode_generation_settings.z_lift_speed)
+                self.get_altered_feedrate(self.z_lift_speed)
             )
         )
         self.lifted_by_start_gcode = True
@@ -537,7 +570,7 @@ class SnapshotGcodeGenerator(object):
                 SnapshotGcode.END_GCODE,
                 self.get_gcode_z_lift(
                     distance_to_delift,
-                    self.get_altered_feedrate(self.gcode_generation_settings.z_lift_speed)
+                    self.get_altered_feedrate(self.z_lift_speed)
                 )
             )
 
@@ -553,7 +586,7 @@ class SnapshotGcodeGenerator(object):
                 self.get_gcode_travel(
                     x_relative,
                     y_relative,
-                    self.get_altered_feedrate(self.gcode_generation_settings.x_y_travel_speed)
+                    self.get_altered_feedrate(self.x_y_travel_speed)
                 )
             )
 
@@ -573,7 +606,7 @@ class SnapshotGcodeGenerator(object):
                 self.get_gcode_travel(
                     x_relative,
                     y_relative,
-                    self.get_altered_feedrate(self.gcode_generation_settings.x_y_travel_speed)
+                    self.get_altered_feedrate(self.x_y_travel_speed)
                 )
             )
 
@@ -588,8 +621,8 @@ class SnapshotGcodeGenerator(object):
         self.snapshot_gcode.append(
             SnapshotGcode.START_GCODE,
             self.get_gcode_retract(
-                self.e_current - self.snapshot_plan.initial_position.e_offset,
-                self.get_altered_feedrate(self.gcode_generation_settings.retraction_speed)
+                self.e_current - self.snapshot_plan.initial_position.get_current_extruder().e_offset,
+                self.get_altered_feedrate(self.retraction_speed)
             )
         )
 
@@ -601,8 +634,8 @@ class SnapshotGcodeGenerator(object):
             self.snapshot_gcode.append(
                 SnapshotGcode.END_GCODE,
                 self.get_gcode_retract(
-                    self.e_current - self.snapshot_plan.initial_position.e_offset,
-                    self.get_altered_feedrate(self.gcode_generation_settings.deretraction_speed)
+                    self.e_current - self.snapshot_plan.initial_position.get_current_extruder().e_offset,
+                    self.get_altered_feedrate(self.deretraction_speed)
                 )
             )
 
@@ -617,7 +650,7 @@ class SnapshotGcodeGenerator(object):
             SnapshotGcode.START_GCODE,
             self.get_gcode_z_lift(
                 self.z_current - self.snapshot_plan.initial_position.z_offset,
-                self.get_altered_feedrate(self.gcode_generation_settings.z_lift_speed)
+                self.get_altered_feedrate(self.z_lift_speed)
             )
         )
 
@@ -631,7 +664,7 @@ class SnapshotGcodeGenerator(object):
             SnapshotGcode.END_GCODE,
             self.get_gcode_z_lift(
                 self.z_current - self.snapshot_plan.initial_position.z_offset,
-                self.get_altered_feedrate(self.gcode_generation_settings.z_lift_speed)
+                self.get_altered_feedrate(self.z_lift_speed)
             )
         )
 
@@ -647,7 +680,7 @@ class SnapshotGcodeGenerator(object):
                 self.get_gcode_travel(
                     step.x - self.snapshot_plan.initial_position.x_offset,
                     step.y - self.snapshot_plan.initial_position.y_offset,
-                    self.get_altered_feedrate(self.gcode_generation_settings.x_y_travel_speed)
+                    self.get_altered_feedrate(self.x_y_travel_speed)
                 )
             )
 
@@ -670,7 +703,7 @@ class SnapshotGcodeGenerator(object):
                     self.get_gcode_travel(
                         self.snapshot_plan.return_position.x - self.snapshot_plan.return_position.x_offset,
                         self.snapshot_plan.return_position.y - self.snapshot_plan.return_position.y_offset,
-                        self.get_altered_feedrate(self.gcode_generation_settings.x_y_travel_speed)
+                        self.get_altered_feedrate(self.x_y_travel_speed)
                     )
                 )
 

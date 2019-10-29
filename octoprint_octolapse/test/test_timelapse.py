@@ -323,11 +323,6 @@ class TestTimelapse(unittest.TestCase):
         self.assertTrue(triggeringTrigger ==
                         self.Timelapse_GcodeTrigger.Triggers[0])
 
-        # test with position error
-        self.Timelapse_GcodeTrigger.Position.get_position(0).has_position_error = True
-        self.assertTrue(self.Timelapse_GcodeTrigger.IsTriggering(
-            snapshotCommand) is None)
-
     def test_IsTriggering_TimerTrigger(self):
         self.Settings.profiles.current_snapshot().gcode_trigger_enabled = False
         self.Settings.profiles.current_snapshot().layer_trigger_enabled = False

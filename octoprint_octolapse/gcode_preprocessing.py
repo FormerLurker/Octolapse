@@ -424,6 +424,10 @@ class ParsingFunctions(object):
         return map(str.strip, parse_string.split(u','))
 
     @staticmethod
+    def parse_string_semicolon_separated_value(parse_string):
+        return map(str.strip, parse_string.split(u';'))
+
+    @staticmethod
     def parse_float_csv(parse_string):
         str_array = parse_string.split(u',')
         results = []
@@ -585,14 +589,18 @@ class Slic3rParsingFunctions(ParsingFunctions):
         }
 
     @staticmethod
-    def parse_xy(parse_string):
-        xy = parse_string[0].split(u'x')
-        if len(xy) == 2:
-            return {
-                u'x': Slic3rParsingFunctions.parse_float(xy[0]),
-                u'y': Slic3rParsingFunctions.parse_float(xy[1])
-            }
-        return None
+    def parse_xy_csv(parse_string):
+        offsets_array = parse_string.split(',')
+        offsets = []
+        for offset in offsets_array:
+            xy = offset.split('x')
+            if len(xy) == 2:
+                offsets.append({
+                    u'x': Slic3rParsingFunctions.parse_float(xy[0]),
+                    u'y': Slic3rParsingFunctions.parse_float(xy[1])
+                })
+
+        return offsets
 
     @staticmethod
     def parse_version(parse_string):
@@ -634,8 +642,20 @@ class Slic3rParsingFunctions(ParsingFunctions):
             return float(parse_string.encode(u'utf-8').translate(None, b'%'))
         except ValueError:
             return 0
-        except Exception as e:
-            raise e
+
+    @staticmethod
+    def parse_percent_csv(parse_string):
+        percents_array = parse_string.split(',')
+        percents = []
+        for percent in percents_array:
+            percent_index = percent.find(u'%')
+            if percent_index < 1:
+                percents.append(None)
+            try:
+                percents.append(percent.encode(u'utf-8').translate(None, b'%'))
+            except ValueError:
+                percents.append(0)
+        return percents
 
     @staticmethod
     def parse_percent_or_mm(parse_string):
@@ -735,46 +755,30 @@ class Slic3rSettingsProcessor(GcodeSettingsProcessor):
     def get_settings_dictionary():
         return {
             # Octolapse Settings
-            u'retract_length': SettingsDefinition(u'retract_length', Slic3rParsingFunctions.parse_float,[u'octolapse_setting']),
-            u'retract_lift': SettingsDefinition(u'retract_lift', Slic3rParsingFunctions.parse_float, [u'octolapse_setting']),
-            u'deretract_speed': SettingsDefinition(u'deretract_speed', Slic3rParsingFunctions.parse_float, [u'octolapse_setting']),
-            u'retract_speed': SettingsDefinition(u'retract_speed', Slic3rParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retract_length': SettingsDefinition(u'retract_length', Slic3rParsingFunctions.parse_float_csv,[u'octolapse_setting']),
+            u'retract_lift': SettingsDefinition(u'retract_lift', Slic3rParsingFunctions.parse_float_csv, [u'octolapse_setting']),
+            u'deretract_speed': SettingsDefinition(u'deretract_speed', Slic3rParsingFunctions.parse_float_csv, [u'octolapse_setting']),
+            u'retract_speed': SettingsDefinition(u'retract_speed', Slic3rParsingFunctions.parse_float_csv, [u'octolapse_setting']),
             u'travel_speed': SettingsDefinition(u'travel_speed', Slic3rParsingFunctions.parse_float, [u'octolapse_setting']),
             u'first_layer_speed': SettingsDefinition(u'first_layer_speed', Slic3rParsingFunctions.parse_percent_or_mm,[u'octolapse_setting']),
-            u'retract_before_travel': SettingsDefinition(u'retract_before_travel', Slic3rParsingFunctions.parse_float,[u'octolapse_setting']),
             # this speed is not yet used
+            u'retract_before_travel': SettingsDefinition(u'retract_before_travel', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
             u'layer_height': SettingsDefinition(u'layer_height', Slic3rParsingFunctions.parse_float, [u'octolapse_setting']),
             u'spiral_vase': SettingsDefinition(u'spiral_vase', Slic3rParsingFunctions.parse_bool, [u'octolapse_setting']),
             u'version': SettingsDefinition(u'version', None, [u'slicer_info', 'octolapse_setting'], True),
             # End Octolapse Settings - The rest are included in case they become useful for Octolapse or another project
-            u'max_print_speed': SettingsDefinition(u'max_print_speed', Slic3rParsingFunctions.parse_float,
-                                                   [u'misc']),
-
-            u'perimeter_speed': SettingsDefinition(u'perimeter_speed', Slic3rParsingFunctions.parse_float,
-                                                   [u'misc']),
-            u'small_perimeter_speed': SettingsDefinition(u'small_perimeter_speed',
-                                                         Slic3rParsingFunctions.parse_percent_or_mm,
-                                                         [u'misc']),
-            u'external_perimeter_speed': SettingsDefinition(u'external_perimeter_speed',
-                                                            Slic3rParsingFunctions.parse_percent_or_mm,
-                                                            [u'misc']),
-            u'infill_speed': SettingsDefinition(u'infill_speed', Slic3rParsingFunctions.parse_float,
-                                                [u'misc']),
-            u'solid_infill_speed': SettingsDefinition(u'solid_infill_speed', Slic3rParsingFunctions.parse_percent_or_mm,
-                                                      [u'misc']),
-            u'top_solid_infill_speed': SettingsDefinition(u'top_solid_infill_speed',
-                                                          Slic3rParsingFunctions.parse_percent_or_mm,
-                                                          [u'misc']),
-            u'support_material_speed': SettingsDefinition(u'support_material_speed', Slic3rParsingFunctions.parse_float,
-                                                          [u'misc']),
-            u'bridge_speed': SettingsDefinition(u'bridge_speed', Slic3rParsingFunctions.parse_float,
-                                                [u'misc']),
-            u'gap_fill_speed': SettingsDefinition(u'gap_fill_speed', Slic3rParsingFunctions.parse_float,
-                                                  [u'misc']),
-
-            u'retract_before_wipe': SettingsDefinition(u'retract_before_wipe',
-                                                       Slic3rParsingFunctions.parse_percent, [u'misc']),
-            u'wipe': SettingsDefinition(u'wipe', Slic3rParsingFunctions.parse_bool, [u'misc']),
+            u'max_print_speed': SettingsDefinition(u'max_print_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'perimeter_speed': SettingsDefinition(u'perimeter_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'small_perimeter_speed': SettingsDefinition(u'small_perimeter_speed', Slic3rParsingFunctions.parse_percent_or_mm, [u'misc']),
+            u'external_perimeter_speed': SettingsDefinition(u'external_perimeter_speed', Slic3rParsingFunctions.parse_percent_or_mm, [u'misc']),
+            u'infill_speed': SettingsDefinition(u'infill_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'solid_infill_speed': SettingsDefinition(u'solid_infill_speed', Slic3rParsingFunctions.parse_percent_or_mm, [u'misc']),
+            u'top_solid_infill_speed': SettingsDefinition(u'top_solid_infill_speed', Slic3rParsingFunctions.parse_percent_or_mm, [u'misc']),
+            u'support_material_speed': SettingsDefinition(u'support_material_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'bridge_speed': SettingsDefinition(u'bridge_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'gap_fill_speed': SettingsDefinition(u'gap_fill_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'retract_before_wipe': SettingsDefinition(u'retract_before_wipe', Slic3rParsingFunctions.parse_percent_csv, [u'misc']),
+            u'wipe': SettingsDefinition(u'wipe', Slic3rParsingFunctions.parse_bool_csv, [u'misc']),
             u'external perimeters extrusion width': SettingsDefinition(u'external_perimeters_extrusion_width', Slic3rParsingFunctions.parse_mm, [u'misc']),
             u'perimeters extrusion width': SettingsDefinition(u'perimeters_extrusion_width', Slic3rParsingFunctions.parse_mm, [u'misc']),
             u'infill extrusion width': SettingsDefinition(u'infill_extrusion_width', Slic3rParsingFunctions.parse_mm, [u'misc']),
@@ -786,62 +790,73 @@ class Slic3rSettingsProcessor(GcodeSettingsProcessor):
             u'estimated printing time': SettingsDefinition(u'estimated_printing_time', Slic3rParsingFunctions.parse_hhmmss,[u'misc']),
             u'avoid_crossing_perimeters': SettingsDefinition(u'avoid_crossing_perimeters', Slic3rParsingFunctions.parse_bool,[u'misc']),
             u'bed_shape': SettingsDefinition(u'bed_shape', Slic3rParsingFunctions.parse_bed_shape, [u'misc']),
-            u'bed_temperature': SettingsDefinition(u'bed_temperature', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'bed_temperature': SettingsDefinition(u'bed_temperature', Slic3rParsingFunctions.parse_int_csv, [u'misc']),
             u'before_layer_gcode': SettingsDefinition(u'before_layer_gcode', Slic3rParsingFunctions.get_string, [u'misc']),
             u'between_objects_gcode': SettingsDefinition(u'between_objects_gcode', Slic3rParsingFunctions.get_string, [u'misc']),
             u'bridge_acceleration': SettingsDefinition(u'bridge_acceleration', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'bridge_fan_speed': SettingsDefinition(u'bridge_fan_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'brim_width': SettingsDefinition(u'brim_width', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'complete_objects': SettingsDefinition(u'complete_objects', Slic3rParsingFunctions.parse_bool, [u'misc']),
-            u'cooling': SettingsDefinition(u'cooling', Slic3rParsingFunctions.parse_bool, [u'misc']),
+            u'cooling': SettingsDefinition(u'cooling', Slic3rParsingFunctions.parse_bool_csv, [u'misc']),
             u'cooling_tube_length': SettingsDefinition(u'cooling_tube_length', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'cooling_tube_retraction': SettingsDefinition(u'cooling_tube_retraction', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'default_acceleration': SettingsDefinition(u'default_acceleration', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'disable_fan_first_layers': SettingsDefinition(u'disable_fan_first_layers', Slic3rParsingFunctions.parse_bool, [u'misc']),
+            u'disable_fan_first_layers': SettingsDefinition(u'disable_fan_first_layers', Slic3rParsingFunctions.parse_int_csv, [u'misc']),
             u'duplicate_distance': SettingsDefinition(u'duplicate_distance', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'end_filament_gcode': SettingsDefinition(u'end_filament_gcode', Slic3rParsingFunctions.get_string, [u'misc']),
             u'end_gcode': SettingsDefinition(u'end_gcode', Slic3rParsingFunctions.get_string, [u'misc']),
             u'extruder_clearance_height': SettingsDefinition(u'extruder_clearance_height', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'extruder_clearance_radius': SettingsDefinition(u'extruder_clearance_radius', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'extruder_colour': SettingsDefinition(u'extruder_colour', Slic3rParsingFunctions.get_string, [u'misc']),
-            u'extruder_offset': SettingsDefinition(u'extruder_offset', Slic3rParsingFunctions.parse_xy, [u'misc']),
+            u'extruder_colour': SettingsDefinition(u'extruder_colour', Slic3rParsingFunctions.parse_string_semicolon_separated_value, [u'misc']),
+            u'extruder_offset': SettingsDefinition(u'extruder_offset', Slic3rParsingFunctions.parse_xy_csv, [u'misc']),
             u'extrusion_axis': SettingsDefinition(u'extrusion_axis', Slic3rParsingFunctions.get_string, [u'misc']),
-            u'extrusion_multiplier': SettingsDefinition(u'extrusion_multiplier', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'fan_always_on': SettingsDefinition(u'fan_always_on', Slic3rParsingFunctions.parse_bool, [u'misc']),
-            u'fan_below_layer_time': SettingsDefinition(u'fan_below_layer_time', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'filament_colour': SettingsDefinition(u'filament_colour', Slic3rParsingFunctions.get_string, [u'misc']),
-            u'filament_cost': SettingsDefinition(u'filament_cost', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'filament_density': SettingsDefinition(u'filament_density', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'filament_diameter': SettingsDefinition(u'filament_diameter', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'filament_loading_speed': SettingsDefinition(u'filament_loading_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'filament_max_volumetric_speed': SettingsDefinition(u'filament_max_volumetric_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'extrusion_multiplier': SettingsDefinition(u'extrusion_multiplier', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'fan_always_on': SettingsDefinition(u'fan_always_on', Slic3rParsingFunctions.parse_bool_csv, [u'misc']),
+            u'fan_below_layer_time': SettingsDefinition(u'fan_below_layer_time', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'filament_colour': SettingsDefinition(u'filament_colour', Slic3rParsingFunctions.parse_string_semicolon_separated_value, [u'misc']),
+            u'filament_cooling_final_speed': SettingsDefinition(u'filament_cooling_final_speed', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'filament_cooling_initial_speed': SettingsDefinition(u'filament_cooling_initial_speed', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'filament_cooling_moves': SettingsDefinition(u'filament_cooling_moves', Slic3rParsingFunctions.parse_int_csv, [u'misc']),
+
+            u'filament_cost': SettingsDefinition(u'filament_cost', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'filament_density': SettingsDefinition(u'filament_density', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'filament_diameter': SettingsDefinition(u'filament_diameter', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'filament_load_time': SettingsDefinition(u'filament_load_time', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'filament_loading_speed': SettingsDefinition(u'filament_loading_speed', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'filament_loading_speed_start': SettingsDefinition(u'filament_loading_speed_start', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'filament_max_volumetric_speed': SettingsDefinition(u'filament_max_volumetric_speed', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'filament_minimal_purge_on_wipe_tower': SettingsDefinition(u'filament_minimal_purge_on_wipe_tower', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+
             u'filament_notes': SettingsDefinition(u'filament_notes', Slic3rParsingFunctions.get_string, [u'misc']),
             u'filament_ramming_parameters': SettingsDefinition(u'filament_ramming_parameters', Slic3rParsingFunctions.get_string, [u'misc']),
-            u'filament_soluble': SettingsDefinition(u'filament_soluble', Slic3rParsingFunctions.parse_bool, [u'misc']),
-            u'filament_toolchange_delay': SettingsDefinition(u'filament_toolchange_delay', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'filament_type': SettingsDefinition(u'filament_type', Slic3rParsingFunctions.get_string, [u'misc']),
-            u'filament_unloading_speed': SettingsDefinition(u'filament_unloading_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'filament_settings_id': SettingsDefinition(u'filament_settings_id', Slic3rParsingFunctions.parse_string_semicolon_separated_value, [u'misc']),
+            u'filament_soluble': SettingsDefinition(u'filament_soluble', Slic3rParsingFunctions.parse_bool_csv, [u'misc']),
+            u'filament_toolchange_delay': SettingsDefinition(u'filament_toolchange_delay', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'filament_type': SettingsDefinition(u'filament_type', Slic3rParsingFunctions.parse_string_semicolon_separated_value, [u'misc']),
+            u'filament_unload_time': SettingsDefinition(u'filament_unload_time', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'filament_unloading_speed': SettingsDefinition(u'filament_unloading_speed', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'filament_unloading_speed_start': SettingsDefinition(u'filament_unloading_speed_start', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
             u'first_layer_acceleration': SettingsDefinition(u'first_layer_acceleration', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'first_layer_bed_temperature': SettingsDefinition(u'first_layer_bed_temperature', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'first_layer_bed_temperature': SettingsDefinition(u'first_layer_bed_temperature', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
             u'first_layer_extrusion_width': SettingsDefinition(u'first_layer_extrusion_width', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'first_layer_temperature': SettingsDefinition(u'first_layer_temperature', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'first_layer_temperature': SettingsDefinition(u'first_layer_temperature', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
             u'gcode_comments': SettingsDefinition(u'gcode_comments', Slic3rParsingFunctions.parse_bool, [u'misc']),
             u'gcode_flavor': SettingsDefinition(u'gcode_flavor', Slic3rParsingFunctions.get_string, [u'misc']),
             u'infill_acceleration': SettingsDefinition(u'infill_acceleration', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'infill_first': SettingsDefinition(u'infill_first', Slic3rParsingFunctions.parse_bool, [u'misc']),
             u'layer_gcode': SettingsDefinition(u'layer_gcode', Slic3rParsingFunctions.get_string, [u'misc']),
-            u'max_fan_speed': SettingsDefinition(u'max_fan_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'max_layer_height': SettingsDefinition(u'max_layer_height', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'max_fan_speed': SettingsDefinition(u'max_fan_speed', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'max_layer_height': SettingsDefinition(u'max_layer_height', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
             u'max_print_height': SettingsDefinition(u'max_print_height', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'max_volumetric_extrusion_rate_slope_negative': SettingsDefinition(u'max_volumetric_extrusion_rate_slope_negative', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'max_volumetric_extrusion_rate_slope_positive': SettingsDefinition(u'max_volumetric_extrusion_rate_slope_positive', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'max_volumetric_speed': SettingsDefinition(u'max_volumetric_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'min_fan_speed': SettingsDefinition(u'min_fan_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'min_layer_height': SettingsDefinition(u'min_layer_height', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'min_print_speed': SettingsDefinition(u'min_print_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'min_fan_speed': SettingsDefinition(u'min_fan_speed', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'min_layer_height': SettingsDefinition(u'min_layer_height', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'min_print_speed': SettingsDefinition(u'min_print_speed', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
             u'min_skirt_length': SettingsDefinition(u'min_skirt_length', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'notes': SettingsDefinition(u'notes', Slic3rParsingFunctions.get_string, [u'misc']),
-            u'nozzle_diameter': SettingsDefinition(u'nozzle_diameter', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'nozzle_diameter': SettingsDefinition(u'nozzle_diameter', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
             u'only_retract_when_crossing_perimeters': SettingsDefinition(u'only_retract_when_crossing_perimeters', Slic3rParsingFunctions.parse_bool, [u'misc']),
             u'ooze_prevention': SettingsDefinition(u'ooze_prevention', Slic3rParsingFunctions.parse_bool, [u'misc']),
             u'output_filename_format': SettingsDefinition(u'output_filename_format', Slic3rParsingFunctions.get_string, [u'misc']),
@@ -850,21 +865,22 @@ class Slic3rSettingsProcessor(GcodeSettingsProcessor):
             u'post_process': SettingsDefinition(u'post_process', Slic3rParsingFunctions.get_string, [u'misc']),
             u'printer_notes': SettingsDefinition(u'printer_notes', Slic3rParsingFunctions.get_string, [u'misc']),
             u'resolution': SettingsDefinition(u'resolution', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'retract_layer_change': SettingsDefinition(u'retract_layer_change', Slic3rParsingFunctions.parse_bool, [u'misc']),
-            u'retract_length_toolchange': SettingsDefinition(u'retract_length_toolchange', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'retract_lift_above': SettingsDefinition(u'retract_lift_above', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'retract_lift_below': SettingsDefinition(u'retract_lift_below', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'retract_restart_extra': SettingsDefinition(u'retract_restart_extra', Slic3rParsingFunctions.parse_float, [u'misc']),
-            u'retract_restart_extra_toolchange': SettingsDefinition(u'retract_restart_extra_toolchange', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'retract_layer_change': SettingsDefinition(u'retract_layer_change', Slic3rParsingFunctions.parse_bool_csv, [u'misc']),
+            u'retract_length_toolchange': SettingsDefinition(u'retract_length_toolchange', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'retract_lift_above': SettingsDefinition(u'retract_lift_above', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'retract_lift_below': SettingsDefinition(u'retract_lift_below', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'retract_restart_extra': SettingsDefinition(u'retract_restart_extra', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'retract_restart_extra_toolchange': SettingsDefinition(u'retract_restart_extra_toolchange', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
             u'single_extruder_multi_material': SettingsDefinition(u'single_extruder_multi_material', Slic3rParsingFunctions.parse_bool, [u'misc']),
+            u'single_extruder_multi_material_priming': SettingsDefinition(u'single_extruder_multi_material_priming', Slic3rParsingFunctions.parse_bool, [u'misc']),
             u'skirt_distance': SettingsDefinition(u'skirt_distance', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'skirt_height': SettingsDefinition(u'skirt_height', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'skirts': SettingsDefinition(u'skirts', Slic3rParsingFunctions.parse_bool, [u'misc']),
-            u'slowdown_below_layer_time': SettingsDefinition(u'slowdown_below_layer_time', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'slowdown_below_layer_time': SettingsDefinition(u'slowdown_below_layer_time', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
             u'standby_temperature_delta': SettingsDefinition(u'standby_temperature_delta', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'start_filament_gcode': SettingsDefinition(u'start_filament_gcode', Slic3rParsingFunctions.get_string, [u'misc']),
             u'start_gcode': SettingsDefinition(u'start_gcode', Slic3rParsingFunctions.get_string, [u'misc']),
-            u'temperature': SettingsDefinition(u'temperature', Slic3rParsingFunctions.parse_float, [u'misc']),
+            u'temperature': SettingsDefinition(u'temperature', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
             u'threads': SettingsDefinition(u'threads', Slic3rParsingFunctions.parse_int, [u'misc']),
             u'toolchange_gcode': SettingsDefinition(u'toolchange_gcode', Slic3rParsingFunctions.get_string, [u'misc']),
             u'use_firmware_retraction': SettingsDefinition(u'use_firmware_retraction', Slic3rParsingFunctions.parse_bool, [u'misc']),
@@ -969,6 +985,7 @@ class Simplify3dSettingsProcessor(GcodeSettingsProcessor):
     def get_settings_dictionary():
         return {
             # Octolapse Settings
+            u'extruderToolheadNumber': SettingsDefinition(u'extruder_tool_number', Simplify3dParsingFunctions.parse_int_csv, [u'octolapse_setting']),
             u'primaryExtruder': SettingsDefinition(u'primary_extruder', Simplify3dParsingFunctions.parse_int,[u'extruder',u'octolapse_setting']),
             u'extruderRetractionDistance': SettingsDefinition(u'extruder_retraction_distance',Simplify3dParsingFunctions.parse_float_csv,[u'extruder', u'octolapse_setting']),
             u'extruderRetractionZLift': SettingsDefinition(u'extruder_retraction_z_lift',Simplify3dParsingFunctions.parse_float_csv,[u'extruder', u'octolapse_setting']),
@@ -979,30 +996,15 @@ class Simplify3dSettingsProcessor(GcodeSettingsProcessor):
             u'spiralVaseMode': SettingsDefinition(u'spiral_vase_mode', Simplify3dParsingFunctions.parse_bool, [u'octolapse_setting']),
             u'layerHeight': SettingsDefinition(u'layer_height', Simplify3dParsingFunctions.parse_float, [u'octolapse_setting']),
             # End Octolapse Settings - The rest is included in case it is ever useful for Octolapse of another project!
-            u'bridgingSpeedMultiplier': SettingsDefinition(u'bridging_speed_multiplier',
-                                                           Simplify3dParsingFunctions.parse_float,
-                                                           [u'misc']),
-
-            u'firstLayerUnderspeed': SettingsDefinition(u'first_layer_underspeed',
-                                                        Simplify3dParsingFunctions.parse_float, [u'misc']),
-            u'aboveRaftSpeedMultiplier': SettingsDefinition(u'above_raft_speed_multiplier',
-                                                            Simplify3dParsingFunctions.parse_float,
-                                                            [u'misc']),
-            u'primePillarSpeedMultiplier': SettingsDefinition(u'prime_pillar_speed_multiplier',
-                                                              Simplify3dParsingFunctions.parse_float,
-                                                              [u'misc']),
-            u'oozeShieldSpeedMultiplier': SettingsDefinition(u'ooze_shield_speed_multiplier',
-                                                             Simplify3dParsingFunctions.parse_float,
-                                                             [u'misc']),
-            u'defaultSpeed': SettingsDefinition(u'default_speed', Simplify3dParsingFunctions.parse_float,
-                                                [u'misc']),
-            u'outlineUnderspeed': SettingsDefinition(u'outline_underspeed', Simplify3dParsingFunctions.parse_float,
-                                                     [u'misc']),
-            u'solidInfillUnderspeed': SettingsDefinition(u'solid_infill_underspeed',
-                                                         Simplify3dParsingFunctions.parse_float,
-                                                         [u'misc']),
-            u'supportUnderspeed': SettingsDefinition(u'support_underspeed', Simplify3dParsingFunctions.parse_float,
-                                                     [u'misc']),
+            u'bridgingSpeedMultiplier': SettingsDefinition(u'bridging_speed_multiplier', Simplify3dParsingFunctions.parse_float, [u'misc']),
+            u'firstLayerUnderspeed': SettingsDefinition(u'first_layer_underspeed', Simplify3dParsingFunctions.parse_float, [u'misc']),
+            u'aboveRaftSpeedMultiplier': SettingsDefinition(u'above_raft_speed_multiplier', Simplify3dParsingFunctions.parse_float, [u'misc']),
+            u'primePillarSpeedMultiplier': SettingsDefinition(u'prime_pillar_speed_multiplier', Simplify3dParsingFunctions.parse_float, [u'misc']),
+            u'oozeShieldSpeedMultiplier': SettingsDefinition(u'ooze_shield_speed_multiplier', Simplify3dParsingFunctions.parse_float, [u'misc']),
+            u'defaultSpeed': SettingsDefinition(u'default_speed', Simplify3dParsingFunctions.parse_float, [u'misc']),
+            u'outlineUnderspeed': SettingsDefinition(u'outline_underspeed', Simplify3dParsingFunctions.parse_float, [u'misc']),
+            u'solidInfillUnderspeed': SettingsDefinition(u'solid_infill_underspeed', Simplify3dParsingFunctions.parse_float, [u'misc']),
+            u'supportUnderspeed': SettingsDefinition(u'support_underspeed', Simplify3dParsingFunctions.parse_float, [u'misc']),
             u'version': SettingsDefinition(u'version', Simplify3dParsingFunctions.strip_string, [u'slicer_info'], True),
             u'gcodeDate': SettingsDefinition(u'gcode_date', Simplify3dParsingFunctions.strip_string, [u'gcode_info'], True),
             # IMPORTANT NOTE - printerModelsOverride does NOT have a comma if it's empty
@@ -1016,7 +1018,6 @@ class Simplify3dSettingsProcessor(GcodeSettingsProcessor):
             u'printQuality':SettingsDefinition(u'print_quality', Simplify3dParsingFunctions.strip_string, [u'misc']),
             u'printExtruders':SettingsDefinition(u'print_extruders', Simplify3dParsingFunctions.parse_string_csv, [u'extruder']),
             u'extruderName': SettingsDefinition(u'extruder_names',  Simplify3dParsingFunctions.parse_string_csv, [u'extruder']),
-            u'extruderToolheadNumber': SettingsDefinition(u'extruder_tool_number', Simplify3dParsingFunctions.parse_string_csv, [u'extruder']),
             u'extruderDiameter': SettingsDefinition(u'extrueder_diameter',  Simplify3dParsingFunctions.parse_float_csv, [u'extruder']),
             u'extruderAutoWidth': SettingsDefinition(u'extruder_auto_width', Simplify3dParsingFunctions.parse_bool_csv, [u'extruder']),
             u'extruderWidth': SettingsDefinition(u'extruder_width', Simplify3dParsingFunctions.parse_float_csv, [u'extruder']),
@@ -1236,8 +1237,7 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             # controls z speed for cura version < 4.2
             u'max_feedrate_z_override': SettingsDefinition(u'max_feedrate_z_override', CuraParsingFunctions.parse_float,[u'octolapse_setting']),
             # controls z speed for cura version >= 4.2
-            u'speed_z_hop': SettingsDefinition(u'speed_z_hop', CuraParsingFunctions.parse_float,
-                                                           [u'octolapse_setting']),
+            u'speed_z_hop': SettingsDefinition(u'speed_z_hop', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
             u'retraction_amount': SettingsDefinition(u'retraction_amount', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
             u'retraction_hop': SettingsDefinition(u'retraction_hop', CuraParsingFunctions.parse_float,[u'octolapse_setting']),
             u'retraction_hop_enabled': SettingsDefinition(u'retraction_hop_enabled', CuraParsingFunctions.parse_bool,[u'octolapse_setting']),
@@ -1250,38 +1250,117 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             u'speed_travel': SettingsDefinition(u'speed_travel', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
             u'retraction_enable': SettingsDefinition(u'retraction_enable', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
             u'version': SettingsDefinition(u'version', CuraParsingFunctions.strip_string, [u'octolapse_setting']),
-
             u'layer_height': SettingsDefinition(u'layer_height', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
-            u'smooth_spiralized_contours': SettingsDefinition(u'smooth_spiralized_contours',
-                                                             CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
-            u'magic_mesh_surface_mode': SettingsDefinition(u'magic_mesh_surface_mode',
-                                                           CuraParsingFunctions.strip_string, [u'octolapse_setting']),
+            u'smooth_spiralized_contours': SettingsDefinition(u'smooth_spiralized_contours', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'magic_mesh_surface_mode': SettingsDefinition(u'magic_mesh_surface_mode', CuraParsingFunctions.strip_string, [u'octolapse_setting']),
+            u'machine_extruder_count': SettingsDefinition(u'machine_extruder_count', CuraParsingFunctions.parse_int, [u'octolapse_setting']),
+            # Extruder Specific Settings
+            # speed_z_hop - Cura 5.1-
+            u'max_feedrate_z_override_0': SettingsDefinition(u'max_feedrate_z_override_0', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'max_feedrate_z_override_1': SettingsDefinition(u'max_feedrate_z_override_1', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'max_feedrate_z_override_2': SettingsDefinition(u'max_feedrate_z_override_2', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'max_feedrate_z_override_3': SettingsDefinition(u'max_feedrate_z_override_3', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'max_feedrate_z_override_4': SettingsDefinition(u'max_feedrate_z_override_4', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'max_feedrate_z_override_5': SettingsDefinition(u'max_feedrate_z_override_5', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'max_feedrate_z_override_6': SettingsDefinition(u'max_feedrate_z_override_6', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'max_feedrate_z_override_7': SettingsDefinition(u'max_feedrate_z_override_7', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            # speed_z_hop - Cura 4.2+
+            u'speed_z_hop_0': SettingsDefinition(u'speed_z_hop_0', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_z_hop_1': SettingsDefinition(u'speed_z_hop_1', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_z_hop_2': SettingsDefinition(u'speed_z_hop_2', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_z_hop_3': SettingsDefinition(u'speed_z_hop_3', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_z_hop_4': SettingsDefinition(u'speed_z_hop_4', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_z_hop_5': SettingsDefinition(u'speed_z_hop_5', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_z_hop_6': SettingsDefinition(u'speed_z_hop_6', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_z_hop_7': SettingsDefinition(u'speed_z_hop_7', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            # retraction_amount
+            u'retraction_amount_0': SettingsDefinition(u'retraction_amount_0', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_amount_1': SettingsDefinition(u'retraction_amount_1', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_amount_2': SettingsDefinition(u'retraction_amount_2', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_amount_3': SettingsDefinition(u'retraction_amount_3', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_amount_4': SettingsDefinition(u'retraction_amount_4', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_amount_5': SettingsDefinition(u'retraction_amount_5', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_amount_6': SettingsDefinition(u'retraction_amount_6', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_amount_7': SettingsDefinition(u'retraction_amount_7', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            # retraction_hop
+            u'retraction_hop_0': SettingsDefinition(u'retraction_hop_0', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_hop_1': SettingsDefinition(u'retraction_hop_1', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_hop_2': SettingsDefinition(u'retraction_hop_2', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_hop_3': SettingsDefinition(u'retraction_hop_3', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_hop_4': SettingsDefinition(u'retraction_hop_4', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_hop_5': SettingsDefinition(u'retraction_hop_5', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_hop_6': SettingsDefinition(u'retraction_hop_6', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_hop_7': SettingsDefinition(u'retraction_hop_7', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            # retraction_hop_enabled
+            u'retraction_hop_enabled_0': SettingsDefinition(u'retraction_hop_enabled_0', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_hop_enabled_1': SettingsDefinition(u'retraction_hop_enabled_1', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_hop_enabled_2': SettingsDefinition(u'retraction_hop_enabled_2', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_hop_enabled_3': SettingsDefinition(u'retraction_hop_enabled_3', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_hop_enabled_4': SettingsDefinition(u'retraction_hop_enabled_4', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_hop_enabled_5': SettingsDefinition(u'retraction_hop_enabled_5', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_hop_enabled_6': SettingsDefinition(u'retraction_hop_enabled_6', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_hop_enabled_7': SettingsDefinition(u'retraction_hop_enabled_7', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            # retraction_prime_speed
+            u'retraction_prime_speed_0': SettingsDefinition(u'retraction_prime_speed_0', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_prime_speed_1': SettingsDefinition(u'retraction_prime_speed_1', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_prime_speed_2': SettingsDefinition(u'retraction_prime_speed_2', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_prime_speed_3': SettingsDefinition(u'retraction_prime_speed_3', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_prime_speed_4': SettingsDefinition(u'retraction_prime_speed_4', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_prime_speed_5': SettingsDefinition(u'retraction_prime_speed_5', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_prime_speed_6': SettingsDefinition(u'retraction_prime_speed_6', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_prime_speed_7': SettingsDefinition(u'retraction_prime_speed_7', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            # retraction_retract_speed
+            u'retraction_retract_speed_0': SettingsDefinition(u'retraction_retract_speed_0', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_retract_speed_1': SettingsDefinition(u'retraction_retract_speed_1', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_retract_speed_2': SettingsDefinition(u'retraction_retract_speed_2', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_retract_speed_3': SettingsDefinition(u'retraction_retract_speed_3', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_retract_speed_4': SettingsDefinition(u'retraction_retract_speed_4', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_retract_speed_5': SettingsDefinition(u'retraction_retract_speed_5', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_retract_speed_6': SettingsDefinition(u'retraction_retract_speed_6', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_retract_speed_7': SettingsDefinition(u'retraction_retract_speed_7', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            # retraction_speed
+            u'retraction_speed_0': SettingsDefinition(u'retraction_speed_0', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_speed_1': SettingsDefinition(u'retraction_speed_1', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_speed_2': SettingsDefinition(u'retraction_speed_2', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_speed_3': SettingsDefinition(u'retraction_speed_3', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_speed_4': SettingsDefinition(u'retraction_speed_4', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_speed_5': SettingsDefinition(u'retraction_speed_5', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_speed_6': SettingsDefinition(u'retraction_speed_6', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'retraction_speed_7': SettingsDefinition(u'retraction_speed_7', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            # retraction_enable
+            u'retraction_enable_0': SettingsDefinition(u'retraction_enable_0', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_enable_1': SettingsDefinition(u'retraction_enable_1', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_enable_2': SettingsDefinition(u'retraction_enable_2', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_enable_3': SettingsDefinition(u'retraction_enable_3', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_enable_4': SettingsDefinition(u'retraction_enable_4', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_enable_5': SettingsDefinition(u'retraction_enable_5', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_enable_6': SettingsDefinition(u'retraction_enable_6', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            u'retraction_enable_7': SettingsDefinition(u'retraction_enable_7', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
+            # speed_travel
+            u'speed_travel_0': SettingsDefinition(u'speed_travel_0', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_travel_1': SettingsDefinition(u'speed_travel_1', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_travel_2': SettingsDefinition(u'speed_travel_2', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_travel_3': SettingsDefinition(u'speed_travel_3', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_travel_4': SettingsDefinition(u'speed_travel_4', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_travel_5': SettingsDefinition(u'speed_travel_5', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_travel_6': SettingsDefinition(u'speed_travel_6', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
+            u'speed_travel_7': SettingsDefinition(u'speed_travel_7', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
 
             # End Octolapse Settings - The rest is included in case it is ever helpful for Octolapse or for other projects!
-            u'speed_infill': SettingsDefinition(u'speed_infill', CuraParsingFunctions.parse_float,
-                                                [u'misc']),
-            u'skirt_brim_speed': SettingsDefinition(u'skirt_brim_speed', CuraParsingFunctions.parse_float,
-                                                    [u'misc']),
+            u'speed_infill': SettingsDefinition(u'speed_infill', CuraParsingFunctions.parse_float, [u'misc']),
+            u'skirt_brim_speed': SettingsDefinition(u'skirt_brim_speed', CuraParsingFunctions.parse_float, [u'misc']),
 
             u'flavor': SettingsDefinition(u'flavor', CuraParsingFunctions.strip_string, [u'misc']),
-            u'speed_layer_0': SettingsDefinition(u'speed_layer_0', CuraParsingFunctions.parse_float,
-                                                 [u'misc']),
+            u'speed_layer_0': SettingsDefinition(u'speed_layer_0', CuraParsingFunctions.parse_float, [u'misc']),
             u'speed_print': SettingsDefinition(u'speed_print', CuraParsingFunctions.parse_int, [u'misc']),
-            u'speed_slowdown_layers': SettingsDefinition(u'speed_slowdown_layers', CuraParsingFunctions.parse_int,
-                                                         [u'misc']),
-            u'speed_topbottom': SettingsDefinition(u'speed_topbottom', CuraParsingFunctions.parse_float,
-                                                   [u'misc']),
-            u'speed_travel_layer_0': SettingsDefinition(u'speed_travel_layer_0', CuraParsingFunctions.parse_float,
-                                                        [u'misc']),
+            u'speed_slowdown_layers': SettingsDefinition(u'speed_slowdown_layers', CuraParsingFunctions.parse_int, [u'misc']),
+            u'speed_topbottom': SettingsDefinition(u'speed_topbottom', CuraParsingFunctions.parse_float, [u'misc']),
+            u'speed_travel_layer_0': SettingsDefinition(u'speed_travel_layer_0', CuraParsingFunctions.parse_float, [u'misc']),
             u'speed_wall': SettingsDefinition(u'speed_wall', CuraParsingFunctions.parse_float, [u'misc']),
-            u'speed_wall_0': SettingsDefinition(u'speed_wall_0', CuraParsingFunctions.parse_float,
-                                                [u'misc']),
-            u'speed_wall_x': SettingsDefinition(u'speed_wall_x', CuraParsingFunctions.parse_float,
-                                                [u'misc']),
-            u'retraction_combing': SettingsDefinition(u'retraction_combing', CuraParsingFunctions.strip_string,
-                                                      [u'misc']),
-            u'speed_print_layer_0': SettingsDefinition(u'speed_print_layer_0', CuraParsingFunctions.parse_float,
-                                                       [u'misc']),
+            u'speed_wall_0': SettingsDefinition(u'speed_wall_0', CuraParsingFunctions.parse_float, [u'misc']),
+            u'speed_wall_x': SettingsDefinition(u'speed_wall_x', CuraParsingFunctions.parse_float, [u'misc']),
+            u'retraction_combing': SettingsDefinition(u'retraction_combing', CuraParsingFunctions.strip_string, [u'misc']),
+            u'speed_print_layer_0': SettingsDefinition(u'speed_print_layer_0', CuraParsingFunctions.parse_float, [u'misc']),
             u'filament_used_meters': SettingsDefinition(u'layer_height', CuraParsingFunctions.parse_float, [u'misc']),
             u'acceleration_enabled': SettingsDefinition(u'acceleration_enabled', CuraParsingFunctions.parse_bool, [u'misc']),
             u'acceleration_infill': SettingsDefinition(u'acceleration_infill', CuraParsingFunctions.parse_int, [u'misc']),
@@ -1443,7 +1522,6 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             u'machine_endstop_positive_direction_x': SettingsDefinition(u'machine_endstop_positive_direction_x', CuraParsingFunctions.parse_bool, [u'misc']),
             u'machine_endstop_positive_direction_y': SettingsDefinition(u'machine_endstop_positive_direction_y', CuraParsingFunctions.parse_bool, [u'misc']),
             u'machine_endstop_positive_direction_z': SettingsDefinition(u'machine_endstop_positive_direction_z', CuraParsingFunctions.parse_bool, [u'misc']),
-            u'machine_extruder_count': SettingsDefinition(u'machine_extruder_count', CuraParsingFunctions.parse_int, [u'misc']),
             u'machine_feeder_wheel_diameter': SettingsDefinition(u'machine_feeder_wheel_diameter', CuraParsingFunctions.parse_float, [u'misc']),
             u'machine_filament_park_distance': SettingsDefinition(u'machine_filament_park_distance', CuraParsingFunctions.parse_int, [u'misc']),
             u'machine_firmware_retract': SettingsDefinition(u'machine_firmware_retract', CuraParsingFunctions.parse_bool, [u'misc']),

@@ -911,8 +911,6 @@ $(function () {
             self.layer = ko.observable(0);
             self.height = ko.observable(0).extend({numeric: 2});
             self.last_extruder_height = ko.observable(0).extend({numeric: 2});
-            self.has_position_error = ko.observable(false);
-            self.position_error = ko.observable(false);
             self.is_metric = ko.observable(null);
             self.is_initialized = ko.observable(false);
 
@@ -932,8 +930,6 @@ $(function () {
                 this.layer(state.layer);
                 this.height(state.height);
                 this.last_extruder_height(state.last_extruder_height);
-                this.has_position_error(state.has_position_error);
-                this.position_error(state.position_error);
                 this.is_metric(state.is_metric);
                 this.is_initialized(true);
             };
@@ -972,7 +968,7 @@ $(function () {
                         || self.is_relative() == null
                         || self.is_extruder_relative() == null
                         || !self.is_metric()
-                        || self.has_position_error())
+                    )
                         return true;
                 return false;
             },self);
@@ -1052,13 +1048,6 @@ $(function () {
                     return "Relative";
                 else
                     return "Absolute";
-            }, self);
-
-            self.getHasPositionErrorStateText = ko.pureComputed(function () {
-                if (self.has_position_error())
-                    return "A position error was detected";
-                else
-                    return "No current position errors";
             }, self);
             self.getis_layer_changeStateText = ko.pureComputed(function () {
                 if (self.is_layer_change())

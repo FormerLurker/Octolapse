@@ -75,7 +75,7 @@ struct trigger_position
 		is_empty = false;
 		type_feature = feature_;
 	}
-	static position_type get_type(position& pos_);
+	static position_type get_type(position* p_pos);
 	position_type type_position;
 	feature_type type_feature;
 	double distance;
@@ -110,7 +110,7 @@ public:
 
 	void initialize(trigger_position_args args);
 	void clear();
-	void try_add(position &current_pos, position &previous_pos);
+	void try_add(position *p_current_pos, position *p_previous_pos);
 	bool is_empty() const;
 	trigger_position get(position_type type);
 	void set_stabilization_coordinates(double x, double y);
@@ -122,18 +122,18 @@ private:
 	bool get_compatibility_position(trigger_position &pos);
 	bool get_high_quality_position(trigger_position &pos);
 
-	double get_stabilization_distance(position& pos) const;
+	double get_stabilization_distance(position* p_pos) const;
 
 	//trigger_position* get_normal_quality_position();
-	void try_save_retracted_position(position& current_pos);
-	void try_save_primed_position(position& current_pos);
-	static bool can_process_position(position& pos, position_type type);
-	void add_internal(position& pos, double distance, position_type type);
-	void try_add_feature_position_internal(position & pos);
-	void add_feature_position_internal(position &pos, double distance, feature_type type);
-	void try_add_internal(position& pos, double distance, position_type type);
-	void try_add_extrusion_start_positions(position& extrusion_start_pos);
-	void try_add_extrusion_start_position(position& extrusion_start_pos, position& saved_pos);
+	void try_save_retracted_position(position* p_current_pos);
+	void try_save_primed_position(position* p_current_pos);
+	static bool can_process_position(position* pos, position_type type);
+	void add_internal(position* p_pos, double distance, position_type type);
+	void try_add_feature_position_internal(position * p_pos);
+	void add_feature_position_internal(position *p_pos, double distance, feature_type type);
+	void try_add_internal(position* p_pos, double distance, position_type type);
+	void try_add_extrusion_start_positions(position* p_extrusion_start_pos);
+	void try_add_extrusion_start_position(position* p_extrusion_start_pos, position& saved_pos);
 
 	trigger_position position_list_[trigger_position::num_position_types];
 	trigger_position feature_position_list_[NUM_FEATURE_TYPES];

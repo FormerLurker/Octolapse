@@ -5,46 +5,46 @@
 #include "stabilization_smart_layer.h"
 //#include "logging.h"
 
-position_type trigger_position::get_type(position& pos_)
+position_type trigger_position::get_type(position* p_pos)
 {
-	if ( pos_.is_partially_retracted ||  pos_.is_deretracted)
+	if ( p_pos->get_current_extruder().is_partially_retracted || p_pos->get_current_extruder().is_deretracted)
 		return position_type_unknown;
 	
-	if ( pos_.is_extruding && utilities::greater_than( pos_.e_relative, 0))
+	if (p_pos->get_current_extruder().is_extruding && utilities::greater_than(p_pos->get_current_extruder().e_relative, 0))
 	{
 		return position_type_extrusion;
 	}
-	else if( pos_.is_xy_travel)
+	else if( p_pos->is_xy_travel)
 	{
-		if ( pos_.is_retracted)
+		if (p_pos->get_current_extruder().is_retracted)
 		{
-			if ( pos_.is_zhop)
+			if ( p_pos->is_zhop)
 				return position_type_lifted_retracted_travel;
 			else
 				return position_type_retracted_travel;
 		}
 		else 
 		{
-			if ( pos_.is_zhop)
+			if ( p_pos->is_zhop)
 				return position_type_lifted_travel;
 			else
 				return position_type_travel;
 		}
 	}
-	else if(utilities::greater_than( pos_.z_relative, 0))
+	else if(utilities::greater_than( p_pos->z_relative, 0))
 	{
-		if ( pos_.is_retracted)
+		if (p_pos->get_current_extruder().is_retracted)
 		{
-			if( pos_.is_xyz_travel)
+			if( p_pos->is_xyz_travel)
 			{
-				if ( pos_.is_zhop)
+				if ( p_pos->is_zhop)
 					return position_type_lifted_retracted_travel;
 				else
 					return position_type_lifting_retracted_travel;
 			}
 			else
 			{
-				if ( pos_.is_zhop)
+				if ( p_pos->is_zhop)
 					return position_type_retracted_lifted;
 				else
 					return position_type_retracted_lifting;
@@ -52,16 +52,16 @@ position_type trigger_position::get_type(position& pos_)
 		}
 		else
 		{
-			if ( pos_.is_xyz_travel)
+			if ( p_pos->is_xyz_travel)
 			{
-				if ( pos_.is_zhop)
+				if ( p_pos->is_zhop)
 					return position_type_lifted_travel;
 				else
 					return position_type_lifting_travel;
 			}
 			else
 			{
-				if ( pos_.is_zhop)
+				if ( p_pos->is_zhop)
 					return position_type_lifted;
 				else
 					return position_type_lifting;
@@ -69,7 +69,7 @@ position_type trigger_position::get_type(position& pos_)
 		}
 		
 	}
-	else if(utilities::less_than( pos_.e_relative , 0) &&  pos_.is_retracted)
+	else if(utilities::less_than(p_pos->get_current_extruder().e_relative , 0) && p_pos->get_current_extruder().is_retracted)
 	{
 		return position_type_retraction;
 	}
@@ -302,19 +302,19 @@ bool trigger_positions::get_high_quality_position(trigger_position &pos)
 	return false;
 }
 
-void trigger_positions::try_save_retracted_position(position& current_pos)
+void trigger_positions::try_save_retracted_position(position* p_current_pos)
 {
-	if (current_pos.is_retracted)
-		previous_retracted_pos_ = current_pos;
-	else if (current_pos.is_extruding && !current_pos.is_extruding_start)
+	if (p_current_pos->get_current_extruder().is_retracted)
+		previous_retracted_pos_ = *p_current_pos;
+	else if (p_current_pos->get_current_extruder().is_extruding && !p_current_pos->get_current_extruder().is_extruding_start)
 		previous_retracted_pos_.is_empty = true;
 }
 
-void trigger_positions::try_save_primed_position(position& current_pos)
+void trigger_positions::try_save_primed_position(position* p_current_pos)
 {
-	if (current_pos.is_primed)
-		previous_primed_pos_ = current_pos;
-	else if (current_pos.is_extruding && !current_pos.is_extruding_start)
+	if (p_current_pos->get_current_extruder().is_primed)
+		previous_primed_pos_ = *p_current_pos;
+	else if (p_current_pos->get_current_extruder().is_extruding && !p_current_pos->get_current_extruder().is_extruding_start)
 		previous_primed_pos_.is_empty = true;
 }
 
@@ -346,23 +346,23 @@ trigger_position trigger_positions::get(const position_type type)
 }
 
 
-bool trigger_positions::can_process_position(position& pos, const position_type type)
+bool trigger_positions::can_process_position(position* pos, const position_type type)
 {
-	if (type == position_type_unknown || pos.is_empty)
+	if (type == position_type_unknown || pos->is_empty)
 		return false;
 
 
 	// check for errors in position, layer, or height
-	if (pos.layer == 0 || pos.x_null || pos.y_null || pos.z_null)
+	if (pos->layer == 0 || pos->x_null || pos->y_null || pos->z_null)
 	{
 		return false;
 	}
 	// See if we should ignore the current position because it is not in bounds, or because it wasn't processed
-	if (pos.gcode_ignored || !pos.is_in_bounds)
+	if (pos->gcode_ignored || !pos->is_in_bounds)
 		return false;
 	
 	// Never save any positions that are below the highest extrusion point.
-	if (utilities::less_than(pos.z, pos.last_extrusion_height))
+	if (utilities::less_than(pos->z, pos->last_extrusion_height))
 	{
 		// if the current z height is less than the maximum extrusion height!
 		// Do not add this point else we might ram into the printed part!
@@ -373,12 +373,12 @@ bool trigger_positions::can_process_position(position& pos, const position_type 
 }
 
 
-double trigger_positions::get_stabilization_distance(position& pos) const
+double trigger_positions::get_stabilization_distance(position* p_pos) const
 {
 	double x, y;
 	if (args_.x_stabilization_disabled && previous_initial_pos_.is_empty)
 	{
-		x = pos.x;
+		x = p_pos->x;
 	}
 	else
 	{
@@ -386,31 +386,31 @@ double trigger_positions::get_stabilization_distance(position& pos) const
 	}
 	if (args_.y_stabilization_disabled && previous_initial_pos_.is_empty)
 	{
-		y = pos.y;
+		y = p_pos->y;
 	}
 	else
 	{
 		y = stabilization_y_;
 	}
 
-	return utilities::get_cartesian_distance(pos.x, pos.y, x, y);
+	return utilities::get_cartesian_distance(p_pos->x, p_pos->y, x, y);
 }
 
 /// Try to add a position to the position list.  Returns false if no position can be added.
-void trigger_positions::try_add(position &current_pos, position &previous_pos)
+void trigger_positions::try_add(position *p_current_pos, position *p_previous_pos)
 {
 	
 	// Get the position type
-	const position_type type = trigger_position::get_type(current_pos);
+	const position_type type = trigger_position::get_type(p_current_pos);
 
-	if (!can_process_position(current_pos, type))
+	if (!can_process_position(p_current_pos, type))
 	{
 		return;
 	}
 
 	// add any feature positions if a feature tag exists, and if we are in high quality or compatibility mode
 	if (
-		current_pos.feature_type_tag != feature_type::feature_type_unknown_feature &&
+		p_current_pos->feature_type_tag != feature_type::feature_type_unknown_feature &&
 		(
 			args_.type == trigger_type_high_quality || 
 			args_.type == trigger_type_compatibility ||
@@ -419,10 +419,10 @@ void trigger_positions::try_add(position &current_pos, position &previous_pos)
 	)
 	{
 		// only add features if we are extruding.
-		if (current_pos.is_extruding)
+		if (p_current_pos->get_current_extruder().is_extruding)
 		{
-			try_add_feature_position_internal(current_pos);
-			if (current_pos.is_extruding_start)
+			try_add_feature_position_internal(p_current_pos);
+			if (p_current_pos->get_current_extruder().is_extruding_start)
 			{
 				// if this is an extrusion_stat (also an extrusion), we will want to add the
 				// starting point of the extrusion as well , which would not have been marked as an extrusion
@@ -435,14 +435,14 @@ void trigger_positions::try_add(position &current_pos, position &previous_pos)
 				
 				if (
 					start_pos != NULL &&
-					start_pos->x == previous_pos.x &&
-					start_pos->y == previous_pos.y &&
-					start_pos->z == previous_pos.z
+					start_pos->x == p_previous_pos->x &&
+					start_pos->y == p_previous_pos->y &&
+					start_pos->z == p_previous_pos->z
 					)
 				{
 					// If we have a starting position that matches the previous position (retracted or primed)
 					// try to add the previous position to the feature position list
-					try_add_feature_position_internal(previous_pos);
+					try_add_feature_position_internal(p_previous_pos);
 				}
 			}
 		}
@@ -454,23 +454,23 @@ void trigger_positions::try_add(position &current_pos, position &previous_pos)
 
 		
 		// If this isn't an extrusion, we might need to save some of the positions for future reference
-		try_save_retracted_position(current_pos);
-		try_save_primed_position(current_pos);
+		try_save_retracted_position(p_current_pos);
+		try_save_primed_position(p_current_pos);
 		
 	}
-	const double distance = get_stabilization_distance(current_pos);
+	const double distance = get_stabilization_distance(p_current_pos);
 	//std::cout << "Distance:" << distance << "\r\n";
-	try_add_internal(current_pos, distance, type);
+	try_add_internal(p_current_pos, distance, type);
 
 	// If we are using snap to print, and the current position is = is_extruding_start
 	if (args_.type == trigger_type_snap_to_print)
 	{
-		if (current_pos.is_extruding_start)
+		if (p_current_pos->get_current_extruder().is_extruding_start)
 		{
 			// try to add the snap_to_print starting position
-			try_add_extrusion_start_positions(previous_pos);
+			try_add_extrusion_start_positions(p_previous_pos);
 		}
-		else if (current_pos.is_extruding)
+		else if (p_current_pos->get_current_extruder().is_extruding)
 		{
 			previous_retracted_pos_.is_empty = true;
 			previous_primed_pos_.is_empty = true;
@@ -479,11 +479,11 @@ void trigger_positions::try_add(position &current_pos, position &previous_pos)
 	
 }
 
-void trigger_positions::try_add_feature_position_internal(position & pos)
+void trigger_positions::try_add_feature_position_internal(position * p_pos)
 {
 	bool add_position = false;
-	const double distance = get_stabilization_distance(pos);
-	const feature_type type = static_cast<feature_type>(pos.feature_type_tag);
+	const double distance = get_stabilization_distance(p_pos);
+	const feature_type type = static_cast<feature_type>(p_pos->feature_type_tag);
 
 	if (feature_position_list_[type].is_empty)
 	{
@@ -497,7 +497,7 @@ void trigger_positions::try_add_feature_position_internal(position & pos)
 	{
 		//std::cout << "Closest position tie detected, ";
 		const double old_distance_from_previous = utilities::get_cartesian_distance(feature_position_list_[type].pos.x, feature_position_list_[type].pos.y, previous_initial_pos_.x, previous_initial_pos_.y);
-		const double new_distance_from_previous = utilities::get_cartesian_distance(pos.x, pos.y, previous_initial_pos_.x, previous_initial_pos_.y);
+		const double new_distance_from_previous = utilities::get_cartesian_distance(p_pos->x, p_pos->y, previous_initial_pos_.x, previous_initial_pos_.y);
 		if (utilities::less_than(new_distance_from_previous, old_distance_from_previous))
 		{
 			//std::cout << "new is closer to the last initial snapshot position.\r\n";
@@ -509,61 +509,61 @@ void trigger_positions::try_add_feature_position_internal(position & pos)
 	if (add_position)
 	{
 		// add the current position as the fastest extrusion speed 
-		add_feature_position_internal(pos, distance, static_cast<feature_type>(type));
+		add_feature_position_internal(p_pos, distance, static_cast<feature_type>(type));
 	}
 }
 
-void trigger_positions::add_feature_position_internal(position &pos, double distance, feature_type type)
+void trigger_positions::add_feature_position_internal(position *p_pos, double distance, feature_type type)
 {
-	feature_position_list_[pos.feature_type_tag].pos = pos;
-	feature_position_list_[pos.feature_type_tag].distance = distance;
-	feature_position_list_[pos.feature_type_tag].type_feature = type;
-	feature_position_list_[pos.feature_type_tag].is_empty = false;
+	feature_position_list_[p_pos->feature_type_tag].pos = *p_pos;
+	feature_position_list_[p_pos->feature_type_tag].distance = distance;
+	feature_position_list_[p_pos->feature_type_tag].type_feature = type;
+	feature_position_list_[p_pos->feature_type_tag].is_empty = false;
 
 }
 
 // Adds a position to the internal position list.
-void trigger_positions::add_internal(position &pos, double distance, position_type type)
+void trigger_positions::add_internal(position *p_pos, double distance, position_type type)
 {
-	position_list_[type].pos = pos;
+	position_list_[type].pos = *p_pos;
 	position_list_[type].distance = distance;
 	position_list_[type].type_position = type;
 	position_list_[type].is_empty = false;
 
 }
 
-void trigger_positions::try_add_extrusion_start_positions(position& extrusion_start_pos)
+void trigger_positions::try_add_extrusion_start_positions(position* p_extrusion_start_pos)
 {
 	// Try to add the start of the extrusion to the snap to print stabilization
 	if (!previous_retracted_pos_.is_empty)
-		try_add_extrusion_start_position(extrusion_start_pos, previous_retracted_pos_);
+		try_add_extrusion_start_position(p_extrusion_start_pos, previous_retracted_pos_);
 	else if (!previous_primed_pos_.is_empty)
-		try_add_extrusion_start_position( extrusion_start_pos, previous_primed_pos_);
+		try_add_extrusion_start_position( p_extrusion_start_pos, previous_primed_pos_);
 
 }
 
-void trigger_positions::try_add_extrusion_start_position(position & extrusion_start_pos, position & saved_pos)
+void trigger_positions::try_add_extrusion_start_position(position * p_extrusion_start_pos, position & saved_pos)
 {
 	// A special case where we are trying to add a snap to print position from the start of an extrusion.
 	// Note that we do not need to add any checks for max speed or thresholds, since that will have been taken care of
 	if (
-		saved_pos.x != extrusion_start_pos.x ||
-		saved_pos.y != extrusion_start_pos.y ||
-		saved_pos.z != extrusion_start_pos.z
+		saved_pos.x != p_extrusion_start_pos->x ||
+		saved_pos.y != p_extrusion_start_pos->y ||
+		saved_pos.z != p_extrusion_start_pos->z
 		)
 	{
 		return;
 	}
 
-	const double distance = get_stabilization_distance(saved_pos);
+	const double distance = get_stabilization_distance(&saved_pos);
 
 	// See if we need to update the fastest extrusion position
 	if (
-		utilities::is_equal(fastest_extrusion_speed_, extrusion_start_pos.f)
+		utilities::is_equal(fastest_extrusion_speed_, p_extrusion_start_pos->f)
 		&& utilities::less_than(distance, position_list_[position_type_fastest_extrusion].distance))
 	{
 		// add the current position as the fastest extrusion speed 
-		add_internal(saved_pos, distance, position_type_fastest_extrusion);
+		add_internal(&saved_pos, distance, position_type_fastest_extrusion);
 	}
 
 	
@@ -596,12 +596,12 @@ void trigger_positions::try_add_extrusion_start_position(position & extrusion_st
 	if (add_position)
 	{
 		// add the current position as the fastest extrusion speed 
-		add_internal(saved_pos, distance, position_type_extrusion);
+		add_internal(&saved_pos, distance, position_type_extrusion);
 	}
 }
 
 // Try to add a position to the internal position list.
-void trigger_positions::try_add_internal(position & pos, double distance, position_type type)
+void trigger_positions::try_add_internal(position * p_pos, double distance, position_type type)
 {
 
 	// If this is an extrusion type position, we need to handle it with care since we want to track both the closest 
@@ -610,28 +610,28 @@ void trigger_positions::try_add_internal(position & pos, double distance, positi
 	{
 		// First make sure to update the fastest and slowest extrusion speeds.
 		// important for implementing any 'min_extrusion_speed_difference_' rules.
-		if (slowest_extrusion_speed_ == -1 || utilities::less_than(pos.f, slowest_extrusion_speed_))
+		if (slowest_extrusion_speed_ == -1 || utilities::less_than(p_pos->f, slowest_extrusion_speed_))
 		{
-			slowest_extrusion_speed_ = pos.f;
+			slowest_extrusion_speed_ = p_pos->f;
 		}
 		
 		// See if the feedrate is faster than our minimum speed.
 		if (args_.minimum_speed > 0)
 		{
 			// see if we should filter out this position due to the feedrate
-			if (utilities::less_than_or_equal(pos.f, args_.minimum_speed))
+			if (utilities::less_than_or_equal(p_pos->f, args_.minimum_speed))
 				return;
 		}
 
 		// Now that we've filtered any feed rates below the minimum speed, let's let's see if we've set a new speed record
 		bool add_fastest = false;
-		if (utilities::greater_than(pos.f, fastest_extrusion_speed_))
+		if (utilities::greater_than(p_pos->f, fastest_extrusion_speed_))
 		{
-			fastest_extrusion_speed_ = pos.f;
+			fastest_extrusion_speed_ = p_pos->f;
 			add_fastest = true;
 		}
 		else if (
-			utilities::is_equal(fastest_extrusion_speed_, pos.f)
+			utilities::is_equal(fastest_extrusion_speed_, p_pos->f)
 			&& utilities::less_than(distance, position_list_[position_type_fastest_extrusion].distance))
 		{
 			add_fastest = true;
@@ -640,7 +640,7 @@ void trigger_positions::try_add_internal(position & pos, double distance, positi
 		if (add_fastest)
 		{
 			// add the current position as the fastest extrusion speed 
-			add_internal(pos, distance, position_type_fastest_extrusion);
+			add_internal(p_pos, distance, position_type_fastest_extrusion);
 		}
 
 	}
@@ -661,7 +661,7 @@ void trigger_positions::try_add_internal(position & pos, double distance, positi
 	{
 		//std::cout << "Closest position tie detected, ";
 		const double old_distance_from_previous = utilities::get_cartesian_distance(position_list_[type].pos.x, position_list_[type].pos.y, previous_initial_pos_.x, previous_initial_pos_.y);
-		const double new_distance_from_previous = utilities::get_cartesian_distance(pos.x, pos.y, previous_initial_pos_.x, previous_initial_pos_.y);
+		const double new_distance_from_previous = utilities::get_cartesian_distance(p_pos->x, p_pos->y, previous_initial_pos_.x, previous_initial_pos_.y);
 		if (utilities::less_than(new_distance_from_previous, old_distance_from_previous))
 		{
 			//std::cout << "new is closer to the last initial snapshot position.\r\n";
@@ -672,6 +672,6 @@ void trigger_positions::try_add_internal(position & pos, double distance, positi
 	if(add_position)
 	{
 		// add the current position as the fastest extrusion speed 
-		add_internal(pos, distance, type);
+		add_internal(p_pos, distance, type);
 	}
 }

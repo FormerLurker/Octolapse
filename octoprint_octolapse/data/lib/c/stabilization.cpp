@@ -183,7 +183,7 @@ stabilization_results stabilization::process_file()
 			// Only continue to process if we've found a command.
 			if (found_command)
 			{
-				process_pos(*gcode_position_->get_current_position_ptr(), *gcode_position_->get_previous_position_ptr());
+				process_pos(gcode_position_->get_current_position_ptr(), gcode_position_->get_previous_position_ptr());
 
 				if ( (lines_processed_ % read_lines_before_clock_check) == 0 && next_update_time < clock())
 				{
@@ -275,7 +275,7 @@ void stabilization::notify_progress(const double percent_progress, const double 
 
 }
 
-void stabilization::process_pos(position& current_pos, position& previous_pos)
+void stabilization::process_pos(position* current_pos, position* previous_pos)
 {
 	throw std::exception();
 }

@@ -1484,8 +1484,7 @@ class OctolapsePlugin(
             on_timelapse_stopped=self.on_timelapse_stopped,
             on_timelapse_end=self.on_timelapse_end,
             on_state_changed=self.on_timelapse_state_changed,
-            on_snapshot_position_error=self.on_snapshot_position_error,
-            on_position_error=self.on_position_error
+            on_snapshot_position_error=self.on_snapshot_position_error
         )
 
     def get_available_server_profiles_path(self):
@@ -2327,15 +2326,6 @@ class OctolapsePlugin(
         data = {
             "type": "timelapse-complete", "msg": "Octolapse has completed a timelapse.",
             "status": self.get_status_dict(),
-            "main_settings": self._octolapse_settings.main_settings.to_dict()
-        }
-        data.update(state_data)
-        self._plugin_manager.send_plugin_message(self._identifier, data)
-
-    def on_position_error(self, message):
-        state_data = self._timelapse.to_state_dict()
-        data = {
-            "type": "position-error", "msg": message, "status": self.get_status_dict(),
             "main_settings": self._octolapse_settings.main_settings.to_dict()
         }
         data.update(state_data)

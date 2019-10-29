@@ -94,10 +94,6 @@ class Triggers(object):
                     current_trigger.update(position)
                 elif isinstance(current_trigger, LayerTrigger):
                     current_trigger.update(position)
-
-                # Make sure there are no position errors (unknown position, out of bounds, etc)
-                if position.previous_pos.has_position_error:
-                    logger.error("A trigger has a position error:%s", position.previous_pos.position_error)
                 # see if the current trigger is triggering, indicting that a snapshot should be taken
         except Exception as e:
             logger.exception("Failed to update the snapshot triggers.")

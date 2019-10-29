@@ -23,10 +23,10 @@
 #include "logging.h"
 stabilization_results::stabilization_results()
 {
-	bool success = false;
-	double seconds_elapsed = 0;
-	long gcodes_processed = 0;
-	long lines_processed = 0;
+	gcodes_processed = 0;
+	lines_processed = 0;
+	missed_layer_count = 0;
+	seconds_elapsed = 0;
 }
 
 PyObject* stabilization_results::to_py_object()

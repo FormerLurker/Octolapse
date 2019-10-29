@@ -71,6 +71,7 @@ gcode_parser::gcode_parser()
 	parsable_command_names.push_back("M208");
 	parsable_command_names.push_back("M240");
 	parsable_command_names.push_back("M400");
+	parsable_command_names.push_back("M563");
 	parsable_command_names.push_back("T");
 
 	for (unsigned int index = 0; index < text_only_function_names.size(); index++)
@@ -284,7 +285,7 @@ bool gcode_parser::try_extract_gcode_command(char ** p_p_gcode, std::string * p_
 		}
 		else
 		{
-			// peek at the next character and see if it is either a number, a question mark, a c or an x.
+			// peek at the next character and see if it is either a number, a question mark, a c, x, or integer.
 			// Use a different pointer so as not to mess up parameter parsing
 			char * p_t = p;
 			// skip any whitespace
@@ -312,6 +313,10 @@ bool gcode_parser::try_extract_gcode_command(char ** p_p_gcode, std::string * p_
 				}
 				if (*p_t == ';' || *p_t == '\0')
 					found_command = true;
+			}
+			else if (t_param >= '0' && t_param <= '9')
+			{
+				found_command = true;
 			}
 		}
 	}
@@ -456,6 +461,7 @@ bool gcode_parser::try_extract_parameter(char ** p_p_gcode, parsed_command_param
 		parameter->name = *p++;
 	else
 		return false;
+	// TODO:  See if unsigned long works....
 
 	// Add all values, stop at end of string or when we hit a ';'
 	if (try_extract_double(&p,&(parameter->double_value)))
