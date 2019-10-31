@@ -513,7 +513,7 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
         del other["retract_before_move"]
         del other["travel_speed"]
         del other["z_travel_speed"]
-        del other["retract_before_move"]
+        
 
         # Adjust Simplify3D Settings
         simplify = slicers["simplify_3d"]
