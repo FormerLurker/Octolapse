@@ -256,7 +256,18 @@ OctolapseErrors = {
             "description": "An unexpected error occurred while starting the timelapse.  See plugin_octolapse.log for "
                            "details.",
             'help_link': "error_help_init_timelapse_start_exception.md"
-        }
+        },
+        'too_few_extruders_defined': {
+            "name": "Extruder Count Error",
+            "description": "Your printer profile has fewer extruders ({printer_num_extruders}) defined than your gcode file ({gcode_num_extruders}).",
+            'help_link': "error_help_init_too_few_extruders_defined.md"
+        },
+        'too_few_extruder_offsets_defined': {
+            "name": "Extruder Count Error",
+            "description": "Your printer profile has fewer extruder offsets ({num_extruder_offsets}) defined than extruders ({num_extruders}).",
+            'help_link': "error_help_init_too_few_extruders_offsets_defined.md"
+        },
+
 
     }
 

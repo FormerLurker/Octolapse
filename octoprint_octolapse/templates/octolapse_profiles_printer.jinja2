@@ -71,6 +71,19 @@
             <div data-bind="slideVisible: !has_been_saved_by_user() && slicer_type() != 'automatic'" class="text-warning">
                 <p>You have not yet configured this slicer profile.  Either copy your slicer settings into this profile or select <i>Automatic Configuration</i> above before using Octolapse.</p>
             </div>
+            <div class="control-group" data-bind="visible: num_extruders() > 1">
+                <label class="control-label" for="octolapse_printer_default_extruder">Default Extruder</label>
+                <div class="controls">
+
+                    <input id="octolapse_printer_default_extruder" name="octolapse_printer_default_extruder"
+                           class="input-small text-right ignore_hidden_errors"
+                           data-bind="value: default_extruder,
+                                      attr: { max: num_extruders() }"
+                           type="number" step="1" min="1"/>
+                    <a class="octolapse_help" data-help-url="profiles.printer.default_extruder.md" data-help-title="Default Extruder" />
+                    <div class="error_label_container text-error" data-error-for="octolapse_printer_default_extruder"></div>
+                </div>
+            </div>
             <!-- Other Slicer Type -->
             <div data-bind="slideVisible: slicer_type() == 'other', template:'octolapse-other-slicer-template'"></div>
             <div data-bind="slideVisible: slicer_type() == 'slic3r-pe', template:'printer-slic3r-pe-template'"></div>
@@ -81,59 +94,7 @@
         </div>
         <div data-bind="slideVisible: !(automatic_configuration.updating_from_server())">
             <hr />
-            <div>
-                <h3>Extruders</h3>
-            </div>
-            <div>
-                <div class="control-group">
-                    <label class="control-label" for="octolapse_printer_num_extruders">Number of Extruders/Materials</label>
-                    <div class="controls">
 
-                        <input id="octolapse_printer_num_extruders" name="octolapse_printer_num_extruders"
-                               class="input-small ignore_hidden_errors text-right"
-                               data-bind="value: num_extruders"
-                               type="number" step="any" min="1" max="16" step="1" required />
-                        <a class="octolapse_help" data-help-url="profiles.printer.num_extruders.md" data-help-title="Number of Extruders/Materials" />
-                        <div class="error_label_container text-error" data-error-for="octolapse_printer_num_extruders"></div>
-                    </div>
-                </div>
-                <div data-bind="visible: num_extruders() > 1">
-                   <div class="control-group" >
-                        <label class="control-label" for="octolapse_printer_shared_extruder">Shared Nozzle</label>
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input id="octolapse_printer_shared_extruder" name="octolapse_printer_shared_extruder"
-                                       data-bind="checked: shared_extruder"
-                                       title="Check this box if your printer has a single extruder but supports multiple materials"
-                                       type="checkbox" />Enabled
-                                <a class="octolapse_help" data-help-url="profiles.printer.shared_extruder.md" data-help-title="Override Octoprint Printer Profile" />
-                            </label>
-                            <span class="help-inline">
-                                Enable this setting if you have a single nozzle, but your printer supports multiple materials (like the Prusa MMU1 and MMU2).
-                            </span>
-                        </div>
-                    </div>
-                    <div class="control-group" >
-                        <label class="control-label" for="octolapse_printer_zero_based_extruder">First Extruder is 0</label>
-                        <div class="controls">
-                            <label class="checkbox">
-                                <input id="octolapse_printer_zero_based_extruder" name="octolapse_printer_zero_based_extruder"
-                                       data-bind="checked: zero_based_extruder"
-                                       title="Check this box if your printer's extruder numbering starts at 0."
-                                       type="checkbox" />Enabled
-                                <a class="octolapse_help" data-help-url="profiles.printer.zero_based_extruder.md" data-help-title="First Extruder is 0" />
-                            </label>
-                            <span class="help-inline">
-                                Enable this setting if your first extruder is 0.  For example, if the T0 command selects the first extruder check this box.  If T1 selects the first extruder, uncheck this box.
-                            </span>
-                        </div>
-                    </div>
-                    <div data-bind="visible: !shared_extruder(), foreach: extruder_offsets">
-                        X: <span data-bind="text:$data.x"></span> Y: <span data-bind="text:$data.y"></span>
-                    </div>
-                </div>
-            </div>
-            <hr />
             <div>
                 <h3>Build Volume and Origin</h3>
             </div>
@@ -542,7 +503,7 @@
                             <input id="octolapse_printer_auto_detect_position" name="octolapse_printer_auto_detect_position"
                                    data-bind="checked: auto_detect_position"
                                    title="Auto-detect the current position after receiving a home command"
-                                   type="checkbox"/>Enabled
+                                   type="checkbox" />Enabled
                             <a class="octolapse_help" data-help-url="profiles.printer.auto_detect_position.md" data-help-title="Auto-Detect Position" />
                         </label>
                         <span class="help-inline">
@@ -558,7 +519,7 @@
                                 <input id="octolapse_printer_auto_position_detection_commands" name="octolapse_printer_auto_position_detection_commands"
                                        class="ignore_hidden_errors"
                                        data-bind="value: auto_position_detection_commands"
-                                       type="text"/>
+                                       type="text" />
                                 <span class="add-on">csv</span>
                             </span>
                             <a class="octolapse_help" data-help-url="profiles.printer.auto_position_detection_commands.md" data-help-title="Additional location detection commands" />
@@ -674,6 +635,108 @@
                         </span>
                     </div>
                 </div>
+                <div>
+                    <h5>Extruders</h5>
+                </div>
+                <div>
+                    <div class="control-group">
+                        <label class="control-label" for="octolapse_printer_num_extruders">Number of Extruders/Materials</label>
+                        <div class="controls">
+
+                            <input id="octolapse_printer_num_extruders" name="octolapse_printer_num_extruders"
+                                   class="input-small ignore_hidden_errors text-right"
+                                   data-bind="value: num_extruders"
+                                   type="number" step="any" min="1" max="16" step="1" required />
+                            <a class="octolapse_help" data-help-url="profiles.printer.num_extruders.md" data-help-title="Number of Extruders/Materials" />
+                            <div class="error_label_container text-error" data-error-for="octolapse_printer_num_extruders"></div>
+                        </div>
+                    </div>
+                    <div data-bind="visible: num_extruders() > 1">
+                        <div class="control-group">
+                            <label class="control-label" for="octolapse_printer_shared_extruder">Shared Nozzle</label>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input id="octolapse_printer_shared_extruder" name="octolapse_printer_shared_extruder"
+                                           data-bind="checked: shared_extruder"
+                                           title="Check this box if your printer has a single extruder but supports multiple materials"
+                                           type="checkbox" />Enabled
+                                    <a class="octolapse_help" data-help-url="profiles.printer.shared_extruder.md" data-help-title="Override Octoprint Printer Profile" />
+                                </label>
+                                <span class="help-inline">
+                                    Enable this setting if you have a single nozzle, but your printer supports multiple materials (like the Prusa MMU1 and MMU2).
+                                </span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label" for="octolapse_printer_zero_based_extruder">First Extruder is 0</label>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input id="octolapse_printer_zero_based_extruder" name="octolapse_printer_zero_based_extruder"
+                                           data-bind="checked: zero_based_extruder"
+                                           title="Check this box if your printer's extruder numbering starts at 0."
+                                           type="checkbox" />Enabled
+                                    <a class="octolapse_help" data-help-url="profiles.printer.zero_based_extruder.md" data-help-title="First Extruder is 0" />
+                                </label>
+                                <span class="help-inline">
+                                    Enable this setting if your first extruder is 0.  For example, if the T0 command selects the first extruder check this box.  If T1 selects the first extruder, uncheck this box.
+                                </span>
+                            </div>
+                        </div>
+                        <div data-bind="visible: !shared_extruder()">
+                            <div>
+                                <h5>Extruder Firmware Offsets <a class="octolapse_help" data-help-url="profiles.printer.extruder_offsets.md" data-help-title="Extruder Firmware Offsets" /></h5>
+                                <p>If you have extruder offsets set in your <strong>firmware</strong>, enter them here.  <strong>DO NOT enter extruder offsets from your slicer here!</strong>  Note that these values will NOT match the OctoPrint extruder offset settings.</p>
+                                <p>Note that Octolapse can extract these offsets from your gcode using either G10 (RepRapFirmware) or M218 (marlin/MK4duo).</p>
+                            </div>
+                            <div data-bind="foreach: extruder_offsets">
+                                <fieldset class="octolapse">
+                                    <legend data-bind="text: ('Extruder ' + ($index() + 1).toString())"></legend>
+                                    <div class="row">
+                                        <div class="span5">
+                                            <div class="control-group">
+                                                <label class="control-label" data-bind="attr: {'for': ('octolapse_printer_extruder_offset_x_'+$index().toString())}">X Offset</label>
+                                                <div class="controls">
+                                                    <div class="input-prepend input-append">
+                                                        <span class="add-on">Min</span>
+                                                        <input class="input-small ignore_hidden_errors text-right"
+                                                               data-bind="value: $data.x,
+                                                                      attr: {name: ('octolapse_printer_extruder_offset_x_'+$index().toString()),
+                                                                             id: ('octolapse_printer_extruder_offset_x_'+$index().toString())}"
+                                                               type="number" step="any" required />
+                                                        <span class="add-on">mm</span>
+                                                    </div>
+                                                    <div class="error_label_container text-error"
+                                                         data-bind="attr: {'data-error-for': ('octolapse_printer_extruder_offset_x_'+$index().toString())}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="span5">
+                                            <div class="control-group">
+                                                <label class="control-label" data-bind="attr: {'for': ('octolapse_printer_extruder_offset_y_'+$index().toString())}">Y Offset</label>
+                                                <div class="controls">
+                                                    <div class="input-prepend input-append">
+                                                        <span class="add-on">Min</span>
+                                                        <input class="input-small ignore_hidden_errors text-right"
+                                                               data-bind="value: $data.y,
+                                                                      attr: {name: ('octolapse_printer_extruder_offset_y_'+$index().toString()),
+                                                                             id: ('octolapse_printer_extruder_offset_y_'+$index().toString())}"
+                                                               type="number" step="any" required />
+                                                        <span class="add-on">mm</span>
+                                                    </div>
+                                                    <div class="error_label_container text-error"
+                                                         data-bind="attr: {'data-error-for': ('octolapse_printer_extruder_offset_y_'+$index().toString())}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!--
                 <div class="control-group">
                     <label class="control-label" for="default_firmware_retractions">Use Retraction/Deretraction settings for Firmware Retract/Deretract</label>

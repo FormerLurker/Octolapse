@@ -31,6 +31,7 @@
 struct gcode_position_args {
 	gcode_position_args() {
 		// Wipe Variables
+		shared_extruder = true;
 		autodetect_position = true;
 		is_circular_bed = false;
 		home_x = 0;
@@ -41,6 +42,8 @@ struct gcode_position_args {
 		home_z_none = false;
 		retraction_lengths = NULL;
 		z_lift_heights = NULL;
+		x_firmware_offsets = NULL;
+		y_firmware_offsets = NULL;
 		priming_height = 0;
 		minimum_layer_height = 0;
 		g90_influences_extruder = false;
@@ -61,13 +64,17 @@ struct gcode_position_args {
 		snapshot_z_min = 0;
 		snapshot_z_max = 0;
 		num_extruders = 1;
+		default_extruder = 0;
 		zero_based_extruder = true;
 		std::vector<std::string> location_detection_commands; // Final list of location detection commands
 	}
+	gcode_position_args(const gcode_position_args &pos); // Copy Constructor
 	~gcode_position_args()
 	{
 		delete_retraction_lengths();
 		delete_z_lift_heights();
+		delete_x_firmware_offsets();
+		delete_y_firmware_offsets();
 	}
 	bool autodetect_position;
 	bool is_circular_bed;
@@ -80,6 +87,8 @@ struct gcode_position_args {
 	bool home_z_none;
 	double* retraction_lengths;
 	double* z_lift_heights;
+	double* x_firmware_offsets;
+	double* y_firmware_offsets;
 	double priming_height;
 	double minimum_layer_height;
 	bool g90_influences_extruder;
@@ -99,21 +108,24 @@ struct gcode_position_args {
 	bool shared_extruder;
 	bool zero_based_extruder;
 	int num_extruders;
+	int default_extruder;
 	std::string xyz_axis_default_mode;
 	std::string e_axis_default_mode;
 	std::string units_default;
 	std::vector<std::string> location_detection_commands; // Final list of location detection commands
-
+	gcode_position_args& operator=(const gcode_position_args& pos_args);
 	void set_num_extruders(int num_extruders);
 	void delete_retraction_lengths();
 	void delete_z_lift_heights();
+	void delete_x_firmware_offsets();
+	void delete_y_firmware_offsets();
 };
 
 class gcode_position
 {
 public:
 	typedef void(gcode_position::*pos_function_type)(position*, parsed_command&);
-	gcode_position(gcode_position_args* args);
+	gcode_position(gcode_position_args args);
 	gcode_position();
 	virtual ~gcode_position();
 
@@ -162,7 +174,6 @@ private:
 	double snapshot_z_max_;
 	int num_extruders_;
 	bool shared_extruder_;
-	int current_extruder_;
 	bool zero_based_extruder_;
 
 	std::map<std::string, pos_function_type> gcode_functions_;
@@ -185,7 +196,8 @@ private:
 	void process_m83(position*, parsed_command&);
 	void process_m207(position*, parsed_command&);
 	void process_m208(position*, parsed_command&);
-	void process_m563(position* pos, parsed_command& cmd);
+	void process_m218(position*, parsed_command&);
+	void process_m563(position*, parsed_command&);
 	void process_t(position*, parsed_command&);
 
 	gcode_comment_processor comment_processor_;

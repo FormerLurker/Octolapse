@@ -24,14 +24,144 @@
 #include "logging.h"
 #include <algorithm>
 #include <iterator>
+gcode_position_args::gcode_position_args(const gcode_position_args &pos_args)
+{
+	shared_extruder = pos_args.shared_extruder;
+	autodetect_position = pos_args.autodetect_position;
+	is_circular_bed = pos_args.is_circular_bed;
+	home_x = pos_args.home_x;
+	home_y = pos_args.home_y;
+	home_z = pos_args.home_z;
+	home_x_none = pos_args.home_x_none;
+	home_y_none = pos_args.home_y_none;
+	home_z_none = pos_args.home_z_none;
+
+	priming_height = pos_args.priming_height;
+	minimum_layer_height = pos_args.minimum_layer_height;
+	g90_influences_extruder = pos_args.g90_influences_extruder;
+	xyz_axis_default_mode = pos_args.xyz_axis_default_mode;
+	e_axis_default_mode = pos_args.e_axis_default_mode;
+	units_default = pos_args.units_default;
+	is_bound_ = pos_args.is_bound_;
+	x_min = pos_args.x_min;
+	x_max = pos_args.x_max;
+	y_min = pos_args.y_min;
+	y_max = pos_args.y_max;
+	z_min = pos_args.z_min;
+	z_max = pos_args.z_max;
+	snapshot_x_min = pos_args.snapshot_x_min;
+	snapshot_x_max = pos_args.snapshot_x_max;
+	snapshot_y_min = pos_args.snapshot_y_min;
+	snapshot_y_max = pos_args.snapshot_y_max;
+	snapshot_z_min = pos_args.snapshot_z_min;
+	snapshot_z_max = pos_args.snapshot_z_max;
+
+	default_extruder = pos_args.default_extruder;
+	zero_based_extruder = pos_args.zero_based_extruder;
+	num_extruders = pos_args.num_extruders;
+	retraction_lengths = NULL;
+	z_lift_heights = NULL;
+	x_firmware_offsets = NULL;
+	y_firmware_offsets = NULL;
+	set_num_extruders(pos_args.num_extruders);
+	// copy extruder specific members
+	for (int index = 0; index < pos_args.num_extruders; index++)
+	{
+		retraction_lengths[index] = pos_args.retraction_lengths[index];
+		z_lift_heights[index] = pos_args.z_lift_heights[index];
+		if (!pos_args.shared_extruder)
+		{
+			x_firmware_offsets[index] = pos_args.x_firmware_offsets[index];
+			y_firmware_offsets[index] = pos_args.y_firmware_offsets[index];
+		}
+		else
+		{
+			x_firmware_offsets[index] = 0;
+			y_firmware_offsets[index] = 0;
+		}
+	}
+	std::vector<std::string> location_detection_commands; // Final list of location detection commands
+}
+
+gcode_position_args& gcode_position_args::operator=(const gcode_position_args& pos_args)
+{
+	shared_extruder = pos_args.shared_extruder;
+	autodetect_position = pos_args.autodetect_position;
+	is_circular_bed = pos_args.is_circular_bed;
+	home_x = pos_args.home_x;
+	home_y = pos_args.home_y;
+	home_z = pos_args.home_z;
+	home_x_none = pos_args.home_x_none;
+	home_y_none = pos_args.home_y_none;
+	home_z_none = pos_args.home_z_none;
+	
+	priming_height = pos_args.priming_height;
+	minimum_layer_height = pos_args.minimum_layer_height;
+	g90_influences_extruder = pos_args.g90_influences_extruder;
+	xyz_axis_default_mode = pos_args.xyz_axis_default_mode;
+	e_axis_default_mode = pos_args.e_axis_default_mode;
+	units_default = pos_args.units_default;
+	is_bound_ = pos_args.is_bound_;
+	x_min = pos_args.x_min;
+	x_max = pos_args.x_max;
+	y_min = pos_args.y_min;
+	y_max = pos_args.y_max;
+	z_min = pos_args.z_min;
+	z_max = pos_args.z_max;
+	snapshot_x_min = pos_args.snapshot_x_min;
+	snapshot_x_max = pos_args.snapshot_x_max;
+	snapshot_y_min = pos_args.snapshot_y_min;
+	snapshot_y_max = pos_args.snapshot_y_max;
+	snapshot_z_min = pos_args.snapshot_z_min;
+	snapshot_z_max = pos_args.snapshot_z_max;
+	
+	default_extruder = pos_args.default_extruder;
+	zero_based_extruder = pos_args.zero_based_extruder;
+	num_extruders = pos_args.num_extruders;
+	retraction_lengths = NULL;
+	z_lift_heights = NULL;
+	x_firmware_offsets = NULL;
+	y_firmware_offsets = NULL;
+	set_num_extruders(pos_args.num_extruders);
+	// copy extruder specific members
+	for(int index=0; index < pos_args.num_extruders; index++)
+	{
+		retraction_lengths[index] = pos_args.retraction_lengths[index];
+		z_lift_heights[index] = pos_args.z_lift_heights[index];
+		if (!pos_args.shared_extruder)
+		{
+			x_firmware_offsets[index] = pos_args.x_firmware_offsets[index];
+			y_firmware_offsets[index] = pos_args.y_firmware_offsets[index];
+		}
+		else
+		{
+			x_firmware_offsets[index] = 0;
+			y_firmware_offsets[index] = 0;
+		}
+	}
+	std::vector<std::string> location_detection_commands; // Final list of location detection commands
+	return *this;
+}
 
 void gcode_position_args::set_num_extruders(int num_extruders_)
 {
 	delete_retraction_lengths();
 	delete_z_lift_heights();
+	delete_x_firmware_offsets();
+	delete_y_firmware_offsets();
 	num_extruders = num_extruders_;
 	retraction_lengths = new double[num_extruders_];
 	z_lift_heights = new double[num_extruders_];
+	x_firmware_offsets = new double[num_extruders_];
+	y_firmware_offsets = new double[num_extruders_];
+	// initialize arrays
+	for (int index=0; index < num_extruders; index++)
+	{
+		retraction_lengths[index] = 0.0;
+		z_lift_heights[index] = 0.0;
+		x_firmware_offsets[index] = 0.0;
+		y_firmware_offsets[index] = 0.0;
+	}
 }
 
 void gcode_position_args::delete_retraction_lengths()
@@ -51,6 +181,22 @@ void gcode_position_args::delete_z_lift_heights()
 		z_lift_heights = NULL;
 	}
 }
+void gcode_position_args::delete_x_firmware_offsets()
+{
+	if (x_firmware_offsets != NULL)
+	{
+		delete[] x_firmware_offsets;
+		x_firmware_offsets = NULL;
+	}
+}
+void gcode_position_args::delete_y_firmware_offsets()
+{
+	if (y_firmware_offsets != NULL)
+	{
+		delete[] y_firmware_offsets;
+		y_firmware_offsets = NULL;
+	}
+}
 
 gcode_position::gcode_position()
 {
@@ -67,8 +213,6 @@ gcode_position::gcode_position()
 	shared_extruder_ = false;
 	set_num_extruders(0);
 	zero_based_extruder_ = true;
-	current_extruder_ = 0;
-	
 	priming_height_ = 0;
 	minimum_layer_height_ = 0;
 	g90_influences_extruder_ = false;
@@ -105,68 +249,92 @@ gcode_position::gcode_position()
 	}
 }
 
-gcode_position::gcode_position(gcode_position_args* args)
+
+gcode_position::gcode_position(gcode_position_args args)
 {
-	autodetect_position_ = args->autodetect_position;
-	home_x_ = args->home_x;
-	home_y_ = args->home_y;
-	home_z_ = args->home_z;
-	home_x_none_ = args->home_x_none;
-	home_y_none_ = args->home_y_none;
-	home_z_none_ = args->home_z_none;
+	autodetect_position_ = args.autodetect_position;
+	home_x_ = args.home_x;
+	home_y_ = args.home_y;
+	home_z_ = args.home_z;
+	home_x_none_ = args.home_x_none;
+	home_y_none_ = args.home_y_none;
+	home_z_none_ = args.home_z_none;
 	retraction_lengths_ = NULL;
 	z_lift_heights_ = NULL;
 	// Configure Extruders
-	shared_extruder_ = args->shared_extruder;
-	set_num_extruders(args->num_extruders);
-	zero_based_extruder_ = args->zero_based_extruder;
-
-	current_extruder_ = 0;
+	shared_extruder_ = args.shared_extruder;
+	set_num_extruders(args.num_extruders);
+	zero_based_extruder_ = args.zero_based_extruder;
+	// Set the current extruder to the default extruder (0 based)
+	int current_extruder = args.default_extruder;
+	// make sure our current extruder is between 0 and num_extruders - 1
+	if (current_extruder < 0)
+	{
+		current_extruder = 0;
+	}
+	else if (current_extruder > args.num_extruders - 1)
+	{
+		current_extruder = args.num_extruders - 1;
+	}
 	
 	// copy the retraction lengths array
-	for (int index=0; index < args->num_extruders; index++)
+	for (int index=0; index < args.num_extruders; index++)
 	{
-		retraction_lengths_[index] = args->retraction_lengths[index];
+		retraction_lengths_[index] = args.retraction_lengths[index];
 	}
 	// Copy the z_lift_heights array from the arguments
-	for (int index = 0; index < args->num_extruders; index++)
+	for (int index = 0; index < args.num_extruders; index++)
 	{
-		z_lift_heights_[index] = args->z_lift_heights[index];
+		z_lift_heights_[index] = args.z_lift_heights[index];
+	}
+	// Copy the firmware offsets
+	for (int index = 0; index < args.num_extruders; index++)
+	{
+		retraction_lengths_[index] = args.retraction_lengths[index];
 	}
 
-	priming_height_ = args->priming_height;
-	minimum_layer_height_ = args->minimum_layer_height;
-	g90_influences_extruder_ = args->g90_influences_extruder;
-	e_axis_default_mode_ = args->e_axis_default_mode;
-	xyz_axis_default_mode_ = args->xyz_axis_default_mode;
-	units_default_ = args->units_default;
+	priming_height_ = args.priming_height;
+	minimum_layer_height_ = args.minimum_layer_height;
+	g90_influences_extruder_ = args.g90_influences_extruder;
+	e_axis_default_mode_ = args.e_axis_default_mode;
+	xyz_axis_default_mode_ = args.xyz_axis_default_mode;
+	units_default_ = args.units_default;
 	gcode_functions_ = get_gcode_functions();
 
-	is_bound_ = args->is_bound_;
-	snapshot_x_min_ = args->snapshot_x_min;
-	snapshot_x_max_ = args->snapshot_x_max;
-	snapshot_y_min_ = args->snapshot_y_min;
-	snapshot_y_max_ = args->snapshot_y_max;
-	snapshot_z_min_ = args->snapshot_z_min;
-	snapshot_z_max_ = args->snapshot_z_max;
+	is_bound_ = args.is_bound_;
+	snapshot_x_min_ = args.snapshot_x_min;
+	snapshot_x_max_ = args.snapshot_x_max;
+	snapshot_y_min_ = args.snapshot_y_min;
+	snapshot_y_max_ = args.snapshot_y_max;
+	snapshot_z_min_ = args.snapshot_z_min;
+	snapshot_z_max_ = args.snapshot_z_max;
 
-	x_min_ = args->x_min;
-	x_max_ = args->x_max;
-	y_min_ = args->y_min;
-	y_max_ = args->y_max;
-	z_min_ = args->z_min;
-	z_max_ = args->z_max;
+	x_min_ = args.x_min;
+	x_max_ = args.x_max;
+	y_min_ = args.y_min;
+	y_max_ = args.y_max;
+	z_min_ = args.z_min;
+	z_max_ = args.z_max;
 
-	is_circular_bed_ = args->is_circular_bed;
+	is_circular_bed_ = args.is_circular_bed;
 
 	cur_pos_ = -1;
-	
+	num_extruders_ = args.num_extruders;
+
+	// Configure the initial position
+	position initial_pos(num_extruders_);
+	initial_pos.set_xyz_axis_mode(xyz_axis_default_mode_);
+	initial_pos.set_e_axis_mode(e_axis_default_mode_);
+	initial_pos.set_units_default(units_default_);
+	initial_pos.current_tool = current_extruder;
+	for (int index = 0; index < args.num_extruders; index++)
+	{
+		initial_pos.p_extruders[index].x_firmware_offset = args.x_firmware_offsets[index];
+		initial_pos.p_extruders[index].y_firmware_offset = args.y_firmware_offsets[index];
+	}
+
 	for (int index = 0; index < NUM_POSITIONS; index++)
 	{
-		position initial_pos(num_extruders_);
-		initial_pos.set_xyz_axis_mode(xyz_axis_default_mode_);
-		initial_pos.set_e_axis_mode(e_axis_default_mode_);
-		initial_pos.set_units_default(units_default_);
 		add_position(initial_pos);
 	}
 }
@@ -283,7 +451,7 @@ void gcode_position::update(parsed_command& command, const int file_line_number,
 		const pos_function_type func = gcode_functions_iterator_->second;
 		(this->*func)(p_current_pos, command);
 		// calculate z and e relative distances
-		p_current_pos->get_current_extruder().e_relative = (p_current_pos->get_current_extruder().e - p_previous_pos->get_current_extruder().e);
+		p_current_pos->get_current_extruder().e_relative = (p_current_pos->get_current_extruder().e - p_previous_pos->get_extruder(p_current_pos->current_tool).e);
 		p_current_pos->z_relative = (p_current_pos->z - p_previous_pos->z);
 		// Have the XYZ positions changed after processing a command ?
 
@@ -320,7 +488,12 @@ void gcode_position::update(parsed_command& command, const int file_line_number,
 	{
 		p_current_pos->get_current_extruder().extrusion_length_total += p_current_pos->get_current_extruder().e_relative;
 
-		if (utilities::greater_than(p_current_pos->get_current_extruder().e_relative, 0) && p_previous_pos->get_current_extruder().is_extruding && !p_previous_pos->get_current_extruder().is_extruding_start)
+		if (
+			utilities::greater_than(p_current_pos->get_current_extruder().e_relative, 0) &&
+			p_previous_pos->current_tool == p_current_pos->current_tool &&
+			// notice we can use the previous position's current extruder since we've made sure they are using the same tool
+			p_previous_pos->get_current_extruder().is_extruding &&
+			!p_previous_pos->get_current_extruder().is_extruding_start)
 		{
 			// A little shortcut if we know we were extruding (not starting extruding) in the previous command
 			// This lets us skip a lot of the calculations for the extruder, including the state calculation
@@ -342,25 +515,40 @@ void gcode_position::update(parsed_command& command, const int file_line_number,
 				p_current_pos->get_current_extruder().extrusion_length = 0;
 
 			// calculate deretraction length
-			if (utilities::greater_than(p_previous_pos->get_current_extruder().retraction_length, p_current_pos->get_current_extruder().retraction_length))
+			if (utilities::greater_than(p_previous_pos->get_extruder(p_current_pos->current_tool).retraction_length, p_current_pos->get_current_extruder().retraction_length))
 			{
-				p_current_pos->get_current_extruder().deretraction_length = p_previous_pos->get_current_extruder().retraction_length - p_current_pos->get_current_extruder().retraction_length;
+				p_current_pos->get_current_extruder().deretraction_length = p_previous_pos->get_extruder(p_current_pos->current_tool).retraction_length - p_current_pos->get_current_extruder().retraction_length;
 			}
 			else
 				p_current_pos->get_current_extruder().deretraction_length = 0;
 
 			// *************Calculate extruder state*************
 			// rounding should all be done by now
-			p_current_pos->get_current_extruder().is_extruding_start = utilities::greater_than(p_current_pos->get_current_extruder().extrusion_length, 0) && !p_previous_pos->get_current_extruder().is_extruding;
-			p_current_pos->get_current_extruder().is_extruding = utilities::greater_than(p_current_pos->get_current_extruder().extrusion_length, 0);
+			if(p_current_pos->current_tool == p_previous_pos->current_tool)
+			{
+				// On a toolchange some flags are not possible, so don't change them.
+				// these flags include like is_extruding, is_extruding_start, is_retracting_start, is_retracting, is_deretracting_start and is_deretracting
+				// Note that it's ok to use the previous pos current extruder since we've  made sure the current tool is identical
+				p_current_pos->get_current_extruder().is_extruding_start = utilities::greater_than(p_current_pos->get_current_extruder().extrusion_length, 0) && !p_previous_pos->get_current_extruder().is_extruding;
+				p_current_pos->get_current_extruder().is_extruding = utilities::greater_than(p_current_pos->get_current_extruder().extrusion_length, 0);
+				p_current_pos->get_current_extruder().is_retracting_start = !p_previous_pos->get_current_extruder().is_retracting && utilities::greater_than(p_current_pos->get_current_extruder().retraction_length, 0);
+				p_current_pos->get_current_extruder().is_retracting = utilities::greater_than(p_current_pos->get_current_extruder().retraction_length, p_previous_pos->get_current_extruder().retraction_length);
+				p_current_pos->get_current_extruder().is_deretracting = utilities::greater_than(p_current_pos->get_current_extruder().deretraction_length, p_previous_pos->get_current_extruder().deretraction_length);
+				p_current_pos->get_current_extruder().is_deretracting_start = utilities::greater_than(p_current_pos->get_current_extruder().deretraction_length, 0) && !p_previous_pos->get_current_extruder().is_deretracting;
+			}
+			else
+			{
+				p_current_pos->get_current_extruder().is_extruding_start = false;
+				p_current_pos->get_current_extruder().is_extruding = false;
+				p_current_pos->get_current_extruder().is_retracting_start = false;
+				p_current_pos->get_current_extruder().is_retracting = false;
+				p_current_pos->get_current_extruder().is_deretracting = false;
+				p_current_pos->get_current_extruder().is_deretracting_start = false;
+			}
 			p_current_pos->get_current_extruder().is_primed = utilities::is_zero(p_current_pos->get_current_extruder().extrusion_length) && utilities::is_zero(p_current_pos->get_current_extruder().retraction_length);
-			p_current_pos->get_current_extruder().is_retracting_start = !p_previous_pos->get_current_extruder().is_retracting && utilities::greater_than(p_current_pos->get_current_extruder().retraction_length, 0);
-			p_current_pos->get_current_extruder().is_retracting = utilities::greater_than(p_current_pos->get_current_extruder().retraction_length, p_previous_pos->get_current_extruder().retraction_length);
 			p_current_pos->get_current_extruder().is_partially_retracted = utilities::greater_than(p_current_pos->get_current_extruder().retraction_length, 0) && utilities::less_than(p_current_pos->get_current_extruder().retraction_length, retraction_lengths_[p_current_pos->current_tool]);
 			p_current_pos->get_current_extruder().is_retracted = utilities::greater_than_or_equal(p_current_pos->get_current_extruder().retraction_length, retraction_lengths_[p_current_pos->current_tool]);
-			p_current_pos->get_current_extruder().is_deretracting_start = utilities::greater_than(p_current_pos->get_current_extruder().deretraction_length, 0) && !p_previous_pos->get_current_extruder().is_deretracting;
-			p_current_pos->get_current_extruder().is_deretracting = utilities::greater_than(p_current_pos->get_current_extruder().deretraction_length, p_previous_pos->get_current_extruder().deretraction_length);
-			p_current_pos->get_current_extruder().is_deretracted = utilities::greater_than(p_previous_pos->get_current_extruder().retraction_length, 0) && utilities::is_zero(p_current_pos->get_current_extruder().retraction_length);
+			p_current_pos->get_current_extruder().is_deretracted = utilities::greater_than(p_previous_pos->get_extruder(p_current_pos->current_tool).retraction_length, 0) && utilities::is_zero(p_current_pos->get_current_extruder().retraction_length);
 			// *************End Calculate extruder state*************
 		}
 
@@ -474,7 +662,7 @@ std::map<std::string, gcode_position::pos_function_type> gcode_position::get_gco
 	newMap.insert(std::make_pair("M83", &gcode_position::process_m83));
 	newMap.insert(std::make_pair("M207", &gcode_position::process_m207));
 	newMap.insert(std::make_pair("M208", &gcode_position::process_m208));
-	newMap.insert(std::make_pair("M208", &gcode_position::process_m208));
+	newMap.insert(std::make_pair("M218", &gcode_position::process_m218));
 	newMap.insert(std::make_pair("M563", &gcode_position::process_m563));
 	newMap.insert(std::make_pair("T", &gcode_position::process_t));
 	return newMap;
@@ -520,17 +708,17 @@ void gcode_position::update_position(
 	{
 		if (update_x)
 		{
-			pos->x = x + pos->x_offset;
+			pos->x = x + pos->x_offset - pos->x_firmware_offset;
 			pos->x_null = false;
 		}
 		if (update_y)
 		{
-			pos->y = y + pos->y_offset;
+			pos->y = y + pos->y_offset - pos->y_firmware_offset;
 			pos->y_null = false;
 		}
 		if (update_z)
 		{
-			pos->z = z + pos->z_offset;
+			pos->z = z + pos->z_offset - pos->z_firmware_offset;
 			pos->z_null = false;
 		}
 		// note that e cannot be null and starts at 0
@@ -572,19 +760,23 @@ void gcode_position::update_position(
 		}
 		else
 		{
+
 			if (update_x)
 			{
-				pos->x = x + pos->x_offset;
+				pos->x_firmware_offset = pos->get_current_extruder().x_firmware_offset;
+				pos->x = x + pos->x_offset - pos->x_firmware_offset;
 				pos->x_null = false;
 			}
 			if (update_y)
 			{
-				pos->y = y + pos->y_offset;
+				pos->y_firmware_offset = pos->get_current_extruder().y_firmware_offset;
+				pos->y = y + pos->y_offset - pos->y_firmware_offset;
 				pos->y_null = false;
 			}
 			if (update_z)
 			{
-				pos->z = z + pos->z_offset;
+				pos->z_firmware_offset = pos->get_current_extruder().z_firmware_offset;
+				pos->z = z + pos->z_offset - pos->z_firmware_offset;
 				pos->z_null = false;
 			}
 		}
@@ -673,7 +865,82 @@ void gcode_position::process_g3(position* pos, parsed_command& cmd)
 
 void gcode_position::process_g10(position* pos, parsed_command& cmd)
 {
-	// Todo: Fix G10
+	unsigned int p = 0;
+	bool has_p = false;
+	double x = 0;
+	bool has_x = false;
+	double y = 0;
+	bool has_y = false;
+	double z = 0;
+	bool has_z = false;
+	double s = 0;
+	bool has_s = false;
+	// Handle extruder offset commands
+	for (unsigned int index = 0; index < cmd.parameters.size(); index++)
+	{
+		parsed_command_parameter p_cur_param = cmd.parameters[index];
+		if (p_cur_param.name == 'S')
+		{
+			has_s = true;
+			if (p_cur_param.value_type == 'F')
+				s = p_cur_param.double_value;
+			else
+				has_s = false;
+		}
+		else if (p_cur_param.name == 'P')
+		{
+			has_p = true;
+			if (p_cur_param.value_type == 'L')
+			{
+				p = p_cur_param.unsigned_long_value;
+			}
+			else if (p_cur_param.value_type == 'F')
+			{
+				double x = p_cur_param.double_value;
+				x = x + 0.5 - (x < 0);
+				p = static_cast<unsigned int>(x);
+			}
+			else
+				has_p = false;
+		}
+		else if (p_cur_param.name == 'X')
+		{
+			has_x = true;
+			if (p_cur_param.value_type == 'F')
+				x = p_cur_param.double_value;
+			else
+				has_x = false;
+		}
+		else if (p_cur_param.name == 'Y')
+		{
+			has_y = true;
+			if (p_cur_param.value_type == 'F')
+				y = p_cur_param.double_value;
+			else
+				has_y = false;
+		}
+		else if (p_cur_param.name == 'Z')
+		{
+			has_z = true;
+			if (p_cur_param.value_type == 'F')
+				z = p_cur_param.double_value;
+			else
+				has_z = false;
+		}
+	}
+	// apply offsets
+	if (has_p)
+	{
+		if (has_x)
+			pos->get_extruder(p).x_firmware_offset = x;
+		if (has_y)
+			pos->get_extruder(p).x_firmware_offset = y;
+		if (has_z)
+			pos->get_extruder(p).z_firmware_offset = z;
+		return;
+	}
+
+	// Todo: add firmware retract here
 }
 
 void gcode_position::process_g11(position* pos, parsed_command& cmd)
@@ -846,11 +1113,11 @@ void gcode_position::process_g92(position* pos, parsed_command& cmd)
 	if (!o_exists && !update_x && !update_y && !update_z && !update_e)
 	{
 		if (!pos->x_null)
-			pos->x_offset = pos->x;
+			pos->x_offset = pos->x + pos->x_firmware_offset;
 		if (!pos->y_null)
-			pos->y_offset = pos->y;
+			pos->y_offset = pos->y + pos->y_firmware_offset;
 		if (!pos->z_null)
-			pos->z_offset = pos->z;
+			pos->z_offset = pos->z + pos->z_firmware_offset;
 		// Todo:  Does this reset E too?  Figure that $#$$ out Formerlurker!
 		pos->get_current_extruder().e_offset = pos->get_current_extruder().e;
 	}
@@ -859,7 +1126,7 @@ void gcode_position::process_g92(position* pos, parsed_command& cmd)
 		if (update_x)
 		{
 			if (!pos->x_null && pos->x_homed)
-				pos->x_offset = pos->x - x;
+				pos->x_offset = pos->x - x + pos->x_firmware_offset;
 			else
 			{
 				pos->x = x;
@@ -870,7 +1137,7 @@ void gcode_position::process_g92(position* pos, parsed_command& cmd)
 		if (update_y)
 		{
 			if (!pos->y_null && pos->y_homed)
-				pos->y_offset = pos->y - y;
+				pos->y_offset = pos->y - y + pos->y_firmware_offset;
 			else
 			{
 				pos->y = y;
@@ -881,7 +1148,7 @@ void gcode_position::process_g92(position* pos, parsed_command& cmd)
 		if (update_z)
 		{
 			if (!pos->z_null && pos->z_homed)
-				pos->z_offset = pos->z - z;
+				pos->z_offset = pos->z - z + pos->z_firmware_offset;
 			else
 			{
 				pos->z = z;
@@ -924,6 +1191,76 @@ void gcode_position::process_m208(position* pos, parsed_command& cmd)
 	// Todo: implement firmware retract
 }
 
+void gcode_position::process_m218(position* pos, parsed_command& cmd)
+{
+	// Set hotend offsets
+	unsigned int t = 0;
+	bool has_t = false;
+	double x = 0;
+	bool has_x = false;
+	double y = 0;
+	bool has_y = false;
+	double z = 0;
+	bool has_z = false;
+	// Handle extruder offset commands
+	for (unsigned int index = 0; index < cmd.parameters.size(); index++)
+	{
+		parsed_command_parameter p_cur_param = cmd.parameters[index];
+		
+		if (p_cur_param.name == 'T')
+		{
+			has_t = true;
+			if (p_cur_param.value_type == 'L')
+			{
+				t = p_cur_param.unsigned_long_value;
+			}
+			else if (p_cur_param.value_type == 'F')
+			{
+				double x = p_cur_param.double_value;
+				x = x + 0.5 - (x < 0);
+				t = static_cast<unsigned int>(x);
+			}
+			else
+				has_t = false;
+		}
+		else if (p_cur_param.name == 'X')
+		{
+			has_x = true;
+			if (p_cur_param.value_type == 'F')
+				x = p_cur_param.double_value;
+			else
+				has_x = false;
+		}
+		else if (p_cur_param.name == 'Y')
+		{
+			has_y = true;
+			if (p_cur_param.value_type == 'F')
+				y = p_cur_param.double_value;
+			else
+				has_y = false;
+		}
+		else if (p_cur_param.name == 'Z')
+		{
+			has_z = true;
+			if (p_cur_param.value_type == 'F')
+				z = p_cur_param.double_value;
+			else
+				has_z = false;
+		}
+	}
+	// apply offsets
+	if (has_t)
+	{
+		if (has_x)
+			pos->get_extruder(t).x_firmware_offset = x;
+		if (has_y)
+			pos->get_extruder(t).x_firmware_offset = y;
+		if (has_z)
+			pos->get_extruder(t).z_firmware_offset = z;
+		return;
+	}
+}
+
 void gcode_position::process_m563(position* pos, parsed_command& cmd)
 {
 	// Todo:  Work on this command, which defines tools and will affect which tool is selected.
@@ -936,20 +1273,23 @@ void gcode_position::process_t(position* pos, parsed_command& cmd)
 		parsed_command_parameter p_cur_param = cmd.parameters[index];
 		if (p_cur_param.name == 'T' && p_cur_param.value_type == 'U')
 		{
-			current_extruder_ = p_cur_param.unsigned_long_value;
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::DEBUG, "GcodePosition.update_position: Tool change Detected.");
+			pos->current_tool = p_cur_param.unsigned_long_value;
 			if (!zero_based_extruder_)
 			{
-				current_extruder_--;
+				pos->current_tool--;
 			}
-			if (current_extruder_ < 0)
+			if (pos->current_tool < 0)
 			{
-				current_extruder_ = 0;
+				pos->current_tool = 0;
+				
 			}
-			else if (current_extruder_ > num_extruders_ - 1)
+			else if (pos->current_tool > num_extruders_ - 1)
 			{
-				current_extruder_ = num_extruders_ - 1;
+				pos->current_tool = num_extruders_ - 1;
+				octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "GcodePosition.update_position: Selected tool was greater than the number of available tools.");
 			}
-
+			
 			break;
 		}
 	}

@@ -27,12 +27,10 @@
 #include "logging.h"
 #include "utilities.h"
 
-stabilization::stabilization(
-	gcode_position_args* position_args, stabilization_args* stab_args, pythonGetCoordinatesCallback get_coordinates_callback, pythonProgressCallback progress
-)
+stabilization::stabilization(gcode_position_args position_args, stabilization_args stab_args, pythonGetCoordinatesCallback get_coordinates_callback, PyObject* py_get_coordinates_callback, pythonProgressCallback progress_callback, PyObject* py_progress_callback)
 {
 	std::string errors_;
-	if (stab_args->py_on_progress_received != NULL && stab_args->py_get_snapshot_position_callback != NULL)
+	if (py_get_coordinates_callback != NULL && py_progress_callback != NULL)
 	{
 		has_python_callbacks_ = true;
 	}
@@ -40,10 +38,12 @@ stabilization::stabilization(
 	{
 		has_python_callbacks_ = false;
 	}
-	progress_callback_ = progress;
+	progress_callback_ = progress_callback;
 	_get_coordinates_callback = get_coordinates_callback;
+	py_on_progress_received = py_progress_callback;
+	py_get_snapshot_position_callback = py_get_coordinates_callback;
 	native_progress_callback_ = NULL;
-	p_stabilization_args_ = stab_args;
+	stabilization_args_ = stab_args;
 	is_running_ = true;
 	gcode_parser_ = new gcode_parser();
 	gcode_position_ = new gcode_position(position_args);
@@ -53,7 +53,6 @@ stabilization::stabilization(
 	missed_snapshots_ = 0;
 	stabilization_x_ = 0;
 	stabilization_y_ = 0;
-	p_args_ = NULL;
 	
 }
 
@@ -63,7 +62,7 @@ stabilization::stabilization()
 	has_python_callbacks_ = false;
 	native_progress_callback_ = NULL;
 	progress_callback_ = NULL;
-	p_stabilization_args_ = new stabilization_args();
+	stabilization_args_ = stabilization_args();
 	is_running_ = true;
 	gcode_parser_ = NULL;
 	gcode_position_ = NULL;
@@ -74,17 +73,18 @@ stabilization::stabilization()
 	stabilization_x_ = 0;
 	stabilization_y_ = 0;
 	_get_coordinates_callback = NULL;
-	p_args_ = NULL;
+	py_on_progress_received = NULL;
+	py_get_snapshot_position_callback = NULL;
 	
 }
 
-stabilization::stabilization(gcode_position_args* position_args, stabilization_args* args, progressCallback progress)
+stabilization::stabilization(gcode_position_args position_args, stabilization_args args, progressCallback progress)
 {
 	std::string errors_; 
 	has_python_callbacks_ = false;
 	native_progress_callback_ = progress;
 	progress_callback_ = NULL;
-	p_stabilization_args_ = args;
+	stabilization_args_ = args;
 	is_running_ = true;
 	gcode_parser_ = new gcode_parser();
 	gcode_position_ = new gcode_position(position_args);
@@ -95,7 +95,8 @@ stabilization::stabilization(gcode_position_args* position_args, stabilization_a
 	stabilization_x_ = 0;
 	stabilization_y_ = 0;
 	_get_coordinates_callback = NULL;
-	p_args_ = NULL;
+	py_on_progress_received = NULL;
+	py_get_snapshot_position_callback = NULL;
 	
 }
 
@@ -117,6 +118,10 @@ stabilization::~stabilization()
 		delete gcode_position_;
 		gcode_position_ = NULL;
 	}
+	if (py_on_progress_received != NULL)
+		Py_XDECREF(py_on_progress_received);
+	if (py_get_snapshot_position_callback != NULL)
+		Py_XDECREF(py_get_snapshot_position_callback);
 }
 
 long stabilization::get_file_size(const std::string& file_path)
@@ -132,7 +137,7 @@ long stabilization::get_file_size(const std::string& file_path)
 
 double stabilization::get_next_update_time() const
 {
-	return clock() + (p_stabilization_args_->notification_period_seconds * CLOCKS_PER_SEC);
+	return clock() + (stabilization_args_.notification_period_seconds * CLOCKS_PER_SEC);
 }
 
 double stabilization::get_time_elapsed(double start_clock, double end_clock)
@@ -150,10 +155,10 @@ stabilization_results stabilization::process_file()
 	double next_update_time = get_next_update_time();
 	const clock_t start_clock = clock();
 
-	file_size_ = get_file_size(p_stabilization_args_->file_path);
+	file_size_ = get_file_size(stabilization_args_.file_path);
 
 	//std::ifstream gcodeFile(p_stabilization_args_->file_path.c_str());
-	FILE *gcodeFile = fopen(p_stabilization_args_->file_path.c_str(), "r");
+	FILE *gcodeFile = fopen(stabilization_args_.file_path.c_str(), "r");
 	char line[9999];
 
 	if (gcodeFile != NULL)
@@ -248,6 +253,7 @@ stabilization_results stabilization::process_file()
 		sstm << ", StartX:" << pPlan.initial_position.x;
 		sstm << ", StartY:" << pPlan.initial_position.y;
 		sstm << ", StartZ:" << pPlan.initial_position.z;
+		sstm << ", Tool:" << pPlan.initial_position.current_tool;
 		sstm << ", Speed:" << pPlan.initial_position.f;
 		sstm << ", Distance:" << pPlan.distance_from_stabilization_point;
 		sstm << ", Travel Distance:" << pPlan.total_travel_distance;
@@ -266,7 +272,7 @@ void stabilization::notify_progress(const double percent_progress, const double 
 {
 	if (has_python_callbacks_)
 	{
-		is_running_ = progress_callback_(p_stabilization_args_->py_on_progress_received, percent_progress, seconds_elapsed, seconds_to_complete, gcodes_processed, lines_processed);
+		is_running_ = progress_callback_(py_on_progress_received, percent_progress, seconds_elapsed, seconds_to_complete, gcodes_processed, lines_processed);
 	}
 	else if(native_progress_callback_ != NULL)
 	{
@@ -350,18 +356,21 @@ void stabilization::get_next_xy_coordinates(double &x, double&y) const
 {
 	//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Getting stabilization coordinates.");
 	//std::cout << "Getting XY stabilization coordinates...";
+	double x_ret, y_ret;
 	if (has_python_callbacks_)
 	{
 		//std::cout << "calling python...";
-		if (!_get_coordinates_callback(p_stabilization_args_->py_get_snapshot_position_callback, p_stabilization_args_->x_coordinate, p_stabilization_args_->y_coordinate, x, y))
+		if (!_get_coordinates_callback(py_get_snapshot_position_callback, stabilization_args_.x_coordinate, stabilization_args_.y_coordinate, x_ret, y_ret))
 			octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Failed dto get snapshot coordinates.");
 	}
 	else
 	{
 		//std::cout << "extracting from args...";
-		x = p_stabilization_args_->x_coordinate;
-		y = p_stabilization_args_->y_coordinate;
+		x_ret = stabilization_args_.x_coordinate;
+		y_ret = stabilization_args_.y_coordinate;
 	}
+	x = x_ret;
+	y = y_ret;
 	//std::cout << " - X coord: " << x;
 	//std::cout << " - Y coord: " << y << "\r\n";
 }

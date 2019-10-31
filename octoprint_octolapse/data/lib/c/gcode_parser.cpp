@@ -69,6 +69,7 @@ gcode_parser::gcode_parser()
 	parsable_command_names.push_back("M191");
 	parsable_command_names.push_back("M207");
 	parsable_command_names.push_back("M208");
+	parsable_command_names.push_back("M218");
 	parsable_command_names.push_back("M240");
 	parsable_command_names.push_back("M400");
 	parsable_command_names.push_back("M563");
@@ -133,7 +134,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 
 		std::string message = "No gcode command was found: ";
 		message += gcode;
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::WARNING, message);
+		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::DEBUG, message);
 		command.command = "";
 	}
 	else

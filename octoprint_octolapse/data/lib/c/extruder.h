@@ -10,6 +10,9 @@
 struct extruder
 {
 	extruder();
+	double x_firmware_offset;
+	double y_firmware_offset;
+	double z_firmware_offset;
 	double e;
 	double e_offset;
 	double e_relative;

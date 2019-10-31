@@ -7,7 +7,7 @@
 stabilization_smart_layer::stabilization_smart_layer()
 {
 	// Initialize travel args
-	p_smart_layer_args_ = new smart_layer_args();
+	smart_layer_args_ = smart_layer_args();
 	// initialize layer/height tracking variables
 	is_layer_change_wait_ = false;
 	current_layer_ = 0;
@@ -27,7 +27,7 @@ stabilization_smart_layer::stabilization_smart_layer()
 }
 
 stabilization_smart_layer::stabilization_smart_layer(
-	gcode_position_args* position_args, stabilization_args* stab_args, smart_layer_args* mt_args, progressCallback progress
+	gcode_position_args position_args, stabilization_args stab_args, smart_layer_args mt_args, progressCallback progress
 ) :stabilization(position_args, stab_args, progress)
 {
 	is_layer_change_wait_ = false;
@@ -40,7 +40,7 @@ stabilization_smart_layer::stabilization_smart_layer(
 	fastest_extrusion_speed_ = -1;
 	slowest_extrusion_speed_ = -1;
 
-	p_smart_layer_args_ = mt_args;
+	smart_layer_args_ = mt_args;
 	// initialize closest extrusion/travel tracking structs
 	stabilization_x_ = 0;
 	stabilization_y_ = 0;
@@ -48,19 +48,19 @@ stabilization_smart_layer::stabilization_smart_layer(
 	standard_layer_trigger_distance_ = 0.0;
 
 	trigger_position_args default_args;
-	default_args.type = mt_args->smart_layer_trigger_type;
-	default_args.minimum_speed = mt_args->speed_threshold;
-	default_args.snap_to_print_high_quality = mt_args->snap_to_print_high_quality;
-	default_args.x_stabilization_disabled = stab_args->x_stabilization_disabled;
-	default_args.y_stabilization_disabled = stab_args->y_stabilization_disabled;
+	default_args.type = mt_args.smart_layer_trigger_type;
+	default_args.minimum_speed = mt_args.speed_threshold;
+	default_args.snap_to_print_high_quality = mt_args.snap_to_print_high_quality;
+	default_args.x_stabilization_disabled = stab_args.x_stabilization_disabled;
+	default_args.y_stabilization_disabled = stab_args.y_stabilization_disabled;
 	closest_positions_.initialize(default_args);
 	last_snapshot_initial_position_.is_empty = true;
 	update_stabilization_coordinates();
 }
 
 stabilization_smart_layer::stabilization_smart_layer(
-	gcode_position_args* position_args, stabilization_args* stab_args, smart_layer_args* mt_args, pythonGetCoordinatesCallback get_coordinates, pythonProgressCallback progress
-) : stabilization(position_args, stab_args, get_coordinates, progress)
+	gcode_position_args position_args, stabilization_args stab_args, smart_layer_args mt_args, pythonGetCoordinatesCallback get_coordinates, PyObject* py_get_coordinates_callback, pythonProgressCallback progress, PyObject* py_progress_callback
+) : stabilization(position_args, stab_args, get_coordinates, py_get_coordinates_callback, progress, py_progress_callback)
 {
 	is_layer_change_wait_ = false;
 	current_layer_ = 0;
@@ -72,7 +72,7 @@ stabilization_smart_layer::stabilization_smart_layer(
 	fastest_extrusion_speed_ = -1;
 	slowest_extrusion_speed_ = -1;
 
-	p_smart_layer_args_ = mt_args;
+	smart_layer_args_ = mt_args;
 	// Get the initial stabilization coordinates
 	stabilization_x_ = 0;
 	stabilization_y_ = 0;
@@ -80,11 +80,11 @@ stabilization_smart_layer::stabilization_smart_layer(
 	standard_layer_trigger_distance_ = 0.0;
 
 	trigger_position_args default_args;
-	default_args.type = mt_args->smart_layer_trigger_type;
-	default_args.minimum_speed = mt_args->speed_threshold;
-	default_args.snap_to_print_high_quality = mt_args->snap_to_print_high_quality;
-	default_args.x_stabilization_disabled = stab_args->x_stabilization_disabled;
-	default_args.y_stabilization_disabled = stab_args->y_stabilization_disabled;
+	default_args.type = mt_args.smart_layer_trigger_type;
+	default_args.minimum_speed = mt_args.speed_threshold;
+	default_args.snap_to_print_high_quality = mt_args.snap_to_print_high_quality;
+	default_args.x_stabilization_disabled = stab_args.x_stabilization_disabled;
+	default_args.y_stabilization_disabled = stab_args.y_stabilization_disabled;
 	closest_positions_.initialize(default_args);
 	last_snapshot_initial_position_.is_empty = true;
 	update_stabilization_coordinates();
@@ -102,8 +102,8 @@ stabilization_smart_layer::~stabilization_smart_layer()
 
 void stabilization_smart_layer::update_stabilization_coordinates()
 {
-	const bool snap_to_print_smooth = p_smart_layer_args_->smart_layer_trigger_type == trigger_type_snap_to_print && p_smart_layer_args_->snap_to_print_smooth;
-	const bool stabilization_disabled = p_stabilization_args_->x_stabilization_disabled && p_stabilization_args_->y_stabilization_disabled;
+	const bool snap_to_print_smooth = smart_layer_args_.smart_layer_trigger_type == trigger_type_snap_to_print && smart_layer_args_.snap_to_print_smooth;
+	const bool stabilization_disabled = stabilization_args_.x_stabilization_disabled && stabilization_args_.y_stabilization_disabled;
 	if (
 		(stabilization_disabled || snap_to_print_smooth)
 		&& !last_snapshot_initial_position_.is_empty
@@ -138,10 +138,10 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 	if (is_layer_change_wait_ && !closest_positions_.is_empty())
 	{
 		bool can_add_saved_plan = true;
-		if (p_stabilization_args_->height_increment != 0)
+		if (stabilization_args_.height_increment != 0)
 		{
 			can_add_saved_plan = false;
-			const double increment_double = p_current_pos->height / p_stabilization_args_->height_increment;
+			const double increment_double = p_current_pos->height / stabilization_args_.height_increment;
 			unsigned const int increment = utilities::round_up_to_int(increment_double);
 			if (increment > current_height_increment_)
 			{
@@ -177,7 +177,7 @@ void stabilization_smart_layer::add_plan()
 		//std::cout << "Adding saved plan to plans...  F Speed" << p_saved_position_->f_ << " \r\n";
 		snapshot_plan p_plan;
 		double total_travel_distance;
-		if (p_smart_layer_args_->smart_layer_trigger_type == trigger_type_snap_to_print)
+		if (smart_layer_args_.smart_layer_trigger_type == trigger_type_snap_to_print)
 		{
 			total_travel_distance = 0;
 		}
@@ -196,17 +196,17 @@ void stabilization_smart_layer::add_plan()
 		p_plan.start_command = p_closest.pos.command;
 		p_plan.initial_position = p_closest.pos;
 		p_plan.has_initial_position = true;
-		const bool all_stabilizations_disabled = p_stabilization_args_->x_stabilization_disabled && p_stabilization_args_->y_stabilization_disabled;
+		const bool all_stabilizations_disabled = stabilization_args_.x_stabilization_disabled && stabilization_args_.y_stabilization_disabled;
 		
-		if (!(all_stabilizations_disabled || p_smart_layer_args_->smart_layer_trigger_type == trigger_type_snap_to_print))
+		if (!(all_stabilizations_disabled || smart_layer_args_.smart_layer_trigger_type == trigger_type_snap_to_print))
 		{
 			double x_stabilization, y_stabilization;
-			if (p_stabilization_args_->x_stabilization_disabled)
+			if (stabilization_args_.x_stabilization_disabled)
 				x_stabilization = p_closest.pos.x;
 			else
 				x_stabilization = stabilization_x_;
 
-			if (p_stabilization_args_->y_stabilization_disabled)
+			if (stabilization_args_.y_stabilization_disabled)
 				y_stabilization = p_closest.pos.y;
 			else
 				y_stabilization = stabilization_y_;
@@ -219,7 +219,7 @@ void stabilization_smart_layer::add_plan()
 		p_plan.steps.push_back(p_snapshot_step);
 
 		// Only add a return position if we're not using snap to print
-		if(p_smart_layer_args_->smart_layer_trigger_type != trigger_type_snap_to_print)
+		if(smart_layer_args_.smart_layer_trigger_type != trigger_type_snap_to_print)
 			p_plan.return_position = p_closest.pos;
 
 		p_plan.file_line = p_closest.pos.file_line_number;
@@ -237,7 +237,7 @@ void stabilization_smart_layer::add_plan()
 		// Need to set the initial position after resetting the saved positions
 		closest_positions_.set_previous_initial_position(last_snapshot_initial_position_);
 		// Determine if we've missed a snapshot layer or height increment
-		if(p_stabilization_args_->height_increment != 0)
+		if(stabilization_args_.height_increment != 0)
 		{
 			if (current_height_increment_ > 2 && current_height_increment_ - 1 > last_snapshot_height_increment_)
 				missed_snapshots_++;
@@ -290,7 +290,7 @@ std::vector<stabilization_quality_issue> stabilization_smart_layer::get_quality_
 
 	// Detect quality issues and return as a human readable string.
 	gcode_comment_processor* p_comment_processor = gcode_position_->get_gcode_comment_processor();
-	if (this->p_smart_layer_args_->smart_layer_trigger_type == trigger_type_fast)
+	if (this->smart_layer_args_.smart_layer_trigger_type == trigger_type_fast)
 	{
 		stabilization_quality_issue issue;
 		issue.description = "You are using the 'Fast' smart trigger.  This could lead to quality issues.  If you are having print quality issues, consider using a 'high quality' or 'snap to print' smart trigger.";
@@ -299,7 +299,7 @@ std::vector<stabilization_quality_issue> stabilization_smart_layer::get_quality_
 	}
 	else
 	{
-		if (this->p_smart_layer_args_->smart_layer_trigger_type == trigger_type_snap_to_print && !p_smart_layer_args_->snap_to_print_high_quality)
+		if (this->smart_layer_args_.smart_layer_trigger_type == trigger_type_snap_to_print && !smart_layer_args_.snap_to_print_high_quality)
 		{
 			stabilization_quality_issue issue;
 			issue.description = "In most cases using the 'High Quality' snap to print option will improve print quality, unless you are printing with vase mode enabled.";

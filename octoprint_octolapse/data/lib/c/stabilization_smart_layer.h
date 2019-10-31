@@ -31,8 +31,8 @@ class stabilization_smart_layer : public stabilization
 {
 public:
 	stabilization_smart_layer();
-	stabilization_smart_layer(gcode_position_args* position_args, stabilization_args* stab_args, smart_layer_args* mt_args, progressCallback progress);
-	stabilization_smart_layer(gcode_position_args* position_args, stabilization_args* stab_args, smart_layer_args* mt_args, pythonGetCoordinatesCallback get_coordinates,  pythonProgressCallback progress);
+	stabilization_smart_layer(gcode_position_args position_args, stabilization_args stab_args, smart_layer_args mt_args, progressCallback progress);
+	stabilization_smart_layer(gcode_position_args position_args, stabilization_args stab_args, smart_layer_args mt_args, pythonGetCoordinatesCallback get_coordinates, PyObject* py_get_coordinates_callback, pythonProgressCallback progress, PyObject* py_progress_callback);
 	~stabilization_smart_layer();
 private:
 	stabilization_smart_layer(const stabilization_smart_layer &source); // don't copy me
@@ -66,7 +66,7 @@ private:
 	double stabilization_y_;
 	double current_layer_saved_extrusion_speed_;
 	double standard_layer_trigger_distance_;
-	smart_layer_args *p_smart_layer_args_;
+	smart_layer_args smart_layer_args_;
 	position last_snapshot_initial_position_;
 	// closest extrusion/travel position tracking variables
 	trigger_positions closest_positions_;

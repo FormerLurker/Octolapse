@@ -78,14 +78,17 @@ position::position()
 	x = 0;
 	x_null = true;
 	x_offset = 0;
+	x_firmware_offset = 0;
 	x_homed = false;
 	y = 0;
 	y_null = true;
 	y_offset = 0;
+	y_firmware_offset = 0;
 	y_homed = false;
 	z = 0;
 	z_null = true;
 	z_offset = 0;
+	z_firmware_offset = 0;
 	z_homed = false;
 	is_relative = false;
 	is_relative_null = true;
@@ -129,14 +132,17 @@ position::position(int extruder_count)
 	x = 0;
 	x_null = true;
 	x_offset = 0;
+	x_firmware_offset = 0;
 	x_homed = false;
 	y = 0;
 	y_null = true;
 	y_offset = 0;
+	y_firmware_offset = 0;
 	y_homed = false;
 	z = 0;
 	z_null = true;
 	z_offset = 0;
+	z_firmware_offset = 0;
 	z_homed = false;
 	is_relative = false;
 	is_relative_null = true;
@@ -181,14 +187,17 @@ position::position(const position &pos)
 	x = pos.x;
 	x_null = pos.x_null;
 	x_offset = pos.x_offset;
+	x_firmware_offset = pos.x_firmware_offset;
 	x_homed = pos.x_homed;
 	y = pos.y;
 	y_null = pos.y_null;
 	y_offset = pos.y_offset;
+	y_firmware_offset = pos.y_firmware_offset;
 	y_homed = pos.y_homed;
 	z = pos.z;
 	z_null = pos.z_null;
 	z_offset = pos.z_offset;
+	z_firmware_offset = pos.z_firmware_offset;
 	z_homed = pos.z_homed;
 	is_relative = pos.is_relative;
 	is_relative_null = pos.is_relative_null;
@@ -241,14 +250,17 @@ position& position::operator=(const position& pos) {
 	x = pos.x;
 	x_null = pos.x_null;
 	x_offset = pos.x_offset;
+	x_firmware_offset = pos.x_firmware_offset;
 	x_homed = pos.x_homed;
 	y = pos.y;
 	y_null = pos.y_null;
 	y_offset = pos.y_offset;
+	y_firmware_offset = pos.y_firmware_offset;
 	y_homed = pos.y_homed;
 	z = pos.z;
 	z_null = pos.z_null;
 	z_offset = pos.z_offset;
+	z_firmware_offset = pos.z_firmware_offset;
 	z_homed = pos.z_homed;
 	is_relative = pos.is_relative;
 	is_relative_null = pos.is_relative_null;
@@ -310,24 +322,38 @@ void position::delete_extruders()
 	}
 }
 
-double position::get_offset_x() const
+double position::get_gcode_x() const
 {
-	return x - x_offset;
+	return x - x_offset + x_firmware_offset;
 }
 
-double position::get_offset_y() const
+double position::get_gcode_y() const
 {
-	return y - y_offset;
+	return y - y_offset + y_firmware_offset;
 }
 
-double position::get_offset_z() const
+double position::get_gcode_z() const
 {
-	return z - z_offset;
+	return z - z_offset + z_firmware_offset;
 }
 
 extruder& position::get_current_extruder() const
 {
-	return p_extruders[current_tool];
+	int tool_number = current_tool;
+	if (current_tool >= num_extruders)
+		tool_number = num_extruders - 1;
+	else if (current_tool < 0)
+		tool_number = 0;
+	return p_extruders[tool_number];
+}
+
+extruder& position::get_extruder(int index) const
+{
+	if (index >= num_extruders)
+		index = num_extruders - 1;
+	else if (index < 0)
+		index = 0;
+	return p_extruders[index];
 }
 
 void position::reset_state()
@@ -349,7 +375,7 @@ void position::reset_state()
 
 PyObject* position::to_py_tuple()
 {
-	std::cout << "Building position py_object.\r\n";
+	//std::cout << "Building position py_object.\r\n";
 	PyObject * py_command;
 	if (command.is_empty)
 	{
@@ -368,10 +394,10 @@ PyObject* position::to_py_tuple()
 	{
 		return NULL;
 	}
-	std::cout << "Building position py_tuple.\r\n";
+	//std::cout << "Building position py_tuple.\r\n";
 	PyObject* pyPosition = Py_BuildValue(
 		// ReSharper disable once StringLiteralTypo
-		"dddddddddddddddlllllllllllllllllllllllllllllllllllllOO",
+		"ddddddddddddddddddlllllllllllllllllllllllllllllllllllllOO",
 		// Floats
 		x, // 0
 		y, // 1
@@ -380,72 +406,75 @@ PyObject* position::to_py_tuple()
 		x_offset, // 4
 		y_offset, // 5
 		z_offset, // 6
-		z_relative, // 7
-		last_extrusion_height, // 8
-		height, // 9
-		0.0, // 10 - Firmware Retraction Length
-		0.0, // 11 - Firmware Unretraction Additional Length
-		0.0, // 12 - Firmware Retraction Feedrate
-		0.0, // 13 - Firmware Unretraction Feedrate
-		0.0, // 14 - Firmware Unretraction ZLift
+		x_firmware_offset, // 7
+		y_firmware_offset, // 8
+		z_firmware_offset, // 9
+		z_relative, // 10
+		last_extrusion_height, // 11
+		height, // 12
+		0.0, // 13 - Firmware Retraction Length
+		0.0, // 14 - Firmware Unretraction Additional Length
+		0.0, // 15 - Firmware Retraction Feedrate
+		0.0, // 16 - Firmware Unretraction Feedrate
+		0.0, // 17 - Firmware Unretraction ZLift
 		// Int
-		layer, // 15
-		current_tool, // 16
-		num_extruders, // 17
+		layer, // 18
+		current_tool, // 19
+		num_extruders, // 20
 		// Bool (represented as an integer)
-		x_homed, // 18
-		y_homed, // 19
-		z_homed, // 20
-		is_relative, // 21
-		is_extruder_relative, // 22
-		is_metric, // 23
-		is_printer_primed, // 24
-		has_definite_position, // 25
-		is_layer_change, // 26
-		is_height_change, // 27
-		is_xy_travel, // 28
-		is_xyz_travel, // 29
-		is_zhop, // 30
-		has_xy_position_changed, // 31
-		has_position_changed, // 32
-		has_received_home_command, // 33
-		is_in_position, // 34
-		in_path_position, // 35
-		is_in_bounds, // 36
+		x_homed, // 21
+		y_homed, // 22
+		z_homed, // 23
+		is_relative, // 24
+		is_extruder_relative, // 25
+		is_metric, // 26
+		is_printer_primed, // 27
+		has_definite_position, // 28
+		is_layer_change, // 29
+		is_height_change, // 30
+		is_xy_travel, // 31
+		is_xyz_travel, // 32
+		is_zhop, // 33
+		has_xy_position_changed, // 34
+		has_position_changed, // 35
+		has_received_home_command, // 36
+		is_in_position, // 37
+		in_path_position, // 38
+		is_in_bounds, // 39
 		// Null bool, represented as integers
-		x_null, // 37
-		y_null, // 38
-		z_null, // 39
-		f_null, // 40
-		is_relative_null, // 41
-		is_extruder_relative_null, // 42
-		last_extrusion_height_null, // 43
-		is_metric_null, // 44
-		true, // 45 - Firmware retraction length null
-		true, // 46 - Firmware unretraction additional length null
-		true, // 47 - Firmware retraction feedrate null
-		true, // 48 - Firmware unretraction feedrate null
-		true, // 49 - Firmware ZLift Null
+		x_null, // 40
+		y_null, // 41
+		z_null, // 42
+		f_null, // 43
+		is_relative_null, // 44
+		is_extruder_relative_null, // 45
+		last_extrusion_height_null, // 46
+		is_metric_null, // 47
+		true, // 48 - Firmware retraction length null
+		true, // 49 - Firmware unretraction additional length null
+		true, // 50 - Firmware retraction feedrate null
+		true, // 51 - Firmware unretraction feedrate null
+		true, // 52 - Firmware ZLift Null
 		// file statistics
-		file_line_number, // 50
-		gcode_number, // 51
+		file_line_number, // 53
+		gcode_number, // 54
 		
 		// Objects
-		py_command, // 52
-		py_extruders // 53
+		py_command, // 55
+		py_extruders // 56
 
 	);
 	if (pyPosition == NULL)
 	{
-		std::cout << "No py_object returned for position!\r\n";
+		//std::cout << "No py_object returned for position!\r\n";
 		std::string message = "position.to_py_tuple: Unable to convert position value to a PyObject tuple via Py_BuildValue.";
 		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 		return NULL;
 	}
-	std::cout << "Finished building pyPosition.\r\n";
+	//std::cout << "Finished building pyPosition.\r\n";
 	Py_DECREF(py_command);
 	Py_DECREF(py_extruders);
-	std::cout << "Returning pyPosition.\r\n";
+	//std::cout << "Returning pyPosition.\r\n";
 	return pyPosition;
 
 }
@@ -467,12 +496,18 @@ PyObject* position::to_py_dict()
 		return NULL;
 	}
 	PyObject * p_position = Py_BuildValue(
-		"{s:O,s:O, s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
+		"{s:O,s:O,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
 		"parsed_command",
 		py_command,
 		"extruders",
 		py_extruders,
 		// FLOATS
+		"x_firmware_offset",
+		x_firmware_offset,
+		"y_firmware_offset",
+		y_firmware_offset,
+		"z_firmware_offset",
+		z_firmware_offset,
 		"x",
 		x,
 		"y",

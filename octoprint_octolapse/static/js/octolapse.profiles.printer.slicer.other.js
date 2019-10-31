@@ -38,7 +38,6 @@ Octolapse.OtherSlicerViewModel = function (values, num_extruders_observable) {
     {
         self.extruders.push(new Octolapse.OtherSlicerExtruderViewModel(values, index))
     }
-
     self.speed_tolerance = ko.observable(values.speed_tolerance);
     self.vase_mode = ko.observable(values.vase_mode);
     self.layer_height = ko.observable(values.layer_height);

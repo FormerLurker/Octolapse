@@ -20,10 +20,15 @@
                     <div class="error_label_container text-error" data-error-for="octolapse_other_slicer_axis_speed_display_unit_options"></div>
                 </div>
             </div>
+            <div>
+                <h5>
+                    Extruder Settings
+                </h5>
+            </div>
             <div data-bind="foreach: slicers.other.extruders">
                 <div>
                     <fieldset class="octolapse">
-                        <legend data-bind="text: ('Extruder ' + ($index() + 1).toString())"></legend>
+                        <legend data-bind="text: ('Extruder ' + ($index()+1).toString())"></legend>
                         <div>
                             <div>
                                 <h5>Retraction Length/Z-Hop Distance</h5>

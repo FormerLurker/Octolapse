@@ -55,5 +55,7 @@ double PyFloatOrInt_AsDouble(PyObject* py_double_or_int)
 		return PyFloat_AsDouble(py_double_or_int);
 	else if (PyInt_CheckExact(py_double_or_int))
 		return static_cast<double>(PyInt_AsLong(py_double_or_int));
+	else if (PyLong_CheckExact(py_double_or_int))
+		return static_cast<double>(PyLong_AsLong(py_double_or_int));
 	return NULL;
 }

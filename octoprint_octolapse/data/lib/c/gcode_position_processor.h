@@ -58,9 +58,9 @@ extern "C"
 	static PyObject* GetSnapshotPlans_SmartLayer(PyObject *self, PyObject *args);
 }
 static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args);
-static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args);
+static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args, PyObject** p_py_progress_callback, PyObject** p_py_snapshot_position_callback);
 static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_args* args);
 static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, const double percent_complete, const double seconds_elapsed, const double estimated_seconds_remaining, const int gcodes_processed, const int lines_processed);
-static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double* x_result, double* y_result);
+static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double& x_result, double& y_result);
 #endif
 

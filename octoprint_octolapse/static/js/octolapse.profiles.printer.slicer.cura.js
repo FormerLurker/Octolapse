@@ -38,7 +38,6 @@ Octolapse.CuraViewmodel = function (values, num_extruders_observable) {
     {
         self.extruders.push(new Octolapse.CuraExtruderViewModel(values, index))
     }
-
     self.layer_height = ko.observable(values.layer_height);
     self.smooth_spiralized_contours = ko.observable(values.smooth_spiralized_contours);
     self.magic_mesh_surface_mode = ko.observable(values.magic_mesh_surface_mode);

@@ -306,7 +306,16 @@ class SnapshotGcodeGenerator(object):
         self.is_relative_current = snapshot_plan.initial_position.is_relative
         self.is_extruder_relative_current = snapshot_plan.initial_position.is_extruder_relative
         self.current_tool = snapshot_plan.initial_position.current_tool
-        self.current_extruder = self.Printer.gcode_generation_settings.extruders[self.current_tool]
+        if self.current_tool > len(self.gcode_generation_settings.extruders) - 1:
+            logger.warning("The requested tool index of %d is greater than the number of extruders ($d).",
+                           self.current_tool, len(self.gcode_generation_settings.extruders))
+            self.current_tool = len(self.gcode_generation_settings.extruders) - 1
+
+        if self.current_tool < 0:
+            logger.warning("The requested tool index was less than zero.  Index: %d.",
+                           self.current_tool)
+            self.current_tool = 0
+        self.current_extruder = self.gcode_generation_settings.extruders[self.current_tool]
         # Get per extruder settings for convenience
         self.x_y_travel_speed = self.current_extruder.x_y_travel_speed
         self.z_lift_speed = self.current_extruder.z_lift_speed
@@ -621,7 +630,7 @@ class SnapshotGcodeGenerator(object):
         self.snapshot_gcode.append(
             SnapshotGcode.START_GCODE,
             self.get_gcode_retract(
-                self.e_current - self.snapshot_plan.initial_position.get_current_extruder().e_offset,
+                self.snapshot_plan.initial_position.gcode_e(e=self.e_current),
                 self.get_altered_feedrate(self.retraction_speed)
             )
         )
@@ -634,7 +643,7 @@ class SnapshotGcodeGenerator(object):
             self.snapshot_gcode.append(
                 SnapshotGcode.END_GCODE,
                 self.get_gcode_retract(
-                    self.e_current - self.snapshot_plan.initial_position.get_current_extruder().e_offset,
+                    self.snapshot_plan.initial_position.gcode_e(e=self.e_current),
                     self.get_altered_feedrate(self.deretraction_speed)
                 )
             )
@@ -678,8 +687,8 @@ class SnapshotGcodeGenerator(object):
             self.snapshot_gcode.append(
                 SnapshotGcode.SNAPSHOT_COMMANDS,
                 self.get_gcode_travel(
-                    step.x - self.snapshot_plan.initial_position.x_offset,
-                    step.y - self.snapshot_plan.initial_position.y_offset,
+                    self.snapshot_plan.initial_position.gcode_x(x=step.x),
+                    self.snapshot_plan.initial_position.gcode_y(y=step.y),
                     self.get_altered_feedrate(self.x_y_travel_speed)
                 )
             )
@@ -701,8 +710,8 @@ class SnapshotGcodeGenerator(object):
                 self.snapshot_gcode.append(
                     SnapshotGcode.RETURN_COMMANDS,
                     self.get_gcode_travel(
-                        self.snapshot_plan.return_position.x - self.snapshot_plan.return_position.x_offset,
-                        self.snapshot_plan.return_position.y - self.snapshot_plan.return_position.y_offset,
+                        self.snapshot_plan.return_position.gcode_x(),
+                        self.snapshot_plan.return_position.gcode_y(),
                         self.get_altered_feedrate(self.x_y_travel_speed)
                     )
                 )
@@ -967,16 +976,16 @@ class SnapshotGcodeGenerator(object):
     def split_extrusion_gcode_at_point(self, triggering_command, start_position, end_position, intersection):
         # get the coordinates necessary to split one gcode into 2 at an intersection point
         # start offset coordinates
-        start_x_offset = start_position.offset_x()
-        start_y_offset = start_position.offset_y()
-        start_e_offset = start_position.offset_e()
+        start_x_offset = start_position.gcode_x()
+        start_y_offset = start_position.gcode_y()
+        start_e_offset = start_position.gcode_e()
         # intersection offset coordinates
-        intersection_x_offset = intersection[0] - start_position.x_offset
-        intersection_y_offset = intersection[1] - start_position.y_offset
+        intersection_x_offset = start_position.gcode_x(x=intersection[0])
+        intersection_y_offset = start_position.gcode_y(y=intersection[1])
         # end offset coordinates
-        end_x_offset = end_position.offset_x()
-        end_y_offset = end_position.offset_y()
-        end_e_offset = end_position.offset_e()
+        end_x_offset = end_position.gcode_x()
+        end_y_offset = end_position.gcode_y()
+        end_e_offset = end_position.gcode_e()
         # the feedrate won't change, but record it to make this obvious
         feedrate = end_position.f
 
@@ -1102,8 +1111,12 @@ class SnapshotGcodeGenerator(object):
             )
 
         # enhanced snapshot gcode logger
-        logger.info("Snapshot Gcode:\r\n%s", self.snapshot_gcode)
-
+        if len(self.gcode_generation_settings.extruders) > 0 or snapshot_plan.initial_position.current_tool != 0:
+            logger.info(
+                "Snapshot Gcode (Tool: %d):\r\n%s", snapshot_plan.initial_position.current_tool + 1, self.snapshot_gcode
+            )
+        else:
+            logger.info("Snapshot Gcode:\r\n%s", self.snapshot_gcode)
 
         return self.snapshot_gcode
 

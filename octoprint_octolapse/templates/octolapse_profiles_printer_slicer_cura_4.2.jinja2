@@ -3,17 +3,20 @@
         <div>
             <h4>Slicer - Cura</h4>
             <p>
-                Match all of the speed settings in your current slicer profile with all of the settings below. In order to
-                use feature detection (used in the 'high quality' snapshot profiles), it is best if each speed is unique.
-                Make sure to use the correct units!
+                Match all of the settings in your current slicer profile with all of the settings below.
             </p>
 
         </div>
         <div>
+            <div>
+                <h5>
+                    Extruder Settings
+                </h5>
+            </div>
             <div data-bind="foreach: slicers.cura.extruders">
                 <div>
                     <fieldset class="octolapse">
-                        <legend data-bind="text: ('Extruder ' + ($index() + 1).toString())"></legend>
+                        <legend data-bind="text: ('Extruder ' + ($index()+1).toString())"></legend>
                         <div>
                             <div>
                                 <h5>Material</h5>

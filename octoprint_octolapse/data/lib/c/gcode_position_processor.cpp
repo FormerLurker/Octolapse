@@ -204,7 +204,9 @@ extern "C"
 		// Extract the stabilization args
 		stabilization_args s_args;
 		//std::cout << "Parsing stabilization arguments\r\n";
-		if (!ParseStabilizationArgs(py_stabilization_args, &s_args))
+		PyObject* py_progress_received_callback = NULL;
+		PyObject* py_snapshot_position_callback = NULL;
+		if (!ParseStabilizationArgs(py_stabilization_args, &s_args, &py_progress_received_callback, &py_snapshot_position_callback))
 		{
 			return NULL;
 		}
@@ -218,13 +220,14 @@ extern "C"
 		// Create our stabilization object
 		set_internal_log_levels(false);
 		stabilization_smart_layer stabilization(
-			&p_args,
-			&s_args,
-			&mt_args,
+			p_args,
+			s_args,
+			mt_args,
 			pythonGetCoordinatesCallback(ExecuteGetSnapshotPositionCallback),
-			pythonProgressCallback(ExecuteStabilizationProgressCallback)
+			py_snapshot_position_callback,
+			pythonProgressCallback(ExecuteStabilizationProgressCallback),
+			py_progress_received_callback
 		);
-		
 		stabilization_results results = stabilization.process_file();
 		set_internal_log_levels(true);
 		
@@ -290,7 +293,7 @@ extern "C"
 
 		octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::INFO, message);
 		// Create the new position object
-		gcode_position * p_new_position = new gcode_position(&positionArgs);
+		gcode_position * p_new_position = new gcode_position(positionArgs);
 		// add the new gcode position to our list of objects
 		gpp::gcode_positions.insert(std::pair<std::string, gcode_position*>(pKey, p_new_position));
 		// Return True
@@ -586,10 +589,10 @@ static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, co
 
 }
 
-static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double* x_result, double* y_result )
+static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double& x_result, double& y_result )
 {
-	//std::cout << "Executing get_snapshot_position callback.\r\n";
-	//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Executing the get_snapshot_position callback.");
+	std::cout << "Executing get_snapshot_position callback.\r\n";
+	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Executing the get_snapshot_position callback.");
 	PyObject * funcArgs = Py_BuildValue("(d,d)", x_initial, y_initial);
 	if (funcArgs == NULL)
 	{
@@ -611,7 +614,7 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
-	//std::cout << "Extracting X coordinate.\r\n";
+	std::cout << "Extracting X coordinate.\r\n";
 	PyObject * pyX = PyDict_GetItemString(pyCoordinates,"x");
 	if (pyX == NULL)
 	{
@@ -619,8 +622,8 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
-	*x_result = PyFloatOrInt_AsDouble(pyX);
-	//std::cout << "Extracting Y coordinate.\r\n";
+	x_result = PyFloatOrInt_AsDouble(pyX);
+	std::cout << "Extracting Y coordinate.\r\n";
 	PyObject * pyY = PyDict_GetItemString(pyCoordinates, "y");
 	if (pyY == NULL)
 	{
@@ -628,8 +631,8 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
-	*y_result = PyFloatOrInt_AsDouble(pyY);
-	//std::cout << "Next Stabilization Coordinates: X" << *x_result << " Y"<< *y_result <<"\r\n";
+	y_result = PyFloatOrInt_AsDouble(pyY);
+	std::cout << "Next Stabilization Coordinates: X" << x_result << " Y"<< y_result <<"\r\n";
 	Py_DECREF(pyCoordinates);
 	return true;
 
@@ -973,6 +976,17 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	}
 	args->zero_based_extruder = PyLong_AsLong(py_zero_based_extruder) > 0;
 
+	// default extruder
+	PyObject * py_default_extruder_index = PyDict_GetItemString(py_args, "default_extruder_index");
+	if (py_default_extruder_index == NULL)
+	{
+		std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve default_extruder_index from the position dict.";
+		octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+		return false;
+	}
+	// The zero based default extruder
+	args->default_extruder = PyLong_AsLong(py_default_extruder_index);
+
 	// get the slicer settings dictionary
 	PyObject * py_slicer_settings_dict = PyDict_GetItemString(py_args, "slicer_settings");
 	if (py_slicer_settings_dict == NULL)
@@ -982,7 +996,8 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		return false;
 	}
 
-	#pragma region Extract Extruder SEttings
+	
+	#pragma region Extract extruder objects
 	PyObject * py_extruders = PyDict_GetItemString(py_slicer_settings_dict, "extruders");
 	if (py_extruders == NULL)
 	{
@@ -997,7 +1012,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		return false;
 	}
 	const int extruder_list_size = PyList_Size(py_extruders);
-	std::cout << "Found " << extruder_list_size << " extruders.\r\n";
+	//std::cout << "Found " << extruder_list_size << " extruders.\r\n";
 	// make sure there is at lest one item in the list
 	if (extruder_list_size < 1)
 	{
@@ -1012,7 +1027,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		return false;
 	}
 	for (int index = 0; index < extruder_list_size; index++) {
-		std::cout << "Extracting the current extruder #" << index << ".\r\n";
+		//std::cout << "Extracting the current extruder #" << index << ".\r\n";
 		PyObject *py_extruder = PyList_GetItem(py_extruders, index);
 		if (py_extruder == NULL)
 		{
@@ -1028,7 +1043,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
 		}
-		if (!(PyFloat_Check(py_z_lift_height) || PyLong_Check(py_z_lift_height) || py_z_lift_height == Py_None)) {
+		if (!(PyFloat_Check(py_z_lift_height) || PyInt_Check(py_z_lift_height) || PyLong_Check(py_z_lift_height) || py_z_lift_height == Py_None)) {
 			std::string message = "GcodePositionProcessor.ParsePositionArgs - The z_lift_height object must a float or int.";
 			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
@@ -1052,7 +1067,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
 		}
-		if (!(PyFloat_Check(py_retraction_length) || PyLong_Check(py_retraction_length) || py_z_lift_height == Py_None)) {
+		if (!(PyFloat_Check(py_retraction_length) || PyLong_Check(py_retraction_length) || PyInt_Check(py_retraction_length) || py_retraction_length == Py_None)) {
 			std::string message = "GcodePositionProcessor.ParsePositionArgs - The z_lift_height object must a float or int.";
 			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
@@ -1068,8 +1083,110 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 		}
 	}
 	
-	#pragma endregion Parse the list of z lift heights
+	#pragma endregion Parse extruder objects
 
+	#pragma region Extract firmware extruder offsets from the printer settings
+	// Only extract extruder offsets if there is more than one extruder.
+	if (args->num_extruders > 1)
+	{
+		PyObject * py_extruder_offsets = PyDict_GetItemString(py_args, "extruder_offsets");
+		if (py_extruder_offsets == NULL)
+		{
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve extruder_offsets from the position dict.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+			return false;
+		}
+		if (!PyList_Check(py_extruder_offsets))
+		{
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - The extruder_offsets object in the position dict is not a list.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+			return false;
+		}
+
+		int extruder_offsets_list_size = PyList_Size(py_extruder_offsets);
+		//std::cout << "Found " << extruder_list_size << " extruders.\r\n";
+		// make sure there is at lest one item in the list
+		if (extruder_offsets_list_size < args->num_extruders && !args->shared_extruder)
+		{
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Too few extruder offsets were detected.  There must be at least as many extruder offsets in the list as the num_extruders variable when not using a shared extruder.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+			return false;
+		}
+		if (extruder_offsets_list_size > args->num_extruders && !args->shared_extruder)
+		{
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Too many extruder offsets were detected.  There can only be as many extruder offsets in the list as the num_extruders variable when not using a shared extruder.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+			return false;
+		}
+		if (extruder_offsets_list_size > 0 && args->shared_extruder)
+		{
+			std::string message = "GcodePositionProcessor.ParsePositionArgs - Firmware extruder offset values are not allowed when using shared extruders.  Setting offsets to 0.";
+			octolapse_log(octolapse_log::WARNING, octolapse_log::GCODE_POSITION, message);
+			extruder_offsets_list_size = 0;
+		}
+
+		for (int index = 0; index < extruder_offsets_list_size; index++) {
+			std::cout << "Extracting the current extruder offset#" << index << ".\r\n";
+			PyObject *py_extruder_offset = PyList_GetItem(py_extruder_offsets, index);
+			if (py_extruder_offset == NULL)
+			{
+				std::string message = "GcodePositionProcessor.ParsePositionArgs - Could not extract an extruder offset by index from the extruder_offsets list.";
+				octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+				return false;
+			}
+			// Extract the x_firmware_offset from the current extruder (called x)
+			PyObject * py_extruder_offset_x = PyDict_GetItemString(py_extruder_offset, "x");
+			if (py_extruder_offset_x == NULL)
+			{
+				std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve an x offset from a list item in the the extruder_offsets list.";
+				octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+				return false;
+			}
+			std::cout << "Checking x offset value.\r\n";
+			if (!(PyFloat_Check(py_extruder_offset_x) || PyLong_Check(py_extruder_offset_x) || PyInt_Check(py_extruder_offset_x) || py_extruder_offset_x == Py_None)) {
+				std::string message = "GcodePositionProcessor.ParsePositionArgs - The extruder_offset.x object must a float or int.";
+				octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+				return false;
+			}
+			std::cout << "Assigning x offset value.\r\n";
+			if (py_extruder_offset_x == Py_None)
+			{
+				args->x_firmware_offsets[index] = 0;
+			}
+			else
+			{
+				double x = PyFloatOrInt_AsDouble(py_extruder_offset_x);
+				args->x_firmware_offsets[index] = x;
+			}
+			// Extract the x_firmware_offset from the current extruder (called x)
+			PyObject * py_extruder_offset_y = PyDict_GetItemString(py_extruder_offset, "y");
+			if (py_extruder_offset_y == NULL)
+			{
+				std::string message = "GcodePositionProcessor.ParsePositionArgs - Unable to retrieve an y offset from a list item in the the extruder_offsets list.";
+				octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+				return false;
+			}
+			std::cout << "Checking y offset value.\r\n";
+			if (!(PyFloat_Check(py_extruder_offset_y) || PyLong_Check(py_extruder_offset_y) || PyInt_Check(py_extruder_offset_y) || py_extruder_offset_y == Py_None)) {
+				std::string message = "GcodePositionProcessor.ParsePositionArgs - The extruder_offset.y object must a float or int.";
+				octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+				return false;
+			}
+			std::cout << "Assigning y offset value.\r\n";
+			if (py_extruder_offset_y == Py_None)
+			{
+				args->y_firmware_offsets[index] = 0;
+			}
+			else
+			{
+				double y = PyFloatOrInt_AsDouble(py_extruder_offset_x);
+				args->y_firmware_offsets[index] = y;
+			}
+		}
+	}
+	
+#pragma endregion Extract firmware extruder offsets from the printer settings
+	std::cout << "Finished extracting offsets.\r\n";
 	// priming_height
 	PyObject * py_priming_height = PyDict_GetItemString(py_args, "priming_height");
 	if (py_priming_height == NULL)
@@ -1103,7 +1220,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	return true;
 }
 
-static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
+static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args, PyObject ** py_progress_callback, PyObject** py_snapshot_position_callback)
 {
 	octolapse_log(
 		octolapse_log::SNAPSHOT_PLAN, octolapse_log::DEBUG,
@@ -1119,8 +1236,8 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 		return false;
 	}
 	// Need to incref py_gcode_generator, borrowed ref and we're holding it!
-	Py_INCREF(py_gcode_generator);
-	args->py_gcode_generator = py_gcode_generator;
+	// This should no longer be true...
+	//Py_INCREF(py_gcode_generator);
 	// extract the get_snapshot_position callback
 	PyObject * py_get_snapshot_position_callback = PyObject_GetAttrString(py_gcode_generator, "get_snapshot_position");
 	if (py_get_snapshot_position_callback == NULL)
@@ -1136,7 +1253,19 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 		return NULL;
 	}
 	// py_get_snapshot_position_callback is a new reference, no reason to incref
-	args->py_get_snapshot_position_callback = py_get_snapshot_position_callback;
+	*py_snapshot_position_callback = py_get_snapshot_position_callback;
+	// on_progress_received
+	PyObject * py_on_progress_received = PyDict_GetItemString(py_args, "on_progress_received");
+	if (py_on_progress_received == NULL)
+	{
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve on_progress_received from the stabilization args.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
+		return false;
+	}
+	// need to incref this so it doesn't vanish later (borrowed reference we are saving)
+	Py_IncRef(py_on_progress_received);
+	*py_progress_callback = py_on_progress_received;
+
 
 	// height_increment
 	PyObject * py_height_increment = PyDict_GetItemString(py_args, "height_increment");
@@ -1178,18 +1307,7 @@ static bool ParseStabilizationArgs(PyObject *py_args, stabilization_args* args)
 	}
 	args->notification_period_seconds = PyFloatOrInt_AsDouble(py_notification_period_seconds);
 
-	// on_progress_received
-	PyObject * py_on_progress_received = PyDict_GetItemString(py_args, "on_progress_received");
-	if (py_on_progress_received == NULL)
-	{
-		std::string message = "GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve on_progress_received from the stabilization args.";
-		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
-		return false;
-	}
-	// need to incref this so it doesn't vanish later (borrowed reference we are saving)
-	Py_IncRef(py_on_progress_received);
-	args->py_on_progress_received = py_on_progress_received;
-
+	
 	// file_path
 	PyObject * py_file_path = PyDict_GetItemString(py_args, "file_path");
 	if (py_file_path == NULL)

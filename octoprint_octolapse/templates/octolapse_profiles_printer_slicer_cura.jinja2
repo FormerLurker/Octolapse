@@ -10,10 +10,15 @@
 
         </div>
         <div>
+            <div>
+                <h5>
+                    Extruder Settings
+                </h5>
+            </div>
             <div data-bind="foreach: slicers.cura.extruders">
                 <div>
                     <fieldset class="octolapse">
-                        <legend data-bind="text: ('Extruder ' + ($index() + 1).toString())"></legend>
+                        <legend data-bind="text: ('Extruder ' + ($index()+1).toString())"></legend>
                         <div>
                             <div>
                                 <h5>Material</h5>

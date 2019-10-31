@@ -262,6 +262,18 @@ class AutomaticConfigurationProfile(ProfileSettings):
         self.automatic_configuration.suppress_updates(available_profile)
 
 
+class ExtruderOffset(Settings):
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+
+    def to_dict(self):
+        return {
+            "x": self.x,
+            "y": self.y
+        }
+
+
 class PrinterProfile(AutomaticConfigurationProfile):
     minimum_height_increment = 0.05
     bed_type_rectangular = 'rectangular'
@@ -323,6 +335,7 @@ class PrinterProfile(AutomaticConfigurationProfile):
         self.shared_extruder = False
         self.zero_based_extruder = True
         self.extruder_offsets = []
+        self.default_extruder = 1  # The default extruder is 1 based!  It is not an index.
 
     @classmethod
     def update_from_server_profile(cls, current_profile, server_profile_dict):
@@ -633,9 +646,17 @@ class PrinterProfile(AutomaticConfigurationProfile):
         return []
 
     def try_convert_value(cls, destination, value, key):
-        if key in ['home_x','home_y','home_z']:
+        if key in ['home_x', 'home_y', 'home_z']:
             if value is not None:
                 return float(value)
+        elif key == "extruder_offsets" and isinstance(value, list):
+            result = []
+            for offset in value:
+                extruder_offset = ExtruderOffset()
+                extruder_offset.update(offset)
+                result.append(extruder_offset)
+            return result
+
         return super(PrinterProfile, cls).try_convert_value(destination, value, key)
 
     def get_position_args(self, overridable_profile_settings):
@@ -646,6 +667,9 @@ class PrinterProfile(AutomaticConfigurationProfile):
         gcode_generation_settings = self.get_current_state_detection_settings()
         num_extruders = gcode_generation_settings.get_num_extruders()
 
+        extruder_offsets = []
+        if not self.shared_extruder and self.num_extruders > 1:
+            extruder_offsets = [x.to_dict() for x in self.extruder_offsets]
         position_args = {
             "location_detection_commands": self.get_location_detection_command_list(),
             "xyz_axis_default_mode": self.xyz_axes_default_mode,
@@ -658,7 +682,8 @@ class PrinterProfile(AutomaticConfigurationProfile):
             "minimum_layer_height": self.minimum_layer_height,
             "num_extruders": num_extruders,
             "shared_extruder": self.shared_extruder,
-            "extruder_offsets": self.extruder_offsets,
+            "default_extruder_index": self.default_extruder - 1,  # The default extruder is 1 based!
+            "extruder_offsets": extruder_offsets,
             "home_position": {
                 "home_x": None if self.home_x is None else float(self.home_x),
                 "home_y": None if self.home_y is None else float(self.home_y),
@@ -2236,7 +2261,6 @@ class OctolapseGcodeSettings(Settings):
         # Print Settings
         self.vase_mode = None
         self.layer_height = None
-        # Calculated Settings
 
     def get_num_extruders(self):
         return len(self.extruders)
@@ -2267,7 +2291,6 @@ class SlicerSettings(Settings):
         self.slicer_type = slicer_type
         self.version = version
         self.extruders = []
-
     def get_speed_tolerance(self):
         raise NotImplementedError("You must implement get_speed_tolerance")
 
@@ -2485,36 +2508,41 @@ class CuraSettings(SlicerSettings):
             try:
                 # first see if this is an extruder setting.  To do that let's look for an underscore then a number
                 # at the end of the setting value, remove it
+
                 matches = re.search(CuraSettings.ExtruderNumberSearchRegex, key)
                 if matches and len(matches.groups()) == 2:
                     extruder_setting_name = matches.groups()[0]
                     extruder_index = int(matches.groups()[1])
-                    if -1 < extruder_index < 8 and extruder_index < num_extruders and extruder_setting_name in [
-                        "speed_z_hop",
-                        "retraction_amount",
-                        "retraction_hop",
-                        "retraction_hop_enabled",
-                        "retraction_enable",
-                        "retraction_speed",
-                        "retraction_retract_speed",
-                        "retraction_prime_speed",
-                        "speed_travel",
-                        "max_feedrate_z_override"
-                    ]:
-                        # convert the type as needed
-                        if extruder_setting_name in ['retraction_hop_enabled','retraction_enable']:
-                            value = None if value is None else bool(value)
-                        else:
-                            value = None if value is None else float(value)
-                        # get the current extruder
-                        extruder = self.extruders[extruder_index]
-                        # for fun, make sure the setting exists in the extruder class
-                        class_item = getattr(extruder, extruder_setting_name, '{octolapse_no_property_found}')
-                        if not (
-                            isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'
-                        ):
-                            extruder.__dict__[extruder_setting_name] = value
-                        continue
+                else:
+                    extruder_setting_name = key
+                    extruder_index = 0
+
+                if -1 < extruder_index < 8 and extruder_index < num_extruders and extruder_setting_name in [
+                    "speed_z_hop",
+                    "retraction_amount",
+                    "retraction_hop",
+                    "retraction_hop_enabled",
+                    "retraction_enable",
+                    "retraction_speed",
+                    "retraction_retract_speed",
+                    "retraction_prime_speed",
+                    "speed_travel",
+                    "max_feedrate_z_override"
+                ]:
+                    # convert the type as needed
+                    if extruder_setting_name in ['retraction_hop_enabled','retraction_enable']:
+                        value = None if value is None else bool(value)
+                    else:
+                        value = None if value is None else float(value)
+                    # get the current extruder
+                    extruder = self.extruders[extruder_index]
+                    # for fun, make sure the setting exists in the extruder class
+                    class_item = getattr(extruder, extruder_setting_name, '{octolapse_no_property_found}')
+                    if not (
+                        isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'
+                    ):
+                        extruder.__dict__[extruder_setting_name] = value
+                    continue
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
                 if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                     if key == 'version':
@@ -2552,9 +2580,9 @@ class CuraSettings(SlicerSettings):
             raise e
 
 
-class Simplify3DExtruder(SlicerExtruder):
+class Simplify3dExtruder(SlicerExtruder):
     def __init__(self):
-        super(Simplify3DExtruder, self).__init__()
+        super(Simplify3dExtruder, self).__init__()
         self.retraction_distance = None
         self.retraction_vertical_lift = None
         self.retraction_speed = None
@@ -2692,7 +2720,7 @@ class Simplify3dSettings(SlicerSettings):
             num_extruders = 8
         # create num_extruders extruders for this profile
         for i in range(0, num_extruders):
-            extruder = Simplify3DExtruder()
+            extruder = Simplify3dExtruder()
             self.extruders.append(extruder)
         # create a lookup of the index in extruder_toolhead_number for each toolhead by looking at the first index
         # of each unique toolhead number.
@@ -2744,7 +2772,7 @@ class Simplify3dSettings(SlicerSettings):
                     if key == "extruders":
                         self.extruders = []
                         for extruder in value:
-                            new_extruder = Simplify3DExtruder()
+                            new_extruder = Simplify3dExtruder()
                             new_extruder.update(extruder)
                             self.extruders.append(new_extruder)
                     elif isinstance(class_item, Settings):
@@ -2851,7 +2879,6 @@ class Slic3rPeSettings(SlicerSettings):
         self.layer_height = None
         self.spiral_vase = None
         self.travel_speed = None
-        self.single_extruder_multi_material = False
 
     def get_extruders(self):
         extruders = []

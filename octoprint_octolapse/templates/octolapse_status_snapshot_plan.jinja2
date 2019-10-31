@@ -94,6 +94,14 @@
                             <strong>X</strong><span data-bind="text: SnapshotPlanState.x_return" />,&nbsp;<strong>Y</strong><span data-bind="text: SnapshotPlanState.y_return" />,&nbsp;<strong>Z</strong><span data-bind="text: SnapshotPlanState.z_return" />
                         </div>
                     </div>
+                    <div class="ol-compact-row" data-bind="visible: SnapshotPlanState.multi_extruder">
+                        <div class="span3 text-right no-min-height">
+                            Tool:&nbsp;
+                        </div>
+                        <div class="span9 text-left no-min-height">
+                            <span data-bind="text: (SnapshotPlanState.current_tool()+1).toString()" />
+                        </div>
+                    </div>
                     <div data-bind="visible:SnapshotPlanState.total_travel_distance() > 0">
                         <strong>Statistics</strong>
                         <div class="row-fluid">

@@ -38,6 +38,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.x_return = ko.observable(null).extend({numeric: 2});
             self.y_return = ko.observable(null).extend({numeric: 2});
             self.z_return = ko.observable(null).extend({numeric: 2});
+            self.multi_extruder = ko.observable(false);
+            self.current_tool = ko.observable(0);
             self.progress_percent = ko.observable(null).extend({numeric: 2});
             self.snapshot_positions = ko.observableArray([]);
             self.is_animating_plans = ko.observable(false);
@@ -132,6 +134,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.lines_total(lines_total);
                 self.progress_percent((1-(lines_remaining / lines_total)) * 100);
 
+                self.multi_extruder(showing_plan.initial_position.extruders.length > 1);
+                self.current_tool(showing_plan.initial_position.current_tool);
 
                 self.x_initial(showing_plan.initial_position.x);
                 self.y_initial(showing_plan.initial_position.y);

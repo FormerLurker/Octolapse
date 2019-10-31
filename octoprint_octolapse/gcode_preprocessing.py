@@ -762,11 +762,16 @@ class Slic3rSettingsProcessor(GcodeSettingsProcessor):
             u'travel_speed': SettingsDefinition(u'travel_speed', Slic3rParsingFunctions.parse_float, [u'octolapse_setting']),
             u'first_layer_speed': SettingsDefinition(u'first_layer_speed', Slic3rParsingFunctions.parse_percent_or_mm,[u'octolapse_setting']),
             # this speed is not yet used
-            u'retract_before_travel': SettingsDefinition(u'retract_before_travel', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+
             u'layer_height': SettingsDefinition(u'layer_height', Slic3rParsingFunctions.parse_float, [u'octolapse_setting']),
             u'spiral_vase': SettingsDefinition(u'spiral_vase', Slic3rParsingFunctions.parse_bool, [u'octolapse_setting']),
             u'version': SettingsDefinition(u'version', None, [u'slicer_info', 'octolapse_setting'], True),
+
             # End Octolapse Settings - The rest are included in case they become useful for Octolapse or another project
+            # This setting appears to be calculated and unnecessary
+            u'retract_before_travel': SettingsDefinition(u'retract_before_travel', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
+            u'single_extruder_multi_material': SettingsDefinition(u'single_extruder_multi_material',
+                                                                  Slic3rParsingFunctions.parse_bool, [u'misc']),
             u'max_print_speed': SettingsDefinition(u'max_print_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'perimeter_speed': SettingsDefinition(u'perimeter_speed', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'small_perimeter_speed': SettingsDefinition(u'small_perimeter_speed', Slic3rParsingFunctions.parse_percent_or_mm, [u'misc']),
@@ -871,7 +876,6 @@ class Slic3rSettingsProcessor(GcodeSettingsProcessor):
             u'retract_lift_below': SettingsDefinition(u'retract_lift_below', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
             u'retract_restart_extra': SettingsDefinition(u'retract_restart_extra', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
             u'retract_restart_extra_toolchange': SettingsDefinition(u'retract_restart_extra_toolchange', Slic3rParsingFunctions.parse_float_csv, [u'misc']),
-            u'single_extruder_multi_material': SettingsDefinition(u'single_extruder_multi_material', Slic3rParsingFunctions.parse_bool, [u'misc']),
             u'single_extruder_multi_material_priming': SettingsDefinition(u'single_extruder_multi_material_priming', Slic3rParsingFunctions.parse_bool, [u'misc']),
             u'skirt_distance': SettingsDefinition(u'skirt_distance', Slic3rParsingFunctions.parse_float, [u'misc']),
             u'skirt_height': SettingsDefinition(u'skirt_height', Slic3rParsingFunctions.parse_float, [u'misc']),

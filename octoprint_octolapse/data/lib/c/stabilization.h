@@ -50,9 +50,6 @@ public:
 		height_increment = 0.0;
 		notification_period_seconds = 0.25;
 		file_path = "";
-		py_get_snapshot_position_callback = NULL;
-		py_gcode_generator = NULL;
-		py_on_progress_received = NULL;
 		x_coordinate = 0;
 		y_coordinate = 0;
 		x_stabilization_disabled = false;
@@ -60,16 +57,9 @@ public:
 	}
 	~stabilization_args()
 	{
-		if (py_get_snapshot_position_callback != NULL)
-			Py_XDECREF(py_get_snapshot_position_callback);
-		if (py_gcode_generator != NULL)
-			Py_XDECREF(py_gcode_generator);
-		if (py_on_progress_received != NULL)
-			Py_XDECREF(py_on_progress_received);
+		
 	}
-	PyObject* py_on_progress_received;
-	PyObject * py_get_snapshot_position_callback;
-	PyObject * py_gcode_generator;
+	
 	std::string file_path;
 	double height_increment;
 	double notification_period_seconds;
@@ -96,9 +86,9 @@ public:
 
 	stabilization();
 	// constructor for use when running natively
-	stabilization(gcode_position_args* position_args, stabilization_args* args, progressCallback progress);
+	stabilization(gcode_position_args position_args, stabilization_args args, progressCallback progress);
 	// constructor for use when being called from python
-	stabilization(gcode_position_args* position_args, stabilization_args* args, pythonGetCoordinatesCallback get_coordinates, pythonProgressCallback progress);
+	stabilization(gcode_position_args position_args, stabilization_args args, pythonGetCoordinatesCallback get_coordinates, PyObject* py_get_coordinates_callback, pythonProgressCallback progress, PyObject* py_progress_callback);
 	virtual ~stabilization();
 	stabilization_results process_file();
 	
@@ -111,11 +101,15 @@ private:
 	pythonGetCoordinatesCallback _get_coordinates_callback;
 	void notify_progress(double percent_progress, double seconds_elapsed, double seconds_to_complete,
 		int gcodes_processed, int lines_processed);
-	gcode_position_args* p_args_;
+	
 	// current stabilization point
 
 	double stabilization_x_;
 	double stabilization_y_;
+
+	PyObject* py_on_progress_received;
+	PyObject* py_get_snapshot_position_callback;
+	
 protected:
 	/**
 	 * \brief Gets the next xy stabilization point
@@ -129,7 +123,7 @@ protected:
 	virtual std::vector<stabilization_processing_issue> get_processing_issues();
 	std::vector<snapshot_plan> p_snapshot_plans_;
 	bool is_running_;
-	stabilization_args* p_stabilization_args_;
+	stabilization_args stabilization_args_;
 	progressCallback native_progress_callback_;
 	pythonProgressCallback progress_callback_;
 	gcode_position* gcode_position_;

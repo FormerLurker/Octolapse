@@ -4,6 +4,9 @@
 
 extruder::extruder()
 {
+	x_firmware_offset = 0;
+	y_firmware_offset = 0;
+	z_firmware_offset = 0;
 	e = 0;
 	e_offset = 0;
 	e_relative = 0;
@@ -30,29 +33,32 @@ double extruder::get_offset_e() const
 
 PyObject* extruder::to_py_tuple() const
 {
-	std::cout << "Building extruder py_tuple.\r\n";
+	//std::cout << "Building extruder py_tuple.\r\n";
 	PyObject* py_extruder = Py_BuildValue(
 		// ReSharper disable once StringLiteralTypo
-		"dddddddllllllllll",
+		"ddddddddddllllllllll",
 		// Floats
-		e,
-		e_offset,
-		e_relative,
-		extrusion_length,
-		extrusion_length_total,
-		retraction_length,
-		deretraction_length,
+		x_firmware_offset, // 0
+		y_firmware_offset, // 1
+		z_firmware_offset, // 2
+		e, // 3
+		e_offset, // 4
+		e_relative, // 5
+		extrusion_length, // 6
+		extrusion_length_total, // 7
+		retraction_length, // 8
+		deretraction_length, // 9
 		// Bool (represented as an integer)
-		is_extruding_start,
-		is_extruding,
-		is_primed,
-		is_retracting_start,
-		is_retracting,
-		is_retracted,
-		is_partially_retracted,
-		is_deretracting_start,
-		is_deretracting,
-		is_deretracted
+		is_extruding_start, // 10
+		is_extruding, // 11
+		is_primed, // 12
+		is_retracting_start, // 13
+		is_retracting, // 14
+		is_retracted, // 15
+		is_partially_retracted, // 16
+		is_deretracting_start, // 17
+		is_deretracting, // 18
+		is_deretracted // 19
 	);
 	if (py_extruder == NULL)
 	{
@@ -69,8 +75,14 @@ PyObject* extruder::to_py_dict() const
 	\
 
 	PyObject * p_extruder = Py_BuildValue(
-		"{s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
+		"{s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
 		// FLOATS
+		"x_firmware_offset",
+		x_firmware_offset,
+		"y_firmware_offset",
+		y_firmware_offset,
+		"z_firmware_offset",
+		z_firmware_offset,
 		"e",
 		e,
 		"e_offset",
@@ -118,7 +130,7 @@ PyObject* extruder::to_py_dict() const
 
 PyObject * extruder::build_py_object(extruder* p_extruders, const unsigned int num_extruders)
 {
-	std::cout << "Building extruders py_object.\r\n";
+	//std::cout << "Building extruders py_object.\r\n";
 	PyObject *py_extruders = PyList_New(0);
 	if (py_extruders == NULL)
 	{

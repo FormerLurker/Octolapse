@@ -1950,7 +1950,33 @@ class OctolapsePlugin(
                 return_value["errors"].append(error)
                 return return_value
 
+        slicer_settings_clone = settings_clone.profiles.current_printer().get_current_slicer_settings()
         current_printer_clone = settings_clone.profiles.current_printer()
+        # Make sure the printer profile has the correct number of extruders defined
+        if len(slicer_settings_clone.extruders) > current_printer_clone.num_extruders:
+            error = error_messages.OctolapseErrors["init"]["too_few_extruders_defined"]
+            error["description"] = error["description"].format(
+                printer_num_extruders=current_printer_clone.num_extruders,
+                gcode_num_extruders=len(slicer_settings_clone.extruders)
+            )
+            logger.error(error["description"])
+            return_value["errors"].append(error)
+            return return_value
+
+        # make sure there are enough extruder offsets
+        if (
+            not current_printer_clone.shared_extruder and
+            current_printer_clone.num_extruders < len(current_printer_clone.extruder_offsets)
+        ):
+            error = error_messages.OctolapseErrors["init"]["too_few_extruder_offsets_defined"]
+            error["description"] = error["description"].format(
+                num_extruders=current_printer_clone.num_extruders,
+                num_extruder_offsets=len(current_printer_clone.extruder_offsets)
+            )
+            logger.error(error["description"])
+            return_value["errors"].append(error)
+            return return_value
+
         overridable_printer_profile_settings = current_printer_clone.get_overridable_profile_settings(
             self.get_octoprint_g90_influences_extruder(), self.get_octoprint_printer_profile()
         )

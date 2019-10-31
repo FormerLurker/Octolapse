@@ -83,6 +83,18 @@ $(function() {
         }
     };
 
+    Octolapse.ExtruderOffset = function(values)
+    {
+        var self = this;
+        self.x = ko.observable(0);
+        self.y = ko.observable(0);
+        if (values)
+        {
+            self.x(values.x);
+            self.y(values.y);
+        }
+    };
+
     Octolapse.OctolapseGcodeSettings = function(values){
         /*
         var self = this;
@@ -126,7 +138,13 @@ $(function() {
         */
         self.num_extruders = ko.observable(values.num_extruders);
         self.shared_extruder = ko.observable(values.shared_extruder);
-        self.extruder_offsets = ko.observableArray(values.extruder_offsets);
+        self.extruder_offsets = ko.observableArray([]);
+        for(var index = 0; index < values.extruder_offsets.length; index++)
+        {
+            var offset = new Octolapse.ExtruderOffset(values.extruder_offsets[index]);
+            self.extruder_offsets.push(offset);
+        }
+        self.default_extruder = ko.observable(values.default_extruder);
         self.zero_based_extruder = ko.observable(values.zero_based_extruder);
 
         //self.gcode_generation_settings = new Octolapse.OctolapseGcodeSettings(values.gcode_generation_settings);
@@ -195,7 +213,7 @@ $(function() {
             while(self.extruder_offsets().length < num_extruders)
             {
                 has_changed = true;
-                self.extruder_offsets.push({x:0,y:0});
+                self.extruder_offsets.push(new Octolapse.ExtruderOffset());
             }
             while(self.extruder_offsets().length > num_extruders)
             {

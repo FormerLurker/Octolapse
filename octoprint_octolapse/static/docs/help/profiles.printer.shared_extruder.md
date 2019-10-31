@@ -1,0 +1,1 @@
+Machines that have a single nozzle but support multiple filaments should check this box.  This includes printers like Prusa's MMU1 and MMU2.  If you have more than one physical nozzle, uncheck this box.

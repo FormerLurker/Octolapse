@@ -39,11 +39,10 @@
                 <h5>Extruder Retraction Settings</h5>
                 <p>Can be found in 'Printer Settings->Extruder->Retraction' in Slic3r PE.</p>
             </div>
-
             <div data-bind="foreach: slicers.slic3r_pe.extruders">
                 <div>
                     <fieldset class="octolapse">
-                        <legend data-bind="text: ('Extruder ' + ($index() + 1).toString())"></legend>
+                        <legend data-bind="text: ('Extruder ' + ($index()+1).toString())"></legend>
                         <div>
                             <div class="control-group">
                                 <label class="control-label" data-bind="attr: {'for': ('octolapse_slic3r_pe_retract_length_'+$index().toString())}">Length*</label>
