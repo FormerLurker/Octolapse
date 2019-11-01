@@ -591,7 +591,6 @@ static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, co
 
 static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double& x_result, double& y_result )
 {
-	std::cout << "Executing get_snapshot_position callback.\r\n";
 	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Executing the get_snapshot_position callback.");
 	PyObject * funcArgs = Py_BuildValue("(d,d)", x_initial, y_initial);
 	if (funcArgs == NULL)
@@ -614,7 +613,6 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
-	std::cout << "Extracting X coordinate.\r\n";
 	PyObject * pyX = PyDict_GetItemString(pyCoordinates,"x");
 	if (pyX == NULL)
 	{
@@ -623,7 +621,6 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 		return false;
 	}
 	x_result = PyFloatOrInt_AsDouble(pyX);
-	std::cout << "Extracting Y coordinate.\r\n";
 	PyObject * pyY = PyDict_GetItemString(pyCoordinates, "y");
 	if (pyY == NULL)
 	{
@@ -632,7 +629,6 @@ static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_positio
 		return false;
 	}
 	y_result = PyFloatOrInt_AsDouble(pyY);
-	std::cout << "Next Stabilization Coordinates: X" << x_result << " Y"<< y_result <<"\r\n";
 	Py_DECREF(pyCoordinates);
 	return true;
 
@@ -1179,7 +1175,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 			}
 			else
 			{
-				double y = PyFloatOrInt_AsDouble(py_extruder_offset_x);
+				double y = PyFloatOrInt_AsDouble(py_extruder_offset_y);
 				args->y_firmware_offsets[index] = y;
 			}
 		}

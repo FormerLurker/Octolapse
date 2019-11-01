@@ -934,7 +934,7 @@ void gcode_position::process_g10(position* pos, parsed_command& cmd)
 		if (has_x)
 			pos->get_extruder(p).x_firmware_offset = x;
 		if (has_y)
-			pos->get_extruder(p).x_firmware_offset = y;
+			pos->get_extruder(p).y_firmware_offset = y;
 		if (has_z)
 			pos->get_extruder(p).z_firmware_offset = z;
 		return;
@@ -1254,7 +1254,7 @@ void gcode_position::process_m218(position* pos, parsed_command& cmd)
 		if (has_x)
 			pos->get_extruder(t).x_firmware_offset = x;
 		if (has_y)
-			pos->get_extruder(t).x_firmware_offset = y;
+			pos->get_extruder(t).y_firmware_offset = y;
 		if (has_z)
 			pos->get_extruder(t).z_firmware_offset = z;
 		return;
