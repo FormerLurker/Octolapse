@@ -865,7 +865,8 @@ void gcode_position::process_g3(position* pos, parsed_command& cmd)
 
 void gcode_position::process_g10(position* pos, parsed_command& cmd)
 {
-	unsigned int p = 0;
+	// Take 0 based extruder parameter in account
+	int p = 0;
 	bool has_p = false;
 	double x = 0;
 	bool has_x = false;
@@ -892,13 +893,13 @@ void gcode_position::process_g10(position* pos, parsed_command& cmd)
 			has_p = true;
 			if (p_cur_param.value_type == 'L')
 			{
-				p = p_cur_param.unsigned_long_value;
+				p = static_cast<int>(p_cur_param.unsigned_long_value);
 			}
 			else if (p_cur_param.value_type == 'F')
 			{
-				double x = p_cur_param.double_value;
-				x = x + 0.5 - (x < 0);
-				p = static_cast<unsigned int>(x);
+				double val = p_cur_param.double_value;
+				val = val + 0.5 - (val < 0);
+				p = static_cast<int>(val);
 			}
 			else
 				has_p = false;
@@ -931,6 +932,21 @@ void gcode_position::process_g10(position* pos, parsed_command& cmd)
 	// apply offsets
 	if (has_p)
 	{
+		// Take 0 based extruder parameter in account before setting offsets
+		if (!zero_based_extruder_)
+		{
+			p--;
+		}
+		if (p < 0)
+		{
+			p = 0;
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "GcodePosition.process_g10: Selected tool was less than 0.  Setting offset for tool index 0 instead.");
+		}
+		else if (p > num_extruders_ - 1)
+		{
+			p = num_extruders_ - 1;
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "GcodePosition.process_g10: Selected tool was greater than the number of configured tools.  Setting offset for the maximum tool index instead.");
+		}
 		if (has_x)
 			pos->get_extruder(p).x_firmware_offset = x;
 		if (has_y)
@@ -1193,8 +1209,9 @@ void gcode_position::process_m208(position* pos, parsed_command& cmd)
 
 void gcode_position::process_m218(position* pos, parsed_command& cmd)
 {
+	
 	// Set hotend offsets
-	unsigned int t = 0;
+	int t = 0;
 	bool has_t = false;
 	double x = 0;
 	bool has_x = false;
@@ -1212,16 +1229,17 @@ void gcode_position::process_m218(position* pos, parsed_command& cmd)
 			has_t = true;
 			if (p_cur_param.value_type == 'L')
 			{
-				t = p_cur_param.unsigned_long_value;
+				t = static_cast<int>(p_cur_param.unsigned_long_value);
 			}
 			else if (p_cur_param.value_type == 'F')
 			{
-				double x = p_cur_param.double_value;
-				x = x + 0.5 - (x < 0);
-				t = static_cast<unsigned int>(x);
+				double val = p_cur_param.double_value;
+				val = val + 0.5 - (val < 0);
+				t = static_cast<int>(val);
 			}
 			else
 				has_t = false;
+
 		}
 		else if (p_cur_param.name == 'X')
 		{
@@ -1251,6 +1269,22 @@ void gcode_position::process_m218(position* pos, parsed_command& cmd)
 	// apply offsets
 	if (has_t)
 	{
+		// Take 0 based extruder parameter in account before setting offsets
+		if (!zero_based_extruder_)
+		{
+			t--;
+		}
+		if (t < 0)
+		{
+			t = 0;
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "GcodePosition.process_m218: Selected tool was less than 0.  Setting offset for tool index 0 instead.");
+		}
+		else if (t > num_extruders_ - 1)
+		{
+			t = num_extruders_ - 1;
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "GcodePosition.process_m218: Selected tool was greater than the number of configured tools.  Setting offset for the maximum tool index instead.");
+		}
+
 		if (has_x)
 			pos->get_extruder(t).x_firmware_offset = x;
 		if (has_y)
@@ -1273,8 +1307,8 @@ void gcode_position::process_t(position* pos, parsed_command& cmd)
 		parsed_command_parameter p_cur_param = cmd.parameters[index];
 		if (p_cur_param.name == 'T' && p_cur_param.value_type == 'U')
 		{
-			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::DEBUG, "GcodePosition.update_position: Tool change Detected.");
-			pos->current_tool = p_cur_param.unsigned_long_value;
+			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::DEBUG, "GcodePosition.process_t: Tool change Detected.");
+			pos->current_tool = static_cast<int>(p_cur_param.unsigned_long_value);
 			if (!zero_based_extruder_)
 			{
 				pos->current_tool--;
@@ -1282,12 +1316,12 @@ void gcode_position::process_t(position* pos, parsed_command& cmd)
 			if (pos->current_tool < 0)
 			{
 				pos->current_tool = 0;
-				
+				octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "GcodePosition.process_t: The tool index was less than 0.  Setting tool index to 0 instead.");
 			}
 			else if (pos->current_tool > num_extruders_ - 1)
 			{
 				pos->current_tool = num_extruders_ - 1;
-				octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "GcodePosition.update_position: Selected tool was greater than the number of available tools.");
+				octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::ERROR, "GcodePosition.process_t: The tool index was greater than the number of available tools.  Setting tool index to the max tool index instead.");
 			}
 			
 			break;
