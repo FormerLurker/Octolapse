@@ -28,6 +28,7 @@ import tempfile
 import json
 import six
 import os
+import copy
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -192,7 +193,16 @@ class ExternalSettings(object):
             message = "No profile data was returned for a request at {0}.".format(url)
             raise ExternalSettingsError('no-data', message)
         # if we're here, we've had great success!
-        return r.json()
+        json_value = r.json()
+        # make sure the key values match by replacing any existing key values with the request values.
+        if "automatic_configuration" in json_value and "key_values" in json_value["automatic_configuration"]:
+            json_value["automatic_configuration"]["key_values"] = copy.deepcopy(key_values)
+
+        # remove any guid value
+        if "guid" in json_value:
+            del json_value["guid"]
+
+        return json_value
 
 
     @staticmethod
