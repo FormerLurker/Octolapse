@@ -493,7 +493,7 @@ class OctolapsePlugin(
         try:
             self.load_settings(force_defaults=True)
             self.send_settings_changed_message(client_id)
-            self.check_for_updates(wait_for_lock=True, force_updates=True)
+            self.check_for_updates(force_updates=True)
             return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
         except Exception as e:
             logger.exception("Failed to restore the defaults in /restoreDefaults.")
@@ -543,7 +543,7 @@ class OctolapsePlugin(
         logger.info("Attempting to update all current profile from the server")
         request_values = flask.request.get_json()
         client_id = request_values["client_id"]
-        self.check_for_updates(False, True)
+        self.check_for_updates(True)
 
         with self.automatic_update_lock:
             if not self.automatic_updates_available:
@@ -593,8 +593,8 @@ class OctolapsePlugin(
         logger.info("Suppressing updates for all current updatable profiles.")
         request_values = flask.request.get_json()
         client_id = request_values["client_id"]
-        with self.automatic_update_lock:
-            if self.automatic_updates_available:
+        if self.automatic_updates_available:
+            with self.automatic_update_lock:
                 for profile_type, updatable_profiles in six.iteritems(self._octolapse_settings.profiles.get_updatable_profiles_dict()):
                     # now iterate through the printer profiles
                     for updatable_profile in updatable_profiles:
@@ -607,10 +607,10 @@ class OctolapsePlugin(
                         )
                         if server_profile is not None:
                             current_profile.suppress_updates(server_profile)
-            self.automatic_updates_available = False
-            self.save_settings()
-            self.send_settings_changed_message(client_id)
-            return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
+                self.automatic_updates_available = False
+                self.save_settings()
+                self.send_settings_changed_message(client_id)
+        return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/importSettings", methods=["POST"])
     @restricted_access
@@ -1490,63 +1490,69 @@ class OctolapsePlugin(
     def get_available_server_profiles_path(self):
         return os.path.join(self.get_plugin_data_folder(), "server_profiles.json".format())
 
-    def start_automatic_updates(self):
-            # create function to load makes and models
-            def _get_available_profiles():
-                # load all available profiles from the server
-                try:
-                    available_profiles = ExternalSettings.get_available_profiles(
-                        self._plugin_version, self.get_available_server_profiles_path()
-                    )
-                    # update the profile options within the octolapse settings
-                    self._octolapse_settings.profiles.options.update_server_options(available_profiles)
-                    # notify the clients of the makes and models changes
-                    data = {
-                        'type': 'server_profiles_updated',
-                        'external_profiles_list_changed': available_profiles
-                    }
-                    self._plugin_manager.send_plugin_message(self._identifier, data)
-                    return available_profiles
-                except ExternalSettingsError as e:
-                    logger.exception("Unable to fetch available profiles from the server.")
-                return None
+    def _update_available_server_profiles(self):
+        # load all available profiles from the server
+        have_profiles_changed = False
 
-            # create a function to do all of the updates
+        available_profiles = ExternalSettings.get_available_profiles(
+            self._plugin_version, self.get_available_server_profiles_path()
+        )
+        if available_profiles:
+            have_profiles_changed = self.available_profiles != available_profiles
+            self.available_profiles = available_profiles
+            # update the profile options within the octolapse settings
+            self._octolapse_settings.profiles.options.update_server_options(available_profiles)
+
+        return have_profiles_changed
+
+    def start_automatic_updates(self):
+           # create a function to do all of the updates
             def _update():
                 if not self._octolapse_settings.main_settings.automatic_updates_enabled:
                     return
-                with self.automatic_update_lock:
-                    logger.info("Checking for profile updates.")
-                    available_profiles = _get_available_profiles()
-                    if available_profiles:
-                        self.available_profiles = available_profiles
-                        self.check_for_updates()
-                    else:
-                        logger.info("There are no automatic profiles to update.")
+                logger.info("Checking for profile updates.")
+                self.check_for_updates()
 
             update_interval = 60 * 60 * 24 * self._octolapse_settings.main_settings.automatic_update_interval_days
-            self.automatic_update_thread = utility.RecurringTimerThread(
-                update_interval, _update, self.automatic_update_cancel
-            )
-            # do an initial update now
-            _update()
 
-            self.automatic_update_thread.start()
+            with self.automatic_update_lock:
+                if self.automatic_update_thread is not None and self.automatic_updates_notification_thread is not None:
+                    self.automatic_update_cancel.set()
+                    self.automatic_update_cancel.clear()
+                    self.automatic_update_thread.join()
+                    self.automatic_updates_notification_thread.join()
 
-            update_interval = 30  # three minutes
+                self.automatic_update_thread = utility.RecurringTimerThread(
+                    update_interval, _update, self.automatic_update_cancel
+                )
+                # do an initial update now
+                _update()
 
-            # create another thread to notify users when new updates are available
-            self.automatic_updates_notification_thread = utility.RecurringTimerThread(
-                update_interval, self.notify_updates, self.automatic_update_cancel
-            )
+                self.automatic_update_thread.start()
 
-            self.automatic_updates_notification_thread.start()
+                update_interval = 30  # three minutes
+
+                # create another thread to notify users when new updates are available
+                self.automatic_updates_notification_thread = utility.RecurringTimerThread(
+                    update_interval, self.notify_updates, self.automatic_update_cancel
+                )
+
+                self.automatic_updates_notification_thread.start()
 
     # create function to update all existing automatic profiles
-    def check_for_updates(self, wait_for_lock=False, force_updates=False):
-        try:
-            if wait_for_lock:
-                self.automatic_update_lock.acquire()
+    def check_for_updates(self, force_updates=False):
+        with self.automatic_update_lock:
+            if self._update_available_server_profiles():
+                # notify the clients of the makes and models changes
+                data = {
+                    'type': 'server_profiles_updated',
+                    'external_profiles_list_changed': self.available_profiles
+                }
+                self._plugin_manager.send_plugin_message(self._identifier, data)
+            if not self.available_profiles:
+                logger.warning("No server profiles are available.")
+                return
+
             self.automatic_updates_available = ExternalSettings.check_for_updates(
                 self.available_profiles, self._octolapse_settings.profiles.get_updatable_profiles_dict(), force_updates
             )
