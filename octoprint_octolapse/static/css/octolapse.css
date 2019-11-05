@@ -338,30 +338,32 @@ span.octolapse-icon-text {
     text-shadow: 1px 0px black, -1px 0px black, 0px 1px black, 0px -1px black;
 }
 
+table.octolapse-profiles {
+    border-collapse: collapse;
+    table-layout: fixed;
+    max-width: 100%;
+}
+
 table.octolapse-profiles td {
     font-size: small
 }
 
 table.octolapse-profiles td.profile_name,
-table.octolapse-profiles td.profile_description,
-table.octolapse-profiles td.profile_action {
+table.octolapse-profiles td.profile_description{
     height: 20px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-table.octolapse-profiles td.profile_name {
-    max-width: 180px;
-    min-width: 180px;
+table.octolapse-profiles td.profile_name, table.octolapse-profiles th.profile_name{
+    width:30%;
 }
-table.octolapse-profiles td.profile_description {
-    max-width: 300px;
-    min-width: 300px;
+table.octolapse-profiles td.profile_description, table.octolapse-profiles th.profile_description {
+    width:50%;
 }
-table.octolapse-profiles td.profile_action {
-    max-width: 120px;
-    min-width: 120px;
+table.octolapse-profiles td.profile_action, table.octolapse-profiles th.profile_action {
+    width:20%;
 }
 
 .octolapse_dropzone
@@ -572,13 +574,6 @@ form.octolapse_form .modal-body {
     100% {
         transform: translate(0px, 0px);
     }
-}
-
-
-table.octolapse-profiles {
-    border-collapse: collapse;
-    table-layout: auto;
-    max-width: 100%;
 }
 
 
