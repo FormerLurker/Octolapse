@@ -1912,47 +1912,50 @@ class Profiles(Settings):
             raise ValueError('An unknown profile type {} was received.'.format(profile_type))
 
     def update(self, iterable, **kwargs):
-        try:
-            item_to_iterate = iterable
-            if not isinstance(iterable, collections.Iterable):
-                item_to_iterate = iterable.__dict__
+        item_to_iterate = iterable
+        if not isinstance(iterable, collections.Iterable):
+            item_to_iterate = iterable.__dict__
 
-            for key, value in item_to_iterate.items():
-                class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
-                    if key == 'printers':
-                        self.printers = {}
-                        for profile_key, profile_value in value.items():
-                            self.printers[profile_key] = PrinterProfile.create_from(profile_value)
-                    elif key == 'stabilizations':
-                        self.stabilizations = {}
-                        for profile_key, profile_value in value.items():
-                            self.stabilizations[profile_key] = StabilizationProfile.create_from(profile_value)
-                    elif key == 'triggers':
-                        self.triggers = {}
-                        for profile_key, profile_value in value.items():
-                            self.triggers[profile_key] = TriggerProfile.create_from(profile_value)
-                    elif key == 'renderings':
-                        self.renderings = {}
-                        for profile_key, profile_value in value.items():
-                            self.renderings[profile_key] = RenderingProfile.create_from(profile_value)
-                    elif key == 'cameras':
-                        self.cameras = {}
-                        for profile_key, profile_value in value.items():
-                            self.cameras[profile_key] = CameraProfile.create_from(profile_value)
-                    elif key == 'debug':
-                        self.debug = {}
-                        for profile_key, profile_value in value.items():
-                            self.debug[profile_key] = DebugProfile.create_from(profile_value)
-                    elif isinstance(class_item, Settings):
-                        class_item.update(value)
-                    elif isinstance(class_item, StaticSettings):
-                        # don't update any static settings, those come from the class itself!
-                        continue
-                    else:
-                        self.__dict__[key] = self.try_convert_value(class_item, value, key)
-        except Exception as e:
-            raise e
+        for key, value in item_to_iterate.items():
+            class_item = getattr(self, key, '{octolapse_no_property_found}')
+            if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                profiles_found = True
+
+                if key == 'printers':
+                    profiles = self.printers
+                    create_from = PrinterProfile.create_from
+                elif key == 'stabilizations':
+                    profiles = self.stabilizations
+                    create_from = StabilizationProfile.create_from
+                elif key == 'triggers':
+                    profiles = self.triggers
+                    create_from = TriggerProfile.create_from
+                elif key == 'renderings':
+                    profiles = self.renderings
+                    create_from = RenderingProfile.create_from
+                elif key == 'cameras':
+                    profiles = self.cameras
+                    create_from = CameraProfile.create_from
+                elif key == 'debug':
+                    profiles = self.debug
+                    create_from = DebugProfile.create_from
+                else:
+                    profiles_found = False
+
+                if profiles_found:
+                    profiles.clear()
+                    for profile_key, profile_value in value.items():
+                        profile = create_from(profile_value)
+                        # ensure the guid key matches the profile guid
+                        profile.guid = profile_key
+                        profiles[profile_key] = profile
+                elif isinstance(class_item, Settings):
+                    class_item.update(value)
+                elif isinstance(class_item, StaticSettings):
+                    # don't update any static settings, those come from the class itself!
+                    continue
+                else:
+                    self.__dict__[key] = self.try_convert_value(class_item, value, key)
 
     def update_from_server_profile(self, profile_type, current_profile_dict, server_profile_dict):
         profile_type = profile_type.lower()
