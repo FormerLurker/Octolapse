@@ -42,7 +42,7 @@ from PIL import Image
 # create the module level logger
 import octoprint_octolapse.camera as camera
 import octoprint_octolapse.utility as utility
-from octoprint_octolapse.gcode_parser import Commands
+from octoprint_octolapse.gcode_commands import Commands
 from octoprint_octolapse.utility import TimelapseJobInfo
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()

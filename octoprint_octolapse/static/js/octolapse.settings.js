@@ -49,7 +49,6 @@ $(function () {
                 Create our global settings
             */
             self.settings = self.global_settings.settings.plugins.octolapse;
-            var settings = ko.toJS(self.settings); // just get the values
 
             /**
              * Profiles - These are bound by octolapse.profiles.js

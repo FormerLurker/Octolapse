@@ -23,7 +23,7 @@
 import time
 import unittest
 
-from octoprint_octolapse.gcode_parser import Commands, Response
+from octoprint_octolapse.gcode_commands import Commands, Response
 
 
 class TestParsing(unittest.TestCase):

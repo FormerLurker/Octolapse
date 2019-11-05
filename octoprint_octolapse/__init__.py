@@ -68,7 +68,7 @@ import octoprint_octolapse.utility as utility
 import octoprint_octolapse.error_messages as error_messages
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.gcode import SnapshotGcodeGenerator
-from octoprint_octolapse.gcode_parser import Commands
+from octoprint_octolapse.gcode_commands import Commands
 from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, TriggerProfile, \
     CameraProfile, RenderingProfile, DebugProfile, SlicerSettings, CuraSettings, OtherSlicerSettings, \
@@ -1554,11 +1554,6 @@ class OctolapsePlugin(
                 logger.info("Profile updates are available.")
             else:
                 logger.info("No profile updates are available.")
-        except ExternalSettingsError as e:
-            logger.exception(e)
-        finally:
-            if wait_for_lock:
-                self.automatic_update_lock.release()
 
     def notify_updates(self):
         if not self._octolapse_settings.main_settings.automatic_updates_enabled:

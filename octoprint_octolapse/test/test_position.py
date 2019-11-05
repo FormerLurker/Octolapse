@@ -24,7 +24,7 @@
 import unittest
 import pprint
 from tempfile import NamedTemporaryFile
-from octoprint_octolapse.gcode_parser import Commands
+from octoprint_octolapse.gcode_commands import Commands
 from octoprint_octolapse.position import Pos
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, SlicerSettings, Slic3rPeSettings

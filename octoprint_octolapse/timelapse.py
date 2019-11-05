@@ -28,7 +28,7 @@ from six.moves import queue
 
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode import SnapshotGcodeGenerator, SnapshotGcode
-from octoprint_octolapse.gcode_parser import Commands, ParsedCommand, Response
+from octoprint_octolapse.gcode_commands import Commands, ParsedCommand, Response
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.render import RenderError, RenderingProcessor, RenderingCallbackArgs, RenderJobInfo, TimelapseRenderJob
 from octoprint_octolapse.settings import PrinterProfile, OctolapseSettings

@@ -22,7 +22,7 @@
 ##################################################################################
 from __future__ import unicode_literals
 from octoprint_octolapse.position import Pos
-from octoprint_octolapse.gcode_parser import ParsedCommand
+from octoprint_octolapse.gcode_commands import ParsedCommand, Commands
 from octoprint_octolapse.settings import *
 from octoprint_octolapse.trigger import Triggers
 # create the module level logger
@@ -873,14 +873,12 @@ class SnapshotGcodeGenerator(object):
     # Functions to send start and end commmand gcode
     ###########################
     def send_start_command(self, gcode_type=SnapshotGcode.INITIALIZATION_GCODE):
-        # If we are returning, add the final command to the end gcode
         if self.snapshot_plan.start_command is not None:
             self.snapshot_gcode.append(
                 gcode_type,
                 self.snapshot_plan.start_command.gcode)
 
     def send_end_command(self, gcode_type=SnapshotGcode.END_GCODE):
-        # If we are returning, add the final command to the end gcode
         if self.snapshot_plan.end_command is not None:
             self.snapshot_gcode.append(
                 gcode_type,

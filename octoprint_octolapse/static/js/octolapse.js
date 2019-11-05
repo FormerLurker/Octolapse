@@ -728,7 +728,7 @@ $(function () {
             return null;
 
         // Check to see if it is a percent
-        var is_percent = Octolapse.isPercent(val)
+        var is_percent = Octolapse.isPercent(val);
         if(is_percent)
         {
             if(round_to_percent)

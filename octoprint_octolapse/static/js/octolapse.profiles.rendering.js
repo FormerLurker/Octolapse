@@ -413,6 +413,7 @@ $(function() {
                     url: "./plugin/octolapse/validateOverlayTextTemplate",
                     type:"post"
                 }
+
             },
             octolapse_overlay_font_size: { required: true, integerPositive: true },
             octolapse_overlay_text_pos: { required: true },

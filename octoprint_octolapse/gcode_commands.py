@@ -230,25 +230,6 @@ class Command(object):
 
         return parameters
 
-    def parse_parameters_fast(self, parameters_string, start_index, parameters=None):
-
-        string_length = len(parameters_string)
-        if parameters is None:
-            parameters = {}
-
-        if start_index < string_length and parameters_string[start_index] in self.Parameters:
-            if start_index <= string_length > 0:
-                end_index = Commands.get_float_end_index(parameters_string, start_index+1)
-                if end_index is None:
-                    end_index = start_index
-                    parameters[parameters_string[start_index]] = None
-                else:
-                    parameters[parameters_string[start_index]] = float(parameters_string[start_index+1:end_index+1])
-                if end_index+1 < string_length:
-                    self.parse_parameters_fast(parameters_string, end_index+1, parameters)
-
-        return parameters
-
     def to_string(self):
         # if we do not have gcode, construct from the command and parameters
         command_string = self.Command
@@ -632,7 +613,6 @@ class Commands(object):
     GcodeWords = {"G", "M", "T"}
     SuppressedSavedCommands = [M105.Command, M400.Command]
     SuppressedSnapshotGcodeCommands = [M105.Command]
-    CommandsRequireMetric = [G0.Command, G1.Command, G2.Command, G3.Command, G28.Command, G92.Command]
     TestModeSuppressExtrusionCommands = [G0.Command, G1.Command, G2.Command, G3.Command]
     TestModeSuppressCommands = [
         G10.Command, G11.Command,
@@ -640,13 +620,6 @@ class Commands(object):
         M109.Command, M190.Command, M191.Command,
         M116.Command, M106.Command, T.Command
     ]
-
-    @staticmethod
-    def format_for_fast_parsing(gcode):
-        ix = gcode.find(";")
-        if len(gcode) - 1 >= ix > -1:
-            gcode = gcode[0:ix]
-        return gcode.encode(u'utf-8').translate(None, string.whitespace).upper()
 
     @staticmethod
     def strip_comments(gcode, remove_parentheticals=True):
@@ -698,157 +671,6 @@ class Commands(object):
 
         # strip whitespace
         return gcode.strip()
-
-    @staticmethod
-    def get_float_end_index(value, start_index):
-        index = -1
-        has_seen_period = False
-        for index in range(start_index, len(value)):
-            if "0" <= value[index] <= "9":
-                continue
-            elif value[index] == ".":
-                if not has_seen_period:
-                    has_seen_period = True
-                    continue
-                else:
-                    index -= 1
-                    break
-            else:
-                index -= 1
-                break
-        if index >= start_index:
-            return index
-        return None
-
-    @staticmethod
-    def fast_parse(original_gcode):
-        gcode = Commands.format_for_fast_parsing(original_gcode)
-        if gcode is None or len(gcode) < 1 or gcode[0] == '%':
-            return None
-
-        # Now we should be left with the command and any parameters
-        # Make sure our command is a valid one
-        if len(gcode) < 2 or gcode[0] not in Commands.GcodeWords:
-            return None
-
-        command_address_end_index = Commands.get_float_end_index(gcode, 1)
-
-        if command_address_end_index is None:
-            command_address_end_index = 0
-
-        command_to_search = gcode[0:command_address_end_index+1]
-        if command_to_search not in Commands.CommandsDictionary:
-            return None
-
-        cmd = Commands.CommandsDictionary[command_to_search]
-        parameters = cmd.parse_parameters_fast(gcode, command_address_end_index + 1)
-        # get the parameter string
-        return ParsedCommand(command_to_search, parameters, original_gcode)
-
-    @staticmethod
-    def parse(gcode, remove_parentheticals=True):
-        original_gcode = gcode
-        gcode = Commands.strip_comments(gcode, remove_parentheticals=remove_parentheticals)
-        if gcode is None:
-            return ParsedCommand(None, None, original_gcode)
-
-        # ignore blank lines
-        if len(gcode) < 1:
-            return ParsedCommand(None, None, original_gcode)
-
-        # ignore any lines that start with a %
-        if gcode[0] == "%":
-            return ParsedCommand(None, None, original_gcode)
-
-        # make sure our string is greater than 2 characters
-        if len(gcode) < 2:
-            return ParsedCommand(None, None, original_gcode)
-
-        # extract any line numbers
-        if gcode[0] == "N":
-            _n_temp = ""
-            # extract any integers and ignore whitespace
-            for index in range(0, len(gcode) - 1):
-                _c = gcode[index].upper()
-
-                if _c.isspace():
-                    continue
-                if "0" <= _c <= "9":
-                    _n_temp += _c
-                else:
-                    break
-
-            # remove the line number from the command string and strip off whitespace from the front
-            gcode = gcode[index:].lstrip()
-
-        # Now we should be left with the command and any parameters
-        # Make sure our command is a valid one
-        if len(gcode) < 2:
-            return ParsedCommand(None, None, original_gcode)
-
-        # get the command letter
-        command_letter = gcode[0].upper()
-        if command_letter not in Commands.GcodeWords:
-            return ParsedCommand(None, None, original_gcode)
-
-        # search for decimals or periods to build the command address
-        command_address = ""
-        has_seen_period = False
-        for index in range(1, len(gcode)):
-            c = gcode[index]
-            if c.isspace():
-                continue
-            elif "0" <= c <= "9":
-                command_address += c
-            elif c == ".":
-                if not has_seen_period:
-                    # add the current command address if it exists
-                    address_number = utility.get_int(command_address, -1)
-                    if address_number > -1:
-                        command_address = "{}".format(address_number)
-                    else:
-                        command_address = '?'
-                    command_address += c
-                    has_seen_period = True
-                else:
-
-                    return ParsedCommand(None, None, original_gcode, error="Cannot parse the gcode address, multiple periods "
-                                                                  "seen.")
-            else:
-                break
-        # If we've not seen any periods, strip any leading 0s from the gcode
-        if not has_seen_period:
-            address_number = utility.get_int(command_address, -1)
-            if address_number > -1:
-                command_address = "{}".format(address_number)
-            else:
-                command_address = '?'
-        # make sure the command is in the dictionary
-        if command_letter != "T":
-            command_to_search = command_letter + command_address
-        else:
-            command_to_search = command_letter
-
-        if command_to_search not in Commands.CommandsDictionary.keys():
-            return ParsedCommand(command_to_search, None, original_gcode)
-
-        cmd = Commands.CommandsDictionary[command_to_search]
-
-        # get the parameter string
-        if len(gcode) > index:
-            parameters = gcode[index:]
-        else:
-            parameters = ""
-
-        if not cmd.TextOnlyParameter:
-            try:
-                if command_letter == "T":
-                    parameters = cmd.parse_parameters("T"+parameters)
-                else:
-                    parameters = cmd.parse_parameters(parameters)
-            except ValueError as e:
-                ParsedCommand(command_to_search, None, original_gcode, error="{}".format(e))
-        return ParsedCommand(command_to_search, parameters, original_gcode)
 
     @staticmethod
     def to_string(parsed_command):
