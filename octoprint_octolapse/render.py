@@ -977,9 +977,10 @@ class TimelapseRenderJob(object):
             return image
         text = text_template.format(**format_vars)
 
-        # Retrieve the correct font.
+        # No font selected
         if not font_path:
-            raise RenderError('overlay-font', "No overlay font was specified when attempting to add overlay.")
+            # raise RenderError('overlay-font', "No overlay font was specified when attempting to add overlay.")
+            return image
         font = ImageFont.truetype(font_path, size=font_size)
 
         # Create the image to draw on.
