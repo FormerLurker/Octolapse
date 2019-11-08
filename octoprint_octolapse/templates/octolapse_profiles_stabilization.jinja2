@@ -30,15 +30,22 @@
         <div class="control-group">
             <label class="control-label">Name</label>
             <div class="controls">
-                <input id="stabilization_profile_name" type="text" name="name" class="input-block-level form-input" data-bind="value: name" />
-                <div class="error_label_container text-error" data-error-for="stabilization_profile_name"></div>
+                <input id="octolapse_stabilization_name" name="octolapse_stabilization_name"
+                       class="input-block-level form-input" 
+                       data-bind="value: name"
+                       type="text"
+                />
+                <div class="error_label_container text-error" data-error-for="octolapse_stabilization_name"></div>
             </div>
         </div>
         <div class="control-group">
             <label class="control-label">Description</label>
             <div class="controls">
-                <textarea id="stabilization_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024" />
-                <div class="error_label_container text-error" data-error-for="stabilization_profile_description"></div>
+                <textarea id="octolapse_stabilization_description" name="octolapse_stabilization_description"
+                          class="input-block-level"
+                          data-bind="value: description"
+                          type="text" maxlength="1024" />
+                <div class="error_label_container text-error" data-error-for="octolapse_stabilization_description"></div>
             </div>
         </div>
     </div>
@@ -53,35 +60,45 @@
             <div class="control-group">
                 <label class="control-label">X Stabilization Type</label>
                 <div class="controls">
-                    <select id="stabilization_profile_x_type" name="x_type" class="ignore_hidden_errors" data-bind="options: Octolapse.Stabilizations.profileOptions.real_time_xy_stabilization_type_options,
+                    <select id="octolapse_stabilization_x_type" name="octolapse_stabilization_x_type"
+                            class="ignore_hidden_errors"
+                            data-bind="options: Octolapse.Stabilizations.profileOptions.real_time_xy_stabilization_type_options,
                                        optionsText: 'name',
                                        optionsValue: 'value',
                                        value: x_type"></select>
                     <a class="octolapse_help" data-help-url="profiles.stabilization.x_type.md" data-help-title="X Stabilization Type"/>
-                    <div class="error_label_container text-error" data-error-for="stabilization_profile_x_type"></div>
+                    <div class="error_label_container text-error" data-error-for="octolapse_stabilization_x_type"></div>
                 </div>
             </div>
             <div class="control-group" data-bind="visible: x_type() === 'fixed_coordinate'">
                 <label class="control-label">Fixed Coordinate</label>
                 <div class="controls">
                     <div class="input-append">
-                        <input id="stabilization_profile_x_fixed_coordinate" name="x_fixed_coordinate" type="text" class="input-small ignore_hidden_errors" data-bind="value: x_fixed_coordinate" />
+                        <input id="octolapse_stabilization_x_fixed_coordinate" name="octolapse_stabilization_x_fixed_coordinate"
+                               class="input-small ignore_hidden_errors"
+                               data-bind="value: x_fixed_coordinate"
+                               type="text"
+                        />
                         <span class="add-on">mm</span>
                         <a class="octolapse_help" data-help-url="profiles.stabilization.x_fixed_coordinate.md" data-help-title="X Fixed Coordinate"/>
                     </div>
-                    <div class="error_label_container text-error" data-error-for="stabilization_profile_x_fixed_coordinate"></div>
+                    <div class="error_label_container text-error" data-error-for="octolapse_stabilization_x_fixed_coordinate"></div>
                 </div>
             </div>
             <div class="control-group" data-bind="visible: x_type() === 'fixed_path'">
                 <label class="control-label">Fixed Path</label>
                 <div class="controls">
                     <div class="input-append input-block-level">
-                        <input id="stabilization_profile_x_fixed_path" name="x_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_fixed_path" />
+                        <input id="octolapse_stabilization_x_fixed_path" name="octolapse_stabilization_x_fixed_path"
+                               class="input-block-level ignore_hidden_errors"
+                               data-bind="value: x_fixed_path"
+                               type="text"
+                        />
                         <span class="add-on">mm</span>
                         <span class="add-on">csv</span>
                         <a class="octolapse_help" data-help-url="profiles.stabilization.x_fixed_path.md" data-help-title="X Fixed Path"/>
                     </div>
-                    <div class="error_label_container text-error" data-error-for="stabilization_profile_x_fixed_path"></div>
+                    <div class="error_label_container text-error" data-error-for="octolapse_stabilization_x_fixed_path"></div>
                     <span class="help-inline">Provide a list of fixed coordinates separated by commas</span>
                 </div>
             </div>
@@ -89,7 +106,10 @@
                 <label class="control-label">Loop</label>
                 <div class="controls">
                     <label class="checkbox">
-                        <input name="x_fixed_path_loop" type="checkbox" data-bind="checked: x_fixed_path_loop" />Enabled
+                        <input id="octolapse_stabilization_x_fixed_path_loop" name="octolapse_stabilization_x_fixed_path_loop"
+                               type="checkbox"
+                               data-bind="checked: x_fixed_path_loop"
+                        />Enabled
                         <a class="octolapse_help" data-help-url="profiles.stabilization.x_fixed_path_loop.md" data-help-title="X Fixed Path Loop"/>
                     </label>
                 </div>
@@ -98,7 +118,10 @@
                 <label class="control-label">Invert Loop</label>
                 <div class="controls">
                     <label class="checkbox">
-                        <input name="x_fixed_path_invert_loop" type="checkbox" data-bind="checked: x_fixed_path_invert_loop" />Enabled
+                        <input id="octolapse_stabilization_x_fixed_path_invert_loop" name="octolapse_stabilization_x_fixed_path_invert_loop"
+                               data-bind="checked: x_fixed_path_invert_loop"
+                               type="checkbox"
+                        />Enabled
                         <a class="octolapse_help" data-help-url="profiles.stabilization.x_fixed_path_invert_loop.md" data-help-title="X Fixed Path Invert Loop"/>
                     </label>
                 </div>
@@ -107,23 +130,31 @@
                 <label class="control-label">Relative Coordinate</label>
                 <div class="controls">
                     <div class="input-append">
-                        <input id="stabilization_profile_x_relative" name="x_relative" type="text" class="input-small form-input ignore_hidden_errors " data-bind="value: x_relative" />
+                        <input id="octolapse_stabilization_x_relative" name="octolapse_stabilization_x_relative"
+                               class="input-small form-input ignore_hidden_errors "
+                               data-bind="value: x_relative"
+                               type="text"
+                        />
                         <span class="add-on">%</span>
                         <a class="octolapse_help" data-help-url="profiles.stabilization.x_relative.md" data-help-title="X Relative Coordinate"/>
                     </div>
-                    <div class="error_label_container text-error" data-error-for="stabilization_profile_x_relative"></div>
+                    <div class="error_label_container text-error" data-error-for="octolapse_stabilization_x_relative"></div>
                 </div>
             </div>
             <div class="control-group" data-bind="visible: x_type() === 'relative_path'">
                 <label class="control-label">Relative Path</label>
                 <div class="controls">
                     <div class="input-append input-block-level">
-                        <input id="stabilization_profile_x_relative_path" name="x_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: x_relative_path" />
+                        <input id="octolapse_stabilization_x_relative_path" name="octolapse_stabilization_x_relative_path"
+                               class="input-block-level ignore_hidden_errors"
+                               data-bind="value: x_relative_path"
+                               type="text"
+                        />
                         <span class="add-on">%</span>
                         <span class="add-on">csv</span>
                         <a class="octolapse_help" data-help-url="profiles.stabilization.x_relative_path.md" data-help-title="X Relative Path"/>
                     </div>
-                    <div class="error_label_container text-error" data-error-for="stabilization_profile_x_relative_path"></div>
+                    <div class="error_label_container text-error" data-error-for="octolapse_stabilization_x_relative_path"></div>
                     <span class="help-inline">Provide a list of relative coordinates separated by commas</span>
                 </div>
             </div>
@@ -131,7 +162,10 @@
                 <label class="control-label">Loop</label>
                 <div class="controls">
                     <label class="checkbox">
-                        <input name="x_relative_path_loop" type="checkbox" data-bind="checked: x_relative_path_loop" />Enabled
+                        <input id="octolapse_stabilization_x_relative_path_loop" name="octolapse_stabilization_x_relative_path_loop"
+                               data-bind="checked: x_relative_path_loop"
+                               type="checkbox"
+                        />Enabled
                         <a class="octolapse_help" data-help-url="profiles.stabilization.x_relative_path_loop.md" data-help-title="X Relative Path Loop"/>
                     </label>
                 </div>
@@ -140,7 +174,10 @@
                 <label class="control-label">Invert Loop</label>
                 <div class="controls">
                     <label class="checkbox">
-                        <input name="x_relative_path_invert_loop" type="checkbox" data-bind="checked: x_relative_path_invert_loop" />Enabled
+                        <input id="octolapse_stabilization_x_relative_path_invert_loop" name="octolapse_stabilization_x_relative_path_invert_loop"
+                               data-bind="checked: x_relative_path_invert_loop"
+                               type="checkbox"
+                        />Enabled
                         <a class="octolapse_help" data-help-url="profiles.stabilization.x_relative_path_invert_loop.md" data-help-title="X Relative Path Invert Loop"/>
                     </label>
                 </div>
@@ -153,35 +190,45 @@
         <div class="control-group">
             <label class="control-label">Y Stabilization Type</label>
             <div class="controls">
-                <select id="stabilization_profile_y_type" name="y_type" class="ignore_hidden_errors" data-bind="options: Octolapse.Stabilizations.profileOptions.real_time_xy_stabilization_type_options,
+                <select id="octolapse_stabilization_y_type" name="octolapse_stabilization_y_type"
+                        class="ignore_hidden_errors"
+                        data-bind="options: Octolapse.Stabilizations.profileOptions.real_time_xy_stabilization_type_options,
                                    optionsText: 'name',
                                    optionsValue: 'value',
                                    value: y_type"></select>
                 <a class="octolapse_help" data-help-url="profiles.stabilization.y_type.md" data-help-title="Y Stabilization Type"/>
-                <div class="error_label_container text-error" data-error-for="stabilization_profile_y_type"></div>
+                <div class="error_label_container text-error" data-error-for="octolapse_stabilization_y_type"></div>
             </div>
         </div>
         <div class="control-group" data-bind="visible: y_type() === 'fixed_coordinate'">
             <label class="control-label">Fixed Coordinate</label>
             <div class="controls">
                 <div class="input-append">
-                    <input id="stabilization_profile_y_fixed_coordinate" name="y_fixed_coordinate" type="text" class="input-small ignore_hidden_errors" data-bind="value: y_fixed_coordinate" />
+                    <input id="octolapse_stabilization_y_fixed_coordinate" name="octolapse_stabilization_y_fixed_coordinate"
+                           class="input-small ignore_hidden_errors"
+                           data-bind="value: y_fixed_coordinate"
+                           type="text"
+                    />
                     <span class="add-on">mm</span>
                     <a class="octolapse_help" data-help-url="profiles.stabilization.y_fixed_coordinate.md" data-help-title="Y Fixed Coordinate"/>
                 </div>
-                <div class="error_label_container text-error" data-error-for="stabilization_profile_y_fixed_coordinate"></div>
+                <div class="error_label_container text-error" data-error-for="octolapse_stabilization_y_fixed_coordinate"></div>
             </div>
         </div>
         <div class="control-group" data-bind="visible: y_type() === 'fixed_path'">
             <label class="control-label">Fixed Path</label>
             <div class="controls">
                 <div class="input-append input-block-level">
-                    <input id="stabilization_profile_y_fixed_path" name="y_fixed_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_fixed_path" />
+                    <input id="octolapse_stabilization_y_fixed_path" name="octolapse_stabilization_y_fixed_path"
+                           class="input-block-level ignore_hidden_errors"
+                           data-bind="value: y_fixed_path"
+                           type="text"
+                    />
                     <span class="add-on">mm</span>
                     <span class="add-on">csv</span>
                     <a class="octolapse_help" data-help-url="profiles.stabilization.y_fixed_path.md" data-help-title="Y Fixed Path"/>
                 </div>
-                <div class="error_label_container text-error" data-error-for="stabilization_profile_y_fixed_path"></div>
+                <div class="error_label_container text-error" data-error-for="octolapse_stabilization_y_fixed_path"></div>
                 <span class="help-inline">Provide a list of fixed coordinates separated by commas</span>
             </div>
         </div>
@@ -189,7 +236,7 @@
             <label class="control-label">Loop</label>
             <div class="controls">
                 <label class="checkbox">
-                    <input name="y_fixed_path_loop" type="checkbox" data-bind="checked: y_fixed_path_loop" />Enabled
+                    <input id="octolapse_stabilization_y_fixed_path_loop" name="octolapse_stabilization_y_fixed_path_loop" type="checkbox" data-bind="checked: y_fixed_path_loop" />Enabled
                     <a class="octolapse_help" data-help-url="profiles.stabilization.y_fixed_path_loop.md" data-help-title="Y Fixed Path Loop"/>
                 </label>
             </div>
@@ -198,7 +245,10 @@
             <label class="control-label">Invert Loop</label>
             <div class="controls">
                 <label class="checkbox">
-                    <input name="y_fixed_path_invert_loop" type="checkbox" data-bind="checked: y_fixed_path_invert_loop" />Enabled
+                    <input id="octolapse_stabilization_y_fixed_path_invert_loop" name="octolapse_stabilization_y_fixed_path_invert_loop"
+                           data-bind="checked: y_fixed_path_invert_loop"
+                           type="checkbox"
+                    />Enabled
                     <a class="octolapse_help" data-help-url="profiles.stabilization.y_fixed_path_invert_loop.md" data-help-title="Y Fixed Path Invert Loop"/>
                 </label>
             </div>
@@ -207,23 +257,31 @@
             <label class="control-label">Relative Coordinate</label>
             <div class="controls">
                 <div class="input-append">
-                    <input id="stabilization_profile_y_relative" name="y_relative" type="text" class="input-small ignore_hidden_errors" data-bind="value: y_relative" />
+                    <input id="octolapse_stabilization_y_relative" name="octolapse_stabilization_y_relative"
+                           class="input-small ignore_hidden_errors"
+                           data-bind="value: y_relative"
+                           type="text"
+                    />
                     <span class="add-on">%</span>
                     <a class="octolapse_help" data-help-url="profiles.stabilization.y_relative.md" data-help-title="Y Relative Coordinate"/>
                 </div>
-                <div class="error_label_container text-error" data-error-for="stabilization_profile_y_relative"></div>
+                <div class="error_label_container text-error" data-error-for="octolapse_stabilization_y_relative"></div>
             </div>
         </div>
         <div class="control-group" data-bind="visible: y_type() === 'relative_path'">
             <label class="control-label">Relative Path</label>
             <div class="controls">
                 <div class="input-append input-block-level">
-                    <input id="stabilization_profile_y_relative_path" name="y_relative_path" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: y_relative_path" />
+                    <input id="octolapse_stabilization_y_relative_path" name="octolapse_stabilization_y_relative_path"
+                           class="input-block-level ignore_hidden_errors"
+                           data-bind="value: y_relative_path"
+                           type="text"
+                    />
                     <span class="add-on">%</span>
                     <span class="add-on">csv</span>
                     <a class="octolapse_help" data-help-url="profiles.stabilization.y_relative_path.md" data-help-title="Y Relative Path"/>
                 </div>
-                <div class="error_label_container text-error" data-error-for="stabilization_profile_y_relative_path"></div>
+                <div class="error_label_container text-error" data-error-for="octolapse_stabilization_y_relative_path"></div>
                 <span class="help-inline">Provide a list of relative coordinates separated by commas</span>
             </div>
         </div>
@@ -231,7 +289,10 @@
             <label class="control-label">Loop</label>
             <div class="controls">
                 <label class="checkbox">
-                    <input name="y_relative_path_loop" type="checkbox" data-bind="checked: y_relative_path_loop" />Enabled
+                    <input id="octolapse_stabilization_y_relative_path_loop" name="octolapse_stabilization_y_relative_path_loop"
+                           data-bind="checked: y_relative_path_loop"
+                           type="checkbox"
+                    />Enabled
                     <a class="octolapse_help" data-help-url="profiles.stabilization.y_relative_path_loop.md" data-help-title="Y Relative Path Loop"/>
                 </label>
             </div>
@@ -240,7 +301,10 @@
             <label class="control-label">Invert Loop</label>
             <div class="controls">
                 <label class="checkbox">
-                    <input name="y_relative_path_invert_loop" type="checkbox" data-bind="checked: y_relative_path_invert_loop" />Enabled
+                    <input id="octolapse_stabilization_y_relative_path_invert_loop" name="y_relative_path_invert_loop"
+                           data-bind="checked: y_relative_path_invert_loop"
+                           type="checkbox"
+                    />Enabled
                     <a class="octolapse_help" data-help-url="profiles.stabilization.y_relative_path_invert_loop.md" data-help-title="Y Relative Path Invert Loop"/>
                 </label>
             </div>
