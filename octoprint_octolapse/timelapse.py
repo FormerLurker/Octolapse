@@ -348,9 +348,6 @@ class Timelapse(object):
             # save the gcode fo the payload
             timelapse_snapshot_payload["snapshot_gcode"] = snapshot_gcode
 
-            if self._gcode.has_snapshot_position_errors:
-                timelapse_snapshot_payload["error"] = self._gcode.Snapshotposition_errors
-
             if snapshot_gcode is None:
                 logger.warning("No snapshot gcode was generated.")
                 return timelapse_snapshot_payload
@@ -415,7 +412,7 @@ class Timelapse(object):
                     "The timelapse state was expected to TakingSnapshots, but was equal to {0}".format(self._state)
                 )
             # we've completed the procedure, set success
-            timelapse_snapshot_payload["success"] = not has_error and not self._gcode.has_snapshot_position_errors
+            timelapse_snapshot_payload["success"] = not has_error
 
         except Exception as e:
             logger.exception("Failed to take a snapshot for the provided snapshot plan.")

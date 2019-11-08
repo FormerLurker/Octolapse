@@ -231,8 +231,6 @@ class SnapshotGcodeGenerator(object):
         self.Printer = self.Settings.profiles.current_printer()
         self.snapshot_command = self.Printer.snapshot_command
         self.overridable_printer_profile_settings = overridable_printer_profile_settings
-        self.has_snapshot_position_errors = False
-        self.snapshot_position_errors = ""
         self.gcode_generation_settings = self.Printer.get_current_state_detection_settings()
         # assert(isinstance(self.gcode_generation_settings, OctolapseGcodeSettings))
         # this will be determined by the supplied position object
@@ -282,9 +280,6 @@ class SnapshotGcodeGenerator(object):
     ):
         assert(isinstance(snapshot_plan, SnapshotPlan))
         assert(isinstance(snapshot_plan.initial_position, Pos))
-        # reset any errors
-        self.has_snapshot_position_errors = False
-        self.snapshot_position_errors = ""
 
         # get the triggering command and extruder position by
         # undo the most recent position update since we haven't yet executed the most recent gcode command
@@ -1065,39 +1060,37 @@ class SnapshotGcodeGenerator(object):
         ):
             return None
 
-        if not self.has_snapshot_position_errors:
-            # Todo:  it's possible that the current command is a detract.  If it is we eventually will want to prevent
-            # create the start command if it exists
-            self.send_start_command()
-            # retract if necessary
-            self.retract()
-            # lift if necessary
-            self.lift_z()
+        # create the start command if it exists
+        self.send_start_command()
+        # retract if necessary
+        self.retract()
+        # lift if necessary
+        self.lift_z()
 
-            has_taken_snapshot = False
-            assert(isinstance(snapshot_plan, SnapshotPlan))
-            for step in snapshot_plan.steps:
-                assert(isinstance(step, SnapshotPlanStep))
-                if step.action == SnapshotPlan.TRAVEL_ACTION:
-                    self.add_travel_action(step)
-                if step.action == SnapshotPlan.SNAPSHOT_ACTION:
-                    self.add_snapshot_action()
+        has_taken_snapshot = False
+        assert(isinstance(snapshot_plan, SnapshotPlan))
+        for step in snapshot_plan.steps:
+            assert(isinstance(step, SnapshotPlanStep))
+            if step.action == SnapshotPlan.TRAVEL_ACTION:
+                self.add_travel_action(step)
+            if step.action == SnapshotPlan.SNAPSHOT_ACTION:
+                self.add_snapshot_action()
 
-            # Create Return Gcode
-            self.return_to_original_position()
+        # Create Return Gcode
+        self.return_to_original_position()
 
-            # If we zhopped in the beginning, lower z
-            self.delift_z()
+        # If we zhopped in the beginning, lower z
+        self.delift_z()
 
-            # deretract if necessary
-            self.deretract()
+        # deretract if necessary
+        self.deretract()
 
-            # reset the coordinate systems for the extruder and axis
-            self.return_to_original_coordinate_systems()
+        # reset the coordinate systems for the extruder and axis
+        self.return_to_original_coordinate_systems()
 
-            self.return_to_original_feedrate()
+        self.return_to_original_feedrate()
 
-            self.send_end_command()
+        self.send_end_command()
 
         # print out log messages
         if snapshot_plan.initial_position.file_line_number > 0:
