@@ -30,15 +30,22 @@
         <div class="control-group">
             <label class="control-label">Name</label>
             <div class="controls">
-                <input id="trigger_profile_name" type="text" name="name" class="input-block-level form-input" data-bind="value: name" />
-                <div class="error_label_container text-error" data-error-for="trigger_profile_name"></div>
+                <input id="octolapse_trigger_name" name="octolapse_trigger_name"
+                       class="input-block-level form-input" 
+                       data-bind="value: name"
+                       type="text" 
+                />
+                <div class="error_label_container text-error" data-error-for="octolapse_trigger_name"></div>
             </div>
         </div>
         <div class="control-group">
             <label class="control-label">Description</label>
             <div class="controls">
-                <textarea id="trigger_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024" />
-                <div class="error_label_container text-error" data-error-for="trigger_profile_description"></div>
+                <textarea id="octolapse_trigger_description" name="octolapse_trigger_description"
+                          class="input-block-level"
+                          data-bind="value: description"
+                          type="text" maxlength="1024" />
+                <div class="error_label_container text-error" data-error-for="octolapse_trigger_description"></div>
             </div>
         </div>
     </div>
@@ -54,12 +61,13 @@
             </div>
             <div class="control-group">
                 <div class="controls">
-                    <select id="trigger_profile_trigger_type" name="trigger_type" data-bind="options: Octolapse.Triggers.profileOptions.trigger_type_options,
-                                           optionsText: 'name',
-                                           optionsValue: 'value',
-                                           value: trigger_type"></select>
+                    <select id="octolapse_trigger_trigger_type" name="octolapse_trigger_trigger_type"
+                            data-bind="options: Octolapse.Triggers.profileOptions.trigger_type_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: trigger_type"></select>
                     <a class="octolapse_help" data-help-url="profiles.trigger.trigger_type.md" data-help-title="Trigger Type"/>
-                    <div class="error_label_container text-error" data-error-for="trigger_profile_trigger_type"></div>
+                    <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_type"></div>
                 </div>
             </div>
         </div>
@@ -79,12 +87,13 @@
             <div class="control-group">
                 <label class="control-label">When to Trigger</label>
                 <div class="controls">
-                    <select id="trigger_profile_trigger_subtype" data-bind="options: get_trigger_subtype_options,
-                           optionsText: 'name',
-                           optionsValue: 'value',
-                           value: trigger_subtype"></select>
+                    <select id="octolapse_trigger_trigger_subtype" name="octolapse_trigger_trigger_subtype"
+                            data-bind="options: get_trigger_subtype_options,
+                                       optionsText: 'name',
+                                       optionsValue: 'value',
+                                       value: trigger_subtype"></select>
                     <a class="octolapse_help" data-help-url="profiles.trigger.trigger_subtype.md" data-help-title="When to Trigger"/>
-                    <div class="error_label_container text-error" data-error-for="trigger_profile_layer_trigger_profile_trigger_subtype"></div>
+                    <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_subtype"></div>
                 </div>
             </div>
 
@@ -93,12 +102,14 @@
                     <label class="control-label">Trigger Height</label>
                     <div class="controls">
                         <span class="input-append">
-                            <input id="trigger_profile_layer_trigger_height" name="layer_trigger_height" type="number" class="input-small ignore_hidden_errors"
-                                   data-bind="value: layer_trigger_height" min="0.0" step="0.01" required="true" />
+                            <input id="octolapse_trigger_layer_trigger_height" name="octolapse_trigger_layer_trigger_height"
+                                   class="input-small ignore_hidden_errors"
+                                   data-bind="value: layer_trigger_height"
+                                   type="number" min="0.0" step="0.01" required="true" />
                             <span class="add-on">mm</span>
                         </span>
                         <a class="octolapse_help" data-help-url="profiles.trigger.layer_trigger_height.md" data-help-title="Trigger Height"/>
-                        <div class="error_label_container text-error" data-error-for="trigger_profile_layer_trigger_height"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_trigger_layer_trigger_height"></div>
                         <span class="help-inline">Use 0mm to trigger on every layer, regardless of the layer height.</span>
                     </div>
                 </div>
@@ -107,20 +118,23 @@
                     <div class="control-group">
                         <label class="control-label">Smart Layer Trigger Type</label>
                         <div class="controls">
-                            <select id="trigger_profile_smart_layer_trigger_type" name="smart_layer_trigger_type"
+                            <select id="octolapse_trigger_smart_layer_trigger_type" name="octolapse_trigger_smart_layer_trigger_type"
                                     data-bind="options: Octolapse.Triggers.profileOptions.smart_layer_trigger_type_options,
-                                                   optionsText: 'name',
-                                                   optionsValue: 'value',
-                                                   value: smart_layer_trigger_type"></select>
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: smart_layer_trigger_type"></select>
                             <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_trigger_type.md" data-help-title="Smart Layer Trigger Type"/>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_smart_layer_trigger_type"></div>
+                            <div class="error_label_container text-error" data-error-for="octolapse_trigger_smart_layer_trigger_type"></div>
                         </div>
                     </div>
                     <div data-bind="visible: smart_layer_trigger_type() == '0'">
                         <div class="control-group">
                             <div class="controls">
                                 <label class="checkbox">
-                                    <input name="smart_layer_disable_z_lift" type="checkbox" data-bind="checked: smart_layer_disable_z_lift" />Disable Lift Before Snapshot
+                                    <input id="octolapse_trigger_smart_layer_disable_z_lift" name="octolapse_trigger_smart_layer_disable_z_lift"
+                                           data-bind="checked: smart_layer_disable_z_lift"
+                                           type="checkbox"
+                                    />Disable Lift Before Snapshot
                                     <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_disable_z_lift.md" data-help-title="Disable Lift Before Snapshot"/>
                                     <span class="help-inline">Disabling z-lift is generally recommended when using snap-to-print.  If it takes a long time to capture an image, consider enabling z_lift to prevent the extruder from melting your print.</span>
                                 </label>
@@ -129,7 +143,10 @@
                         <div class="control-group">
                             <div class="controls">
                                 <label class="checkbox">
-                                    <input name="smart_layer_snap_to_print_high_quality" type="checkbox" data-bind="checked: smart_layer_snap_to_print_high_quality" />High Quality Mode
+                                    <input id="octolapse_trigger_smart_layer_snap_to_print_high_quality" name="octolapse_trigger_smart_layer_snap_to_print_high_quality"
+                                           data-bind="checked: smart_layer_snap_to_print_high_quality"
+                                           type="checkbox"
+                                    />High Quality Mode
                                     <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_snap_to_print_high_quality.md" data-help-title="High Quality Mode"/>
                                     <span class="help-inline">This setting can improve print when using snap-to-print, especially if your image capture time is high (DSLR).  However, this may result in a less stable timelapse.</span>
                                 </label>
@@ -138,7 +155,10 @@
                         <div class="control-group">
                             <div class="controls">
                                 <label class="checkbox">
-                                    <input name="smart_layer_snap_to_print_smooth" type="checkbox" data-bind="checked: smart_layer_snap_to_print_smooth" />Smooth Mode
+                                    <input id="octolapse_trigger_smart_layer_snap_to_print_smooth" name="octolapse_trigger_smart_layer_snap_to_print_smooth"
+                                           data-bind="checked: smart_layer_snap_to_print_smooth"
+                                           type="checkbox"
+                                    />Smooth Mode
                                     <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_snap_to_print_smooth.md" data-help-title="Snap To Fastest Feedrate"/>
                                     <span class="help-inline">When enabled, the first snapshot will be stabilized, and every snapshot thereafter will be taken at the closest point to the previous snapshot, usually resulting in a much smoother timelapse.</span>
                                 </label>
@@ -152,10 +172,13 @@
                 <div class="control-group">
                     <label class="control-label">Seconds to Trigger</label>
                     <div class="controls">
-                        <input id="trigger_profile_timer_trigger_seconds" name="timer_trigger_seconds" type="number" class="input-small ignore_hidden_errors"
-                               data-bind="value: timer_trigger_seconds" min="0" required="true" />
+                        <input id="octolapse_trigger_timer_trigger_seconds" name="octolapse_trigger_timer_trigger_seconds"
+                               class="input-small ignore_hidden_errors"
+                               data-bind="value: timer_trigger_seconds"
+                               type="number" min="0" required="true"
+                        />
                         <a class="octolapse_help" data-help-url="profiles.trigger.timer_trigger_seconds.md" data-help-title="Seconds to Trigger"/>
-                        <div class="error_label_container text-error" data-error-for="trigger_profile_timer_trigger_seconds"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_trigger_timer_trigger_seconds"></div>
                         <span class="help-inline">Pause time is not counted when determining when to trigger.</span>
                     </div>
                 </div>
@@ -174,7 +197,10 @@
                 <div class="control-group">
                     <div class="controls">
                         <label class="checkbox">
-                            <input type="checkbox" data-bind="checked: require_zhop" />Enabled
+                            <input
+                                    data-bind="checked: require_zhop"
+                                    type="checkbox"
+                            />Enabled
                             <a class="octolapse_help" data-help-url="profiles.trigger.require_zhop.md" data-help-title="Trigger on Z-Hop Only"/>
                         </label>
                     </div>
@@ -190,7 +216,10 @@
                 <div class="control-group">
                     <div class="controls">
                         <label class="checkbox">
-                            <input id="trigger_profile_extruder_state_requirements_enabled" name="extruder_state_requirements_enabled" type="checkbox" data-bind="checked: extruder_state_requirements_enabled" />Enabled
+                            <input id="octolapse_trigger_extruder_state_requirements_enabled" name="octolapse_trigger_extruder_state_requirements_enabled"
+                                   data-bind="checked: extruder_state_requirements_enabled"
+                                   type="checkbox"
+                            />Enabled
                             <a class="octolapse_help" data-help-url="profiles.trigger.extruder_state_requirements_enabled.md" data-help-title="Extruder Trigger Requirements"/>
                         </label>
                     </div>
@@ -199,111 +228,111 @@
                     <div class="control-group">
                         <label class="control-label">Extrusion Starting</label>
                         <div class="controls">
-                            <select id="trigger_profile_trigger_on_extruding_start" data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: trigger_on_extruding_start"></select>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_trigger_on_extruding_start"></div>
+                            <select id="octolapse_trigger_trigger_on_extruding_start" name="octolapse_trigger_trigger_on_extruding_start"
+                                    data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: trigger_on_extruding_start"></select>
+                            <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_on_extruding_start"></div>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label">During Extrusion</label>
                         <div class="controls">
-                            <select id="trigger_profile_trigger_on_extruding" data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: trigger_on_extruding"></select>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_trigger_on_extruding"></div>
+                            <select id="octolapse_trigger_trigger_on_extruding" name="octolapse_trigger_trigger_on_extruding"
+                                    data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: trigger_on_extruding"></select>
+                            <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_on_extruding"></div>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label">On Extruder Primed</label>
                         <div class="controls">
-                            <select id="trigger_profile_trigger_on_primed" data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: trigger_on_primed"></select>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_trigger_on_primed"></div>
+                            <select id="octolapse_trigger_trigger_on_primed" name="octolapse_trigger_trigger_on_primed"
+                                    data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: trigger_on_primed"></select>
+                            <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_on_primed"></div>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label">Start Retracting</label>
                         <div class="controls">
-                            <select id="trigger_profile_trigger_on_retracting_start" data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: trigger_on_retracting_start"></select>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_trigger_on_retracting_start"></div>
+                            <select id="octolapse_trigger_trigger_on_retracting_start" name="octolapse_trigger_trigger_on_retracting_start"
+                                    data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: trigger_on_retracting_start"></select>
+                            <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_on_retracting_start"></div>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label">Retracting</label>
                         <div class="controls">
-                            <select id="trigger_profile_trigger_on_retracting" data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: trigger_on_retracting"></select>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_trigger_on_retracting"></div>
+                            <select id="octolapse_trigger_trigger_on_retracting" name="octolapse_trigger_trigger_on_retracting"
+                                    data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: trigger_on_retracting"></select>
+                            <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_on_retracting"></div>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label">Partially Retracted</label>
                         <div class="controls">
-                            <select id="trigger_profile_trigger_on_partially_retracted" data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: trigger_on_partially_retracted"></select>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_trigger_on_partially_retracted"></div>
+                            <select id="octolapse_trigger_trigger_on_partially_retracted" name="octolapse_trigger_trigger_on_partially_retracted"
+                                    data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: trigger_on_partially_retracted"></select>
+                            <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_on_partially_retracted"></div>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label">Fully Retracted</label>
                         <div class="controls">
-                            <select id="trigger_profile_trigger_on_retracted" data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: trigger_on_retracted"></select>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_trigger_on_retracted"></div>
+                            <select id="octolapse_trigger_trigger_on_retracted" name="octolapse_trigger_trigger_on_retracted"
+                                    data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: trigger_on_retracted"></select>
+                            <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_on_retracted"></div>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label">Start Deretracting</label>
                         <div class="controls">
-                            <select id="trigger_profile_trigger_on_deretracting_start" data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: trigger_on_deretracting_start"></select>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_trigger_on_deretracting_start"></div>
+                            <select id="octolapse_trigger_trigger_on_deretracting_start" name="octolapse_trigger_trigger_on_deretracting_start"
+                                    data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: trigger_on_deretracting_start"></select>
+                            <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_on_deretracting_start"></div>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label">Deretracting</label>
                         <div class="controls">
-                            <select id="trigger_profile_trigger_on_deretracting" data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: trigger_on_deretracting"></select>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_trigger_on_deretracting"></div>
+                            <select id="octolapse_trigger_trigger_on_deretracting" name="octolapse_trigger_trigger_on_deretracting"
+                                    data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: trigger_on_deretracting"></select>
+                            <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_on_deretracting"></div>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label">On Deretracted</label>
                         <div class="controls">
-                            <select id="trigger_profile_trigger_on_deretracted" data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
-                                   optionsText: 'name',
-                                   optionsValue: 'value',
-
-                                   value: trigger_on_deretracted"></select>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_trigger_on_deretracted"></div>
+                            <select id="octolapse_trigger_trigger_on_deretracted" name="octolapse_trigger_trigger_on_deretracted"
+                                    data-bind="options: Octolapse.Triggers.profileOptions.snapshot_extruder_trigger_options,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: trigger_on_deretracted"></select>
+                            <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_on_deretracted"></div>
                         </div>
                     </div>
                 </div>
@@ -321,7 +350,9 @@
                         <label class="control-label">Enable Position Restrictions</label>
                         <div class="controls">
                             <label class="checkbox" title="Enable or disable position restrictions">
-                                <input type="checkbox" data-bind="checked: position_restrictions_enabled" /> Enabled
+                                <input data-bind="checked: position_restrictions_enabled"
+                                       type="checkbox"
+                                /> Enabled
                                 <a class="octolapse_help" data-help-url="profiles.trigger.position_restrictions_enabled.md" data-help-title="Enable Position Restrictions"/>
                             </label>
                         </div>
@@ -332,23 +363,25 @@
                     <div class="control-group">
                         <label class="control-label">Position Restriction Type</label>
                         <div class="controls">
-                            <select id="trigger_profile_new_position_restriction_type" data-bind="options: Octolapse.Triggers.profileOptions.position_restriction_types,
-                                       optionsText: 'name',
-                                       optionsValue: 'value',
-                                       value: new_position_restriction_type"></select>
+                            <select id="octolapse_trigger_new_position_restriction_type" name="octolapse_trigger_new_position_restriction_type"
+                                    data-bind="options: Octolapse.Triggers.profileOptions.position_restriction_types,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: new_position_restriction_type"></select>
                             <a class="octolapse_help" data-help-url="profiles.trigger.position_restriction_type.md" data-help-title="Position Restriction Type"/>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_new_position_restriction_type"></div>
+                            <div class="error_label_container text-error" data-error-for="octolapse_trigger_new_position_restriction_type"></div>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label">Position Restriction Shape</label>
                         <div class="controls">
-                            <select id="trigger_profile_new_position_restriction_shape" data-bind="options: Octolapse.Triggers.profileOptions.position_restriction_shapes,
-                                       optionsText: 'name',
-                                       optionsValue: 'value',
-                                       value: new_position_restriction_shape"></select>
+                            <select id="octolapse_trigger_new_position_restriction_shape" name="octolapse_trigger_new_position_restriction_shape"
+                                    data-bind="options: Octolapse.Triggers.profileOptions.position_restriction_shapes,
+                                               optionsText: 'name',
+                                               optionsValue: 'value',
+                                               value: new_position_restriction_shape"></select>
                             <a class="octolapse_help" data-help-url="profiles.trigger.position_restriction_shape.md" data-help-title="Position Restriction Shape"/>
-                            <div class="error_label_container text-error" data-error-for="trigger_profile_new_position_restriction_shape"></div>
+                            <div class="error_label_container text-error" data-error-for="octolapse_trigger_new_position_restriction_shape"></div>
                         </div>
                     </div>
                     <div class="control-group">
@@ -357,11 +390,10 @@
                                 <div class="span6">
                                     <div class="input-prepend input-append">
                                         <span class="add-on">X</span>
-                                        <input id="octolapse_trigger_new_position_restriction_x"
-                                               name="new_position_restriction_x" type="number"
+                                        <input id="octolapse_trigger_new_position_restriction_x" name="octolapse_trigger_new_position_restriction_x"
                                                class="input-small ignore_hidden_errors text-right"
-                                               data-bind="value: new_position_restriction_x" step="any"
-                                               required="true" />
+                                               data-bind="value: new_position_restriction_x"
+                                               type="number" step="any" required="true" />
                                         <span class="add-on">mm</span>
                                     </div>
                                     <div class="error_label_container text-error" data-error-for="octolapse_trigger_new_position_restriction_x"></div>
@@ -369,11 +401,10 @@
                                 <div class="span6">
                                     <div class="input-prepend input-append">
                                         <span class="add-on">Y</span>
-                                        <input id="octolapse_trigger_new_position_restriction_y"
-                                               name="new_position_restriction_y" type="number"
+                                        <input id="octolapse_trigger_new_position_restriction_y" name="octolapse_trigger_new_position_restriction_y"
                                                class="input-small ignore_hidden_errors text-right"
-                                               data-bind="value: new_position_restriction_y" step="any"
-                                               required="true" />
+                                               data-bind="value: new_position_restriction_y"
+                                               type="number" step="any" required="true" />
                                         <span class="add-on">mm</span>
                                     </div>
                                     <div class="error_label_container text-error" data-error-for="octolapse_trigger_new_position_restriction_y"></div>
@@ -387,11 +418,10 @@
                                 <div class="span6">
                                     <div class="input-prepend input-append">
                                         <span class="add-on">X2</span>
-                                        <input id="octolapse_trigger_new_position_restriction_x2"
-                                               name="new_position_restriction_x2" type="number"
+                                        <input id="octolapse_trigger_new_position_restriction_x2" name="octolapse_trigger_new_position_restriction_x2"
                                                class="input-small ignore_hidden_errors text-right"
-                                               data-bind="value: new_position_restriction_x2" step="any"
-                                               required="true" />
+                                               data-bind="value: new_position_restriction_x2"
+                                               type="number" step="any" required="true" />
                                         <span class="add-on">mm</span>
                                     </div>
                                     <div class="error_label_container text-error" data-error-for="octolapse_trigger_new_position_restriction_x2"></div>
@@ -399,11 +429,10 @@
                                 <div class="span6">
                                     <div class="input-prepend input-append">
                                         <span class="add-on">Y2</span>
-                                        <input id="octolapse_trigger_new_position_restriction_y2"
-                                               name="new_position_restriction_y2" type="number"
+                                        <input id="octolapse_trigger_new_position_restriction_y2" name="octolapse_trigger_new_position_restriction_y2"
                                                class="input-small ignore_hidden_errors text-right"
-                                               data-bind="value: new_position_restriction_y2" step="any"
-                                               required="true" />
+                                               data-bind="value: new_position_restriction_y2"
+                                               type="number" step="any" required="true" />
                                         <span class="add-on">mm</span>
                                     </div>
                                     <div class="error_label_container text-error" data-error-for="octolapse_trigger_new_position_restriction_y2"></div>
@@ -417,11 +446,10 @@
                                 <div class="span12">
                                     <div class="input-prepend input-append">
                                         <span class="add-on">Radius</span>
-                                        <input id="octolapse_trigger_new_position_restriction_r"
-                                               name="new_position_restriction_r" type="number"
+                                        <input id="octolapse_trigger_new_position_restriction_r" name="octolapse_trigger_new_position_restriction_r"
                                                class="input-small ignore_hidden_errors text-right"
-                                               data-bind="value: new_position_restriction_r" step="any" min="0"
-                                               required="true" />
+                                               data-bind="value: new_position_restriction_r"
+                                               type="number" step="any" min="0" required="true" />
                                         <span class="add-on">mm</span>
                                     </div>
                                     <div class="error_label_container text-error" data-error-for="octolapse_trigger_new_position_restriction_r"></div>
@@ -432,9 +460,10 @@
                     <div class="control-group">
                         <div class="controls">
                             <label class="checkbox">
-                                <input type="checkbox"
-                                       data-bind="checked: new_calculate_intersections"
-                                       title="Calculate intersections and trigger if an intersection is in position." />Calculate Intersections
+                                <input data-bind="checked: new_calculate_intersections"
+                                       title="Calculate intersections and trigger if an intersection is in position."
+                                       type="checkbox"
+                                />Calculate Intersections
                                 <a class="octolapse_help" data-help-url="profiles.trigger.calculate_intersections.md" data-help-title="Calculate Intersections"/>
                             </label>
                             <span class="help-inline">
@@ -447,8 +476,7 @@
                             <small>
                                 <a class="btn btn-default"
                                    data-bind="click: function(){$data.addPositionRestriction();}">
-                                    Add Position
-                                    Restriction
+                                    Add Position Restriction
                                 </a>
                             </small>
                         </div>

@@ -74,6 +74,7 @@ $(function () {
                 ko.observable(values.position_restrictions[index]));
         }
 
+
         // Temporary variables to hold new layer position restrictions
         self.new_position_restriction_type = ko.observable('required');
         self.new_position_restriction_shape = ko.observable('rect');
@@ -83,7 +84,8 @@ $(function () {
         self.new_position_restriction_y2 = ko.observable(1);
         self.new_position_restriction_r = ko.observable(1);
         self.new_calculate_intersections = ko.observable(false);
-
+        // Hold the parent dialog.
+        self.dialog = null;
         self.get_trigger_subtype_options = ko.pureComputed( function () {
                 if (self.trigger_type() !== 'real-time') {
                     var options = [];
@@ -121,6 +123,12 @@ $(function () {
 
         self.addPositionRestriction = function () {
             //console.log("Adding " + type + " position restriction.");
+            if (!self.dialog.IsValid())
+            {
+
+                return;
+            }
+
             var restriction = ko.observable({
                 "type": self.new_position_restriction_type(),
                 "shape": self.new_position_restriction_shape(),
@@ -183,10 +191,18 @@ $(function () {
         {
             // need to remove the parent link from the automatic configuration to prevent a cyclic copy
             var parent = self.automatic_configuration.parent;
+            var dialog = self.dialog;
+            self.dialog = null;
             self.automatic_configuration.parent = null;
             var copy = ko.toJS(self);
+            self.dialog = dialog;
             self.automatic_configuration.parent = parent;
             return copy;
+        };
+
+        self.on_opened = function(dialog)
+        {
+            self.dialog = dialog;
         };
         self.on_closed = function(){
             self.automatic_configuration.on_closed();
@@ -203,24 +219,18 @@ $(function () {
 
             rules: {
 
-            name: "required",
-            new_position_restriction_x: { lessThan: "#octolapse_trigger_new_position_restriction_x2:visible" },
-            new_position_restriction_x2: { greaterThan: "#octolapse_trigger_new_position_restriction_x:visible" },
-            new_position_restriction_y: { lessThan: "#octolapse_trigger_new_position_restriction_y2:visible" },
-            new_position_restriction_y2: { greaterThan: "#octolapse_trigger_new_position_restriction_y:visible" },
-            layer_trigger_enabled: {check_one: ".octolapse_trigger_enabled"},
-            gcode_trigger_enabled: {check_one: ".octolapse_trigger_enabled"},
-            timer_trigger_enabled: {check_one: ".octolapse_trigger_enabled"},
+            octolapse_trigger_name: "required",
+            octolapse_trigger_new_position_restriction_x: { lessThan: "#octolapse_trigger_new_position_restriction_x2:visible" },
+            octolapse_trigger_new_position_restriction_x2: { greaterThan: "#octolapse_trigger_new_position_restriction_x:visible" },
+            octolapse_trigger_new_position_restriction_y: { lessThan: "#octolapse_trigger_new_position_restriction_y2:visible" },
+            octolapse_trigger_new_position_restriction_y2: { greaterThan: "#octolapse_trigger_new_position_restriction_y:visible" },
         },
         messages: {
-            name: "Please enter a name for your profile",
-            new_position_restriction_x : { lessThan: "Must be less than the 'X2' field." },
-            new_position_restriction_x2: { greaterThan: "Must be greater than the 'X' field." },
-            new_position_restriction_y: { lessThan: "Must be less than the 'Y2." },
-            new_position_restriction_y2: { greaterThan: "Must be greater than the 'Y' field." },
-            layer_trigger_enabled: {check_one: "No triggers are enabled.  You must enable at least one trigger."},
-            gcode_trigger_enabled: {check_one: "No triggers are enabled.  You must enable at least one trigger."},
-            timer_trigger_enabled: {check_one: "No triggers are enabled.  You must enable at least one trigger."},
+            octolapse_trigger_name: "Please enter a name for your profile",
+            octolapse_trigger_new_position_restriction_x : { lessThan: "Must be less than the 'X2' field." },
+            octolapse_trigger_new_position_restriction_x2: { greaterThan: "Must be greater than the 'X' field." },
+            octolapse_trigger_new_position_restriction_y: { lessThan: "Must be less than the 'Y2." },
+            octolapse_trigger_new_position_restriction_y2: { greaterThan: "Must be greater than the 'Y' field." },
         }
     };
 });
