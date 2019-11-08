@@ -899,25 +899,25 @@ class TimelapseRenderJob(object):
                 )
 
                 # Open the image in Pillow and do preprocessing operations.
-                image = Image.open(file_path)
-                image = self.add_overlay(image,
-                                 text_template=self._rendering.overlay_text_template,
-                                 format_vars=format_vars,
-                                 font_path=self._rendering.overlay_font_path,
-                                 font_size=self._rendering.overlay_font_size,
-                                 overlay_location=self._rendering.overlay_text_pos,
-                                 overlay_text_alignment=self._rendering.overlay_text_alignment,
-                                 overlay_text_valign=self._rendering.overlay_text_valign,
-                                 overlay_text_halign=self._rendering.overlay_text_halign,
-                                 text_color=self._rendering.get_overlay_text_color(),
-                                 outline_color=self._rendering.get_overlay_outline_color(),
-                                 outline_width=self._rendering.overlay_outline_width)
-                # Save processed image.
-                output_path = os.path.join(
-                    preprocessed_directory, self.render_job_info.snapshot_filename_format % snapshot_number)
-                if not os.path.exists(os.path.dirname(output_path)):
-                    os.makedirs(os.path.dirname(output_path))
-                image.save(output_path)
+                with Image.open(file_path) as img:
+                    img = self.add_overlay(img,
+                                     text_template=self._rendering.overlay_text_template,
+                                     format_vars=format_vars,
+                                     font_path=self._rendering.overlay_font_path,
+                                     font_size=self._rendering.overlay_font_size,
+                                     overlay_location=self._rendering.overlay_text_pos,
+                                     overlay_text_alignment=self._rendering.overlay_text_alignment,
+                                     overlay_text_valign=self._rendering.overlay_text_valign,
+                                     overlay_text_halign=self._rendering.overlay_text_halign,
+                                     text_color=self._rendering.get_overlay_text_color(),
+                                     outline_color=self._rendering.get_overlay_outline_color(),
+                                     outline_width=self._rendering.overlay_outline_width)
+                    # Save processed image.
+                    output_path = os.path.join(
+                        preprocessed_directory, self.render_job_info.snapshot_filename_format % snapshot_number)
+                    if not os.path.exists(os.path.dirname(output_path)):
+                        os.makedirs(os.path.dirname(output_path))
+                    img.save(output_path)
             else:
                 file_path = os.path.join(
                     self.render_job_info.snapshot_directory,

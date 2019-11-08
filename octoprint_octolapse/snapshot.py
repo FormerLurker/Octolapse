@@ -21,19 +21,17 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from subprocess import CalledProcessError
-import os as os
 import shutil
 import six
 import os
 from csv import DictWriter
-from io import open as i_open
 from time import sleep
 import requests
 from PIL import ImageFile
 import sys
 # PIL is in fact in setup.py.
 from requests.auth import HTTPBasicAuth
-from threading import Thread, Timer, Event
+from threading import Thread, Event
 from tempfile import mkdtemp
 from uuid import uuid4
 from time import time
@@ -363,9 +361,9 @@ class ImagePostProcessing(object):
                     transpose_method = Image.TRANSPOSE
 
                 if transpose_method is not None:
-                    im = Image.open(snapshot_full_path)
-                    im = im.transpose(transpose_method)
-                    im.save(snapshot_full_path)
+                    with Image.open(snapshot_full_path) as img:
+                        img = img.transpose(transpose_method)
+                        img.save(snapshot_full_path)
         except IOError as e:
             raise SnapshotError(
                 'snapshot-transpose-error',
@@ -388,21 +386,16 @@ class ImagePostProcessing(object):
 
             # create a thumbnail of the image
             basewidth = 500
-            img = Image.open(latest_snapshot_path)
-            wpercent = (basewidth / float(img.size[0]))
-            hsize = int((float(img.size[1]) * float(wpercent)))
-            img.thumbnail([basewidth, hsize], Image.ANTIALIAS)
-            img.save(
-                utility.get_latest_snapshot_thumbnail_download_path(
-                    self.snapshot_job_info.DataDirectory, self.snapshot_job_info.camera.guid
-                ),
-                "JPEG"
-            )
-
-            #img = img.resize((basewidth, hsize), Image.ANTIALIAS)
-            #img.save(utility.get_latest_snapshot_thumbnail_download_path(
-            #    self.snapshot_job_info.DataDirectory, self.snapshot_job_info.camera.guid), "JPEG"
-            #)
+            with Image.open(latest_snapshot_path) as img:
+                wpercent = (basewidth / float(img.size[0]))
+                hsize = int((float(img.size[1]) * float(wpercent)))
+                img.thumbnail([basewidth, hsize], Image.ANTIALIAS)
+                img.save(
+                    utility.get_latest_snapshot_thumbnail_download_path(
+                        self.snapshot_job_info.DataDirectory, self.snapshot_job_info.camera.guid
+                    ),
+                    "JPEG"
+                )
         except Exception as e:
 
             # If we can't create the thumbnail, just log
