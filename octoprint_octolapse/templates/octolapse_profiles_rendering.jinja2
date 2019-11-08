@@ -31,16 +31,21 @@
         <div class="control-group">
             <label class="control-label">Name</label>
             <div class="controls">
-                <input id="rendering_profile_name" type="text" class="input-block-level" data-bind="value: name" required="true" />
-                <div class="error_label_container text-error" data-error-for="rendering_profile_name"></div>
+                <input id="octolapse_rendering_name" name="octolapse_rendering_name"
+                       class="input-block-level"
+                       data-bind="value: name"
+                       type="text" required="true" />
+                <div class="error_label_container text-error" data-error-for="octolapse_rendering_name"></div>
             </div>
         </div>
         <div class="control-group">
             <label class="control-label">Description</label>
             <div class="controls">
-                <textarea id="rendering_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description"
-                          maxlength="1024" />
-                <div class="error_label_container text-error" data-error-for="rendering_profile_description"></div>
+                <textarea id="octolapse_rendering_description" name="octolapse_rendering_description"
+                          class="input-block-level"
+                          data-bind="value: description"
+                          type="text" maxlength="1024" />
+                <div class="error_label_container text-error" data-error-for="octolapse_rendering_description"></div>
             </div>
         </div>
     </div>
@@ -54,8 +59,10 @@
             <label class="control-label"></label>
             <div class="controls">
                 <label class="checkbox">
-                    <input name="rendering_enabled" type="checkbox" data-bind="checked: enabled"
-                           title="Enable or disable timelapse generation" />Enabled
+                    <input id="octolapse_rendering_enabled" name="octolapse_rendering_enabled"
+                           data-bind="checked: enabled"
+                           title="Enable or disable timelapse generation"
+                           type="checkbox" />Enabled
                     <a class="octolapse_help" data-help-url="profiles.rendering.enabled.md" data-help-title="Timelapse Generation" />
                 </label>
                 <span class="help-inline">
@@ -72,13 +79,15 @@
                 <div class="control-group">
                     <label class="control-label">Output Format (Codec)</label>
                     <div class="controls">
-                        <select class="ignore_hidden_errors" id="rendering_profile_output_format" name="output_format" data-bind="options: Octolapse.Renderings.profileOptions.rendering_output_format_options,
-                                 optionsText: 'name',
-                                 optionsValue: 'value',
-                                 optionsCaption: 'Select One...',
-                                 value: output_format"></select>
+                        <select id="octolapse_rendering_output_format" name="octolapse_rendering_output_format"
+                                class="ignore_hidden_errors"
+                                data-bind="options: Octolapse.Renderings.profileOptions.rendering_output_format_options,
+                                           optionsText: 'name',
+                                           optionsValue: 'value',
+                                           optionsCaption: 'Select One...',
+                                           value: output_format"></select>
                         <a class="octolapse_help" data-help-url="profiles.rendering.output_format.md" data-help-title="Output Format (Codec)" />
-                        <div class="error_label_container text-error" data-error-for="rendering_profile_output_format"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_output_format"></div>
                         <span class="help-inline" data-bind="visible: !data.can_synchronize_format()">
                             <span class="label label-important">Attention</span>&nbsp;Your video may not appear within the Timelapse plugin when using the selected video format unless you are using Octoprint v1.3.11 or later.
                         </span>
@@ -98,46 +107,53 @@
                 <div class="control-group">
                     <label class="control-label">FPS Type</label>
                     <div class="controls">
-                        <select class="ignore_hidden_errors" id="rendering_profile_fps_calculation_type" name="fps_calculation_type" data-bind="options: Octolapse.Renderings.profileOptions.rendering_fps_calculation_options,
-                                optionsText: 'name',
-                                optionsValue: 'value',
-                                optionsCaption: 'Select One...',
-                                value: fps_calculation_type"></select>
+                        <select id="octolapse_rendering_fps_calculation_type" name="octolapse_rendering_fps_calculation_type"
+                                class="ignore_hidden_errors"
+                                data-bind="options: Octolapse.Renderings.profileOptions.rendering_fps_calculation_options,
+                                           optionsText: 'name',
+                                           optionsValue: 'value',
+                                           optionsCaption: 'Select One...',
+                                           value: fps_calculation_type"></select>
 
                         <a class="octolapse_help" data-help-url="profiles.rendering.fps_calculation_type.md" data-help-title="FPS Type" />
-                        <div class="error_label_container text-error" data-error-for="rendering_profile_fps_calculation_type"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_fps_calculation_type"></div>
                     </div>
                 </div>
                 <div class="control-group" data-bind="visible: fps_calculation_type() === 'static'">
                     <label class="control-label">Static FPS</label>
                     <div class="controls">
-                        <input id="rendering_profile_fps" name="fps" type="number" class="input-small ignore_hidden_errors" data-bind="value: fps"
-                               min="1" required="true" />
+                        <input id="octolapse_rendering_fps" name="octolapse_rendering_fps"
+                               class="input-small ignore_hidden_errors"
+                               data-bind="value: fps"
+                               type="number" min="1" required="true" />
                         <a class="octolapse_help" data-help-url="profiles.rendering.fps.md" data-help-title="Static FPS" />
-                        <div class="error_label_container text-error" data-error-for="rendering_profile_fps"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_fps"></div>
                     </div>
                 </div>
                 <div class="control-group" data-bind="visible: fps_calculation_type() === 'duration'">
                     <label class="control-label">Fixed Run Length</label>
                     <div class="controls">
                         <span class="input-append">
-                            <input id="octolapse_run_length_seconds" name="run_length_seconds" type="number" class="input-small ignore_hidden_errors"
-                                   data-bind="value: run_length_seconds" min="0.5" step="0.5" required="true" />
+                            <input id="octolapse_rendering_run_length_seconds" name="octolapse_rendering_run_length_seconds"
+                                   class="input-small ignore_hidden_errors"
+                                   data-bind="value: run_length_seconds"
+                                   type="number" min="0.5" step="0.5" required="true" />
                             <span class="add-on">seconds</span>
                         </span>
                         <a class="octolapse_help" data-help-url="profiles.rendering.run_length_seconds.md" data-help-title="Fixed Run Length" />
-                        <div class="error_label_container text-error" data-error-for="octolapse_run_length_seconds"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_run_length_seconds"></div>
 
                     </div>
                 </div>
                 <div class="control-group" data-bind="visible: fps_calculation_type() === 'duration'">
                     <label class="control-label">Minimum FPS</label>
                     <div class="controls">
-                        <input id="rendering_profile_min_fps" name="min_fps" type="number"
-                               class="ignore_hidden_errors input-small" data-bind="value: min_fps" min="0.5" step="0.5"
-                               required="true" />
+                        <input id="octolapse_rendering_min_fps" name="octolapse_rendering_min_fps"
+                               class="ignore_hidden_errors input-small"
+                               data-bind="value: min_fps"
+                               type="number" min="0.5" step="0.5" required="true" />
                         <a class="octolapse_help" data-help-url="profiles.rendering.min_fps.md" data-help-title="Minimum FPS" />
-                        <div class="error_label_container text-error" data-error-for="rendering_profile_min_fps"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_min_fps"></div>
                         <span class="help-inline">
                             When using <i>Fixed Length</i> rendering, the calculated FPS can be no less than this value.
                         </span>
@@ -146,11 +162,12 @@
                 <div class="control-group" data-bind="visible: fps_calculation_type() === 'duration'">
                     <label class="control-label">Maximum FPS</label>
                     <div class="controls">
-                        <input id="rendering_profile_max_fps" name="max_fps" type="number"
-                               class="input-small ignore_hidden_errors" data-bind="value: max_fps" min="0.5" step="0.5"
-                               required="true" />
+                        <input id="octolapse_rendering_max_fps" name="octolapse_rendering_max_fps"
+                               class="input-small ignore_hidden_errors"
+                               data-bind="value: max_fps"
+                                type="number" min="0.5" step="0.5" required="true" />
                         <a class="octolapse_help" data-help-url="profiles.rendering.max_fps.md" data-help-title="Maximum FPS" />
-                        <div class="error_label_container text-error" data-error-for="rendering_profile_max_fps"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_max_fps"></div>
                         <span class="help-inline">
                             When using <i>Fixed Length</i> rendering, the calculated FPS can be no greater than this value.
                         </span>
@@ -160,12 +177,14 @@
                     <label class="control-label">Pre-Roll</label>
                     <div class="controls">
                         <span class="input-append">
-                            <input id="rendering_profile_pre_roll_seconds" name="pre_roll_seconds" type="number" class="input-small ignore_hidden_errors"
-                                   data-bind="value: pre_roll_seconds" min="0" max="60" required="true" />
+                            <input id="octolapse_rendering_pre_roll_seconds" name="octolapse_rendering_pre_roll_seconds"
+                                   class="input-small ignore_hidden_errors"
+                                   data-bind="value: pre_roll_seconds"
+                                   type="number" min="0" max="60" required="true" />
                             <span class="add-on">seconds</span>
                         </span>
                         <a class="octolapse_help" data-help-url="profiles.rendering.pre_roll_seconds.md" data-help-title="Pre-Roll" />
-                        <div class="error_label_container text-error" data-error-for="rendering_profile_pre_roll_seconds"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_pre_roll_seconds"></div>
                         <span class="help-inline">Copies the first frame of the timelapse so that it shows for the number of seconds entered.</span>
                     </div>
                 </div>
@@ -173,32 +192,38 @@
                     <label class="control-label">Post-Roll</label>
                     <div class="controls">
                         <span class="input-append">
-                            <input id="rendering_profile_post_roll_seconds" name="post_roll_seconds" type="number" class="input-small ignore_hidden_errors"
-                                   data-bind="value: post_roll_seconds" min="0" max="60" required="true" />
+                            <input id="octolapse_rendering_post_roll_seconds" name="octolapse_rendering_post_roll_seconds"
+                                   class="input-small ignore_hidden_errors"
+                                   data-bind="value: post_roll_seconds"
+                                   type="number" min="0" max="60" required="true" />
                             <span class="add-on">seconds</span>
                         </span>
                         <a class="octolapse_help" data-help-url="profiles.rendering.post_roll_seconds.md" data-help-title="Post-Roll" />
-                        <div class="error_label_container text-error" data-error-for="rendering_profile_post_roll_seconds"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_post_roll_seconds"></div>
                         <span class="help-inline">Copies the last frame of the timelapse so that it shows for the number of seconds entered.</span>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Skip Snapshots At Beginning</label>
                     <div class="controls">
-                        <input name="snapshots_to_skip_beginning" type="number" class="input-small ignore_hidden_errors"
-                               data-bind="value: snapshots_to_skip_beginning" min="0" max="9999" required="true" />
+                        <input id="octolapse_rendering_snapshots_to_skip_beginning" name="octolapse_rendering_snapshots_to_skip_beginning"
+                               class="input-small ignore_hidden_errors"
+                               data-bind="value: snapshots_to_skip_beginning"
+                               type="number" min="0" max="9999" required="true" />
                         <a class="octolapse_help" data-help-url="profiles.rendering.snapshots_to_skip_beginning.md" data-help-title="Post-Roll" />
-                        <div class="error_label_container text-error" data-error-for="snapshots_to_skip_beginning"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_snapshots_to_skip_beginning"></div>
                         <span class="help-inline">Remove frames from the beginning of the timelapse</span>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label">Skip Snapshots At End</label>
                     <div class="controls">
-                        <input name="snapshot_to_skip_end" type="number" class="input-small ignore_hidden_errors"
-                               data-bind="value: snapshot_to_skip_end" min="0" max="9999" required="true" />
+                        <input name="octolapse_rendering_snapshot_to_skip_end" name="octolapse_rendering_snapshot_to_skip_end"
+                               class="input-small ignore_hidden_errors"
+                               data-bind="value: snapshot_to_skip_end"
+                               type="number" min="0" max="9999" required="true" />
                         <a class="octolapse_help" data-help-url="profiles.rendering.snapshot_to_skip_end.md" data-help-title="Post-Roll" />
-                        <div class="error_label_container text-error" data-error-for="snapshot_to_skip_end"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_snapshot_to_skip_end"></div>
                         <span class="help-inline">Remove frames from the end of the timelapse</span>
                     </div>
                 </div>
@@ -206,13 +231,15 @@
                     <label class="control-label">Bitrate</label>
                     <div class="controls">
                         <span class="input-append">
-                            <input id="rendering_profile_bitrate" name="bitrate" type="text" class="input-small ignore_hidden_errors" data-bind="value: bitrate"
-                                   required="true" />
+                            <input id="octolapse_rendering_bitrate" name="octolapse_rendering_bitrate"
+                                   class="input-small ignore_hidden_errors"
+                                   data-bind="value: bitrate"
+                                   type="text" required="true" />
                             <span class="add-on">kbps</span>
                             <span class="add-on">mbps</span>
                         </span>
                         <a class="octolapse_help" data-help-url="profiles.rendering.bitrate.md" data-help-title="Bitrate" />
-                        <div class="error_label_container text-error" data-error-for="rendering_profile_bitrate"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_bitrate"></div>
                         <span class="help-inline">Higher bitrates mean better quality but yield a larger file.  The bitrate can be in kBit/s or MBit/s.  Examples:  8000K, 64M</span>
                     </div>
                 </div>
@@ -223,8 +250,10 @@
                     <label class="control-label">Sync Output With Timelapse Tab</label>
                     <div class="controls">
                         <label class="checkbox">
-                            <input name="sync_with_timelapse" type="checkbox" data-bind="checked: sync_with_timelapse"
-                                   title="Automatically move the finished timelapse into the standard octoprint timelapse directory" />Enabled
+                            <input id="octolapse_rendering_sync_with_timelapse" name="octolapse_rendering_sync_with_timelapse"
+                                   data-bind="checked: sync_with_timelapse"
+                                   title="Automatically move the finished timelapse into the standard octoprint timelapse directory"
+                                   type="checkbox" />Enabled
                             <a class="octolapse_help" data-help-url="profiles.rendering.sync_with_timelapse.md" data-help-title="Sync Output With Timelapse Tab" />
                         </label>
                         <span class="help-inline">
@@ -236,8 +265,10 @@
                     <label class="control-label">Clean Snapshots After Rendering</label>
                     <div class="controls">
                         <label class="checkbox" title="Clean temporary snapshots after a timelapse is rendered">
-                            <input type="checkbox" data-bind="checked: cleanup_after_render_complete"
-                                   title="After timelapse is rendered" />Enabled
+                            <input id="octolapse_rendering_cleanup_after_render_complete" name="octolapse_rendering_cleanup_after_render_complete"
+                                   data-bind="checked: cleanup_after_render_complete"
+                                   title="After timelapse is rendered"
+                                   type="checkbox" />Enabled
                             <a class="octolapse_help" data-help-url="profiles.rendering.cleanup_after_render_complete.md" data-help-title="Clean Snapshots After Rendering" />
                         </label>
                         <span class="help-inline">
@@ -249,8 +280,10 @@
                     <label class="control-label">Clean Snapshots After Rendering Failure</label>
                     <div class="controls">
                         <label class="checkbox">
-                            <input type="checkbox" data-bind="checked: cleanup_after_render_fail"
-                                   title="After timelapse fails" />Enabled
+                            <input id="octolapse_rendering_cleanup_after_render_fail" name="octolapse_rendering_cleanup_after_render_fail"
+                                   data-bind="checked: cleanup_after_render_fail"
+                                   title="After timelapse fails"
+                                   type="checkbox" />Enabled
                             <a class="octolapse_help" data-help-url="profiles.rendering.cleanup_after_render_fail.md" data-help-title="Clean Snapshots After Rendering Failure" />
                         </label>
                         <span class="help-inline">
@@ -263,13 +296,16 @@
                     <div class="controls">
                         <div class="row-fluid">
                             <div class="span11">
-                                <input id="octolapse_output_template" name="output_template" type="text" class="input-block-level ignore_hidden_errors" data-bind="value: output_template" required="true" />
+                                <input id="octolapse_rendering_output_template" name="octolapse_rendering_output_template"
+                                       class="input-block-level ignore_hidden_errors"
+                                       data-bind="value: output_template"
+                                       type="text" required="true" />
                             </div>
                             <div class="span1">
                                 <a class="octolapse_help" data-help-url="profiles.rendering.output_template.md" data-help-title="Rendering Filename Template" />
                             </div>
                         </div>
-                        <div class="error_label_container text-error" data-error-for="octolapse_output_template"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_output_template"></div>
                         <span class="help-inline">
                             Determines the rendering file name.  You can use the following replacement tokens:
                             <i>
@@ -283,11 +319,12 @@
                 <div class="control-group">
                     <label class="control-label">Rendering Thread Count</label>
                     <div class="controls">
-                        <input id="rendering_profile_thread_count" name="thread_count" type="number"
-                               class="ignore_hidden_errors input-small" data-bind="value: thread_count" min="1" step="1"
-                               required="true" />
+                        <input id="octolapse_rendering_thread_count" name="octolapse_rendering_thread_count"
+                               class="ignore_hidden_errors input-small"
+                               data-bind="value: thread_count"
+                               type="number"  min="1" step="1" required="true" />
                         <a class="octolapse_help" data-help-url="profiles.rendering.thread_count.md" data-help-title="Rendering Thread Count" />
-                        <div class="error_label_container text-error" data-error-for="rendering_profile_thread_count"></div>
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_thread_count"></div>
                         <span class="help-inline">
                             Increasing the amount of threads will improve rendering performance as long as your processor has idle cores.  It may HURT performance if you do not.
                         </span>
@@ -307,8 +344,10 @@
                 <label class="control-label">Embed watermark</label>
                 <div class="controls">
                     <label class="checkbox">
-                        <input name="watermark" type="checkbox" data-bind="checked: enable_watermark"
-                               title="Embed a watermark in the resulting timelapse" />Enabled
+                        <input id="octolapse_rendering_watermark" name="octolapse_rendering_watermark"
+                               data-bind="checked: enable_watermark"
+                               title="Embed a watermark in the resulting timelapse"
+                               type="checkbox"/>Enabled
                         <a class="octolapse_help" data-help-url="profiles.rendering.enable_watermark.md" data-help-title="Embed watermark" />
                     </label>
                 </div>
@@ -357,9 +396,9 @@
                             <div class="input-group" style="display:flex; align-items:center">
                                 <span class="btn fileinput-button">
                                     <span>Upload new...</span>
-                                    <input id="octolapse_watermark_path_upload" type="file" name="image" accept="image/*" data-url="{{ url_for('plugin.octolapse.upload_watermark') }}">
+                                    <input id="octolapse_rendering_watermark_path_upload" type="file" name="image" accept="image/*" data-url="{{ url_for('plugin.octolapse.upload_watermark') }}">
                                 </span>
-                                <span id="octolapse-upload-watermark-progress" class="progress-bar-container">
+                                <span id="octolapse_rendering_upload_watermark_progress" class="progress-bar-container">
                                     <span class="progress-bar" style="width: 0%;"></span>
                                 </span>
 
@@ -385,9 +424,11 @@
                     <div class="control-group">
                         <label class="control-label">Text:</label>
                         <div class="controls">
-                            <textarea id="octolapse_overlay_text_template" class="input-xxl ignore_hidden_errors" name="overlay_text_template" data-bind="value: overlay_text_template" />
+                            <textarea id="octolapse_rendering_overlay_text_template" name="octolapse_rendering_overlay_text_template"
+                                      class="input-xxl ignore_hidden_errors"
+                                      data-bind="value: overlay_text_template" />
                             <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_template.md" data-help-title="Overlay Text Template" />
-                            <div class="error_label_container text-error" data-error-for="octolapse_overlay_text_template"></div>
+                            <div class="error_label_container text-error" data-error-for="octolapse_rendering_overlay_text_template"></div>
                             <p class="help-inline">
                                 Determines the overlay text. Leave blank to disable the overlay text. You can use the following replacement tokens:
                                 <i>
@@ -402,48 +443,56 @@
                         <label class="control-label">Size:</label>
                         <div class="controls">
                             <span class="input-append" style="display:inline-block">
-                                <input id="rendering_profile_overlay_font_size" name="octolapse_overlay_font_size" type="number" class="input-small ignore_hidden_errors" data-bind="value: overlay_font_size" required="true" min="1" max="255" />
+                                <input id="octolapse_rendering_overlay_font_size" name="octolapse_rendering_overlay_font_size"
+                                       class="input-small ignore_hidden_errors"
+                                       data-bind="value: overlay_font_size"
+                                       type="number" required="true" min="1" max="255" />
                                 <span class="add-on">pt</span>
                             </span>
                             <a class="octolapse_help" data-help-url="profiles.rendering.overlay_font_size.md" data-help-title="Overlay Font Size"></a>
-                            <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_font_size"></div>
+                            <div class="error_label_container text-error" data-error-for="octolapse_rendering_overlay_font_size"></div>
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="rendering_profile_overlay_text_valign" class="control-label">Vertical alignment:</label>
+                        <label for="octolapse_rendering_overlay_text_valign" class="control-label">Vertical alignment:</label>
                         <div class="controls">
-                            <select id="rendering_profile_overlay_text_valign" name="overlay_text_valign" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_valign_options,
-                                        optionsCaption: 'Select One...',
-                                        value: overlay_text_valign"></select>
+                            <select id="octolapse_rendering_overlay_text_valign" name="octolapse_rendering_overlay_text_valign"
+                                    data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_valign_options,
+                                               optionsCaption: 'Select One...',
+                                               value: overlay_text_valign"></select>
                             <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_valign.md" data-help-title="Overlay Vertical Alignment" />
-                            <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_valign"></div>
+                            <div class="error_label_container text-error" data-error-for="octolapse_rendering_overlay_text_valign"></div>
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="rendering_profile_overlay_text_halign" class="control-label">Horizontal alignment:</label>
+                        <label for="octolapse_rendering_overlay_text_halign" class="control-label">Horizontal alignment:</label>
                         <div class="controls">
-                            <select id="rendering_profile_overlay_text_halign" name="overlay_text_halign" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_halign_options,
-                                        optionsCaption: 'Select One...',
-                                        value: overlay_text_halign"></select>
+                            <select id="octolapse_rendering_overlay_text_halign" name="octolapse_rendering_overlay_text_halign"
+                                    data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_halign_options,
+                                               optionsCaption: 'Select One...',
+                                               value: overlay_text_halign"></select>
                             <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_halign.md" data-help-title="Overlay Text Horizontal Alignment" />
-                            <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_halign"></div>
+                            <div class="error_label_container text-error" data-error-for="octolapse_rendering_overlay_text_halign"></div>
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="rendering_profile_overlay_text_alignment" class="control-label">Text Alignment:</label>
+                        <label for="octolapse_rendering_overlay_text_alignment" class="control-label">Text Alignment:</label>
                         <div class="controls">
-                            <select id="rendering_profile_overlay_text_alignment" name="overlay_text_alignment" data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_alignment_options,
-                                        optionsCaption: 'Select One...',
-                                        value: overlay_text_alignment"></select>
+                            <select id="octolapse_rendering_overlay_text_alignment" name="octolapse_rendering_overlay_text_alignment"
+                                    data-bind="options: Octolapse.Renderings.profileOptions.overlay_text_alignment_options,
+                                               optionsCaption: 'Select One...',
+                                               value: overlay_text_alignment"></select>
                             <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_alignment.md" data-help-title="Overlay Text Alignment" />
-                            <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_alignment"></div>
+                            <div class="error_label_container text-error" data-error-for="octolapse_rendering_overlay_text_alignment"></div>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label">Position offset:</label>
                         <div class="controls">
                             <span class="input-append">
-                                <input type="number" class="input-small" data-bind="value: overlay_text_pos_x" required="true" />
+                                <input class="input-small"
+                                       data-bind="value: overlay_text_pos_x"
+                                       required="true" type="number"/>
                                 <span class="add-on">x</span>
                             </span>
                             <span class="input-append">
@@ -452,37 +501,47 @@
                             </span>
                             <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_pos_xy.md" data-help-title="Overlay Text Position Offset" />
                             <div class="input-append" style="display:inline-block">
-                                <input type="hidden" id="rendering_profile_overlay_text_pos" name="octolapse_overlay_text_pos" data-bind="value: overlay_text_pos()" />
+                                <input id="octolapse_rendering_overlay_text_pos" name="octolapse_rendering_overlay_text_pos"
+                                       data-bind="value: overlay_text_pos()"
+                                       type="hidden" />
                             </div>
-                            <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_text_pos"></div>
-
+                            <div class="error_label_container text-error" data-error-for="octolapse_rendering_overlay_text_pos"></div>
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="rendering_profile_overlay_color" class="control-label">Text Color:</label>
+                        <label for="octolapse_rendering_overlay_color" class="control-label">Text Color:</label>
                         <div class="controls">
-                            <input type="text" id="rendering_profile_overlay_color" class="form-control demo" data-format="rgb" data-bind="value: overlay_text_color_as_css" required="true">
+                            <input id="octolapse_rendering_overlay_color" name="octolapse_rendering_overlay_color"
+                                   class="form-control demo"
+                                   data-bind="value: overlay_text_color_as_css"
+                                   type="text" data-format="rgb" required="true">
                             <a class="octolapse_help" data-help-url="profiles.rendering.overlay_text_color.md" data-help-title="Overlay Text Color" />
-                            <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_color"></div>
+                            <div class="error_label_container text-error" data-error-for="octolapse_rendering_overlay_color"></div>
                         </div>
                     </div>
                     <div class="control-group">
-                        <label for="rendering_profile_outline_color" class="control-label">Outline Color:</label>
+                        <label for="octolapse_rendering_outline_color" class="control-label">Outline Color:</label>
                         <div class="controls">
-                            <input type="text" id="rendering_profile_outline_color" class="form-control demo" data-format="rgb" data-bind="value: overlay_outline_color_as_css" required="true">
+                            <input id="octolapse_rendering_outline_color" name="octolapse_rendering_outline_color"
+                                   class="form-control demo"
+                                   data-bind="value: overlay_outline_color_as_css"
+                                   type="text" data-format="rgb" required="true">
                             <a class="octolapse_help" data-help-url="profiles.rendering.overlay_outline_color.md" data-help-title="Overlay Outline Color" />
-                            <div class="error_label_container text-error" data-error-for="rendering_profile_outline_color"></div>
+                            <div class="error_label_container text-error" data-error-for="octolapse_rendering_outline_color"></div>
                         </div>
                     </div>
                     <div class="control-group">
                         <label class="control-label">Outline Width:</label>
                         <div class="controls">
                             <span class="input-append" style="display:inline-block">
-                                <input id="rendering_profile_overlay_outline_width" name="octolapse_overlay_outline_width" type="number" class="input-small ignore_hidden_errors" data-bind="value: overlay_outline_width" required="true" min="0" max="5" />
+                                <input id="octolapse_rendering_overlay_outline_width" name="octolapse_rendering_overlay_outline_width"
+                                       class="input-small ignore_hidden_errors"
+                                       data-bind="value: overlay_outline_width"
+                                       type="number" required="true" min="0" max="1024" step="1"/>
                                 <span class="add-on">pixels</span>
                             </span>
                             <a class="octolapse_help" data-help-url="profiles.rendering.overlay_outline_width.md" data-help-title="Overlay Outline Width"></a>
-                            <div class="error_label_container text-error" data-error-for="rendering_profile_overlay_outline_width"></div>
+                            <div class="error_label_container text-error" data-error-for="octolapse_rendering_overlay_outline_width"></div>
                         </div>
                     </div>
                     <div class="control-group">
@@ -515,7 +574,7 @@
                             </div>
                             <div class="span2">
                                 <div class="text-right">
-                                    <a class="octolapse_help" data-help-url="profiles.rendering.overlay_preview.md" data-help-title="Overlay Preview??" />
+                                    <a class="octolapse_help" data-help-url="profiles.rendering.overlay_preview.md" data-help-title="Overlay Preview" />
                                 </div>
                             </div>
                         </div>

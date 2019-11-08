@@ -1082,7 +1082,7 @@ class OctolapsePlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/validateRenderingTemplate", methods=["POST"])
     def validate_rendering_template(self):
-        template = flask.request.form['output_template']
+        template = flask.request.form['octolapse_rendering_output_template']
         result = render.is_rendering_template_valid(
             template,
             self._octolapse_settings.profiles.options.rendering["rendering_file_templates"]
@@ -1095,7 +1095,7 @@ class OctolapsePlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/validateOverlayTextTemplate", methods=["POST"])
     def validate_overlay_text_template(self):
-        template = flask.request.form['overlay_text_template']
+        template = flask.request.form['octolapse_rendering_overlay_text_template']
         result = render.is_overlay_text_template_valid(
             template,
             self._octolapse_settings.profiles.options.rendering["overlay_text_templates"]

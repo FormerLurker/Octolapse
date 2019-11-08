@@ -96,7 +96,7 @@ $(function() {
                     return;
                 }
                 try {
-                    positions = JSON.parse(value)
+                    var positions = JSON.parse(value);
                     self.overlay_text_pos_x(positions[0]);
                     self.overlay_text_pos_y(positions[1]);
                 }
@@ -182,8 +182,8 @@ $(function() {
 
         // This function is called when the Edit Profile dialog shows.
         self.onShow = function(parent) {
-             $('#rendering_profile_overlay_color').minicolors({format: 'rgb', opacity: true});
-             $('#rendering_profile_outline_color').minicolors({format: 'rgb', opacity: true});
+             $('#octolapse_rendering_overlay_color').minicolors({format: 'rgb', opacity: true});
+             $('#octolapse_rendering_outline_color').minicolors({format: 'rgb', opacity: true});
              self.updateWatermarkList();
              self.updateFontList();
              self.initWatermarkUploadButton();
@@ -224,7 +224,7 @@ $(function() {
              return OctoPrint.get(OctoPrint.getBlueprintUrl('octolapse') +
                 'rendering/watermark')
                     .then(function(response) {
-                        self.watermark_list.removeAll()
+                        self.watermark_list.removeAll();
                         // The let format is not working in some versions of safari
                         for (var index = 0; index < response['filepaths'].length;index++) {
                             self.watermark_list.push(new WatermarkImage(response['filepaths'][index]));
@@ -238,8 +238,8 @@ $(function() {
 
         self.initWatermarkUploadButton = function() {
              // Set up the file upload button.
-             var $watermarkUploadElement = $('#octolapse_watermark_path_upload');
-             var $progressBarContainer = $('#octolapse-upload-watermark-progress');
+             var $watermarkUploadElement = $('#octolapse_rendering_watermark_path_upload');
+             var $progressBarContainer = $('#octolapse_rendering_upload_watermark_progress');
              var $progressBar = $progressBarContainer.find('.progress-bar');
 
              $watermarkUploadElement.fileupload({
@@ -394,37 +394,37 @@ $(function() {
     };
     Octolapse.RenderingProfileValidationRules = {
         rules: {
-            bitrate: { required: true, ffmpegBitRate: true },
-            output_format : {required: true},
-            fps_calculation_type: {required: true},
-            min_fps: { lessThanOrEqual: '#rendering_profile_max_fps' },
-            max_fps: { greaterThanOrEqual: '#rendering_profile_min_fps' },
-            overlay_text_valign: {required: true},
-            overlay_text_halign: {required: true},
-            overlay_text_alignment: {required: true},
-            output_template: {
+            octolapse_rendering_bitrate: { required: true, ffmpegBitRate: true },
+            octolapse_rendering_output_format : {required: true},
+            octolapse_rendering_fps_calculation_type: {required: true},
+            octolapse_rendering_min_fps: { lessThanOrEqual: '#octolapse_rendering_max_fps' },
+            octolapse_rendering_max_fps: { greaterThanOrEqual: '#octolapse_rendering_min_fps' },
+            octolapse_rendering_overlay_text_valign: {required: true},
+            octolapse_rendering_overlay_text_halign: {required: true},
+            octolapse_rendering_overlay_text_alignment: {required: true},
+            octolapse_rendering_output_template: {
                 remote: {
                     url: "./plugin/octolapse/validateRenderingTemplate",
                     type:"post"
                 }
             },
-            overlay_text_template: {
+            octolapse_rendering_overlay_text_template: {
                 remote: {
                     url: "./plugin/octolapse/validateOverlayTextTemplate",
                     type:"post"
                 }
 
             },
-            octolapse_overlay_font_size: { required: true, integerPositive: true },
-            octolapse_overlay_text_pos: { required: true },
+            octolapse_rendering_overlay_font_size: { required: true, integerPositive: true },
+            octolapse_rendering_overlay_text_pos: { required: true },
         },
         messages: {
-            name: "Please enter a name for your profile",
-            min_fps: { lessThanOrEqual: 'Must be less than or equal to the maximum fps.' },
-            max_fps: { greaterThanOrEqual: 'Must be greater than or equal to the minimum fps.' },
-            output_template: { octolapseRenderingTemplate: 'Either there is an invalid token in the rendering template, or the resulting file name is not valid.' },
-            overlay_text_template: { octolapseOverlayTextTemplate: 'Either there is an invalid token in the overlay text template, or the resulting file name is not valid.' },
-            octolapse_overlay_text_pos: { required: 'Position offsets must be valid integers.' },
+            octolapse_rendering_name: "Please enter a name for your profile",
+            octolapse_rendering_min_fps: { lessThanOrEqual: 'Must be less than or equal to the maximum fps.' },
+            octolapse_rendering_max_fps: { greaterThanOrEqual: 'Must be greater than or equal to the minimum fps.' },
+            octolapse_rendering_output_template: { octolapseRenderingTemplate: 'Either there is an invalid token in the rendering template, or the resulting file name is not valid.' },
+            octolapse_rendering_overlay_text_template: { octolapseOverlayTextTemplate: 'Either there is an invalid token in the overlay text template, or the resulting file name is not valid.' },
+            octolapse_rendering_overlay_text_pos: { required: 'Position offsets must be valid integers.' },
         }
     };
 });
