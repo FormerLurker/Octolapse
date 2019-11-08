@@ -1016,28 +1016,17 @@ class TimelapseRenderJob(object):
             raise RenderError('overlay-text-halign',
                               "An invalid overlay text halign ({0}) was specified.".format(overlay_text_halign))
 
-        # Draw overlay text outline
-        # create outline text
-        for adj in range(outline_width):
-            # move right
-            d.multiline_text(xy=(x - adj, y), text=text, font=font, fill=outline_color_tuple)
-            # move left
-            d.multiline_text(xy=(x + adj, y), text=text, font=font, fill=outline_color_tuple)
-            # move up
-            d.multiline_text(xy=(x, y + adj), text=text, font=font, fill=outline_color_tuple)
-            # move down
-            d.multiline_text(xy=(x, y - adj), text=text, font=font, fill=outline_color_tuple)
-            # diagnal left up
-            d.multiline_text(xy=(x - adj, y + adj), text=text, font=font, fill=outline_color_tuple)
-            # diagnal right up
-            d.multiline_text(xy=(x + adj, y + adj), text=text, font=font, fill=outline_color_tuple)
-            # diagnal left down
-            d.multiline_text(xy=(x - adj, y - adj), text=text, font=font, fill=outline_color_tuple)
-            # diagnal right down
-            d.multiline_text(xy=(x + adj, y - adj), text=text, font=font, fill=outline_color_tuple)
-
         # Draw overlay text.
-        d.multiline_text(xy=(x, y), text=text, fill=text_color_tuple, font=font, align=overlay_text_alignment)
+        d.multiline_text(
+            xy=(x, y),
+            text=text,
+            fill=text_color_tuple,
+            font=font,
+            align=overlay_text_alignment,
+            stroke_width=outline_width,
+            stroke_fill=outline_color_tuple
+
+        )
 
 
         return Image.alpha_composite(image.convert('RGBA'), text_image).convert('RGB')
