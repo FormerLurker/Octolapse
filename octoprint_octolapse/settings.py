@@ -128,10 +128,11 @@ class Settings(object):
         elif isinstance(destination, bool):
             return bool(value)
         elif isinstance(destination, int):
+            floatValue = float(value)
             # sometimes the destination can be an int, but the value is a float
-            if int(value) == float(value):
-                return int(value)
-            return float(value)
+            if int(floatValue) == floatValue:
+                return int(floatValue)
+            return floatValue
         else:
             # default action, just return the value
             return value
