@@ -1609,7 +1609,18 @@ $(function () {
                     }
                     break;
                 case "external_profiles_list_changed":
-                    Octolapse.Printers.profileOptions.server_profiles = data.server_profiles;
+                    Octolapse.Settings.UpdateAvailableServerProfiles(data.server_profiles);
+                    var options = {
+                        title: 'New Server Profiles Available',
+                        text: "New profiles were found in the octolapse profile repository.  These can be imported when adding/editing a profile.",
+                        type: 'notice',
+                        hide: true,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopupForKey(options, "new-profiles-available", "new-profiles-available");
                     break;
                 case "settings-changed":
                     {

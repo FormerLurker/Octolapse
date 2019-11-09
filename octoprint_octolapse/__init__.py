@@ -1277,7 +1277,6 @@ class OctolapsePlugin(
                                  'attachment', filename=download_filename)
             response.headers.set('Content-Type', 'application/octet-stream')
             return response
-
         return json.dumps({'success': False}), 404, {'ContentType': 'application/json'}
 
     def apply_camera_settings(self, camera_profiles):
@@ -1545,8 +1544,8 @@ class OctolapsePlugin(
             if self._update_available_server_profiles():
                 # notify the clients of the makes and models changes
                 data = {
-                    'type': 'server_profiles_updated',
-                    'external_profiles_list_changed': self.available_profiles
+                    'type': 'external_profiles_list_changed',
+                    'server_profiles': self.available_profiles
                 }
                 self._plugin_manager.send_plugin_message(self._identifier, data)
             if not self.available_profiles:

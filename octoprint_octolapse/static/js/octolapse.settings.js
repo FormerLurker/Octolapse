@@ -405,7 +405,7 @@ $(function () {
                     }
                     else
                     {
-                        message = "No new updates found.  Your Octolapse profiles are up-to-date."
+                        message = "Your Octolapse profiles are all up-to-date."
                     }
                     var options = {
                         title: 'Octolapse Updates',
@@ -437,6 +437,17 @@ $(function () {
                 }
             });
         };
+
+        Octolapse.Settings.UpdateAvailableServerProfiles = function(server_profiles)
+        {
+            Octolapse.Printers.profileOptions.server_profiles = server_profiles["printer"];
+            Octolapse.Stabilizations.profileOptions.server_profiles = server_profiles["stabilization"];
+            Octolapse.Triggers.profileOptions.server_profiles = server_profiles["trigger"];
+            Octolapse.Renderings.profileOptions.server_profiles = server_profiles["rendering"];
+            Octolapse.Cameras.profileOptions.server_profiles = server_profiles["camera"];
+            Octolapse.DebugProfiles.profileOptions.server_profiles = server_profiles["debug"];
+        };
+
 
         self.suppressServerUpdates = function() {
             var data = {
