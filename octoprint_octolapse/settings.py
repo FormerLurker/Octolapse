@@ -668,6 +668,11 @@ class PrinterProfile(AutomaticConfigurationProfile):
         gcode_generation_settings = self.get_current_state_detection_settings()
         num_extruders = gcode_generation_settings.get_num_extruders()
 
+        default_extruder = self.default_extruder
+        if num_extruders < default_extruder:
+            # we must have used automatic gcode settings extraction.
+            default_extruder = num_extruders
+
         extruder_offsets = []
         if not self.shared_extruder and self.num_extruders > 1:
             extruder_offsets = [x.to_dict() for x in self.extruder_offsets]
@@ -683,7 +688,7 @@ class PrinterProfile(AutomaticConfigurationProfile):
             "minimum_layer_height": self.minimum_layer_height,
             "num_extruders": num_extruders,
             "shared_extruder": self.shared_extruder,
-            "default_extruder_index": self.default_extruder - 1,  # The default extruder is 1 based!
+            "default_extruder_index": default_extruder - 1,  # The default extruder is 1 based!
             "extruder_offsets": extruder_offsets,
             "home_position": {
                 "home_x": None if self.home_x is None else float(self.home_x),
