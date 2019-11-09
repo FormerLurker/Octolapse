@@ -717,7 +717,7 @@
           "version": "1.0"
         },
         "timeout_ms": 5000,
-        "apply_settings_at_startup": false,
+        "apply_settings_at_startup": true,
         "on_after_render_script": "",
         "name": "Webcam - Default OctoPi 0.16.0",
         "on_before_snapshot_script": "",
@@ -747,7 +747,7 @@
         },
         "on_after_snapshot_script": "",
         "on_print_start_script": "",
-        "apply_settings_before_print": false,
+        "apply_settings_before_print": true,
         "guid": "354def78-9eea-409a-ad23-ee966dfff4ba",
         "description": "This profile should work for the default settings within OctoPi V0.16.0 for most locally attached USB or Raspberry Pi cameras."
       }
@@ -1261,7 +1261,7 @@
           "version": null
         },
         "timeout_ms": 5000,
-        "apply_settings_at_startup": false,
+        "apply_settings_at_startup": true,
         "on_after_render_script": "",
         "name": "Default Camera Profile",
         "on_before_snapshot_script": "",
@@ -1291,7 +1291,7 @@
         },
         "on_after_snapshot_script": "",
         "on_print_start_script": "",
-        "apply_settings_before_print": false,
+        "apply_settings_before_print": true,
         "guid": "9c9e89a0-c969-4772-9dfe-20c9957a134b",
         "description": ""
       },

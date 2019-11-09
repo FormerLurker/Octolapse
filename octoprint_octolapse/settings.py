@@ -1423,8 +1423,8 @@ class CameraProfile(AutomaticConfigurationProfile):
         self.snapshot_transpose = ""
         self.webcam_settings = WebcamSettings()
         self.enable_custom_image_preferences = False
-        self.apply_settings_before_print = False
-        self.apply_settings_at_startup = False
+        self.apply_settings_before_print = True
+        self.apply_settings_at_startup = True
 
     def format_snapshot_request_template(self):
         return self.snapshot_request_template.format(camera_address=self.address)
