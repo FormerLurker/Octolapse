@@ -243,7 +243,7 @@ class StabilizationPreprocessingThread(Thread):
                 smart_layer_args
             ))
             # add the success indicator
-            ret_val.insert(0,True)
+            ret_val.insert(0, True)
             # add the 'other' errors (errors not related to the C++ call)
             ret_val.append([])
             # set the results as the ret_val in tuple form
