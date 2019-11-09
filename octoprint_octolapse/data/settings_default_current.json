@@ -1397,7 +1397,7 @@
         "automatic_configuration": {
           "key_values": [
             {
-              "name": "Test Mode - Log Errors",
+              "name": "Prevent Extrusion - Test Mode",
               "value": "test_log_errors"
             }
           ],
@@ -1405,7 +1405,7 @@
           "suppress_update_notification_version": false,
           "version": "1.0"
         },
-        "name": "Test Mode",
+        "name": "Prevent Extrusion",
         "log_to_console": false,
         "is_test_mode": true,
         "enabled": false,
@@ -1413,21 +1413,21 @@
         "log_all_errors": true,
         "guid": "3811da8f-182d-44bf-8fcb-95614e4daf1b",
         "default_log_level": 10,
-        "description": "This test mode profile is useful for testing Octolapse without waiting for warm-up or wasting filament.  Test mode will prevent extrusion, bed and extruder heating, fan controls, and a few other commands.  Only errors are logged.  This profile is recommended for your first Octolapse, or for performing a pre-flight check for a new model."
+        "description": "This test mode profile (all extrusion is prevented) is useful for testing Octolapse without waiting for warm-up or wasting filament.  Test mode will prevent extrusion, bed and extruder heating, fan controls, and a few other commands.  Only errors are logged.  This profile is recommended for your first Octolapse, or for performing a pre-flight check for a new model."
       },
       "68d000d6-0ae3-40f4-9b16-bdcb882604a6": {
         "automatic_configuration": {
           "key_values": [
             {
-              "name": "Live Print - Debug Issues",
+              "name": "Debug",
               "value": "live_log_debug"
             }
           ],
-          "is_custom": true,
+          "is_custom": false,
           "suppress_update_notification_version": false,
           "version": "1.0"
         },
-        "name": "Live Print - Debug Issues",
+        "name": "Debug",
         "log_to_console": false,
         "is_test_mode": false,
         "enabled": true,
@@ -1514,7 +1514,7 @@
         "automatic_configuration": {
           "key_values": [
             {
-              "name": "Test Mode - Debug Issues",
+              "name": "Debug - Prevent Extrusion",
               "value": "test_log_debug"
             }
           ],
@@ -1522,7 +1522,7 @@
           "suppress_update_notification_version": false,
           "version": "1.0"
         },
-        "name": "Test Mode - Debug Issues",
+        "name": "Debug - Prevent Extrusion",
         "log_to_console": false,
         "is_test_mode": true,
         "enabled": true,
@@ -1603,13 +1603,13 @@
         "log_all_errors": true,
         "guid": "072f506e-3e5e-4e84-922b-fb4e01690398",
         "default_log_level": 10,
-        "description": "This test mode profile is useful for debugging issues during a print without waiting for warm-up or wasting filament.  Test mode will prevent extrusion, bed and extruder heating, fan controls, and a few other commands.  Logs all but verbose messages.  This will create a very large log file that can affect performance, so only use this when necessary.  This is useful for debugging issues, or for submitting error reports in the github repository."
+        "description": "This test mode profile (all extrusion is prevented) is useful for debugging issues during a print without waiting for warm-up or wasting filament.  Test mode will prevent extrusion, bed and extruder heating, fan controls, and a few other commands.  Logs all but verbose messages.  This will create a very large log file that can affect performance, so only use this when necessary.  This is useful for debugging issues, or for submitting error reports in the github repository."
       },
       "afbe12d6-0dee-4911-b77e-ee9ebfae7521": {
         "automatic_configuration": {
           "key_values": [
             {
-              "name": "Live Print - Log Errors",
+              "name": "Log All Errors - Recommended",
               "value": "live_log_errors"
             }
           ],
@@ -1617,7 +1617,7 @@
           "suppress_update_notification_version": false,
           "version": "1.0"
         },
-        "name": "Live Print",
+        "name": "Log All Errors",
         "log_to_console": false,
         "is_test_mode": false,
         "enabled": false,
@@ -1625,7 +1625,7 @@
         "log_all_errors": true,
         "guid": "afbe12d6-0dee-4911-b77e-ee9ebfae7521",
         "default_log_level": 10,
-        "description": "Logs only errors and exceptions.  This is the recommended live (not test mode) profile to use unless you are trying to solve some additional problem."
+        "description": "Logs only errors and exceptions.  This is the recommended default profile, logs a minimal amount of data, and has a low impact on performance."
       }
     },
     "current_trigger_profile_guid": "c44de27e-053e-4a89-900f-c89502fec7ee",
