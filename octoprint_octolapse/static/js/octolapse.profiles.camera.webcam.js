@@ -57,7 +57,7 @@ $(function() {
             // Show the settings dialog
             dialog.$webcamSettingsDialog = $("#octolapse_webcam_settings_dialog");
             dialog.$webcamSettingsForm = dialog.$webcamSettingsDialog.find("#octolapse_webcam_settings_popup_form");
-            dialog.$webcamStreamImg = dialog.$webcamSettingsDialog.find("#octolapse_webcam_settings_stream");
+            dialog.$webcamStreamImg = dialog.$webcamSettingsDialog.find("#octolapse_camera_webcam_settings_stream");
             dialog.$cancelButton = $(".cancel", dialog.$webcamSettingsDialog);
             dialog.$closeIcon = $("a.close", dialog.$webcamSettingsDialog);
             dialog.$saveButton = $(".save", dialog.$webcamSettingsDialog);

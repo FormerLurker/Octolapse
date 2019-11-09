@@ -193,8 +193,6 @@ $(function() {
         };
 
         self.toggleCustomImagePreferences = function () {
-            var id = 'camera_profile_apply_settings_before_print';
-
             if (self.enable_custom_image_preferences()) {
                 self.enable_custom_image_preferences(false);
                 return;
@@ -202,15 +200,13 @@ $(function() {
 
             if (self.camera_stream_visible()) {
                 self.enable_custom_image_preferences(true);
-                $('#'+ id).prop("checked",true);
                 return;
             }
-
-            self.testCustomImagePreferences(self.enable_custom_image_preferences,id);
+            self.tryEnableCustomImagePreferences();
 
         };
 
-        self.testCustomImagePreferences = function(bool_observable, id){
+        self.tryEnableCustomImagePreferences = function(){
             self.is_testing_custom_image_preferences(true);
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             //console.log("Running camera request.");
@@ -223,11 +219,11 @@ $(function() {
                 dataType: "json",
                 success: function (results) {
                     if (results.success){
-                        bool_observable(true);
-                        $('#'+ id).prop("checked",true);
+                        self.enable_custom_image_preferences(true);
                         self.updateImagePreferencesFromServer(true);
                     }
                     else {
+                        self.enable_custom_image_preferences(false);
                         var options = {
                             title: 'Unable To Enable Custom Preferences',
                             text: results.error,
@@ -315,7 +311,6 @@ $(function() {
         self.updateImagePreferencesFromServer = function(replace) {
             self.webcam_settings.getMjpgStreamerControls(replace, function (results) {
                 // Update the current settings that we just received
-                self.webcam_settings.updateWebcamSettings(results.settings);
                 if (results.settings.new_preferences_available) {
                     // If new settings are available, offer to update them, but don't do it automatically
                     var message = "Octolapse has detected new camera preferences from your " +
@@ -325,11 +320,13 @@ $(function() {
                         "New Image Preferences Available",
                         message,
                         function () {
-                            self.updateImagePreferencesFromServer(true, function (results) {
-                                self.webcam_settings.updateWebcamSettings(results.settings);
-                            });
+                            self.webcam_settings.updateWebcamSettings(results.settings);
                         }
                     );
+                }
+                else
+                {
+                    self.webcam_settings.updateWebcamSettings(results.settings);
                 }
             }, function(results){
                  self.enable_custom_image_preferences(false);
@@ -360,42 +357,19 @@ $(function() {
         // Now that the webcam settings are updated, subscribe to address changes
         // so we can update the streaming server controls
         self.webcam_settings.address.subscribe(function(newValue){
-            if(self.enable_custom_image_preferences)
+            if(self.enable_custom_image_preferences())
                 self.updateImagePreferencesFromServer(true);
         });
     };
 
     Octolapse.CameraProfileValidationRules = {
         rules: {
-            camera_type: { required: true },
-            exposure_type: { required: true },
-            led_1_mode: { required: true},
-            powerline_frequency: { required: true},
-            snapshot_request_template: { octolapseSnapshotTemplate: true },
-            stream_template: { octolapseSnapshotTemplate: true },
-            brightness_request_template: { octolapseCameraRequestTemplate: true },
-            contrast_request_template: { octolapseCameraRequestTemplate: true },
-            saturation_request_template: { octolapseCameraRequestTemplate: true },
-            white_balance_auto_request_template: { octolapseCameraRequestTemplate: true },
-            gain_request_template: { octolapseCameraRequestTemplate: true },
-            powerline_frequency_request_template: { octolapseCameraRequestTemplate: true },
-            white_balance_temperature_request_template: { octolapseCameraRequestTemplate: true },
-            sharpness_request_template: { octolapseCameraRequestTemplate: true },
-            backlight_compensation_enabled_request_template: { octolapseCameraRequestTemplate: true },
-            exposure_type_request_template: { octolapseCameraRequestTemplate: true },
-            exposure_request_template: { octolapseCameraRequestTemplate: true },
-            exposure_auto_priority_enabled_request_template: { octolapseCameraRequestTemplate: true },
-            pan_request_template: { octolapseCameraRequestTemplate: true },
-            tilt_request_template: { octolapseCameraRequestTemplate: true },
-            autofocus_enabled_request_template: { octolapseCameraRequestTemplate: true },
-            focus_request_template: { octolapseCameraRequestTemplate: true },
-            zoom_request_template: { octolapseCameraRequestTemplate: true },
-            led1_mode_request_template: { octolapseCameraRequestTemplate: true },
-            led1_frequency_request_template: { octolapseCameraRequestTemplate: true },
-            jpeg_quality_request_template: { octolapseCameraRequestTemplate: true }
+            octolapse_camera_camera_type: { required: true },
+            octolapse_camera_snapshot_request_template: { octolapseSnapshotTemplate: true },
+            octolapse_camera_stream_template: { octolapseSnapshotTemplate: true },
         },
         messages: {
-            name: "Please enter a name for your profile"
+            octolapse_camera_name: "Please enter a name for your profile"
         }
     };
 

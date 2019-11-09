@@ -125,7 +125,6 @@ $(function () {
             //console.log("Adding " + type + " position restriction.");
             if (!self.dialog.IsValid())
             {
-
                 return;
             }
 

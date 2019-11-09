@@ -432,7 +432,7 @@ class CameraControl(object):
                           "error.</a>, or disable the 'Enable And Apply Preferences at Startup' and " \
                           "'Enable And Apply Preferences Before Print' options.".format(camera_profile.name)
                 logger.error(message)
-                raise CameraError("mjpg_streamer-control-error", message)
+                raise CameraError("mjpg_streamer_control_error", message)
             if r.status_code != requests.codes.ok:
                 message = "Status code received ({0}) was not OK.  Double check your webcam 'Base Addresss' address and " \
                           "your 'Snapshot Address Template'.  Or, disable the 'Enable And Apply Preferences at Startup' " \
@@ -729,32 +729,15 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
         return control_settings
 
     def get_file(self, file_name):
+
+        url = "{camera_address}{file_name}".format(camera_address=self.address, file_name=file_name)
         try:
-            url = "{camera_address}{file_name}".format(camera_address=self.address, file_name=file_name)
             if len(self.username) > 0:
                 r = requests.get(url, auth=HTTPBasicAuth(self.username, self.password),
                                  verify=not self.ignore_ssl_error, timeout=float(self.timeout_seconds))
             else:
                 r = requests.get(url, verify=not self.ignore_ssl_error,
                                  timeout=float(self.timeout_seconds))
-
-            if r.status_code == 501:
-                message = "Access was denied to the mjpg-streamer {0} file for the " \
-                          "'{1}' camera profile.".format(file_name, self.camera_name)
-                raise CameraError("mjpg_streamer-control-error", message)
-            if r.status_code != requests.codes.ok:
-                message = (
-                    "Recived a status code of ({0}) while retrieving the {1} file from the {2} camera profile.  Double "
-                    "check your 'Base Address' and 'Snapshot Address Template' within your camera profile settings."
-                        .format(r.status_code, file_name, self.camera_name)
-                )
-                raise CameraError('webcam_settings_apply_error', message)
-            try:
-                data = json.loads(r.text, strict=False)
-            except ValueError as e:
-                raise CameraError('json_error', "Unable to read the input.json file from mjpg-streamer.  Please chack "
-                                                "your base address and try again.", cause=e)
-            return data
         except SSLError as e:
             message = (
                 "An SSL error was raised while retrieving the {0} file for the '{1}' camera profile."
@@ -764,15 +747,36 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
         except requests.ConnectionError as e:
             message = (
                 "Unable to connect to the camera to '{0}' to retrieve controls for the {1} camera profile."
-                .format(url, self.camera_name)
+                    .format(url, self.camera_name)
             )
-            raise CameraError("connection-error", message, cause=e)
+            raise CameraError("connection_error", message, cause=e)
         except Exception as e:
             message = (
                 "An unexpected error was raised while retrieving the {0} file for the '{1}' camera profile."
-                .format(file_name, self.camera_name)
+                    .format(file_name, self.camera_name)
             )
-            raise CameraError('unexpected-error', message, cause=e)
+            raise CameraError('unexpected_error', message, cause=e)
+
+        if r.status_code == 501:
+            message = "Access was denied to the mjpg-streamer {0} file for the " \
+                      "'{1}' camera profile.".format(file_name, self.camera_name)
+            raise CameraError("access_denied", message)
+        if r.status_code == 404:
+            message = "Unable to find the camera at the supplied base address for the " \
+                      "'{0}' camera profile.".format(self.camera_name)
+            raise CameraError("file_not_found", message)
+        if r.status_code != requests.codes.ok:
+            message = (
+                "Recived a status code of ({0}) while retrieving the {1} file from the {2} camera profile."
+                .format(r.status_code, file_name, self.camera_name)
+            )
+            raise CameraError('unexpected_status_code', message)
+        try:
+            data = json.loads(r.text, strict=False)
+        except ValueError as e:
+            raise CameraError('json_error', "Unable to read the input.json file from mjpg-streamer.  Please chack "
+                                            "your base address and try again.", cause=e)
+        return data
 
 
 class MjpgStreamerSettingsThread(MjpgStreamerThread):
@@ -936,7 +940,7 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
                           "and 'Enable And Apply Preferences Before Print' options '.".format(name,
                                                                                               self.camera_name)
                 logger.error(message)
-                raise CameraError("mjpg_streamer-control-error", message)
+                raise CameraError("mjpg_streamer_control_error", message)
             if r.status_code != requests.codes.ok:
                 message = (
                     "Recived a status code of ({0}) while applying the {1} settings to the {2} camera profile.  "
