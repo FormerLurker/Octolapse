@@ -91,7 +91,7 @@ $(function () {
 
         self.resize_timer = null;
         self.resize_handler = function(event, elem) {
-            console.log("Resizing Help.");
+            //console.log("Resizing Help.");
             if(self.resize_timer)
             {
                 clearTimeout(self.resize_timer);
@@ -99,7 +99,7 @@ $(function () {
             }
             self.resize_timer = setTimeout(resize_help_popup, 100);
             function resize_help_popup (){
-                console.log("Resizing octolapse help.");
+                //console.log("Resizing octolapse help.");
                 var width = self.popup_width.toString();
 
                 if (document.body.clientWidth < self.popup_width_with_margin) {
@@ -363,7 +363,7 @@ $(function () {
                             text: '',
                             addClass: 'error_previous',
                             click: function(){
-                                console.log("Showing the previous error");
+                                //console.log("Showing the previous error");
                                 error_popup.previous_error();
                             }
                         },{
@@ -381,14 +381,14 @@ $(function () {
                             text: '',
                             addClass: 'error_next',
                             click: function(){
-                                console.log("Showing the next error");
+                                //console.log("Showing the next error");
                                 error_popup.next_error();
                             }
                         },{
                             text: 'Close',
                             addClass: 'error_close',
                             click: function(){
-                                console.log("Closing popup with key: " + popup_key.toString());
+                                //console.log("Closing popup with key: " + popup_key.toString());
                                 Octolapse.closeConfirmDialogsForKeys([popup_key]);
                             }
                         }]

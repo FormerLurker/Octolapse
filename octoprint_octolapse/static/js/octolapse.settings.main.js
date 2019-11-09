@@ -209,7 +209,7 @@ $(function () {
                     }, 250);
                 },
                 onclick: function (element, event) {
-                    setTimeout(() => dialog.validator.form(), 250);
+                    //setTimeout(() => dialog.validator.form(), 250);
                     setTimeout(function() {
                         dialog.validator.form();
                         dialog.resize();

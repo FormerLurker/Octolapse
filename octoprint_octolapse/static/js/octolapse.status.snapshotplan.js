@@ -80,12 +80,12 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     }
 
                     if (typeof state.autoclose !== 'undefined') {
-                        console.log("Setting snapshot plan preview autoclose");
+                        //console.log("Setting snapshot plan preview autoclose");
                         self.autoclose(state.autoclose);
                         self.autoclose_seconds(state.autoclose_seconds);
                     }
                     else {
-                        console.log("Autoclose property not set!");
+                        console.error("Autoclose property not set!");
                     }
                 }
                 if (state.current_plan_index != null)

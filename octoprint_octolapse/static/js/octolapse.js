@@ -759,7 +759,7 @@ $(function () {
             return rounded;
         }
         catch (e){
-            console.log("Error rounding axis_speed_unit");
+            console.error("Error rounding axis_speed_unit");
         }
 
     };
@@ -770,7 +770,7 @@ $(function () {
         },update: function(element, valueAccessor) {
             // close the stream if one exists
             $(element).attr('src', "");
-            console.log("Binding element to streamLoading");
+            //console.log("Binding element to streamLoading");
             var self = this;
             var options = valueAccessor();
             self.max_height = ko.unwrap(options.max_height) || 333;
@@ -787,14 +787,14 @@ $(function () {
             // Create a handler to handle load and error
             self.on_loaded = function(){
                 $(element).width('auto').height('auto');
-                console.log("Stream Loaded.");
+                //console.log("Stream Loaded.");
                 // get the width and height of the stream element
                 var stream_width = $(element).width();
                 var stream_height = $(element).height();
                 // See if the image is greater than the max
                 if (stream_width > self.max_width || stream_height > self.max_height)
                 {
-                    console.log("Resizing Stream.");
+                    //console.log("Resizing Stream.");
                     var ratioX = self.max_width / stream_width;
                     var ratioY = self.max_height / stream_height;
                     var ratio = Math.min(ratioX, ratioY);
@@ -815,11 +815,11 @@ $(function () {
                 $(element).hide();
                 $(loading_selector).hide();
                 if (src !== "") {
-                    console.log("Stream Error.");
+                    console.error("Stream Error.");
                     $(error_selector).html("<div><p>Error loading the stream at: <a href='" + src + "' target='_blank'>" + src + "</a></p><p>Check the 'Stream Address Template' setting in your camera profile.</p></div>").fadeIn(1000);
                 }
                 else{
-                    console.log("Stream Closing.");
+                    //console.log("Stream Closing.");
                     $(error_selector).html("<div><p>No stream url was provided.  Check the 'Stream Address Template' setting.</p></div>").fadeIn(1000);
                 }
             };
@@ -1094,7 +1094,7 @@ $(function () {
                     return val.toFixed(precision);
                 }
                 catch (e){
-                    console.log("Error converting toFixed");
+                    console.error("Error converting toFixed");
                 }
 
             },

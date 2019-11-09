@@ -26,7 +26,7 @@
         <div class="row-fluid">
             <button type="button" class="span3 btn btn-default input-block-level" data-bind="click: previewStabilization">Stabilize Extruder</button>
             <button type="button" class="span3 btn input-block-level" data-bind="click: applyWebcamSettings">Apply All Settings Now</button>
-            <button type="button" class="span3 btn input-block-level" data-bind="click: toggleCustomCameraSettingsPage">
+            <button type="button" class="span3 btn input-block-level" data-bind="click: function() {toggleCustomCameraSettingsPage(false, false);}">
                 <span data-bind="text: getToggleCustomCameraSettingsText"></span>
             </button>
             <button type="button" class="span3 btn input-block-level" data-bind="click: toggleColumns, text: (webcam_two_column_view()? 'Switch to Single Column' : 'Switch to Two Columns')"/>
@@ -35,7 +35,7 @@
         <div class="row-fluid">
             <button type="button" class="span3 btn btn-default input-block-level" data-bind="click: previewStabilization">Stabilize Extruder</button>
             <button type="button" class="span3 btn btn-default input-block-level" data-bind="click: applyWebcamSettings">Apply All Settings Now</button>
-            <button type="button" class="span3 btn input-block-level" data-bind="click: toggleCustomCameraSettingsPage">
+            <button type="button" class="span3 btn input-block-level" data-bind="click: function() {toggleCustomCameraSettingsPage(false, false);}">
                 <span data-bind="text: getToggleCustomCameraSettingsText"></span>
             </button>
             <button type="button" class="span3 btn input-block-level" data-bind="click: toggleColumns, text: (webcam_two_column_view()? 'Switch to Single Column' : 'Switch to Two Columns')"/>

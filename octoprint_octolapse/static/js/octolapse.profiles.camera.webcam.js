@@ -88,7 +88,7 @@ $(function() {
             // Prevent hiding unless the event was initiated by the hideAddEditDialog function
 
             dialog.$webcamSettingsDialog.on("hide.bs.modal", function () {
-                console.log("Hiding webcam settings dialog");
+                //console.log("Hiding webcam settings dialog");
                 if (!self.can_hide)
                     return false;
                 // Clear out error summary
@@ -244,7 +244,7 @@ $(function() {
         self.toggleColumns = function(){
             var two_column_view = !self.webcam_two_column_view();
             self.webcam_two_column_view(two_column_view);
-            console.log("Setting two column view.");
+            //console.log("Setting two column view.");
             Octolapse.setLocalStorage("webcam_two_column_view", two_column_view);
         };
 
@@ -320,7 +320,7 @@ $(function() {
            }
         });
 
-        self.toggleCustomCameraSettingsPage = function(){
+        self.toggleCustomCameraSettingsPage = function(prevent_errors, force_custom){
             // fetch control settings from the server
             if (!self.server_type() || !self.address())
             {
@@ -376,7 +376,7 @@ $(function() {
                         return;
                     }
                     // set our camera type info
-                    var use_custom_webcam_settings_page = !self.use_custom_webcam_settings_page();
+                    var use_custom_webcam_settings_page = !self.use_custom_webcam_settings_page() || force_custom;
                     if(!results.type)
                         use_custom_webcam_settings_page = false;
                     data = {
@@ -391,42 +391,44 @@ $(function() {
                     self.updateWebcamSettings(data);
                     // We meed to rebind the help links here, else they will not show up.
                     Octolapse.Help.bindHelpLinks(".octolapse .webcam_settings");
-                    var message;
-                    var title = "Webcam type found!";
-                    var type = "success";
-                    if (!results.type) {
-                        message = "There is no custom control for your webcam model at the moment!";
-                        title = 'Unknown webcam';
-                        type = "error";
-                    }
-                    else if (!use_custom_webcam_settings_page)
-                    {
-                        message = "Successfully switched to the default mjpg-streamer control page.";
-                    }
-                    else
-                    {
-                        message = "A custom image preference control page exists for this camera!.";
-                    }
-                    var options = {
+                    if (!prevent_errors) {
+                        var message;
+                        var title = "Webcam type found!";
+                        var type = "success";
+                        if (!results.type) {
+                            message = "There is no custom control for your webcam model at the moment!";
+                            title = 'Unknown webcam';
+                            type = "error";
+                        } else if (!use_custom_webcam_settings_page) {
+                            title = "Changed to Default View";
+                            message = "Successfully switched to the default mjpg-streamer control page.";
+                        } else {
+                            title = "Webcam type found!";
+                            message = "A custom image preference control page exists for this camera!.";
+                        }
+                        var options = {
                             title: title,
                             text: message,
                             type: type,
                             hide: true,
                             addclass: "octolapse"
                         };
-                    Octolapse.displayPopupForKey(options, "camera-detected",["camera-detected"]);
+                        Octolapse.displayPopupForKey(options, "camera-detected", ["camera-detected"]);
+                    }
                     return;
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    var options = {
-                        title: 'Unknown Camera Type',
-                        text: "Status: " + textStatus + ".  Error: " + errorThrown,
-                        type: 'error',
-                        hide: false,
-                        addclass: "octolapse"
-                    };
                     self.type(null);
-                    Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
+                    if (!prevent_errors) {
+                        var options = {
+                            title: 'Unknown Camera Type',
+                            text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
+                    }
                 }
             });
         };
@@ -471,7 +473,7 @@ $(function() {
         self.stream_url = ko.pureComputed(function(){
             if(!self.camera_stream_visible())
                 return '';
-            console.log("Calculating stream url.");
+            //console.log("Calculating stream url.");
             var url = self.stream_template();
             if (url != "")
                 url = url.replace("{camera_address}", self.address());
@@ -479,7 +481,7 @@ $(function() {
         },this);
 
         self.setStreamVisibility = function(value){
-            console.log("Attempting to stop the camera stream");
+            //console.log("Attempting to stop the camera stream");
             self.camera_stream_visible(value);
             self.stream_url();
         };

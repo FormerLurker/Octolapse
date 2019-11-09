@@ -538,12 +538,12 @@ $(function () {
         // hide the modal dialog
         self.can_hide = false;
         self.hideAddEditDialog = function () {
-            console.log("Add update dialog will be closed.");
+            //console.log("Add update dialog will be closed.");
             self.can_hide = true;
             $("#octolapse_add_edit_profile_dialog").modal("hide");
         };
         self.cancelAddEditDialog = function () {
-            console.log("Add update dialog cancelled.");
+            //console.log("Add update dialog cancelled.");
             // Hide the dialog
             self.hideAddEditDialog();
             // see if the current viewmodel has an on_canceled function
@@ -641,7 +641,7 @@ $(function () {
 
             // Prevent hiding unless the event was initiated by the hideAddEditDialog function
             dialog.$addEditDialog.on("hide.bs.modal", function () {
-                console.log("About to hide add edit dialog");
+                //console.log("About to hide add edit dialog");
                 if (!self.can_hide)
                     return false;
                 //return self.can_hide;
@@ -655,7 +655,7 @@ $(function () {
                 if (typeof self.profileObservable().on_closed === 'function')
                 {
                     // call the function
-                    console.log("Closing the profile dialog");
+                    //console.log("Closing the profile dialog");
                     self.profileObservable().on_closed();
                 }
             });
@@ -697,7 +697,7 @@ $(function () {
             });
             // Configure the shown event
             dialog.$addEditDialog.on("shown.bs.modal", function () {
-                console.log("Showing profile settings dialog.");
+                //console.log("Showing profile settings dialog.");
                 self.can_hide = false;
                 // Unbind all click events
                 dialog.$addEditDialog.unbind('click');
@@ -730,7 +730,7 @@ $(function () {
                 dialog.$saveButton.unbind("click");
                 // Called when a user clicks the save button on any add/update dialog.
                 dialog.$saveButton.bind("click", function () {
-                    console.log("Save button clicked on add/edit profile");
+                    //console.log("Save button clicked on add/edit profile");
                     // now see if the form is valid
                     if (dialog.$addEditForm.valid()) {
                         // the form is valid, add or update the profile
@@ -778,14 +778,14 @@ $(function () {
             dialog.unbind_validation = function()
             {
                 if (dialog.validator != null) {
-                    console.log("octolapse.settings.js - Unbinding validation.");
+                    //console.log("octolapse.settings.js - Unbinding validation.");
                     dialog.validator.destroy();
                     dialog.validator = null;
                 }
             };
             dialog.bind_validation = function()
             {
-                console.log("octolapse.settings.js - Binding validation.");
+                //console.log("octolapse.settings.js - Binding validation.");
                 dialog.unbind_validation();
                 dialog.validator = dialog.$addEditForm.validate(dialog.rules);
                 dialog.validator.form();
