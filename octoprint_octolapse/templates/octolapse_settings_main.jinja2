@@ -154,7 +154,11 @@
                                     <label class="control-label">Update every</label>
                                     <div class="controls">
                                         <span class="input-append">
-                                            <input name="automatic_update_interval_days" class="input-mini ignore_hidden_errors" title="The number of days to wait between update checks." type="number" data-bind="value: automatic_update_interval_days" min="1" max="365" step="1" required="true" />
+                                            <input id="octolapse_main_automatic_update_interval_days" name="octolapse_main_automatic_update_interval_days"
+                                                   class="input-mini ignore_hidden_errors"
+                                                   title="The number of days to wait between update checks."
+                                                   data-bind="value: automatic_update_interval_days"
+                                                   type="number" min="1" max="365" step="1" required="true" />
                                             <span class="add-on">days</span>
                                         </span>
 
@@ -252,7 +256,11 @@
                                 <div class="control-group" data-bind="visible: auto_reload_latest_snapshot">
                                     <label class="control-label">Animation Frames</label>
                                     <div class="controls">
-                                        <input name="auto_reload_frames" class="input-mini ignore_hidden_errors" title="The number of frames to animate during auto-reload" type="number" data-bind="value: auto_reload_frames" min="1" max="256" step="1" required="true" />
+                                        <input id="octolapse_main_auto_reload_frames" name="octolapse_main_auto_reload_frames"
+                                               class="input-mini ignore_hidden_errors"
+                                               title="The number of frames to animate during auto-reload"
+                                               data-bind="value: auto_reload_frames"
+                                               type="number" min="1" max="256" step="1" required="true" />
                                         <a class="octolapse_help" data-help-url="main_settings.auto_reload_frames.md" data-help-title="Auto Reload Frames" />
                                         <div class="error_label_container text-error"></div>
                                     </div>
