@@ -30,7 +30,7 @@ Octolapse.Slic3rPeViewModel = function (values, num_extruders_observable) {
     }
     self.travel_speed = ko.observable(values.travel_speed);
     self.layer_height = ko.observable(values.layer_height);
-    self.spiral_vase_mode = ko.observable(values.spiral_vase_mode);
+    self.spiral_vase = ko.observable(values.spiral_vase || false);
     // Constants
     self.speed_tolerance = 0.01 / 60.0 / 2.0;
     self.axis_speed_display_units = 'mm-sec';

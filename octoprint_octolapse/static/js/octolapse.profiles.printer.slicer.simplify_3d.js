@@ -4,7 +4,7 @@ Octolapse.Simplify3dExtruderViewModel = function (values, extruder_index) {
     self.retraction_distance = ko.observable(null);
     self.retraction_vertical_lift = ko.observable(null);
     self.retraction_speed = ko.observable(null);
-    self.extruder_use_retract = ko.observable(null);
+    self.extruder_use_retract = ko.observable(false);
 
     if (values && values.extruders.length > self.index) {
         var extruder = values.extruders[self.index];
@@ -13,7 +13,7 @@ Octolapse.Simplify3dExtruderViewModel = function (values, extruder_index) {
         self.retraction_distance(extruder.retraction_distance);
         self.retraction_vertical_lift(extruder.retraction_vertical_lift);
         self.retraction_speed(extruder.retraction_speed);
-        self.extruder_use_retract(extruder.extruder_use_retract);
+        self.extruder_use_retract(extruder.extruder_use_retract || false);
     }
 };
 
@@ -28,7 +28,7 @@ Octolapse.Simplify3dViewModel = function (values, num_extruders_observable) {
     }
     self.x_y_axis_movement_speed = ko.observable(values.x_y_axis_movement_speed);
     self.z_axis_movement_speed = ko.observable(values.z_axis_movement_speed);
-    self.spiral_vase_mode = ko.observable(values.spiral_vase_mode);
+    self.spiral_vase_mode = ko.observable(values.spiral_vase_mode || false);
     self.layer_height = ko.observable(values.layer_height);
     // Constants
     self.speed_tolerance = values.speed_tolerance;

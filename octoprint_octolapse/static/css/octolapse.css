@@ -366,6 +366,22 @@ table.octolapse-profiles td.profile_action, table.octolapse-profiles th.profile_
     width:20%;
 }
 
+.row-fluid.octolapse-profile-row .span1,
+.row-fluid.octolapse-profile-row .span2,
+.row-fluid.octolapse-profile-row .span3,
+.row-fluid.octolapse-profile-row .span4,
+.row-fluid.octolapse-profile-row .span5,
+.row-fluid.octolapse-profile-row .span6,
+.row-fluid.octolapse-profile-row .span7,
+.row-fluid.octolapse-profile-row .span8,
+.row-fluid.octolapse-profile-row .span9,
+.row-fluid.octolapse-profile-row .span10,
+.row-fluid.octolapse-profile-row .span11,
+.row-fluid.octolapse-profile-row .span12
+{
+    margin-left:0px;
+}
+
 .octolapse_dropzone
 {
     z-index:10001; /* prevent octoprint's built in dropzone from completely taking over :)*/

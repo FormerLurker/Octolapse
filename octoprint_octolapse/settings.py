@@ -2339,8 +2339,6 @@ class SlicerSettings(Settings):
         # Print Settings
         if settings.vase_mode is None:
             issue_list.append("Is Vase Mode")
-        if settings.layer_height is None:
-            issue_list.append("Layer Height")
         return issue_list
 
     def get_speed_mm_min(self, speed, multiplier=None, speed_name=None):
@@ -2359,8 +2357,8 @@ class CuraExtruder(SlicerExtruder):
         self.max_feedrate_z_override = None
         self.retraction_amount = None
         self.retraction_hop = None
-        self.retraction_hop_enabled = None
-        self.retraction_enable = None
+        self.retraction_hop_enabled = False
+        self.retraction_enable = False
         self.retraction_speed = None
         self.retraction_retract_speed = None
         self.retraction_prime_speed = None
@@ -2460,7 +2458,7 @@ class CuraSettings(SlicerSettings):
         super(CuraSettings, self).__init__(SlicerSettings.SlicerTypeCura, version)
         self.axis_speed_display_settings = 'mm-sec'
         self.layer_height = None
-        self.smooth_spiralized_contours = None
+        self.smooth_spiralized_contours = False
         self.magic_mesh_surface_mode = None
         self.machine_extruder_count = 1
 
@@ -2595,7 +2593,7 @@ class Simplify3dExtruder(SlicerExtruder):
         self.retraction_distance = None
         self.retraction_vertical_lift = None
         self.retraction_speed = None
-        self.extruder_use_retract = None
+        self.extruder_use_retract = False
 
     def get_extruder(self, slicer_settings):
         extruder = OctolapseExtruderGcodeSettings()
@@ -2649,7 +2647,7 @@ class Simplify3dSettings(SlicerSettings):
         super(Simplify3dSettings, self).__init__(SlicerSettings.SlicerTypeSimplify3D, version)
         self.x_y_axis_movement_speed = None
         self.z_axis_movement_speed = None
-        self.spiral_vase_mode = None
+        self.spiral_vase_mode = False
         self.layer_height = None
         # simplify has a fixed speed tolerance
         self.axis_speed_display_settings = 'mm-min'
@@ -2886,7 +2884,7 @@ class Slic3rPeSettings(SlicerSettings):
         super(Slic3rPeSettings, self).__init__(SlicerSettings.SlicerTypeSlic3rPe, version)
         self.axis_speed_display_units = 'mm-sec'
         self.layer_height = None
-        self.spiral_vase = None
+        self.spiral_vase = False
         self.travel_speed = None
 
     def get_extruders(self):
@@ -3023,8 +3021,8 @@ class OtherSlicerExtruder(SlicerExtruder):
         self.z_hop = None
         self.retract_speed = None
         self.deretract_speed = None
-        self.lift_when_retracted = None
-        self.retract_before_move = None
+        self.lift_when_retracted = False
+        self.retract_before_move = False
         self.travel_speed = None
         self.z_travel_speed = None
 
@@ -3076,7 +3074,7 @@ class OtherSlicerSettings(SlicerSettings):
         super(OtherSlicerSettings, self).__init__(SlicerSettings.SlicerTypeOther, version)
         self.speed_tolerance = 1
         self.axis_speed_display_units = 'mm-min'
-        self.vase_mode = None
+        self.vase_mode = False
         self.layer_height = None
 
     def update_settings_from_gcode(self, settings_dict):

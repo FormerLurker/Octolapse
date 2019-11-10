@@ -47,8 +47,8 @@ $(function() {
             octolapse_cura_layer_height: {ifOtherCheckedEnsureNonNull: '#octolapse_cura_smooth_spiralized_contours'},
             octolapse_cura_4_2_smooth_spiralized_contours: {ifCheckedEnsureNonNull: ["#octolapse_cura_4_2_layer_height"] },
             octolapse_cura_4_2_layer_height: {ifOtherCheckedEnsureNonNull: '#octolapse_cura_4_2_smooth_spiralized_contours'},
-            slicer_simplify_3d_vase_mode: {ifCheckedEnsureNonNull: ["#octolapse_simplify_3d_layer_height"] },
-            slicer_simplify_3d_layer_height: {ifOtherCheckedEnsureNonNull: '#octolapse_simplify_3d_vase_mode'},
+            octolapse_simplify_3d_vase_mode: {ifCheckedEnsureNonNull: ["#octolapse_simplify_3d_layer_height"] },
+            octolapse_simplify_3d_layer_height: {ifOtherCheckedEnsureNonNull: '#octolapse_simplify_3d_vase_mode'},
             octolapse_slic3r_pe_spiral_vase: {ifCheckedEnsureNonNull: ["#octolapse_slic3r_pe_layer_height"] },
             octolapse_slic3r_pe_layer_height: {ifOtherCheckedEnsureNonNull: '#octolapse_slic3r_pe_spiral_vase'}
 
@@ -73,7 +73,7 @@ $(function() {
             octolapse_cura_smooth_spiralized_contours: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
             octolapse_cura_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
             octolapse_cura_4_2_smooth_spiralized_contours: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
-            octolapse_cura_4_4_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
+            octolapse_cura_4_2_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
             octolapse_other_slicer_vase_mode: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
             octolapse_other_slicer_layer_height: {ifOtherCheckedEnsureNonNull: 'Vase mode is selected, you must enter a layer height.'},
             octolapse_simplify_3d_vase_mode: {ifCheckedEnsureNonNull: "If vase mode is selected, you must enter a layer height."},
