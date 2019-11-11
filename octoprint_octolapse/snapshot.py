@@ -188,9 +188,9 @@ class CaptureSnapshot(object):
         for t, snapshot_job_info, event in snapshot_threads:
             if event:
                 event.wait()
-                if t.download_error:
+                if t.snapshot_thread_error:
                     snapshot_job_info.success = False
-                    snapshot_job_info.error = t.download_error
+                    snapshot_job_info.error = t.snapshot_thread_error
                 else:
                     snapshot_job_info.success = True
             else:
@@ -425,8 +425,8 @@ class SnapshotThread(Thread):
         self.snapshot_job_info = snapshot_job_info
         self.Settings = settings
         self.on_new_thumbnail_available_callback = on_new_thumbnail_available_callback
-        self.post_processing_errors = None
-        self.download_error = None
+        self.post_processing_error = None
+        self.snapshot_thread_error = None
 
     def join(self, timeout=None):
         super(SnapshotThread, self).join(timeout=timeout)
@@ -468,7 +468,7 @@ class SnapshotThread(Thread):
         except SnapshotError as e:
             logger.exception("An unexpected exception occurred while post processing an image for "
                              "the %s camera.", self.snapshot_job_info.camera.name)
-            self.post_processing_errors = e
+            self.post_processing_error = e
         except Exception as e:
             message = "An unexpected exception occurred while post-processing images for the {0} camera." \
                       "  See plugin.octolapse.log for details".format(self.snapshot_job_info.camera.name)
@@ -497,37 +497,34 @@ class ExternalScriptSnapshotJob(SnapshotThread):
         self.script_type = script_type
 
     def run(self):
+        logger.info("Snapshot - running %s script for the %s camera.",
+                    self.script_type, self.snapshot_job_info.camera.name)
+        # execute the script and send the parameters
+        if self.script_type == 'snapshot':
+            if self.snapshot_job_info.DelaySeconds < 0.001:
+                logger.info(
+                    "Snapshot Delay - No pre snapshot delay configured for the %s camera.",
+                    self.snapshot_job_info.camera.name)
+            else:
+                self.apply_camera_delay()
         try:
-            logger.info("Snapshot - running %s script for the %s camera.",
-                        self.script_type, self.snapshot_job_info.camera.name)
-            # execute the script and send the parameters
-            if self.script_type == 'snapshot':
-                if self.snapshot_job_info.DelaySeconds < 0.001:
-                    logger.info(
-                        "Snapshot Delay - No pre snapshot delay configured for the %s camera.",
-                        self.snapshot_job_info.camera.name)
-                else:
-                    self.apply_camera_delay()
-
             self.execute_script()
-
-            if self.script_type == 'snapshot':
-                # Make sure the expected snapshot exists before we start working with the snapshot file.
-                self.post_process(block=self.on_new_thumbnail_available_callback is None)
-
             self.snapshot_job_info.success = True
-
         except SnapshotError as e:
-            self.snapshot_job_info.error = "{}".format(e)
+            self.snapshot_thread_error = str(e)
+            return
         except Exception as e:
-            logger.exception(
-                "An unexpected error occurred while processing the %s script for the %s camera.",
-                self.script_type, self.snapshot_job_info.camera.name)
-            self.snapshot_job_info.error = "An unexpected exception occurred while processing the {0} script for the " \
-                                           "{1} camera.".format(self.script_type, self.snapshot_job_info.camera.name)
+            message = "An unexpected exception occurred while processing the {0} script for the " \
+                      "{1} camera.".format(self.script_type, self.snapshot_job_info.camera.name)
+            logger.exception(message)
+            self.snapshot_thread_error = message
             raise e
-        finally:
-            logger.info("The %s script job completed, signaling task queue.", self.script_type)
+
+        if self.script_type == 'snapshot':
+            # perform post processing
+            self.post_process(block=self.on_new_thumbnail_available_callback is None)
+
+        logger.info("The %s script job completed, signaling task queue.", self.script_type)
 
     def execute_script(self):
         logger.info(
@@ -556,8 +553,19 @@ class ExternalScriptSnapshotJob(SnapshotThread):
         try:
             cmd = utility.POpenWithTimeout()
             return_code = cmd.run(script_args, self.snapshot_job_info.TimeoutSeconds)
-            console_output = cmd.stdout
+            if cmd.stdout:
+                logger.verbose(
+                    "Console output for the %s script for the %s camera:\n%s",
+                    self.script_type,
+                    self.snapshot_job_info.camera.name,
+                    cmd.stdout)
+            else:
+                logger.verbose(
+                    "No console output was returned for the %s script for the %s camera.",
+                    self.script_type,
+                    self.snapshot_job_info.camera.name)
             error_message = cmd.stderr
+
         except utility.POpenWithTimeout.ProcessError as e:
             message = "An OS Error error occurred while executing the {0} script for the {1} camera.".format(
                 self.script_type, self.snapshot_job_info.camera.name)
@@ -581,14 +589,16 @@ class ExternalScriptSnapshotJob(SnapshotThread):
                     " which indicates an error.".format(
                         self.script_type, self.snapshot_job_info.camera.name, return_code)
                 )
+            logger.error(error_message)
             raise SnapshotError('{0}_script_error'.format(self.script_type), error_message)
         elif error_message:
-            logger.error(
-                "Error output was returned from the %s script for the %s camera: %s",
+            error_message = "Error output was returned from the %s script for the %s camera: %s".format(
                 self.script_type,
                 self.snapshot_job_info.camera.name,
                 error_message
             )
+            logger.error(error_message)
+            raise SnapshotError('{0}_script_error'.format(self.script_type), error_message)
 
 
 class WebcamSnapshotJob(SnapshotThread):
@@ -635,7 +645,7 @@ class WebcamSnapshotJob(SnapshotThread):
             message = "An error occurred while applying the snapshot delay for the {0} camera." \
                     "  See plugin.octolapse.log for details.".format(self.snapshot_job_info.camera.name)
             logger.exception(message)
-            self.download_error = SnapshotError("snapshot-delay-error", message, e)
+            self.snapshot_thread_error = SnapshotError("snapshot-delay-error", message, e)
             if self.download_started_event:
                 self.download_started_event.set()
             return
@@ -693,7 +703,7 @@ class WebcamSnapshotJob(SnapshotThread):
                 logger.exception(
                     "Unable to close the snapshot download request for the %s camera.",
                     self.snapshot_job_info.camera.name)
-            self.download_error = SnapshotError(
+            self.snapshot_thread_error = SnapshotError(
                 'snapshot-download-error',
                 message,
                 cause=e
