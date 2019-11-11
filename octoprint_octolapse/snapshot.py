@@ -318,6 +318,8 @@ class ImagePostProcessing(object):
                 logger.debug("Snapshot - Snapshot saved to disk for the %s camera at %s",
                              self.snapshot_job_info.camera.name, self.snapshot_job_info.full_path)
         except Exception as e:
+            logger.exception("An unexpected exception occurred while saving a snapshot from a request for "
+                             "the %s camera.", self.snapshot_job_info.camera.name)
             raise SnapshotError(
                 'snapshot-save-error',
                 "An unexpected exception occurred.",
@@ -334,6 +336,8 @@ class ImagePostProcessing(object):
                     'time_taken': "{}".format(time()),
                 })
         except Exception as e:
+            logger.exception("An unexpected exception occurred while saving snapshot metadata for "
+                             "the %s camera.", self.snapshot_job_info.camera.name)
             raise SnapshotError(
                 'snapshot-metadata-error',
                 "Snapshot Download - An unexpected exception occurred while writing snapshot metadata for the {0} "
@@ -367,6 +371,8 @@ class ImagePostProcessing(object):
                         img = img.transpose(transpose_method)
                         img.save(snapshot_full_path)
         except IOError as e:
+            logger.exception("An unexpected exception occurred while transposing an image for "
+                             "the %s camera.", self.snapshot_job_info.camera.name)
             raise SnapshotError(
                 'snapshot-transpose-error',
                 "Snapshot transpose - An unexpected IOException occurred while transposing the image for the {0} "
@@ -400,7 +406,8 @@ class ImagePostProcessing(object):
                     "JPEG"
                 )
         except Exception as e:
-
+            logger.exception("An unexpected exception occurred while creating a snapshot thumbnail for "
+                             "the %s camera.", self.snapshot_job_info.camera.name)
             # If we can't create the thumbnail, just log
             raise SnapshotError(
                 'snapshot-thumbnail-create-error',
@@ -459,6 +466,8 @@ class SnapshotThread(Thread):
                 else:
                     image_post_processor.process()
         except SnapshotError as e:
+            logger.exception("An unexpected exception occurred while post processing an image for "
+                             "the %s camera.", self.snapshot_job_info.camera.name)
             self.post_processing_errors = e
         except Exception as e:
             message = "An unexpected exception occurred while post-processing images for the {0} camera." \
