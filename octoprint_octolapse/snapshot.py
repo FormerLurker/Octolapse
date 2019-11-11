@@ -592,7 +592,7 @@ class ExternalScriptSnapshotJob(SnapshotThread):
             logger.error(error_message)
             raise SnapshotError('{0}_script_error'.format(self.script_type), error_message)
         elif error_message:
-            error_message = "Error output was returned from the %s script for the %s camera: %s".format(
+            error_message = "Error output was returned from the {0} script for the {1{ camera: {2}".format(
                 self.script_type,
                 self.snapshot_job_info.camera.name,
                 error_message
