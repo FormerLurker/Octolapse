@@ -293,7 +293,7 @@ class ImagePostProcessing(object):
 
     def process(self):
         try:
-            logger.debug("Post-processing snapshot for %s.", self.snapshot_job_info.camera.name)
+            logger.debug("Post-processing snapshot for the %s camera.", self.snapshot_job_info.camera.name)
             if self.request is not None:
                 self.save_image_from_request()
                 self.request.close()
@@ -304,7 +304,7 @@ class ImagePostProcessing(object):
             if self.on_new_thumbnail_available_callback is not None:
                 self.on_new_thumbnail_available_callback(self.snapshot_job_info.camera.guid)
         finally:
-            logger.debug("Post-processing snapshot for %s complete.", self.snapshot_job_info.camera.name)
+            logger.debug("Post-processing snapshot for the %s camera complete.", self.snapshot_job_info.camera.name)
 
     def save_image_from_request(self):
         try:
@@ -315,7 +315,8 @@ class ImagePostProcessing(object):
                     if chunk:
                         snapshot_file.write(chunk)
 
-                logger.debug("Snapshot - Snapshot saved to disk at %s", self.snapshot_job_info.full_path)
+                logger.debug("Snapshot - Snapshot saved to disk for the %s camera at %s",
+                             self.snapshot_job_info.camera.name, self.snapshot_job_info.full_path)
         except Exception as e:
             raise SnapshotError(
                 'snapshot-save-error',
@@ -335,8 +336,9 @@ class ImagePostProcessing(object):
         except Exception as e:
             raise SnapshotError(
                 'snapshot-metadata-error',
-                "Snapshot Download - An unexpected exception occurred while writing snapshot metadata.  "
-                "Check the log file (plugin_octolapse.log) for details.",
+                "Snapshot Download - An unexpected exception occurred while writing snapshot metadata for the {0} "
+                "camera.  Check the log file (plugin_octolapse.log) for details.".format(
+                    self.snapshot_job_info.camera.name),
                 cause=e
             )
 
@@ -367,8 +369,9 @@ class ImagePostProcessing(object):
         except IOError as e:
             raise SnapshotError(
                 'snapshot-transpose-error',
-                "Snapshot transpose - An unexpected IOException occurred while transposing the image.  "
-                "Check the log file (plugin_octolapse.log) for details.",
+                "Snapshot transpose - An unexpected IOException occurred while transposing the image for the {0} "
+                "camera.  Check the log file (plugin_octolapse.log) for details.".format(
+                    self.snapshot_job_info.camera.name),
                 cause=e
             )
 
@@ -401,8 +404,10 @@ class ImagePostProcessing(object):
             # If we can't create the thumbnail, just log
             raise SnapshotError(
                 'snapshot-thumbnail-create-error',
-                "Create Thumbnail - An unexpected exception occurred while creating a snapshot thumbnail.  "
-                "Check the log file (plugin_octolapse.log) for details.",
+                "Create Thumbnail - An unexpected exception occurred while creating a snapshot thumbnail for the"
+                " {0} camera.  Check the log file (plugin_octolapse.log) for details.".format(
+                    self.snapshot_job_info.camera.name
+                ),
                 cause=e
             )
 
@@ -430,8 +435,8 @@ class SnapshotThread(Thread):
         delay_seconds = self.snapshot_job_info.DelaySeconds - (time() - t0)
 
         logger.info(
-            "Snapshot Delay - Waiting %s second(s) after executing the snapshot script.",
-            self.snapshot_job_info.DelaySeconds
+            "Snapshot Delay - Waiting %s second(s) after executing the snapshot script for the %s camera.",
+            self.snapshot_job_info.DelaySeconds, self.snapshot_job_info.camera.name
         )
 
         while delay_seconds >= 0.001:
@@ -457,7 +462,8 @@ class SnapshotThread(Thread):
             self.post_processing_errors = e
         except Exception as e:
             logger.exception(e)
-            message = "An unexpected exception occurred while post-processing images.  See plugin.octolapse.log for details"
+            message = "An unexpected exception occurred while post-processing images for the {0} camera." \
+                      "  See plugin.octolapse.log for details".format(self.snapshot_job_info.camera.name)
             raise SnapshotError('post-processing-error', message, cause=e)
         finally:
             if request:
@@ -483,11 +489,13 @@ class ExternalScriptSnapshotJob(SnapshotThread):
 
     def run(self):
         try:
-            logger.info("Snapshot - running %s script.", self.script_type)
+            logger.info("Snapshot - running %s script for the %s camera.",
+                        self.script_type, self.snapshot_job_info.camera.name)
             # execute the script and send the parameters
             if self.script_type == 'snapshot':
                 if self.snapshot_job_info.DelaySeconds < 0.001:
-                    logger.info("Snapshot Delay - No pre snapshot delay configured.")
+                    logger.info("Snapshot Delay - No pre snapshot delay configured for the %s camera.".format(
+                        self.snapshot_job_info.camera.name))
                 else:
                     self.apply_camera_delay()
 
@@ -501,13 +509,19 @@ class ExternalScriptSnapshotJob(SnapshotThread):
 
         except SnapshotError as e:
             self.snapshot_job_info.error = "{}".format(e)
+        except Exception as e:
+            logger.exception(e)
+            self.snapshot_job_info.error = "An unexpected exception occurred while processing the {0} script for the " \
+                                           "{1} camera.".format(self.script_type, self.snapshot_job_info.camera.name)
+            raise e
         finally:
             logger.info("The %s script job completed, signaling task queue.", self.script_type)
 
     def execute_script(self):
         logger.info(
-            "Running the following %s script command with a timeout of %s: %s %s %s %s %s %s %s",
+            "Running the following %s script command for the %s camera with a timeout of %s: %s %s %s %s %s %s %s",
             self.script_type,
+            self.snapshot_job_info.camera.name,
             self.snapshot_job_info.TimeoutSeconds,
             self.ScriptPath,
             "{}".format(self.snapshot_job_info.SnapshotNumber),
@@ -533,9 +547,11 @@ class ExternalScriptSnapshotJob(SnapshotThread):
             console_output = cmd.stdout
             error_message = cmd.stderr
         except utility.POpenWithTimeout.ProcessError as e:
+            logger.exception(e)
             raise SnapshotError(
                 '{0}_script_error'.format(self.script_type),
-                "An OS Error error occurred while executing the {0} script".format(self.script_type),
+                "An OS Error error occurred while executing the {0} script for the {1} camera.".format(
+                    self.script_type, self.snapshot_job_info.camera.name),
                 cause=e
             )
 
@@ -544,18 +560,20 @@ class ExternalScriptSnapshotJob(SnapshotThread):
 
         if not return_code == 0:
             if error_message:
-                error_message = "The {0} script failed with the following error message: {1}"\
-                    .format(self.script_type, error_message)
+                error_message = "The {0} script failed for the {1} camera with the following error message: {2}"\
+                    .format(self.script_type, self.snapshot_job_info.camera.name, error_message)
             else:
                 error_message = (
-                    "The {0} script returned {1},"
-                    " which indicates an error.".format(self.script_type, return_code)
+                    "The {0} script for the {1} camera returned {2},"
+                    " which indicates an error.".format(
+                        self.script_type, self.snapshot_job_info.camera.name, return_code)
                 )
             raise SnapshotError('{0}_script_error'.format(self.script_type), error_message)
         elif error_message:
             logger.error(
-                "Error output was returned from the %s script: %s",
+                "Error output was returned from the %s script for the %s camera: %s",
                 self.script_type,
+                self.snapshot_job_info.camera.name,
                 error_message
             )
 
@@ -594,13 +612,16 @@ class WebcamSnapshotJob(SnapshotThread):
     def run(self):
         try:
             if self.snapshot_job_info.DelaySeconds < 0.001:
-                logger.debug("Starting Snapshot Download Job Immediately.")
+                logger.debug(
+                    "Starting Snapshot Download Job Immediately for the %s camera.",
+                    self.snapshot_job_info.camera.name)
             else:
                 # Pre-Snapshot Delay
                 self.apply_camera_delay()
         except Exception as e:
             logger.exception(e)
-            message="An error occurred while applying the snapshot delay.  See plugin.octolapse.log for details."
+            message="An error occurred while applying the snapshot delay for the {0} camera." \
+                    "  See plugin.octolapse.log for details.".format(self.snapshot_job_info.camera.name)
             self.download_error = SnapshotError("snapshot-delay-error", message, e)
             if self.download_started_event:
                 self.download_started_event.set()
@@ -611,7 +632,10 @@ class WebcamSnapshotJob(SnapshotThread):
         try:
             download_start_time = time()
             if len(self.Username) > 0:
-                logger.debug("Snapshot Download - Authenticating and downloading from %s.", self.Url)
+                logger.debug(
+                    "Snapshot Download - Authenticating and downloading for the %s camera from %s.",
+                    self.snapshot_job_info.camera.name,
+                    self.Url)
 
                 r = requests.get(
                     self.Url,
@@ -621,7 +645,10 @@ class WebcamSnapshotJob(SnapshotThread):
                     stream=self.stream_download
                 )
             else:
-                logger.debug("Snapshot - downloading from %s.", self.Url)
+                logger.debug(
+                    "Snapshot - downloading for the %s camera from %s.",
+                    self.snapshot_job_info.camera.name,
+                    self.Url)
 
                 r = requests.get(
                     self.Url,
@@ -631,9 +658,15 @@ class WebcamSnapshotJob(SnapshotThread):
                 )
             r.raise_for_status()
             if self.stream_download:
-                logger.debug("Snapshot - received streaming response in %.3f seconds.", time() - download_start_time)
+                logger.debug(
+                    "Snapshot - received streaming respons for the %s camera e in %.3f seconds.",
+                    self.snapshot_job_info.camera.name,
+                    time() - download_start_time)
             else:
-                logger.debug("Snapshot - snapshot downloaded in %.3f seconds.", time() - download_start_time)
+                logger.debug(
+                    "Snapshot - snapshot downloaded for the %s camera in %.3f seconds.",
+                    self.snapshot_job_info.camera.name,
+                    time() - download_start_time)
 
         except Exception as e:
             message = "An error occurred downloading a snapshot for the {0} camera.".format(
@@ -659,7 +692,9 @@ class WebcamSnapshotJob(SnapshotThread):
             self.post_process(request=r, block=self.on_new_thumbnail_available_callback is None)
             self.snapshot_job_info.success = True
         finally:
-            logger.info("Snapshot Download Job completed in %.3f seconds.", time()-start_time)
+            logger.info("Snapshot Download Job completed for the %s camera in %.3f seconds.",
+                        self.snapshot_job_info.camera.name,
+                        time()-start_time)
 
 
 class SnapshotError(Exception):
