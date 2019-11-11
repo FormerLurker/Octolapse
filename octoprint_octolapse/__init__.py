@@ -1638,7 +1638,7 @@ class OctolapsePlugin(
                     payload["origin"] != "local"
                 ):
                     self._timelapse.end_timelapse("FAILED")
-                    error = error_messages.OctolapseErrors["init"]["cant_print_from_sd"]
+                    error = error_messages.get_error(["init", "cant_print_from_sd"])
                     logger.info(error["description"])
                     self.on_print_start_failed([error])
                     return
@@ -1714,20 +1714,20 @@ class OctolapsePlugin(
             self.start_timelapse(timelapse_settings)
             return True
         except Exception as e:
-            error = error_messages.OctolapseErrors["init"]["timelapse_start_exception"]
+            error = error_messages.get_error(["init", "timelapse_start_exception"])
             logger.exception("Unable to start the timelapse.")
             self.on_print_start_failed([error])
             return True
 
     def test_timelapse_config(self):
         if not self._octolapse_settings.main_settings.is_octolapse_enabled:
-            error = error_messages.OctolapseErrors["init"]["octolapse_is_disabled"]
+            error = error_messages.get_error(["init","octolapse_is_disabled"])
             logger.error(error["description"])
             return {"success": False, "error": error}
 
         # make sure we have an active printer
         if self._octolapse_settings.profiles.current_printer() is None:
-            error = error_messages.OctolapseErrors["init"]["no_printer_profile_selected"]
+            error = error_messages.get_error(["init", "no_printer_profile_selected"])
             logger.error(error["description"])
             return {"success": False, "error": error}
 
@@ -1736,7 +1736,7 @@ class OctolapsePlugin(
             not self._octolapse_settings.profiles.current_printer().has_been_saved_by_user and
             not self._octolapse_settings.profiles.current_printer().slicer_type == "automatic"
         ):
-            error = error_messages.OctolapseErrors["init"]["printer_not_configured"]
+            error = error_messages.get_error(["init", "printer_not_configured"])
             logger.error(error["description"])
             return {"success": False, "error": error}
 
@@ -1744,7 +1744,7 @@ class OctolapsePlugin(
         printer_data = self._printer.get_current_data()
         current_job = printer_data.get("job", None)
         if not current_job:
-            error = error_messages.OctolapseErrors["init"]["no_current_job_data_found"]
+            error = error_messages.get_error(["init", "no_current_job_data_found"])
             log_message = "Failed to get current job data on_print_start:" \
                           "  Current printer data: {0}".format(printer_data)
             logger.error(log_message)
@@ -1752,7 +1752,7 @@ class OctolapsePlugin(
 
         current_file = current_job.get("file", None)
         if not current_file:
-            error = error_messages.OctolapseErrors["init"]["no_current_job_file_data_found"]
+            error = error_messages.get_error(["init", "no_current_job_file_data_found"])
             log_message = "Failed to get current file data on_print_start:" \
                           "  Current job data: {0}".format(current_job)
             logger.error(log_message)
@@ -1761,14 +1761,14 @@ class OctolapsePlugin(
 
         current_origin = current_file.get("origin", "unknown")
         if not current_origin:
-            error = error_messages.OctolapseErrors["init"]["unknown_file_origin"]
+            error = error_messages.get_error(["init", "unknown_file_origin"])
             log_message = "Failed to get current origin data on_print_start:" \
                 "Current file data: {0}".format(current_file)
             # ERROR_REPLACEMENT
             logger.error(log_message)
             return {"success": False, "error": error}
         if current_origin != "local":
-            error = error_messages.OctolapseErrors["init"]["cant_print_from_sd"]
+            error = error_messages.get_error(["init", "cant_print_from_sd"])
             log_message = "Unable to start Octolapse when printing from {0}.".format(current_origin)
             logger.error(log_message)
             # ERROR_REPLACEMENT
@@ -1776,7 +1776,7 @@ class OctolapsePlugin(
 
         if self._timelapse.get_current_state() != TimelapseState.Initializing:
 
-            error = error_messages.OctolapseErrors["init"]["incorrect_printer_state"]
+            error = error_messages.get_error(["init", "incorrect_printer_state"])
             log_message = "Octolapse was in the wrong state at print start.  StateId: {0}".format(
                 self._timelapse.get_current_state())
             logger.error(log_message)
@@ -1793,26 +1793,27 @@ class OctolapsePlugin(
                     success, camera_test_errors = camera.CameraControl.test_web_camera(
                         current_camera, is_before_print_test=True)
                     if not success:
-                        error = error_messages.OctolapseErrors["init"]["camera_init_test_failed"]
-                        error["description"] = error["description"].format(error=camera_test_errors)
+                        error = error_messages.get_error(["init", "camera_init_test_failed"], error=camera_test_errors)
                         return {"success": False, "error": error}
 
         if not found_camera:
-            error = error_messages.OctolapseErrors["init"]["no_enabled_cameras"]
+            error = error_messages.get_error(["init", "no_enabled_cameras"])
             return {"success": False, "error": error}
 
         success, camera_settings_apply_errors = camera.CameraControl.apply_camera_settings(
             self._octolapse_settings.profiles.before_print_start_cameras()
         )
         if not success:
-            error = error_messages.OctolapseErrors["init"]["camera_settings_apply_failed"]
-            error["description"] = error["description"].format(error=camera_settings_apply_errors)
+            error = error_messages.get_error(
+                ["init", "camera_settings_apply_failed"],
+                error=camera_settings_apply_errors)
             return {"success": False, "error": error}
 
         # check for version 1.3.8 min
         if not (LooseVersion(octoprint.server.VERSION) > LooseVersion("1.3.8")):
-            error = error_messages.OctolapseErrors["init"]["incorrect_octoprint_version"]
-            error["description"] = error["description"].format(installed_version=octoprint.server.DISPLAY_VERSION)
+            error = error_messages.get_error(
+                ["init", "incorrect_octoprint_version"], installed_version=octoprint.server.DISPLAY_VERSION
+            )
             return {"success": False, "error": error}
 
         # Check the rendering filename template
@@ -1820,16 +1821,16 @@ class OctolapsePlugin(
             self._octolapse_settings.profiles.current_rendering().output_template,
             self._octolapse_settings.profiles.options.rendering['rendering_file_templates'],
         ):
-            error = error_messages.OctolapseErrors["init"]["rendering_file_template_invalid"]
+            error = error_messages.get_error(["init", "rendering_file_template_invalid"])
             return {"success": False, "error": error}
 
         # make sure that at least one profile is available
         if len(self._octolapse_settings.profiles.printers) == 0:
-            error = error_messages.OctolapseErrors["init"]["no_printer_profile_exists"]
+            error = error_messages.get_error(["init", "no_printer_profile_exists"])
             return {"success": False, "error": error}
         # check to make sure a printer is selected
         if self._octolapse_settings.profiles.current_printer() is None:
-            error = error_messages.OctolapseErrors["init"]["no_printer_profile_selected"]
+            error = error_messages.get_error(["init", "no_printer_profile_selected"])
             return {"success": False, "error": error}
         return {"success": True}
 
@@ -1862,7 +1863,7 @@ class OctolapsePlugin(
         if path is not None:
             gcode_file_path = self._file_manager.path_on_disk(octoprint.filemanager.FileDestinations.LOCAL, path)
         else:
-            error = error_messages.OctolapseErrors["init"]["no_gcode_filepath_found"]
+            error = error_messages.get_error(["init", "no_gcode_filepath_found"])
             logger.error(error["description"])
             return_value["errors"].append(error)
             return return_value
@@ -1874,18 +1875,18 @@ class OctolapsePlugin(
                 self._octolapse_settings.profiles.current_rendering().enabled and
                 (ffmpeg_path == "" or ffmpeg_path is None)
             ):
-                error = error_messages.OctolapseErrors["init"]["ffmpeg_path_not_set"]
+                error = error_messages.get_error(["init", "ffmpeg_path_not_set"])
                 logger.error(error["description"])
                 return_value["errors"].append(error)
                 return return_value
         except Exception as e:
             logger.exception(e)
-            error = error_messages.OctolapseErrors["init"]["ffmpeg_path_retrieve_exception"]
+            error = error_messages.get_error(["init", "ffmpeg_path_retrieve_exception"])
             return_value["errors"].append(error)
             return return_value
 
         if not os.path.isfile(ffmpeg_path):
-            error = error_messages.OctolapseErrors["init"]["ffmpeg_not_found_at_path"]
+            error = error_messages.get_error(["init", "ffmpeg_not_found_at_path"])
             logger.error(error["description"])
             return_value["errors"].append(error)
             return return_value
@@ -1893,7 +1894,12 @@ class OctolapsePlugin(
         if current_printer_clone.slicer_type == 'automatic':
             # extract any slicer settings if possible.  This must be done before any calls to the printer profile
             # info that includes slicer setting
-            success, error_type, error_list = current_printer_clone.get_gcode_settings_from_file(gcode_file_path)
+            try:
+                success, error_type, error_list = current_printer_clone.get_gcode_settings_from_file(gcode_file_path)
+            except error_messages.OctolapseException as e:
+                logger.error(str(e))
+                return_value["errors"].append(e.to_dict())
+                return return_value
             if success:
                 # Save the profile changes
                 # get the extracted slicer settings
@@ -1913,25 +1919,30 @@ class OctolapsePlugin(
             else:
                 if self._octolapse_settings.main_settings.cancel_print_on_startup_error:
                     if error_type == "no-settings-detected":
-                        error = error_messages.OctolapseErrors["init"]["automatic_slicer_no_settings_found"]
+                        error = error_messages.get_error(["init", "automatic_slicer_no_settings_found"])
                         logger.error(error["description"])
                         return_value["errors"].append(error)
                         return return_value
                     else:
-                        error = error_messages.OctolapseErrors["init"]["automatic_slicer_settings_missing"]
-                        error["description"] = error["description"].format(missing_settings=",".join(error_list))
+                        error = error_messages.get_error(
+                            ["init", "automatic_slicer_settings_missing"], missing_settings=",".join(error_list)
+                        )
                         logger.error(error["description"])
                         return_value["errors"].append(error)
                         return return_value
                 else:
                     if error_type == "no-settings-detected":
-                        error = error_messages.OctolapseErrors["init"]["automatic_slicer_no_settings_found_continue_printing"]
+                        error = error_messages.get_error(
+                            ["init", "automatic_slicer_no_settings_found_continue_printing"]
+                        )
                         logger.error(error["description"])
                         return_value["warnings"].append(error)
                         return return_value
                     else:
-                        error = error_messages.OctolapseErrors["init"]["automatic_slicer_settings_missing_continue_printing"]
-                        error["description"] = error["description"].format(missing_settings=",".join(error_list))
+                        error = error_messages.get_error(
+                            ["init", "automatic_slicer_settings_missing_continue_printing"],
+                            missing_settings=",".join(error_list)
+                        )
                         logger.error(error["description"])
                         return_value["warnings"].append(error)
                         return return_value
@@ -1944,8 +1955,10 @@ class OctolapsePlugin(
                 slicer_type=settings_clone.profiles.current_printer().slicer_type
             )
             if len(missing_settings) > 0:
-                error = error_messages.OctolapseErrors["init"]["manual_slicer_settings_missing"]
-                error["description"] = error["description"].format(missing_settings=",".join(missing_settings))
+                error = error_messages.get_error(
+                    ["init", "manual_slicer_settings_missing"],
+                    missing_settings=",".join(missing_settings)
+                )
                 logger.error(error["description"])
                 return_value["errors"].append(error)
                 return return_value
@@ -1954,8 +1967,8 @@ class OctolapsePlugin(
         current_printer_clone = settings_clone.profiles.current_printer()
         # Make sure the printer profile has the correct number of extruders defined
         if len(slicer_settings_clone.extruders) > current_printer_clone.num_extruders:
-            error = error_messages.OctolapseErrors["init"]["too_few_extruders_defined"]
-            error["description"] = error["description"].format(
+            error = error_messages.get_error(
+                ["init", "too_few_extruders_defined"],
                 printer_num_extruders=current_printer_clone.num_extruders,
                 gcode_num_extruders=len(slicer_settings_clone.extruders)
             )
@@ -1968,8 +1981,8 @@ class OctolapsePlugin(
             not current_printer_clone.shared_extruder and
             current_printer_clone.num_extruders < len(current_printer_clone.extruder_offsets)
         ):
-            error = error_messages.OctolapseErrors["init"]["too_few_extruder_offsets_defined"]
-            error["description"] = error["description"].format(
+            error = error_messages.get_error(
+                ["init", "too_few_extruder_offsets_defined"],
                 num_extruders=current_printer_clone.num_extruders,
                 num_extruder_offsets=len(current_printer_clone.extruder_offsets)
             )

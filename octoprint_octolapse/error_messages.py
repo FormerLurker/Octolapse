@@ -22,10 +22,10 @@
 ##################################################################################
 
 
-OctolapseErrors = {
+_octolapse_errors = {
     'preprocessor': {
         'cpp_quality_issues': {
-            1: {
+            "1": {
                 'name': "Using Fast Trigger",
                 'help_link': "quality_issues_fast_trigger.md",
                 'cpp_name': "stabilization_quality_issue_fast_trigger",
@@ -33,14 +33,14 @@ OctolapseErrors = {
                                "having print quality issues, consider using a 'high quality' or 'snap to print' smart "
                                "trigger. "
             },
-            2: {
+            "2": {
                 'name': "Low Quality Snap-to-print",
                 'help_link': "quality_issues_low_quality_snap_to_print.md",
                 'cpp_name': "stabilization_quality_issue_snap_to_print_low_quality",
                 'description': "In most cases using the 'High Quality' snap to print option will improve print quality, "
                                "unless you are printing with vase mode enabled. "
             },
-            3: {
+            "3": {
                 'name': "No Print Features Detected",
                 'help_link': "quality_issues_no_print_features_detected.md",
                 'cpp_name': "stabilization_quality_issue_no_print_features",
@@ -50,35 +50,35 @@ OctolapseErrors = {
             }
         },
         'cpp_processing_errors': {
-            1: {
+            "1": {
                 'name': "XYZ Axis Mode Unknown",
                 'help_link': "error_help_preprocessor_axis_mode_xyz_unknown.md",
                 'cpp_name': "stabilization_processing_issue_type_xyz_axis_mode_unknown",
                 'is_fatal': True,
                 'description': "The XYZ axis mode was not set."
             },
-            2: {
+            "2": {
                 'name': "E axis Mode Unknown",
                 'help_link': "error_help_preprocessor_axis_mode_e_unknown.md",
                 'cpp_name': "stabilization_processing_issue_type_e_axis_mode_unknown",
                 'is_fatal': True,
                 'description': "The E axis mode was not set"
             },
-            3: {
+            "3": {
                 'name': "No Definite Position",
                 'help_link': "error_help_preprocessor_no_definite_position.md",
                 'cpp_name': "stabilization_processing_issue_type_no_definite_position",
                 'is_fatal': False,
                 'description': "Unable to find a definite position."
             },
-            4: {
+            "4": {
                 'name': "Printer Not Primed",
-                'help_link': "error_help_preprocessor_not_primed.md",
+                'help_link': "error_help_preprocessor_printer_not_primed.md",
                 'cpp_name': "stabilization_processing_issue_type_printer_not_primed",
                 'is_fatal': True,
                 'description': "Priming was not detected."
             },
-            5: {
+            "5": {
                 'name': "No Metric Units",
                 'help_link': "error_help_preprocessor_no_metric_units.md",
                 'cpp_name': "stabilization_processing_issue_type_no_metric_units",
@@ -100,7 +100,7 @@ OctolapseErrors = {
             'unknown_trigger_type': {
                 'name': "Unknown Trigger Type",
                 'help_link': "error_help_preprocessor_unknown_trigger_type.md",
-                'description': "The current preprocessor type {0} is unknown."
+                'description': "The current preprocessor type {preprocessor_type} is unknown."
             },
             'no_snapshot_plans_returned': {
                 'name': "No Snapshot Plans Returned",
@@ -269,9 +269,102 @@ OctolapseErrors = {
         },
 
 
+    },
+    'settings': {
+        'slicer': {
+            'simplify3d': {
+                "duplicate_toolhead_numbers": {
+                    "name": "Duplicate Toolhead Numbers",
+                    "description": "Multiple extruders are defined with the same toolhead number in simplify, "
+                                   "which is not supported by Octolapse.  Duplicated toolhead numbers: "
+                                   "{toolhead_numbers}",
+                    "help_link": "error_help_settings_slicer_simplify3d_duplicate_toolhead_numbers.md"
+                },
+                "extruder_count_mismatch": {
+                    "name": "Extruder Count Mismatch",
+                    "description": "Your printer profile is configured with {configured_extruder_count} extruders, "
+                                   "but Simpify 3D is configured with {detected_extruder_count} extruders.",
+                    "help_link": "error_help_settings_slicer_simplify3d_extruder_count_mismatch.md"
+                },
+                "max_extruder_count_exceeded": {
+                    "name": "Max Extruder Count Exceeded",
+                    "description":  "Octolapse detected {simplify_extruder_count} extruders in your Simplify 3D "
+                                    "gcode file, but can only support {max_extruder_count} extruders.",
+                    "help_link": "error_help_settings_slicer_simplify3d_max_extruder_count_exceeded.md"
+                },
+                "unexpected_max_toolhead_number": {
+                    "name": "Incorrect Max Toolhead Number",
+                    "description": "The maximum toolhead number expected was T{expected_max_toolhead_number}, but "
+                                   "Simplify 3D was configured with a max toolhead of {max_toolhead_number}.",
+                    "help_link": "error_help_settings_slicer_simplify3d_unexpected_max_toolhead_number.md"
+                }
+            }
+        }
     }
-
 }
+
+_error_not_found = {
+    "name": "Unknown Error",
+    "description": "An unknown error was raised, but the provided key could not be found in the "
+                   "ErrorMessages dict.  Keys: {keys}",
+    "help_link": "error_help_error_not_found.md"
+}
+
+_error_not_a_valid_error_dict = {
+    "name": "Unknown Error",
+    "description": "An unknown error was raised, but the provided key could not be found in the "
+                   "ErrorMessages dict.  Keys: {keys}",
+    "help_link": "error_help_not_a_valid_error_dict.md"
+}
+
+
+def get_error(keys, **kwargs):
+    current_error_dict = _octolapse_errors
+    for key in keys:
+        try:
+            current_error_dict = current_error_dict[key]
+        except KeyError:
+            error = _error_not_found.copy()
+            error["description"] = error["description"].format(keys=keys)
+            return error
+    if not all(k in current_error_dict for k in ["name", "description", "help_link"]):
+        error = _error_not_a_valid_error_dict.copy()
+        error["description"] = error["description"].format(keys=keys)
+        return error
+    # copy the error so we don't mess up the original dict
+    error = current_error_dict.copy()
+    # try to format with any kwargs
+    try:
+        error["description"] = error["description"].format(**kwargs)
+    except KeyError:
+        pass
+
+    return error
+
+class OctolapseException(Exception):
+    def __init__(self, keys, cause=None, **kwargs):
+        super(Exception, self).__init__()
+        self.keys = keys
+        self.cause = cause if cause is not None else None
+        self.error = get_error(keys, **kwargs)
+        self.name = self.error["name"]
+        self.description = self.error["description"]
+        self.help_link = self.error["help_link"]
+
+    def __str__(self):
+        if self.cause is None:
+            return self.description
+        return "{0} - Inner Exception: {1}".format(
+            self.description,
+            "{} - {}".format(type(self.cause), self.cause)
+        )
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "description": str(self),
+            "help_link": self.help_link
+        }
 
 
 

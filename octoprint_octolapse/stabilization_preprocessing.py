@@ -105,7 +105,7 @@ class StabilizationPreprocessingThread(Thread):
             )
         except Exception as e:
             logger.exception("An error occurred while running the gcode preprocessor.")
-            error = error_messages.OctolapseErrors["preprocessor"]["preprocessor_errors"]['unhandled_exception']
+            error = error_messages.get_error(["preprocessor", "preprocessor_errors", "unhandled_exception"])
             results = (
                 False,  # success
                 False,
@@ -142,7 +142,7 @@ class StabilizationPreprocessingThread(Thread):
                     break
             # only append the no snapshot plan error if there are no fatal processing issues and no other errors
             if not has_fatal_issues and len(other_errors) == 0:
-                error = error_messages.OctolapseErrors["preprocessor"]["preprocessor_errors"]["no_snapshot_plans_returned"]
+                error = error_messages.get_error(["preprocessor", "preprocessor_errors", "no_snapshot_plans_returned"])
                 other_errors.append(error)
         elif cpp_snapshot_plans:
             snapshot_plans = SnapshotPlan.create_from_cpp_snapshot_plans(cpp_snapshot_plans)
@@ -156,18 +156,18 @@ class StabilizationPreprocessingThread(Thread):
     def _get_quality_issues_from_cpp(self, issues):
         quality_issues = []
         for issue in issues:
-            if issue[0] in error_messages.OctolapseErrors["preprocessor"]["cpp_quality_issues"]:
-                quality_issues.append(error_messages.OctolapseErrors["preprocessor"]["cpp_quality_issues"][issue[0]])
+            quality_issues.append(
+                error_messages.get_error(["preprocessor", "cpp_quality_issues", str(issue[0])])
+            )
 
         return quality_issues
 
     def _get_processing_issues_from_cpp(self, issues):
         processing_issues = []
         for issue in issues:
-            if issue[0] in error_messages.OctolapseErrors["preprocessor"]["cpp_processing_errors"]:
-                processing_issues.append(
-                    error_messages.OctolapseErrors["preprocessor"]["cpp_processing_errors"][issue[0]]
-                )
+            processing_issues.append(
+                error_messages.get_error(["preprocessor", "cpp_processing_errors", str(issue[0])])
+            )
 
         return processing_issues
 
@@ -218,7 +218,7 @@ class StabilizationPreprocessingThread(Thread):
             # note that this would mean a programming error
             logger.error("The current trigger is not precalculated!")
 
-            other_error = error_messages.OctolapseErrors["preprocessor"]["preprocessor_errors"]['incorrect_trigger_type']
+            other_error = error_messages.get_error(["preprocessor", "preprocessor_errors", 'incorrect_trigger_type'])
             results = (
                 False,  # success
                 [],  # snapshot_plans
@@ -252,9 +252,10 @@ class StabilizationPreprocessingThread(Thread):
         else:
             # If this is an unknown trigger type, report the error
             # This could happen if there is settings corruption, manual edits, or profile repo errors
-            other_error = error_messages.OctolapseErrors["preprocessor"]["preprocessor_errors"]['unknown_trigger_type']
-            other_error['description'] = other_error['description'].format(
-                self.trigger_profile.trigger_type)
+            other_error = error_messages.get_error(
+                ["preprocessor", "preprocessor_errors", 'unknown_trigger_type'],
+                preprocessor_type=self.trigger_profile.trigger_type
+            )
             results = (
                 False,  # success
                 [],  # snapshot_plans

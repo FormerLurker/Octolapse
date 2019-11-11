@@ -37,6 +37,7 @@ import collections
 import octoprint_octolapse.gcode_preprocessing as gcode_preprocessing
 import octoprint_octolapse.settings_migration as settings_migration
 import six
+from octoprint_octolapse.error_messages import OctolapseException
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -617,7 +618,8 @@ class PrinterProfile(AutomaticConfigurationProfile):
             else:
                 raise Exception("An invalid slicer type has been detected while extracting settings from gcode.")
 
-            new_slicer_settings.update_settings_from_gcode(new_settings)
+            new_slicer_settings.update_settings_from_gcode(new_settings, self)
+
             # check to make sure all of the required settings are there
             missing_settings = new_slicer_settings.get_missing_gcode_generation_settings(slicer_type=self.slicer_type)
             if len(missing_settings) > 0:
@@ -2345,7 +2347,7 @@ class SlicerSettings(Settings):
         """Returns a speed in mm/min for a setting name"""
         raise NotImplementedError("You must implement get_speed_mm_min")
 
-    def update_settings_from_gcode(self, settings_dict):
+    def update_settings_from_gcode(self, settings_dict, printer_profile):
         raise NotImplementedError("You must implement update_settings_from_gcode")
 
 
@@ -2488,7 +2490,7 @@ class CuraSettings(SlicerSettings):
         # round to .1
         return utility.round_to(speed, 0.1)
 
-    def update_settings_from_gcode(self, settings_dict):
+    def update_settings_from_gcode(self, settings_dict, printer_profile):
 
         # get the version if it's in the settings dict
         version = "unknown"
@@ -2687,7 +2689,7 @@ class Simplify3dSettings(SlicerSettings):
     def get_z_axis_movement_speed(self):
         return self.get_speed_mm_min(self.z_axis_movement_speed)
 
-    def update_settings_from_gcode(self, settings_dict):
+    def update_settings_from_gcode(self, settings_dict, printer_profile):
         # per print settings extraction functions
         def _x_y_axis_movement_speed():
             return settings_dict["rapid_xy_speed"]
@@ -2703,6 +2705,7 @@ class Simplify3dSettings(SlicerSettings):
         # clear existing extruders
         self.extruders = []
         # get the toolhead numbers, which is a list of ints that determine the T gcode number for each extruder
+        # Note that toolhead_numbers is a 0 based index
         toolhead_numbers = settings_dict["extruder_tool_number"]
         # Simplify 3D has a very odd method of defining extruders.  You can define any number of
         # extruders and assign them to a tool number (0 based).  Multiple extruders can use the same tool number.
@@ -2712,42 +2715,50 @@ class Simplify3dSettings(SlicerSettings):
         # First, we need to check for duplicate indexes.  If we find any, throw an error
         duplicate_extruder_toolhead_numbers = set([x for x in toolhead_numbers if toolhead_numbers.count(x) > 1])
         if len(duplicate_extruder_toolhead_numbers) > 0:
-            raise Exception(
-                "Multiple extruders are defined with the same toolhead number in simplify, which is not "
-                "supported by Octolapse.  Duplicated toolhead numbers: {0}".format(
-                    ','.join([str(x) for x in duplicate_extruder_toolhead_numbers])
-                )
+            raise OctolapseException(
+                ["settings","slicer","simplify3d","duplicate_toolhead_numbers"],
+                toolhead_numbers = ','.join([str(x) for x in duplicate_extruder_toolhead_numbers])
             )
         #
-        # To get the number of extruders use extruder_tool_number (extruderToolheadNumber in the file),
-        # and select the max int in the list.
 
-        num_extruders = max(toolhead_numbers)
-        if num_extruders > 8:
-            num_extruders = 8
+        # get the number of extruders
+        num_extruders = len(toolhead_numbers)
+        # make sure we have enough extruders
+        if num_extruders != printer_profile.num_extruders:
+            raise OctolapseException(
+                ["settings", "slicer", "simplify3d", "extruder_count_mismatch"],
+                configured_extruder_count=printer_profile.num_extruders, detected_extruder_count=num_extruders
+            )
+
+        zero_based_extruder = (
+            (printer_profile.num_extruders > 1 and printer_profile.zero_based_extruder) or
+            (printer_profile.num_extruders == 1 and max(toolhead_numbers) == 0)
+        )
+        max_extruder_count = 8
+        if num_extruders > max_extruder_count:
+            raise OctolapseException(
+                ["settings", "slicer", "simplify3d", "max_extruder_count_exceeded"],
+                simplify_extruder_count=num_extruders, max_extruder_count=max_extruder_count
+            )
+
+        # ensure that the max(toolhead_number) is correct given the number of extruders and zero_based_extruder
+        expected_max_toolhead_number = num_extruders - 1 if zero_based_extruder else num_extruders
+        max_toolhead_number = max(toolhead_numbers)
+        if expected_max_toolhead_number != max_toolhead_number:
+            raise OctolapseException(
+                ["settings", "slicer", "simplify3d", "unexpected_max_toolhead_number"],
+                expected_max_toolhead_number=expected_max_toolhead_number, max_toolhead_number=max_toolhead_number
+            )
+
         # create num_extruders extruders for this profile
         for i in range(0, num_extruders):
             extruder = Simplify3dExtruder()
             self.extruders.append(extruder)
-        # create a lookup of the index in extruder_toolhead_number for each toolhead by looking at the first index
-        # of each unique toolhead number.
-        # the lookup will be dictionary that takes the toolhead number (T0-T5) and returns the index of the tool
-        # in a given setting.  Null is returned if there is no index for a toolhead number
-        toolhead_index_lookup = dict()
-        for toolhead_number in range(0, num_extruders):
-            try:
-                toolhead_index = toolhead_numbers.index(toolhead_number)
-                toolhead_index_lookup[toolhead_number] = toolhead_index
-            except ValueError:
-                toolhead_index_lookup[toolhead_number] = None
 
         # extract all per-extruder settings for each toolhead
-        for toolhead_number in range(0, num_extruders):
-            toolhead_index = toolhead_index_lookup[toolhead_number]
-            if toolhead_index is None:
-                continue
+        for toolhead_index in range(num_extruders):
             # get the extruder for the toolhead
-            extruder = self.extruders[toolhead_number]
+            extruder = self.extruders[toolhead_index]
             # per defined extruder settings extraction functions
 
             def _retraction_distance(index):
@@ -2945,7 +2956,7 @@ class Slic3rPeSettings(SlicerSettings):
             self.travel_speed
         )
 
-    def update_settings_from_gcode(self, settings_dict):
+    def update_settings_from_gcode(self, settings_dict, printer_profile):
         try:
             # clear out the extruders
             self.extruders = []
@@ -3077,7 +3088,7 @@ class OtherSlicerSettings(SlicerSettings):
         self.vase_mode = False
         self.layer_height = None
 
-    def update_settings_from_gcode(self, settings_dict):
+    def update_settings_from_gcode(self, settings_dict, printer_profile):
         raise Exception("Cannot update 'Other Slicer' from gcode file!  Please select another slicer type to use this "
                         "function.")
 
