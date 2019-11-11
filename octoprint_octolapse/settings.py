@@ -2724,16 +2724,11 @@ class Simplify3dSettings(SlicerSettings):
         # get the number of extruders
         num_extruders = len(toolhead_numbers)
         # make sure we have enough extruders
-        if num_extruders != printer_profile.num_extruders:
+        if num_extruders != 1 and num_extruders != printer_profile.num_extruders:
             raise OctolapseException(
                 ["settings", "slicer", "simplify3d", "extruder_count_mismatch"],
                 configured_extruder_count=printer_profile.num_extruders, detected_extruder_count=num_extruders
             )
-
-        zero_based_extruder = (
-            (printer_profile.num_extruders > 1 and printer_profile.zero_based_extruder) or
-            (printer_profile.num_extruders == 1 and max(toolhead_numbers) == 0)
-        )
         max_extruder_count = 8
         if num_extruders > max_extruder_count:
             raise OctolapseException(
@@ -2742,9 +2737,14 @@ class Simplify3dSettings(SlicerSettings):
             )
 
         # ensure that the max(toolhead_number) is correct given the number of extruders and zero_based_extruder
+        zero_based_extruder = (
+            (printer_profile.num_extruders > 1 and printer_profile.zero_based_extruder) or
+            (printer_profile.num_extruders == 1 and max(toolhead_numbers) == 0)
+        )
+
         expected_max_toolhead_number = num_extruders - 1 if zero_based_extruder else num_extruders
         max_toolhead_number = max(toolhead_numbers)
-        if expected_max_toolhead_number != max_toolhead_number:
+        if num_extruders > 1 and expected_max_toolhead_number != max_toolhead_number:
             raise OctolapseException(
                 ["settings", "slicer", "simplify3d", "unexpected_max_toolhead_number"],
                 expected_max_toolhead_number=expected_max_toolhead_number, max_toolhead_number=max_toolhead_number
