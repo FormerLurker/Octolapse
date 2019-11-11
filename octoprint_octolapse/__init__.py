@@ -517,7 +517,7 @@ class OctolapsePlugin(
         try:
             server_profile_dict = ExternalSettings.get_profile(self._plugin_version, profile_type, key_values)
         except ExternalSettingsError as e:
-            logger.exception(e)
+            logger.exception("An error occurred while retrieving profiles from the profile server.")
             return json.dumps(
                 {
                     "success": False,
@@ -563,7 +563,7 @@ class OctolapsePlugin(
                             updatable_profile["key_values"]
                         )
                     except ExternalSettingsError as e:
-                        logger.exception(e)
+                        logger.exception("An error occurred while getting a profile from the profile server.")
                         return json.dumps(
                             {
                                 "message": e.message
@@ -688,7 +688,7 @@ class OctolapsePlugin(
                 ignore_ssl_error
             )
         except Exception as e:
-            logger.exception(e)
+            logger.exception("An exception occurred while retrieving the current camera settings.")
             raise e
 
         if not success:
@@ -1880,7 +1880,7 @@ class OctolapsePlugin(
                 return_value["errors"].append(error)
                 return return_value
         except Exception as e:
-            logger.exception(e)
+            logger.exception("An exception occurred while retrieving the ffmpeg/avconv path from octoprint.")
             error = error_messages.get_error(["init", "ffmpeg_path_retrieve_exception"])
             return_value["errors"].append(error)
             return return_value

@@ -837,11 +837,11 @@ class Timelapse(object):
                 try:
                     fast_cmd = GcodePositionProcessor.Parse(command_string.encode('ascii', errors="replace"))
                 except ValueError as e:
-                    logger.exception(e)
+                    logger.exception("Unable to parse the command string.")
                     # if we don't return NONE here, we will have problems with the print!
                     return None
                 except Exception as e:
-                    logger.exception(e)
+                    logger.exception("An unexpected exception occurred while trying to parse the command string.")
                     # TODO:  REMOVE THIS BECAUSE IT'S TOO BROAD!
                     # if we don't return NONE here, we will have problems with the print!
                     raise e

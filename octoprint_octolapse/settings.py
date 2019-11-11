@@ -1404,7 +1404,7 @@ class WebcamSettings(Settings):
                     else:
                         self.__dict__[key] = self.try_convert_value(class_item, value, key)
         except Exception as e:
-            logger.exception(e)
+            logger.exception("An unexpected exception occurred while updating webcam settings.")
             raise e
 
 

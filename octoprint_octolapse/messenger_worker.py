@@ -128,4 +128,4 @@ class MessengerWorker(Thread):
             except queue.Empty:
                 pass
             except Exception as e:
-                logger.exception(e)
+                logger.exception("An unexpected exception occurred while sending message to the UI.")

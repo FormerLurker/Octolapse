@@ -299,7 +299,7 @@ class RenderingProcessor(threading.Thread):
                 if self._is_processing:
                     self._is_processing = False
             except Exception as e:
-                logger.exception(e)
+                logger.exception("An unexpected error occurred while processing rendering tasks.")
                 raise e
 
     def on_prerender_start(self, payload):

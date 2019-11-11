@@ -712,7 +712,7 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
         try:
             self.controls = self.get_controls_from_server()
         except CameraError as e:
-            logger.exception(e)
+            logger.exception("An unexpected error occurred while running the MjpgStreamerControlThread.")
             self.errors.append(e)
 
     def get_controls_from_server(self):
@@ -1031,7 +1031,7 @@ class CameraSettingScriptThread(Thread):
                 raise CameraError('error_message_returned', error_message)
 
         except CameraError as e:
-            logger.exception(e)
+            logger.exception("A camera error occurred while running the CameraSettingScriptThread.")
             self.error = e
 
 

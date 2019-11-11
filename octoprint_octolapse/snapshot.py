@@ -461,9 +461,9 @@ class SnapshotThread(Thread):
         except SnapshotError as e:
             self.post_processing_errors = e
         except Exception as e:
-            logger.exception(e)
             message = "An unexpected exception occurred while post-processing images for the {0} camera." \
                       "  See plugin.octolapse.log for details".format(self.snapshot_job_info.camera.name)
+            logger.exception(message)
             raise SnapshotError('post-processing-error', message, cause=e)
         finally:
             if request:
@@ -494,8 +494,9 @@ class ExternalScriptSnapshotJob(SnapshotThread):
             # execute the script and send the parameters
             if self.script_type == 'snapshot':
                 if self.snapshot_job_info.DelaySeconds < 0.001:
-                    logger.info("Snapshot Delay - No pre snapshot delay configured for the %s camera.".format(
-                        self.snapshot_job_info.camera.name))
+                    logger.info(
+                        "Snapshot Delay - No pre snapshot delay configured for the %s camera.",
+                        self.snapshot_job_info.camera.name)
                 else:
                     self.apply_camera_delay()
 
@@ -510,7 +511,9 @@ class ExternalScriptSnapshotJob(SnapshotThread):
         except SnapshotError as e:
             self.snapshot_job_info.error = "{}".format(e)
         except Exception as e:
-            logger.exception(e)
+            logger.exception(
+                "An unexpected error occurred while processing the %s script for the %s camera.",
+                self.script_type, self.snapshot_job_info.camera.name)
             self.snapshot_job_info.error = "An unexpected exception occurred while processing the {0} script for the " \
                                            "{1} camera.".format(self.script_type, self.snapshot_job_info.camera.name)
             raise e
@@ -547,11 +550,12 @@ class ExternalScriptSnapshotJob(SnapshotThread):
             console_output = cmd.stdout
             error_message = cmd.stderr
         except utility.POpenWithTimeout.ProcessError as e:
-            logger.exception(e)
+            message = "An OS Error error occurred while executing the {0} script for the {1} camera.".format(
+                self.script_type, self.snapshot_job_info.camera.name)
+            logger.exception(message)
             raise SnapshotError(
                 '{0}_script_error'.format(self.script_type),
-                "An OS Error error occurred while executing the {0} script for the {1} camera.".format(
-                    self.script_type, self.snapshot_job_info.camera.name),
+                message,
                 cause=e
             )
 
@@ -619,9 +623,9 @@ class WebcamSnapshotJob(SnapshotThread):
                 # Pre-Snapshot Delay
                 self.apply_camera_delay()
         except Exception as e:
-            logger.exception(e)
-            message="An error occurred while applying the snapshot delay for the {0} camera." \
+            message = "An error occurred while applying the snapshot delay for the {0} camera." \
                     "  See plugin.octolapse.log for details.".format(self.snapshot_job_info.camera.name)
+            logger.exception(message)
             self.download_error = SnapshotError("snapshot-delay-error", message, e)
             if self.download_started_event:
                 self.download_started_event.set()
@@ -672,11 +676,14 @@ class WebcamSnapshotJob(SnapshotThread):
             message = "An error occurred downloading a snapshot for the {0} camera.".format(
                 self.snapshot_job_info.camera.name
             )
+            logger.exception(message)
             try:
                 if r:
                     r.close()
             except Exception as c:
-                logger.exception(c)
+                logger.exception(
+                    "Unable to close the snapshot download request for the %s camera.",
+                    self.snapshot_job_info.camera.name)
             self.download_error = SnapshotError(
                 'snapshot-download-error',
                 message,
