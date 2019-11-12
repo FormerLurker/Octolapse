@@ -560,9 +560,12 @@ class TimelapseRenderJob(object):
     def _verify_images(self):
         logger.info("Verifying all snapshot images")
         for index in range(self.render_job_info.camera_info.snapshot_attempt):
+
             file_path = self.render_job_info.get_snapshot_full_path_from_index(index)
             if os.path.isfile(file_path):
                 try:
+                    has_been_converted = False
+                    temp_file_path = None
                     with Image.open(file_path) as img:
                         if img.format not in ["JPEG", "JPEG 2000"]:
                             logger.info(
@@ -571,7 +574,15 @@ class TimelapseRenderJob(object):
                                 img.format
                             )
                             with img.convert('RGB') as rgb_img:
-                                rgb_img.save(file_path)
+                                temp_file_path = os.path.join(
+                                    self.render_job_info.snapshot_directory, "converted_image.jpg"
+                                )
+                                # save the file with a temp name
+                                rgb_img.save(temp_file_path)
+                                has_been_converted = True
+                    if has_been_converted:
+                        os.remove(file_path)
+                        os.rename(temp_file_path, file_path)
                 except IOError as e:
                     os.remove(file_path)
                     logger.exception("The file at path %s is not a valid image file, could not be converted, "
