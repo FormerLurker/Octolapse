@@ -1096,7 +1096,7 @@ class RenderingProfile(AutomaticConfigurationProfile):
         self.cleanup_after_render_fail = False
         # Skip Snapshots
         self.snapshots_to_skip_beginning = 0
-        self.snapshot_to_skip_end = 0
+        self.snapshots_to_skip_end = 0
 
     def get_overlay_text_color(self):
         return RenderingProfile._get_color_(self.overlay_text_color)

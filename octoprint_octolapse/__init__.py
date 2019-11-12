@@ -1479,6 +1479,7 @@ class OctolapsePlugin(
             on_snapshot_start=self.on_snapshot_start,
             on_snapshot_end=self.on_snapshot_end,
             on_new_thumbnail_available=self.on_new_thumbnail_available,
+            on_post_processing_error_callback=self.on_post_processing_error_callback,
             on_timelapse_stopping=self.on_timelapse_stopping,
             on_timelapse_stopped=self.on_timelapse_stopped,
             on_timelapse_end=self.on_timelapse_end,
@@ -2446,6 +2447,18 @@ class OctolapsePlugin(
             "guid": guid
         }
         self.queue_plugin_message(PluginMessage(data, "new-thumbnail-available"))
+
+    def on_post_processing_error_callback(self, guid, exc):
+        status_dict = self.get_status_dict()
+        error = str(exc)
+        data = {
+            # "type": "snapshot-complete",
+            "msg": error,
+            "status": status_dict,
+            "state": self._timelapse.to_state_dict(),
+            "main_settings": self._octolapse_settings.main_settings.to_dict(),
+        }
+        self.queue_plugin_message(PluginMessage(data, "snapshot-post-proocessing-failed"))
 
     def on_print_failed(self):
         self._timelapse.on_print_failed()

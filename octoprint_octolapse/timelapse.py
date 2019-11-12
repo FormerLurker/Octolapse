@@ -46,13 +46,12 @@ logger = logging_configurator.get_logger(__name__)
 class Timelapse(object):
 
     def __init__(
-            self, get_current_octolapse_settings, octoprint_printer, data_folder, timelapse_folder,
-            on_print_started=None, on_print_start_failed=None,
-            on_snapshot_start=None, on_snapshot_end=None, on_new_thumbnail_available=None,
-            on_prerender_start=None, on_render_start=None, on_render_success=None, on_render_error=None,
-            on_render_end=None, on_timelapse_stopping=None, on_timelapse_stopped=None,
-            on_state_changed=None, on_timelapse_end=None,
-            on_snapshot_position_error=None
+        self, get_current_octolapse_settings, octoprint_printer, data_folder, timelapse_folder,
+        on_print_started=None, on_print_start_failed=None,
+        on_snapshot_start=None, on_snapshot_end=None, on_new_thumbnail_available=None,
+        on_post_processing_error_callback=None, on_prerender_start=None, on_render_start=None,
+        on_render_success=None, on_render_error=None, on_render_end=None, on_timelapse_stopping=None,
+        on_timelapse_stopped=None, on_state_changed=None, on_timelapse_end=None, on_snapshot_position_error=None
     ):
         # config variables - These don't change even after a reset
         self.state_update_period_seconds = 1
@@ -71,6 +70,7 @@ class Timelapse(object):
         self._snapshot_start_callback = on_snapshot_start
         self._snapshot_complete_callback = on_snapshot_end
         self._new_thumbnail_available_callback = on_new_thumbnail_available
+        self._on_post_processing_error_callback = on_post_processing_error_callback
         self._timelapse_stopping_callback = on_timelapse_stopping
         self._timelapse_stopped_callback = on_timelapse_stopped
         self._state_changed_callback = on_state_changed
@@ -199,7 +199,9 @@ class Timelapse(object):
             self._settings.profiles.active_cameras(),
             self._current_job_info,
             self.send_gcode_for_camera,
-            self._new_thumbnail_available_callback
+            self._new_thumbnail_available_callback,
+            self._on_post_processing_error_callback,
+
         )
 
         self._position = Position(
@@ -1222,6 +1224,7 @@ class Timelapse(object):
                         self._data_folder,
                         self._default_timelapse_directory,
                         camera,
+                        self._capture_snapshot.CameraInfos[camera.guid],
                         self._settings.profiles.current_rendering(),
                         self._ffmpeg_path
                     )

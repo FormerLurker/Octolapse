@@ -1798,6 +1798,25 @@ $(function () {
 
                     }
                     break;
+                case "snapshot-post-proocessing-failed":
+                    {
+                        self.updateState(data);
+                        Octolapse.Status.snapshot_error(true);
+                        // If only the camera image acquisition failed, use the camera error message
+
+                        if (!data.snapshot_success)
+                        {
+                            var options = {
+                                title: "Camera Processing Error",
+                                text: data.message,
+                                type: 'error',
+                                hide: false,
+                                addclass: "octolapse"
+                            };
+                            Octolapse.displayPopupForKey(options, "camera_error",["camera_error"])
+                        }
+                    }
+                    break;
                 case "new-thumbnail-available":
                     if (data.guid == $("#octolapse_current_snapshot_camera").val()) {
                         //console.log("New thumbnails available");

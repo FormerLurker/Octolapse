@@ -465,83 +465,103 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
         # Adjust slicer settings
         slicers = printer["slicers"]
         # Adjust Cura Settings
-        cura = slicers["cura"]
-        cura_extruder = {
-            "version": cura["version"],
-            "speed_z_hop": cura["speed_z_hop"],
-            "max_feedrate_z_override": cura["max_feedrate_z_override"],
-            "retraction_amount": cura["retraction_amount"],
-            "retraction_hop": cura["retraction_hop"],
-            "retraction_hop_enabled": cura["retraction_hop_enabled"],
-            "retraction_enable": cura["retraction_enable"],
-            "retraction_speed": cura["retraction_speed"],
-            "retraction_retract_speed": cura["retraction_retract_speed"],
-            "retraction_prime_speed": cura["retraction_prime_speed"],
-            "speed_travel": cura["speed_travel"],
-        }
-        cura["machine_extruder_count"] = 1
-        cura["extruders"] = [cura_extruder]
-        del cura["speed_z_hop"]
-        del cura["max_feedrate_z_override"]
-        del cura["retraction_amount"]
-        del cura["retraction_hop"]
-        del cura["retraction_hop_enabled"]
-        del cura["retraction_enable"]
-        del cura["retraction_speed"]
-        del cura["retraction_retract_speed"]
-        del cura["retraction_prime_speed"]
-        del cura["speed_travel"]
+        if "cura" in slicers:
+            cura = slicers["cura"]
+            cura_extruder = {
+                "version": cura["version"],
+                "speed_z_hop": cura["speed_z_hop"],
+                "max_feedrate_z_override": cura["max_feedrate_z_override"],
+                "retraction_amount": cura["retraction_amount"],
+                "retraction_hop": cura["retraction_hop"],
+                "retraction_hop_enabled": cura["retraction_hop_enabled"],
+                "retraction_enable": cura["retraction_enable"],
+                "retraction_speed": cura["retraction_speed"],
+                "retraction_retract_speed": cura["retraction_retract_speed"],
+                "retraction_prime_speed": cura["retraction_prime_speed"],
+                "speed_travel": cura["speed_travel"],
+            }
+            cura["machine_extruder_count"] = 1
+            cura["extruders"] = [cura_extruder]
+            del cura["speed_z_hop"]
+            del cura["max_feedrate_z_override"]
+            del cura["retraction_amount"]
+            del cura["retraction_hop"]
+            del cura["retraction_hop_enabled"]
+            del cura["retraction_enable"]
+            del cura["retraction_speed"]
+            del cura["retraction_retract_speed"]
+            del cura["retraction_prime_speed"]
+            del cura["speed_travel"]
 
-        # Adjust Other Slicer Settings
-        other = slicers["other"]
-        other_extruder = {
-            "retract_length": other["retract_length"],
-            "z_hop": other["z_hop"],
-            "retract_speed": other["retract_speed"],
-            "deretract_speed": other["deretract_speed"],
-            "lift_when_retracted": other["lift_when_retracted"],
-            "travel_speed": other["travel_speed"],
-            "z_travel_speed": other["z_travel_speed"],
-            "retract_before_move": other["retract_before_move"]
-        }
-        other["extruders"] = [other_extruder]
-        del other["retract_length"]
-        del other["z_hop"]
-        del other["retract_speed"]
-        del other["deretract_speed"]
-        del other["lift_when_retracted"]
-        del other["retract_before_move"]
-        del other["travel_speed"]
-        del other["z_travel_speed"]
+        if "other" in slicers:
+            # Adjust Other Slicer Settings
+            other = slicers["other"]
+            retract_before_move = (
+                other["retract_length"] > 0 if "retract_before_move" not in other else other["retract_before_move"]
+            )
+            lift_when_retracted = (
+                retract_before_move and other["z_hop"] > 0 if "lift_when_retracted" not in other else other["lift_when_retracted"]
+            )
 
-        # Adjust Simplify3D Settings
-        simplify = slicers["simplify_3d"]
-        simplify_extruder = {
-            'retraction_distance': simplify["retraction_distance"],
-            'retraction_vertical_lift': simplify["retraction_vertical_lift"],
-            'retraction_speed': simplify["retraction_speed"],
-            'extruder_use_retract': simplify["extruder_use_retract"]
-        }
-        simplify["extruders"] = [simplify_extruder]
-        del simplify["retraction_distance"]
-        del simplify["retraction_vertical_lift"]
-        del simplify["retraction_speed"]
-        del simplify["extruder_use_retract"]
+            other_extruder = {
+                "retract_length": other["retract_length"],
+                "z_hop": other["z_hop"],
+                "retract_speed": other["retract_speed"],
+                "deretract_speed": other["deretract_speed"],
+                "lift_when_retracted": lift_when_retracted,
+                "travel_speed": other["travel_speed"],
+                "z_travel_speed": other["z_travel_speed"],
+                "retract_before_move": retract_before_move
+            }
+            other["extruders"] = [other_extruder]
+            del other["retract_length"]
+            del other["z_hop"]
+            del other["retract_speed"]
+            del other["deretract_speed"]
+            del other["travel_speed"]
+            del other["z_travel_speed"]
+            if "lift_when_retracted" in other:
+                del other["lift_when_retracted"]
+            if "retract_before_move" in other:
+                del other["retract_before_move"]
 
-        # Adjust Slic3r Settings
-        slic3r_pe = slicers["slic3r_pe"]
-        del slic3r_pe["retract_before_travel"]
-        slic3r_extruder = {
-            "retract_length": slic3r_pe["retract_length"],
-            "retract_lift": slic3r_pe["retract_lift"],
-            "retract_speed": slic3r_pe["retract_speed"],
-            "deretract_speed": slic3r_pe["deretract_speed"],
-        }
-        slic3r_pe["extruders"] = [slic3r_extruder]
-        del slic3r_pe["retract_length"]
-        del slic3r_pe["retract_lift"]
-        del slic3r_pe["retract_speed"]
-        del slic3r_pe["deretract_speed"]
+        if "simplify_3d" in slicers:
+            # Adjust Simplify3D Settings
+            simplify = slicers["simplify_3d"]
+            simplify_extruder = {
+                'retraction_distance': simplify["retraction_distance"],
+                'retraction_vertical_lift': simplify["retraction_vertical_lift"],
+                'retraction_speed': simplify["retraction_speed"],
+                'extruder_use_retract': simplify["extruder_use_retract"]
+            }
+            simplify["extruders"] = [simplify_extruder]
+            del simplify["retraction_distance"]
+            del simplify["retraction_vertical_lift"]
+            del simplify["retraction_speed"]
+            del simplify["extruder_use_retract"]
+
+        if "slic3r_pe" in slicers:
+            # Adjust Slic3r Settings
+            slic3r_pe = slicers["slic3r_pe"]
+            if "retract_before_travel" in slic3r_pe:
+                del slic3r_pe["retract_before_travel"]
+            slic3r_extruder = {
+                "retract_length": slic3r_pe["retract_length"],
+                "retract_lift": slic3r_pe["retract_lift"],
+                "retract_speed": slic3r_pe["retract_speed"],
+                "deretract_speed": slic3r_pe["deretract_speed"],
+            }
+            slic3r_pe["extruders"] = [slic3r_extruder]
+            del slic3r_pe["retract_length"]
+            del slic3r_pe["retract_lift"]
+            del slic3r_pe["retract_speed"]
+            del slic3r_pe["deretract_speed"]
+
+    renderings = settings_dict["profiles"]["renderings"]
+    for key, render in six.iteritems(renderings):
+        if "snapshot_to_skip_end" in render:
+            render["snapshots_to_skip_end"] = render["snapshot_to_skip_end"]
+            del render["snapshot_to_skip_end"]
 
     settings_dict["main_settings"]["version"] = "0.4.0rc1.dev3"
     return settings_dict

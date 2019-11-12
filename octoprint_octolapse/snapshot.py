@@ -81,7 +81,7 @@ def take_in_memory_snapshot(settings, current_camera):
 class CaptureSnapshot(object):
 
     def __init__(self, settings, data_directory, cameras, timelapse_job_info, send_gcode_array_callback
-                 , on_new_thumbnail_available_callback):
+                 , on_new_thumbnail_available_callback, on_post_processing_error_callback):
         self.Settings = settings
         self.Cameras = []
         for current_camera in cameras:
@@ -98,6 +98,7 @@ class CaptureSnapshot(object):
         self.ErrorsTotal = 0
         self.SendGcodeArrayCallback = send_gcode_array_callback
         self.OnNewThumbnailAvailableCallback = on_new_thumbnail_available_callback
+        self.on_post_processing_error_callback = on_post_processing_error_callback
 
     def take_snapshots(self):
         logger.info("Starting snapshot acquisition")
@@ -114,21 +115,22 @@ class CaptureSnapshot(object):
             # pre_snapshot threads
             if current_camera.on_before_snapshot_script:
                 before_snapshot_job_info = SnapshotJobInfo(
-                    self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_count, current_camera
+                    self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_attempt, current_camera
                 )
                 before_snapshot_threads.append(
                     ExternalScriptSnapshotJob(before_snapshot_job_info, self.Settings, 'before-snapshot')
                 )
 
             snapshot_job_info = SnapshotJobInfo(
-                self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_count, current_camera
+                self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_attempt, current_camera
             )
             if current_camera.camera_type == "script":
                 thread = ExternalScriptSnapshotJob(
                     snapshot_job_info,
                     self.Settings,
                     'snapshot',
-                    on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback
+                    on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback,
+                    on_post_processing_error_callback=self.on_post_processing_error_callback
                 )
                 snapshot_threads.append((thread, snapshot_job_info, None))
             elif current_camera.camera_type == "webcam":
@@ -137,12 +139,13 @@ class CaptureSnapshot(object):
                     snapshot_job_info,
                     self.Settings,
                     download_started_event=download_started_event,
-                    on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback
+                    on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback,
+                    on_post_processing_error_callback=self.on_post_processing_error_callback
                 )
                 snapshot_threads.append((thread, snapshot_job_info, download_started_event))
 
             after_snapshot_job_info = SnapshotJobInfo(
-                self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_count, current_camera
+                self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_attempt, current_camera
             )
             # post_snapshot threads
             if current_camera.on_after_snapshot_script:
@@ -188,14 +191,19 @@ class CaptureSnapshot(object):
         for t, snapshot_job_info, event in snapshot_threads:
             if event:
                 event.wait()
-                if t.snapshot_thread_error:
-                    snapshot_job_info.success = False
-                    snapshot_job_info.error = t.snapshot_thread_error
-                else:
-                    snapshot_job_info.success = True
             else:
                 snapshot_job_info = t.join()
+            if t.snapshot_thread_error:
+                snapshot_job_info.success = False
+                snapshot_job_info.error = t.snapshot_thread_error
+            elif t.post_processing_error:
+                snapshot_job_info.success = False
+                snapshot_job_info.error = t.post_processing_error
+            else:
+                snapshot_job_info.success = True
+
             info = self.CameraInfos[snapshot_job_info.camera_guid]
+            info.snapshot_attempt += 1
             if snapshot_job_info.success:
                 info.snapshot_count += 1
                 self.SnapshotsTotal += 1
@@ -286,9 +294,11 @@ class CaptureSnapshot(object):
 
 
 class ImagePostProcessing(object):
-    def __init__(self, snapshot_job_info, on_new_thumbnail_available_callback=None, request=None):
+    def __init__(self, snapshot_job_info, on_new_thumbnail_available_callback=None,
+                 on_post_processing_error_callback=None, request=None):
         self.snapshot_job_info = snapshot_job_info
         self.on_new_thumbnail_available_callback = on_new_thumbnail_available_callback
+        self.on_post_processing_error_callback = on_post_processing_error_callback
         self.request = request
 
     def process(self):
@@ -298,11 +308,23 @@ class ImagePostProcessing(object):
                 self.save_image_from_request()
                 self.request.close()
             # Post Processing and Meta Data Creation
+            # Always write metadata
             self.write_metadata()
-            self.transpose_image()
-            self.create_thumbnail()
-            if self.on_new_thumbnail_available_callback is not None:
-                self.on_new_thumbnail_available_callback(self.snapshot_job_info.camera.guid)
+            # only process image manipulation if the image exists
+            if os.path.isfile(self.snapshot_job_info.full_path):
+                self.transpose_image()
+                self.create_thumbnail()
+                if self.on_new_thumbnail_available_callback is not None:
+                    self.on_new_thumbnail_available_callback(self.snapshot_job_info.camera.guid)
+            else:
+                logger.debug(
+                    "Snapshot #%d does not exist for the %s camera.",
+                    self.snapshot_job_info.snapshot_number,
+                    self.snapshot_job_info.camera.name)
+        except SnapshotError as e:
+            if self.on_post_processing_error_callback is not None:
+                self.on_post_processing_error_callback(e)
+
         finally:
             logger.debug("Post-processing snapshot for the %s camera complete.", self.snapshot_job_info.camera.name)
 
@@ -327,8 +349,13 @@ class ImagePostProcessing(object):
             )
 
     def write_metadata(self):
+        metadata_path = os.path.join(self.snapshot_job_info.directory, SnapshotMetadata.METADATA_FILE_NAME)
+
         try:
-            with open(os.path.join(self.snapshot_job_info.directory, SnapshotMetadata.METADATA_FILE_NAME), 'a') as metadata_file:
+            if not os.path.exists(self.snapshot_job_info.directory):
+                os.makedirs(self.snapshot_job_info.directory)
+
+            with open(metadata_path, 'a') as metadata_file:
                 dictwriter = DictWriter(metadata_file, SnapshotMetadata.METADATA_FIELDS)
                 dictwriter.writerow({
                     'snapshot_number': "{}".format(self.snapshot_job_info.snapshot_number),
@@ -420,16 +447,19 @@ class ImagePostProcessing(object):
 
 
 class SnapshotThread(Thread):
-    def __init__(self, snapshot_job_info, settings, on_new_thumbnail_available_callback=None):
+    def __init__(self, snapshot_job_info, settings, on_new_thumbnail_available_callback=None,
+                 on_post_processing_error_callback=None):
         super(SnapshotThread, self).__init__()
         self.snapshot_job_info = snapshot_job_info
         self.Settings = settings
         self.on_new_thumbnail_available_callback = on_new_thumbnail_available_callback
+        self.on_post_processing_error_callback = on_post_processing_error_callback
         self.post_processing_error = None
         self.snapshot_thread_error = None
 
     def join(self, timeout=None):
         super(SnapshotThread, self).join(timeout=timeout)
+
         return self.snapshot_job_info
 
     def apply_camera_delay(self):
@@ -456,15 +486,18 @@ class SnapshotThread(Thread):
         # since it's possible the image isn't on the pi.
         # for example it could be on a DSLR's SD memory
         try:
-            if request is not None or os.path.isfile(self.snapshot_job_info.full_path):
-                def post_process(post_processor):
-                    post_processor.process()
-                image_post_processor = ImagePostProcessing(self.snapshot_job_info, self.on_new_thumbnail_available_callback, request=request)
-                if not block and not request:
-                    processing_thread = Thread(target=post_process, args=[image_post_processor])
-                    processing_thread.start()
-                else:
-                    image_post_processor.process()
+            def post_process_thread(post_processor):
+                post_processor.process()
+            image_post_processor = ImagePostProcessing(
+                self.snapshot_job_info,
+                on_new_thumbnail_available_callback=self.on_new_thumbnail_available_callback,
+                on_post_processing_error_callback=self.on_post_processing_error_callback,
+                request=request)
+            if not block and not request:
+                processing_thread = Thread(target=post_process_thread, args=[image_post_processor])
+                processing_thread.start()
+            else:
+                image_post_processor.process()
         except SnapshotError as e:
             logger.exception("An unexpected exception occurred while post processing an image for "
                              "the %s camera.", self.snapshot_job_info.camera.name)
@@ -480,11 +513,13 @@ class SnapshotThread(Thread):
 
 
 class ExternalScriptSnapshotJob(SnapshotThread):
-    def __init__(self, snapshot_job_info, settings, script_type, on_new_thumbnail_available_callback=None):
+    def __init__(self, snapshot_job_info, settings, script_type, on_new_thumbnail_available_callback=None,
+                 on_post_processing_error_callback=None):
         super(ExternalScriptSnapshotJob, self).__init__(
             snapshot_job_info,
             settings,
-            on_new_thumbnail_available_callback=on_new_thumbnail_available_callback
+            on_new_thumbnail_available_callback=on_new_thumbnail_available_callback,
+            on_post_processing_error_callback=on_post_processing_error_callback
         )
         assert (isinstance(snapshot_job_info, SnapshotJobInfo))
         if script_type == 'before-snapshot':
@@ -502,14 +537,13 @@ class ExternalScriptSnapshotJob(SnapshotThread):
         # execute the script and send the parameters
         if self.script_type == 'snapshot':
             if self.snapshot_job_info.DelaySeconds < 0.001:
-                logger.info(
+                logger.debug(
                     "Snapshot Delay - No pre snapshot delay configured for the %s camera.",
                     self.snapshot_job_info.camera.name)
             else:
                 self.apply_camera_delay()
         try:
             self.execute_script()
-            self.snapshot_job_info.success = True
         except SnapshotError as e:
             self.snapshot_thread_error = str(e)
             return
@@ -519,10 +553,23 @@ class ExternalScriptSnapshotJob(SnapshotThread):
             logger.exception(message)
             self.snapshot_thread_error = message
             raise e
-
-        if self.script_type == 'snapshot':
-            # perform post processing
-            self.post_process(block=self.on_new_thumbnail_available_callback is None)
+        finally:
+            if self.script_type == 'snapshot':
+                # perform post processing
+                try:
+                    self.post_process(block=self.on_new_thumbnail_available_callback is None)
+                except SnapshotError as e:
+                    self.post_processing_error = e
+                except Exception as e:
+                    message = "An unexpected error occurred during post processing for the {0} camera".format(
+                        self.snapshot_job_info.camera.name)
+                    logger.exception(message)
+                    self.post_processing_error = SnapshotError(
+                        'post-processing-error',
+                        message,
+                        cause=e
+                    )
+                    raise e
 
         logger.info("The %s script job completed, signaling task queue.", self.script_type)
 
@@ -580,7 +627,30 @@ class ExternalScriptSnapshotJob(SnapshotThread):
             error_message = error_message[:-2]
 
         if not return_code == 0:
-            if error_message:
+            if cmd.exception and not error_message:
+                # an exception was stored in the cmd
+                error_message = (
+                    "The {0} script raised an exception for the {1} camera with the following error "
+                    "message: {2}".format(
+                        self.script_type, self.snapshot_job_info.camera.name, error_message)
+                )
+                raise SnapshotError(
+                    '{0}_script_error'.format(self.script_type),
+                    error_message,
+                    cause=cmd.exception
+                )
+            elif cmd.exception:
+                error_message = (
+                    "The {0} script raised an exception for the {1} camera.".format(
+                        self.script_type, self.snapshot_job_info.camera.name
+                    )
+                )
+                raise SnapshotError(
+                    '{0}_script_error'.format(self.script_type),
+                    error_message,
+                    cause=cmd.exception
+                )
+            elif error_message:
                 error_message = "The {0} script failed for the {1} camera with the following error message: {2}"\
                     .format(self.script_type, self.snapshot_job_info.camera.name, error_message)
             else:
@@ -608,12 +678,14 @@ class WebcamSnapshotJob(SnapshotThread):
         snapshot_job_info,
         settings,
         download_started_event=None,
-        on_new_thumbnail_available_callback=None
+        on_new_thumbnail_available_callback=None,
+        on_post_processing_error_callback=None
     ):
         super(WebcamSnapshotJob, self).__init__(
             snapshot_job_info,
             settings,
-            on_new_thumbnail_available_callback=on_new_thumbnail_available_callback
+            on_new_thumbnail_available_callback=on_new_thumbnail_available_callback,
+            on_post_processing_error_callback=on_post_processing_error_callback
         )
         self.Address = self.snapshot_job_info.camera.webcam_settings.address
         if isinstance(self.Address, six.string_types):
@@ -633,22 +705,13 @@ class WebcamSnapshotJob(SnapshotThread):
         self.stream_download = self.snapshot_job_info.camera.webcam_settings.stream_download
 
     def run(self):
-        try:
-            if self.snapshot_job_info.DelaySeconds < 0.001:
-                logger.debug(
-                    "Starting Snapshot Download Job Immediately for the %s camera.",
-                    self.snapshot_job_info.camera.name)
-            else:
-                # Pre-Snapshot Delay
-                self.apply_camera_delay()
-        except Exception as e:
-            message = "An error occurred while applying the snapshot delay for the {0} camera." \
-                    "  See plugin.octolapse.log for details.".format(self.snapshot_job_info.camera.name)
-            logger.exception(message)
-            self.snapshot_thread_error = SnapshotError("snapshot-delay-error", message, e)
-            if self.download_started_event:
-                self.download_started_event.set()
-            return
+
+        if self.snapshot_job_info.DelaySeconds < 0.001:
+            logger.debug(
+                "Snapshot Delay - No pre snapshot delay configured for the %s camera.",
+                self.snapshot_job_info.camera.name)
+        else:
+            self.apply_camera_delay()
 
         r = None
         start_time = time()
@@ -682,7 +745,7 @@ class WebcamSnapshotJob(SnapshotThread):
             r.raise_for_status()
             if self.stream_download:
                 logger.debug(
-                    "Snapshot - received streaming respons for the %s camera e in %.3f seconds.",
+                    "Snapshot - received streaming response for the %s camera e in %.3f seconds.",
                     self.snapshot_job_info.camera.name,
                     time() - download_start_time)
             else:
@@ -690,7 +753,27 @@ class WebcamSnapshotJob(SnapshotThread):
                     "Snapshot - snapshot downloaded for the %s camera in %.3f seconds.",
                     self.snapshot_job_info.camera.name,
                     time() - download_start_time)
-
+        except requests.ConnectionError as e:
+            message = (
+                "A connection error occurred while downloading a snapshot for the {0} camera."
+                .format(self.snapshot_job_info.camera.name, self.snapshot_job_info.TimeoutSeconds)
+            )
+            logger.error(message)
+            self.snapshot_thread_error = SnapshotError(
+                'snapshot-download-error',
+                message,
+                cause=e
+            )
+        except (requests.ConnectTimeout, requests.ReadTimeout) as e:
+            message = "An timeout occurred downloading a snapshot for the {0} camera in {1:.3f} seconds.".format(
+                self.snapshot_job_info.camera.name, self.snapshot_job_info.TimeoutSeconds
+            )
+            logger.error(message)
+            self.snapshot_thread_error = SnapshotError(
+                'snapshot-download-error',
+                message,
+                cause=e
+            )
         except Exception as e:
             message = "An error occurred downloading a snapshot for the {0} camera.".format(
                 self.snapshot_job_info.camera.name
@@ -708,19 +791,29 @@ class WebcamSnapshotJob(SnapshotThread):
                 message,
                 cause=e
             )
-            return
+            raise e
         finally:
             if self.download_started_event:
                 self.download_started_event.set()
-
-        # start post processing
-        try:
-            self.post_process(request=r, block=self.on_new_thumbnail_available_callback is None)
-            self.snapshot_job_info.success = True
-        finally:
-            logger.info("Snapshot Download Job completed for the %s camera in %.3f seconds.",
-                        self.snapshot_job_info.camera.name,
-                        time()-start_time)
+            # start post processing
+            try:
+                self.post_process(request=r, block=self.on_new_thumbnail_available_callback is None)
+            except SnapshotError as e:
+                self.post_processing_error = e
+            except Exception as e:
+                message = "An unexpected error occurred during post processing for the {0} camera".format(
+                    self.snapshot_job_info.camera.name)
+                logger.exception(message)
+                self.post_processing_error = SnapshotError(
+                    'post-processing-error',
+                    message,
+                    cause=e
+                )
+                raise e
+            finally:
+                logger.info("Snapshot Download Job completed for the %s camera in %.3f seconds.",
+                            self.snapshot_job_info.camera.name,
+                            time()-start_time)
 
 
 class SnapshotError(Exception):
@@ -760,5 +853,6 @@ class SnapshotJobInfo(object):
 
 class CameraInfo(object):
     def __init__(self):
+        self.snapshot_attempt = 0
         self.snapshot_count = 0
         self.errors_count = 0

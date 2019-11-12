@@ -740,10 +740,12 @@ class POpenWithTimeout(object):
             except (OSError, subprocess.CalledProcessError) as e:
                 self.exception = e
                 self.completed = True
-                (exc_stdout, exc_stderr) = self.proc.communicate()
-                self.stdout = exc_stdout
-                self.stderr = exc_stderr
-                return
+                if self.proc:
+                    # self.proc could be none!
+                    (exc_stdout, exc_stderr) = self.proc.communicate()
+                    self.stdout = exc_stdout
+                    self.stderr = exc_stderr
+                return -100
             finally:
                 self.lock.release()
 
