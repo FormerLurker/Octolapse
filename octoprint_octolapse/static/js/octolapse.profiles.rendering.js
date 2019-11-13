@@ -224,15 +224,15 @@ $(function() {
              return OctoPrint.get(OctoPrint.getBlueprintUrl('octolapse') +
                 'rendering/watermark')
                     .then(function(response) {
-                        self.watermark_list.removeAll();
-                        // The let format is not working in some versions of safari
+                        var watermarks = [];
                         for (var index = 0; index < response['filepaths'].length;index++) {
-                            self.watermark_list.push(new WatermarkImage(response['filepaths'][index]));
+                            watermarks.push(new WatermarkImage(response['filepaths'][index]));
                         }
+                        self.watermark_list(watermarks);
                      }, function(response) {
-                        self.watermark_list.removeAll()
+                        var watermarks = [new WatermarkImage("Failed to load watermarks from Octolapse data directory.")];
                         // Hacky solution, but good enough. We shouldn't encounter this error too much anyways.
-                        self.watermark_list.push(new WatermarkImage("Failed to load watermarks from Octolapse data directory."));
+                        self.watermark_list(watermarks);
                      });
         };
 
@@ -290,11 +290,12 @@ $(function() {
         self.updateFontList = function() {
              return OctoPrint.get(OctoPrint.getBlueprintUrl('octolapse') + 'rendering/font')
                     .then(function(response) {
-                        self.data.font_list.removeAll();
+                        var font_list = [];
                         // The let expression was not working in safari
                         for (var index = 0; index< response.length; index++) {
-                            self.data.font_list.push(new Font(response[index]));
+                            font_list.push(new Font(response[index]));
                         }
+                        self.data.font_list(font_list);
                      }, function(response) {
                         // Failed to load any fonts.
                         self.data.font_list.removeAll();

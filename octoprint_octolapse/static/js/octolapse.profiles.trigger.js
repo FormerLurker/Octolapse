@@ -68,12 +68,12 @@ $(function () {
         * Position Restrictions
         * */
         self.position_restrictions_enabled = ko.observable(values.position_restrictions_enabled);
-        self.position_restrictions = ko.observableArray([]);
+        var position_restrictions = [];
         for (var index = 0; index < values.position_restrictions.length; index++) {
-            self.position_restrictions.push(
+            position_restrictions.push(
                 ko.observable(values.position_restrictions[index]));
         }
-
+        self.position_restrictions = ko.observableArray(position_restrictions);
 
         // Temporary variables to hold new layer position restrictions
         self.new_position_restriction_type = ko.observable('required');
@@ -171,11 +171,12 @@ $(function () {
             self.trigger_on_deretracted(values.trigger_on_deretracted);
             self.require_zhop(values.require_zhop);
             self.position_restrictions_enabled(values.position_restrictions_enabled);
-            self.position_restrictions([]);
+            var position_restrictions = [];
             for (var index = 0; index < values.position_restrictions.length; index++) {
-                self.position_restrictions.push(
+                position_restrictions.push(
                     ko.observable(values.position_restrictions[index]));
             }
+            self.position_restrictions(position_restrictions);
         };
 
         self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(

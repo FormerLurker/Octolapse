@@ -189,60 +189,65 @@ $(function () {
             Octolapse.SettingsMain.update(settings.main_settings);
 
             // Printers
-            Octolapse.Printers.profiles([]);
+            var printers = [];
             Octolapse.Printers.default_profile(settings.profiles.defaults.printer);
             Octolapse.Printers.profileOptions = settings.profiles.options.printer;
             Octolapse.Printers.current_profile_guid(settings.profiles.current_printer_profile_guid);
             Object.keys(settings.profiles.printers).forEach(function(key) {
-                Octolapse.Printers.profiles.push(new Octolapse.PrinterProfileViewModel(settings.profiles.printers[key]));
+                printers.push(new Octolapse.PrinterProfileViewModel(settings.profiles.printers[key]));
             });
+            Octolapse.Printers.profiles(printers);
 
             // Stabilizations
-            Octolapse.Stabilizations.profiles([]);
+            var stabilizations = [];
             Octolapse.Stabilizations.default_profile(settings.profiles.defaults.stabilization);
             Octolapse.Stabilizations.profileOptions = settings.profiles.options.stabilization;
             Octolapse.Stabilizations.current_profile_guid(settings.profiles.current_stabilization_profile_guid);
             Object.keys(settings.profiles.stabilizations).forEach(function(key) {
-                Octolapse.Stabilizations.profiles.push(new Octolapse.StabilizationProfileViewModel(settings.profiles.stabilizations[key]));
+                stabilizations.push(new Octolapse.StabilizationProfileViewModel(settings.profiles.stabilizations[key]));
             });
+            Octolapse.Stabilizations.profiles(stabilizations);
 
             // Triggers
-            Octolapse.Triggers.profiles([]);
+            var triggers = [];
             Octolapse.Triggers.default_profile(settings.profiles.defaults.trigger);
             Octolapse.Triggers.profileOptions = settings.profiles.options.trigger;
             Octolapse.Triggers.current_profile_guid(settings.profiles.current_trigger_profile_guid);
             Object.keys(settings.profiles.triggers).forEach(function(key) {
-                Octolapse.Triggers.profiles.push(new Octolapse.TriggerProfileViewModel(settings.profiles.triggers[key]));
+                triggers.push(new Octolapse.TriggerProfileViewModel(settings.profiles.triggers[key]));
             });
+            Octolapse.Triggers.profiles(triggers);
             
             // Renderings
-            Octolapse.Renderings.profiles([]);
+            var renderings = [];
             Octolapse.Renderings.default_profile(settings.profiles.defaults.rendering);
             Octolapse.Renderings.profileOptions = settings.profiles.options.rendering;
             Octolapse.Renderings.current_profile_guid(settings.profiles.current_rendering_profile_guid);
             Object.keys(settings.profiles.renderings).forEach(function(key) {
-                Octolapse.Renderings.profiles.push(new Octolapse.RenderingProfileViewModel(settings.profiles.renderings[key]));
+                renderings.push(new Octolapse.RenderingProfileViewModel(settings.profiles.renderings[key]));
             });
+            Octolapse.Renderings.profiles(renderings);
 
             // Cameras
-            Octolapse.Cameras.profiles([]);
+            var cameras = [];
             Octolapse.Cameras.default_profile(settings.profiles.defaults.camera);
             Octolapse.Cameras.profileOptions = settings.profiles.options.camera;
             //console.log("Creating initial camera profiles.");
             Object.keys(settings.profiles.cameras).forEach(function(key) {
-                Octolapse.Cameras.profiles.push(new Octolapse.CameraProfileViewModel(settings.profiles.cameras[key]));
+                cameras.push(new Octolapse.CameraProfileViewModel(settings.profiles.cameras[key]));
             });
+            Octolapse.Cameras.profiles(cameras);
 
             // Debug
-            Octolapse.DebugProfiles.profiles([]);
+            var debug_profiles=[];
             Octolapse.DebugProfiles.default_profile(settings.profiles.defaults.debug);
             Octolapse.DebugProfiles.profileOptions = settings.profiles.options.debug;
             Octolapse.DebugProfiles.current_profile_guid(settings.profiles.current_debug_profile_guid);
             //console.log("Creating Debug Profiles")
             Object.keys(settings.profiles.debug).forEach(function(key) {
-                Octolapse.DebugProfiles.profiles.push(new Octolapse.DebugProfileViewModel(settings.profiles.debug[key]));
+                debug_profiles.push(new Octolapse.DebugProfileViewModel(settings.profiles.debug[key]));
             });
-
+            Octolapse.DebugProfiles.profiles(debug_profiles);
             Octolapse.Settings.is_loaded(true);
 
         };

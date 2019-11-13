@@ -481,9 +481,16 @@ $(function() {
         },this);
 
         self.setStreamVisibility = function(value){
-            //console.log("Attempting to stop the camera stream");
-            self.camera_stream_visible(value);
-            self.stream_url();
+            if (self.camera_stream_visible() != value) {
+                if (value){
+                    console.log("Attempting to start the camera stream");
+                }
+                else{
+                    console.log("Attempting to stop the camera stream");
+                }
+                self.camera_stream_visible(value);
+                //self.stream_url();
+            }
         };
 
         self.subscriptions = [];
@@ -498,6 +505,7 @@ $(function() {
         };
 
         self.subscribe_to_mjpg_streamer_changes = function() {
+            self.unsubscribe_to_settings_changes();
             for(var index = 0; index < self.mjpg_streamer.controls().length; index++)
             {
                 var control = self.mjpg_streamer.controls()[index];
@@ -675,7 +683,7 @@ $(function() {
                 self.mjpg_streamer.update(webcam_settings.mjpg_streamer, self.type(), self.use_custom_webcam_settings_page());
             }
             // notify subscribers of a possible stream url change.
-            self.stream_url.notifySubscribers();
+            //self.stream_url.notifySubscribers();
             // restore the webcam settings template so that the custom controls show
             self.restore_webcam_settings_template();
             setTimeout(function(){

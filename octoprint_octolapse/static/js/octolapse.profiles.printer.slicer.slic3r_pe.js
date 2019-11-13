@@ -23,11 +23,12 @@ Octolapse.Slic3rPeViewModel = function (values, num_extruders_observable) {
     // Observables
 
     self.num_extruders_observable = num_extruders_observable;
-    self.extruders = ko.observableArray();
+    var extruders = [];
     for (var index = 0; index < self.num_extruders_observable(); index++)
     {
-        self.extruders.push(new Octolapse.Slic3rPeExtruderViewModel(values, index))
+        extruders.push(new Octolapse.Slic3rPeExtruderViewModel(values, index));
     }
+    self.extruders = ko.observableArray(extruders);
     self.travel_speed = ko.observable(values.travel_speed);
     self.layer_height = ko.observable(values.layer_height);
     self.spiral_vase = ko.observable(values.spiral_vase || false);
@@ -49,14 +50,17 @@ Octolapse.Slic3rPeViewModel = function (values, num_extruders_observable) {
         else if (num_extruders > 16){
             num_extruders = 16;
         }
-        while(self.extruders().length < num_extruders)
+        var extruders = self.extruders();
+        while(extruders.length < num_extruders)
         {
-            var new_extruder = new Octolapse.Slic3rPeExtruderViewModel(null, self.extruders().length-1);
-            self.extruders.push(new_extruder);
+            var new_extruder = new Octolapse.Slic3rPeExtruderViewModel(null, extruders.length-1);
+            extruders.push(new_extruder);
         }
-        while(self.extruders().length > num_extruders)
+        while(extruders.length > num_extruders)
         {
-             self.extruders.pop();
+             extruders.pop();
         }
+        self.extruders(extruders);
+
     });
 };

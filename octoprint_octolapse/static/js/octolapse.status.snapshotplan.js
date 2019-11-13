@@ -156,7 +156,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 var x_current = showing_plan.initial_position.x;
                 var y_current = showing_plan.initial_position.y;
                 var z_current = showing_plan.initial_position.z;
-                self.snapshot_positions([]);
+                var snapshot_positions = [];
                 // Create snapshot positions from steps
                 for (var stepIndex = 0; stepIndex < showing_plan.steps.length; stepIndex++)
                 {
@@ -172,9 +172,10 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     }
                     else if(current_step.action == "snapshot")
                     {
-                        self.snapshot_positions.push({x: x_current, y: y_current, z: z_current});
+                        snapshot_positions.push({x: x_current, y: y_current, z: z_current});
                     }
                 }
+                self.snapshot_positions(snapshot_positions);
                 // Update Canvass
                 self.updateCanvas();
             };

@@ -766,28 +766,42 @@ $(function () {
 
     ko.bindingHandlers.streamLoading = {
         init:  function(element, valueAccessor) {
-
-        },update: function(element, valueAccessor) {
-            // close the stream if one exists
-            $(element).attr('src', "");
-            //console.log("Binding element to streamLoading");
-            var self = this;
+            console.log("Camera Stream Init");
             var options = valueAccessor();
-            self.max_height = ko.unwrap(options.max_height) || 333;
-            self.max_width = ko.unwrap(options.max_width) || 588;
-            self.src = ko.unwrap(options.src);
-            var error_selector = ko.unwrap(options.error_selector);
-            var loading_selector = ko.unwrap(options.loading_selector);
+            var self = this;
+            // variable init
+            self.max_height = 333;
+            self.max_width = 588;
+            self.src = "";
+            self.error_selector = "";
+            self.loading_selector = "";
 
-            $(element).hide();
-            $(error_selector).hide();
-            $(loading_selector).html("<div><p>Loading webcam stream at: " + self.src + "</p></div>").show();
-            $(element).unbind('load').unbind('error');
+            self.on_error = function(){
+                $(element).hide();
+                $(loading_selector).hide();
+                if (src !== "") {
+                    console.error("Stream Error.");
+                    $(error_selector).html("<div><p>Error loading the stream at: <a href='" + src + "' target='_blank'>" + src + "</a></p><p>Check the 'Stream Address Template' setting in your camera profile.</p></div>").fadeIn(1000);
+                }
+                else{
+                    console.log("Stream Closing.");
+                    $(error_selector).html("<div><p>No stream url was provided.  Check the 'Stream Address Template' setting.</p></div>").fadeIn(1000);
+                }
+            };
+            self.update = function(options)
+            {
+                self.max_height = options.max_height || 333;
+                self.max_width = options.max_width || 588;
+                self.src = options.src;
+                self.error_selector = options.error_selector;
+                self.loading_selector = options.loading_selector;
+                $(element).attr('src', self.src);
+            };
 
             // Create a handler to handle load and error
             self.on_loaded = function(){
                 $(element).width('auto').height('auto');
-                //console.log("Stream Loaded.");
+                console.log("Stream Loaded.");
                 // get the width and height of the stream element
                 var stream_width = $(element).width();
                 var stream_height = $(element).height();
@@ -803,30 +817,28 @@ $(function () {
 
                     $(element).width(newWidth).height(newHeight);
                 }
-                $(error_selector).hide();
-                $(loading_selector).hide();
+                $(self.error_selector).hide();
+                $(self.loading_selector).hide();
                 $(element).show();
+                console.log("Stream shown.");
             };
+            self.update(options);
+            $(element).on('load', self.on_loaded);
+            $(element).on('error', self.on_error);
 
-            $(element).off('load', self.on_loaded);
-            $(element).one('load', self.on_loaded);
+        },update: function(element, valueAccessor) {
 
-            self.on_error = function(){
-                $(element).hide();
-                $(loading_selector).hide();
-                if (src !== "") {
-                    console.error("Stream Error.");
-                    $(error_selector).html("<div><p>Error loading the stream at: <a href='" + src + "' target='_blank'>" + src + "</a></p><p>Check the 'Stream Address Template' setting in your camera profile.</p></div>").fadeIn(1000);
-                }
-                else{
-                    //console.log("Stream Closing.");
-                    $(error_selector).html("<div><p>No stream url was provided.  Check the 'Stream Address Template' setting.</p></div>").fadeIn(1000);
-                }
-            };
-            $(element).off('error', self.on_error);
-            $(element).one('error', self.on_error);
+            console.log("Camera stream is updating.");
+            // close the stream if one exists
+            var options = valueAccessor();
+            $(element).hide();
+            $(self.error_selector).hide();
+            $(self.loading_selector).html("<div><p>Loading webcam stream at: " + self.src + "</p></div>").show();
+            self.update(options);
+
             // set the source for the stream
-            $(element).attr('src', self.src);
+
+            console.log("Finished setting stream");
         }
     };
 
