@@ -767,78 +767,83 @@ $(function () {
     ko.bindingHandlers.streamLoading = {
         init:  function(element, valueAccessor) {
             console.log("Camera Stream Init");
-            var options = valueAccessor();
             var self = this;
-            // variable init
-            self.max_height = 333;
-            self.max_width = 588;
-            self.src = "";
-            self.error_selector = "";
-            self.loading_selector = "";
-
-            self.on_error = function(){
+            self.empty_src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+            self.get_src = function(src)
+            {
+                if (src === "")
+                    return self.empty_src;
+                return src
+            };
+            self.on_error = function(e){
+                var element = e.target;
+                var options = e.data.options;
                 $(element).hide();
-                $(loading_selector).hide();
-                if (src !== "") {
+                $(options.loading_selector).hide();
+                if (options.src !== "") {
                     console.error("Stream Error.");
-                    $(error_selector).html("<div><p>Error loading the stream at: <a href='" + src + "' target='_blank'>" + src + "</a></p><p>Check the 'Stream Address Template' setting in your camera profile.</p></div>").fadeIn(1000);
+                    $(options.error_selector).html("<div><p>Error loading the stream at: <a href='" + options.src + "' target='_blank'>" + options.src + "</a></p><p>Check the 'Stream Address Template' setting in your camera profile.</p></div>").fadeIn(1000);
                 }
                 else{
-                    console.log("Stream Closing.");
-                    $(error_selector).html("<div><p>No stream url was provided.  Check the 'Stream Address Template' setting.</p></div>").fadeIn(1000);
+                    // This should not happen!
+                    console.error("Stream Error, but src is empty.");
+                    $(options.error_selector).html("<div><p>No stream url was provided.  Check the 'Stream Address Template' setting.</p></div>").fadeIn(1000);
                 }
             };
-            self.update = function(options)
-            {
-                self.max_height = options.max_height || 333;
-                self.max_width = options.max_width || 588;
-                self.src = options.src;
-                self.error_selector = options.error_selector;
-                self.loading_selector = options.loading_selector;
-                $(element).attr('src', self.src);
-            };
-
             // Create a handler to handle load and error
-            self.on_loaded = function(){
+            self.on_loaded = function(e){
+                var element = e.target;
+                var options = e.data.options;
+
+                if (options.src === "")
+                {
+                    // If the src is empty, that means we have closed the stream, or we have no stream src.
+                    // When we close the stream we set it to an empty image to prevent the error
+                    // handler from being called.  However, assume this is an error.
+                    console.log("Stream closed, or we have no stream address.");
+                    $(options.loading_selector).hide();
+                    $(element).hide();
+                    $(options.error_selector).html("<div><p>No stream url was provided.  Check the 'Stream Address Template' setting.</p></div>").fadeIn(1000);
+                    return;
+                }
+                // If we are here, we have a valid stream that is loaded.
+                var max_height = options.max_height || 333;
+                var max_width = options.max_width || 588;
                 $(element).width('auto').height('auto');
                 console.log("Stream Loaded.");
                 // get the width and height of the stream element
                 var stream_width = $(element).width();
                 var stream_height = $(element).height();
                 // See if the image is greater than the max
-                if (stream_width > self.max_width || stream_height > self.max_height)
+                if (stream_width > max_width || stream_height > max_height)
                 {
                     //console.log("Resizing Stream.");
-                    var ratioX = self.max_width / stream_width;
-                    var ratioY = self.max_height / stream_height;
+                    var ratioX = max_width / stream_width;
+                    var ratioY = max_height / stream_height;
                     var ratio = Math.min(ratioX, ratioY);
                     var newWidth = stream_width * ratio;
                     var newHeight = stream_height * ratio;
 
                     $(element).width(newWidth).height(newHeight);
                 }
-                $(self.error_selector).hide();
-                $(self.loading_selector).hide();
+                $(options.error_selector).hide();
+                $(options.loading_selector).hide();
                 $(element).show();
                 console.log("Stream shown.");
             };
-            self.update(options);
-            $(element).on('load', self.on_loaded);
-            $(element).on('error', self.on_error);
+
 
         },update: function(element, valueAccessor) {
-
             console.log("Camera stream is updating.");
             // close the stream if one exists
             var options = valueAccessor();
+            $(element).unbind( "load" ).on("load", {options:options}, self.on_loaded);
+            $(element).unbind("error").on("error", {options:options}, self.on_error);
+            $(options.loading_selector).html("<div><p>Loading webcam stream at: " + options.src + "</p></div>").show();
             $(element).hide();
-            $(self.error_selector).hide();
-            $(self.loading_selector).html("<div><p>Loading webcam stream at: " + self.src + "</p></div>").show();
-            self.update(options);
-
-            // set the source for the stream
-
-            console.log("Finished setting stream");
+            $(options.error_selector).hide();
+            $(element).attr('src', self.get_src(options.src));
+            console.log("Finished updating camera stream.");
         }
     };
 

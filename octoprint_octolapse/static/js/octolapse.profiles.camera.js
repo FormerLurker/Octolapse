@@ -46,12 +46,12 @@ $(function() {
         self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
         self.apply_settings_at_startup = ko.observable(values.apply_settings_at_startup);
         self.snapshot_transpose = ko.observable(values.snapshot_transpose);
-        self.camera_stream_closed = false;
+        self.is_dialog_open = ko.observable(false);
         self.camera_stream_visible = ko.pureComputed(function(){
             var visible = (
                 self.camera_type() === 'webcam' &&
                 self.enable_custom_image_preferences() &&
-                !self.camera_stream_closed
+                self.is_dialog_open()
             );
             self.webcam_settings.setStreamVisibility(visible);
             return visible;
@@ -260,10 +260,20 @@ $(function() {
             });
         };
 
+        self.on_opened = function(dialog) {
+            //console.log("Opening camera profile");
+            self.is_dialog_open(true);
+            if (self.enable_custom_image_preferences())
+                self.updateImagePreferencesFromServer(false);
+
+        };
+
         self.on_closed = function(){
             //console.log("Closing camera profile");
+            self.is_dialog_open(false);
             self.webcam_settings.setStreamVisibility(false);
             self.automatic_configuration.on_closed();
+
         };
 
         self.on_cancelled = function(){
@@ -364,11 +374,7 @@ $(function() {
             });
         };
 
-        self.on_opened = function(dialog) {
-            //console.log("Opening camera profile");
-            if (self.enable_custom_image_preferences())
-                self.updateImagePreferencesFromServer(false);
-        };
+
 
         // update the webcam settings
         self.webcam_settings.updateWebcamSettings(values);
