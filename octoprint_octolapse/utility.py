@@ -438,7 +438,7 @@ def get_closest_in_bounds_position(bounding_box, x=None, y=None, z=None):
 
 def is_snapshot_command(command_string, snapshot_command):
     # note that self.Printer.snapshot_command is stripped of comments.
-    if snapshot_command is not None and len(snapshot_command)>0:
+    if snapshot_command is not None and len(snapshot_command) > 0:
         return command_string.lower().strip() == snapshot_command.strip()
     return False
 

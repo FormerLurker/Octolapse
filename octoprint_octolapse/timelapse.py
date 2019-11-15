@@ -87,6 +87,7 @@ class Timelapse(object):
         self._ffmpeg_path = None
         self._stabilization = None
         self._trigger = None
+        self._trigger_profile = None
         self._gcode = None
         self._printer = None
         self._capture_snapshot = None
@@ -620,21 +621,20 @@ class Timelapse(object):
             return None,
 
         if not self.is_timelapse_active():
-            if utility.is_snapshot_command(command_string, self._snapshot_command):
-                if self._settings.profiles.current_printer().suppress_snapshot_command_always:
-                    logger.info(
-                        "Snapshot command %s detected while octolapse was disabled."
-                        " Suppressing command.".format(command_string)
-                    )
-                    return None,
-                else:
-                    logger.info(
-                        "Snapshot command %s detected while octolapse was disabled.  Not suppressing since "
-                        "'suppress_snapshot_command_always' is false.",
-                        command_string
-                    )
-            # if the timelapse is not active, exit without changing any gcode
-            return None
+            current_printer = self._settings.profiles.current_printer()
+            if (
+                current_printer is not None and
+                current_printer.suppress_snapshot_command_always and
+                utility.is_snapshot_command(command_string, current_printer.snapshot_command)
+            ):
+                logger.info(
+                    "Snapshot command %s detected while octolapse was disabled."
+                    " Suppressing command.".format(command_string)
+                )
+                return None,
+            else:
+                # if the timelapse is not active, exit without changing any gcode
+                return None
 
         self.check_current_line_number(tags)
 
