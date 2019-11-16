@@ -184,7 +184,8 @@ $(function() {
                                     self.is_confirming(false);
                                 }
                             },
-                            on_complete: function (newValue, oldValue, wasConfirmed, wasIgnored,) {
+                            on_complete: function (newValue, oldValue, wasConfirmed, wasIgnored) {
+                                // Todo:  What is wasIgnored doing here?  Probably need to deal with it.
                                 // we don't want to do anything if we're ignoring key changes
                                 if (self.ignore_key_change)
                                     return;
