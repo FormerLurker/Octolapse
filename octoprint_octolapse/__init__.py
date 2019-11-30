@@ -670,14 +670,15 @@ class OctolapsePlugin(
     @admin_permission.require(403)
     def get_mjpg_streamer_controls(self):
         request_values = flask.request.get_json()
-        server_type = request_values["server_type"]
-        camera_name = request_values["camera_name"]
-        address = request_values["address"]
-        username = request_values["username"]
-        password = request_values["password"]
-        ignore_ssl_error = request_values["ignore_ssl_error"]
-        replace = request_values["replace"]
-        guid = None if "guid" not in request_values else request_values["guid"]
+        profile = request_values["profile"]
+        server_type = profile["server_type"]
+        camera_name = profile["name"]
+        address = profile["address"]
+        username = profile["username"]
+        password = profile["password"]
+        ignore_ssl_error = profile["ignore_ssl_error"]
+
+        guid = None if "guid" not in profile else profile["guid"]
         try:
             success, errors, webcam_settings = camera.CameraControl.get_webcam_settings(
                 server_type,
@@ -697,10 +698,9 @@ class OctolapsePlugin(
                 {'ContentType': 'application/json'})
 
         if guid and guid in self._octolapse_settings.profiles.cameras:
-            # Check to see if we need to update our existing camera image settings.  We only want to do this
-            # if the control set has changed (minus the actual value)
-
-            camera_profile = self._octolapse_settings.profiles.cameras[guid].clone()
+            # Create a new camera profile and update from the supplied profile.
+            camera_profile = CameraProfile()
+            camera_profile.update(profile)
             matches = False
             if server_type == MjpgStreamer.server_type:
                 if camera_profile.webcam_settings.mjpg_streamer.controls_match_server(
@@ -708,7 +708,7 @@ class OctolapsePlugin(
                 ):
                     matches = True
 
-            if replace or len(camera_profile.webcam_settings.mjpg_streamer.controls) == 0:
+            if len(camera_profile.webcam_settings.mjpg_streamer.controls) == 0:
                 # get the existing settings since we don't want to use the defaults
                 camera_profile.webcam_settings.mjpg_streamer.controls = {}
                 camera_profile.webcam_settings.mjpg_streamer.update(
@@ -742,8 +742,6 @@ class OctolapsePlugin(
                         not matches and len(webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]) > 0
                     )
                 }
-
-
         # if we're here, we should be good, extract and return the camera settings
         return json.dumps(
             {

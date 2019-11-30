@@ -412,28 +412,18 @@
                             </label>
                         </div>
                     </div>
-                </div>
-
-                <div data-bind="visible: camera_stream_visible">
-                    <div id="octolapse_camera_webcam_settings_stream" class="webcam_settings_preview">
-                        <img class="preview" data-bind="streamLoading:{src: webcam_settings.stream_url(), loading_selector: '#octolapse_camera_webcam_settings_stream .loading', error_selector: '#octolapse_camera_webcam_settings_stream .error', max_width: 900, max_height:333}" style="display:none;">
-                        <div class="alert error" style="display:none;">
-                            Unable to load the webcam stream
-                        </div>
-                        <div class="alert loading">
-                            Loading the webcam stream...<i class="fa fa-spinner fa-spin"></i>
+                    <div class="control-group">
+                        <div class="controls">
+                            <button class="btn btn-default cancel input-block-level" data-bind="click: showWebcamSettings">Edit Camera Image Preferences</button>
+                            <span class="help-inline">You can also edit the camera image preferences directly from the Octolapse tab by clicking the edit pen on the upper right hand corner of the snapshot preview.</span>
                         </div>
                     </div>
-                    <div data-bind="template:{name:'webcam-settings-template', data:webcam_settings}"></div>
                 </div>
-                <div data-bind="visible: !camera_stream_visible()">
-                    <button type="button" class="span6 btn btn-default input-block-level" data-bind="click: webcam_settings.previewStabilization">Stabilize Extruder</button>
-                </div>
-
             </div>
             <hr />
 
         </div>
     </div>
+    <div data-bind="template:{ name: 'webcam-settings-popup-template', data: webcam_settings_popup}"></div>
 </script>
 {% include "octolapse_profiles_camera_webcam.jinja2" %}

@@ -58,7 +58,7 @@ $(function () {
             self.ExtruderState = new Octolapse.extruderStateViewModel();
             self.TriggerState = new Octolapse.TriggersStateViewModel();
             self.SnapshotPlanState = new Octolapse.snapshotPlanStateViewModel();
-            self.WebcamSettings = new Octolapse.WebcamSettingsPopupViewModel();
+            self.webcam_settings_popup = new Octolapse.WebcamSettingsPopupViewModel("octolapse_tab_custom_image_preferences_popup");
             self.SnapshotPlanPreview = new Octolapse.SnapshotPlanPreviewPopupViewModel({
                 on_closed: function(){
                     self.SnapshotPlanState.is_preview = false;
@@ -68,6 +68,19 @@ $(function () {
             self.IsLatestSnapshotDialogShowing = false;
             self.current_print_volume = null;
             self.current_camera_enabled = ko.observable(false);
+            self.canEditSettings = ko.pureComputed(function(){
+                // Get the current camera profile
+                var current_camera = self.getCurrentProfileByGuid(self.profiles().cameras(),self.current_camera_guid());
+                    if (current_camera != null)
+                    {
+                        return current_camera.enable_custom_image_preferences;
+                    }
+                return false;
+            });
+            self.showWebcamSettings = function(){
+                self.webcam_settings_popup.showWebcamSettingsForGuid(self.current_camera_guid());
+            };
+
             self.showLatestSnapshotDialog = function () {
 
                 var $SnapshotDialog = $("#octolapse_latest_snapshot_dialog");

@@ -129,13 +129,13 @@
                                             </a>
                                             <a class="refresh"
                                                data-bind="click: function() { refreshLatestImage('octolapse_snapshot_thumbnail_container',true); },visible:!Octolapse.Globals.auto_reload_latest_snapshot()">
-                                                <span class="fa-stack" style="position:inline;">
+                                                <span class="fa-stack" style="position: inline;">
                                                     <i class="fa fa-square fa-stack-2x"></i>
                                                     <i class="fa fa-refresh fa-stack-1x"></i>
                                                 </span>
                                             </a>
                                             <a class="edit-settings" title="Edit image preferences"
-                                               data-bind="visible: WebcamSettings.canEditSettings, click:WebcamSettings.showWebcamSettings">
+                                               data-bind="visible: canEditSettings, click: showWebcamSettings">
                                                 <span class="fa-stack" style="position:inline;">
                                                     <i class="fa fa-square fa-stack-2x"></i>
                                                     <i class="fa fa-pencil fa-stack-1x"></i>
@@ -212,7 +212,7 @@
                 Octolapse <i data-bind="text:Octolapse.Globals.version"></i>
             </h6>
         </div>
-        <div data-bind="template:'webcam-settings-popup-template'"></div>
+        <div data-bind="template:  { name: 'webcam-settings-popup-template', data: webcam_settings_popup}"></div>
         <div data-bind="template:'snapshot-plan-preview-template'"></div>
     </div>
     <div data-bind="visible:!Octolapse.Globals.has_loaded_state()" class="loading">

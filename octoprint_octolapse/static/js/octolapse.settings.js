@@ -568,10 +568,10 @@ $(function () {
             dialog.templateName = options.templateName;
             dialog.$addEditDialog = $("#octolapse_add_edit_profile_dialog");
             dialog.$addEditForm = dialog.$addEditDialog.find("#octolapse_add_edit_profile_form");
-            dialog.$cancelButton = $("button.cancel", dialog.$addEditDialog);
-            dialog.$closeIcon = $("a.close", dialog.$addEditDialog);
-            dialog.$saveButton = $("button.save", dialog.$addEditDialog);
-            dialog.$defaultButton = $("button.set-defaults", dialog.$addEditDialog);
+            dialog.$cancelButton = dialog.$addEditForm.find(".modal-footer button.cancel");
+            dialog.$closeIcon = dialog.$addEditForm.find(".modal-header a.close");
+            dialog.$saveButton = dialog.$addEditForm.find(".modal-footer button.save");
+            dialog.$defaultButton = dialog.$addEditForm.find(".modal-footer button.set-defaults");
             dialog.$dialogTitle = $("h3.modal-title", dialog.$addEditDialog);
             dialog.$dialogWarningContainer = $("div.dialog-warning", dialog.$addEditDialog);
             dialog.$dialogWarningText = $("span", dialog.$dialogWarningContainer);
@@ -636,11 +636,9 @@ $(function () {
                     }, 250);
                 }
             };
-            dialog.resize = function(){
-                /*dialog.$addEditDialog.css("top","0px").css(
-                    'margin-top',
-                    Math.max(0 - dialog.$addEditDialog.height() / 2,0)
-                );*/
+
+            dialog.resize = function() {
+
             };
             dialog.validator = null;
 
@@ -686,14 +684,14 @@ $(function () {
                     dialog.$dialogWarningContainer.show();
 
                 }
-
+/*
                 dialog.$addEditDialog.css({
                     width: 'auto',
                     'margin-left': function () {
                         return -($(this).width() / 2);
                     }
                 });
-
+*/
                 // Initialize the profile.
                 var onShow = Octolapse.Settings.AddEditProfile().profileObservable().onShow;
                 if (typeof onShow == 'function') {
@@ -771,8 +769,6 @@ $(function () {
 
                 });
 
-                // Resize the dialog
-                dialog.resize();
                 // see if the current viewmodel has an on_opened function
                 if (typeof self.profileObservable().on_opened === 'function'){
                     // call the function
@@ -805,7 +801,7 @@ $(function () {
                 resize: true,
                 maxHeight: function() {
                     return Math.max(
-                      window.innerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-66,
+                      window.outerHeight - dialog.$modalHeader.outerHeight()-dialog.$modalFooter.outerHeight()-66,
                       200
                     );
                 }

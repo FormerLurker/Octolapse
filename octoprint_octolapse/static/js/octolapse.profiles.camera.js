@@ -46,17 +46,11 @@ $(function() {
         self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
         self.apply_settings_at_startup = ko.observable(values.apply_settings_at_startup);
         self.snapshot_transpose = ko.observable(values.snapshot_transpose);
+        self.webcam_settings = new Octolapse.WebcamSettingsViewModel();
+        self.webcam_settings_popup = new Octolapse.WebcamSettingsPopupViewModel("octolapse_camera_image_preferences_popup");
+        self.webcam_settings_popup.webcam_settings.updateWebcamSettings(values.webcam_settings);
         self.is_dialog_open = ko.observable(false);
-        self.camera_stream_visible = ko.pureComputed(function(){
-            var visible = (
-                self.camera_type() === 'webcam' &&
-                self.enable_custom_image_preferences() &&
-                self.is_dialog_open()
-            );
-            self.webcam_settings.setStreamVisibility(visible);
-            return visible;
-        });
-        self.webcam_settings = new Octolapse.WebcamSettingsViewModel(null);
+
         self.is_testing_custom_image_preferences = ko.observable(false);
 
         self.applySettingsToCamera = function (settings_type) {
@@ -195,12 +189,6 @@ $(function() {
         self.toggleCustomImagePreferences = function () {
             if (self.enable_custom_image_preferences()) {
                 self.enable_custom_image_preferences(false);
-                return;
-            }
-
-            if (self.camera_stream_visible()) {
-                self.enable_custom_image_preferences(true);
-                self.useCustomCameraPageIfPossible();
             }
             else {
                 self.tryEnableCustomImagePreferences();
@@ -208,10 +196,13 @@ $(function() {
 
         };
 
-        self.useCustomCameraPageIfPossible = function() {
-            if (self.camera_type() == 'webcam' && self.enable_custom_image_preferences()) {
-                self.webcam_settings.toggleCustomCameraSettingsPage(true, true);
-            }
+        self.showWebcamSettings = function() {
+            var profile = self.toJS();
+            self.webcam_settings_popup.showWebcamSettingsForProfile(profile, function(webcam_settings) {
+                console.log("Applying new settings to camera profile.");
+                profile.webcam_settings = webcam_settings;
+                self.webcam_settings.updateWebcamSettings(profile);
+            });
         };
 
         self.tryEnableCustomImagePreferences = function(){
@@ -228,8 +219,6 @@ $(function() {
                 success: function (results) {
                     if (results.success){
                         self.enable_custom_image_preferences(true);
-                        self.updateImagePreferencesFromServer(true, function(){ self.useCustomCameraPageIfPossible();});
-
                     }
                     else {
                         self.enable_custom_image_preferences(false);
@@ -263,24 +252,12 @@ $(function() {
         self.on_opened = function(dialog) {
             //console.log("Opening camera profile");
             self.is_dialog_open(true);
-            if (self.enable_custom_image_preferences())
-                self.updateImagePreferencesFromServer(false);
-
         };
 
         self.on_closed = function(){
             //console.log("Closing camera profile");
             self.is_dialog_open(false);
-            self.webcam_settings.setStreamVisibility(false);
             self.automatic_configuration.on_closed();
-
-        };
-
-        self.on_cancelled = function(){
-            //console.log("Cancelling camera profile");
-            if(self.camera_type() == "webcam" && self.enable_custom_image_preferences()) {
-                self.webcam_settings.cancelWebcamChanges();
-            }
         };
 
         self.updateFromServer = function(values) {
@@ -302,8 +279,6 @@ $(function() {
             self.apply_settings_at_startup(values.apply_settings_at_startup);
             self.snapshot_transpose(values.snapshot_transpose);
             self.webcam_settings.updateWebcamSettings(values);
-            self.useCustomCameraPageIfPossible();
-
         };
 
         self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
@@ -319,8 +294,11 @@ $(function() {
             // need to remove the parent link from the automatic configuration to prevent a cyclic copy
             var parent = self.automatic_configuration.parent;
             self.automatic_configuration.parent = null;
+            var webcam_settings_popup = self.webcam_settings_popup;
+            self.webcam_settings_popup = null;
             var copy = ko.toJS(self);
             self.automatic_configuration.parent = parent;
+            self.webcam_settings_popup = webcam_settings_popup;
             return copy;
         };
 
@@ -329,62 +307,8 @@ $(function() {
             Octolapse.Cameras.setIsClickable(!value);
         });
 
-        self.updateImagePreferencesFromServer = function(replace, success_callback) {
-            self.webcam_settings.getMjpgStreamerControls(replace, function (results) {
-                // Update the current settings that we just received
-                if (results.settings.new_preferences_available) {
-                    // If new settings are available, offer to update them, but don't do it automatically
-                    var message = "Octolapse has detected new camera preferences from your " +
-                        "streaming server.  Do you want to overwrite your current image preferences?";
-                    Octolapse.showConfirmDialog(
-                        "replace-image-preferences",
-                        "New Image Preferences Available",
-                        message,
-                        function () {
-                            self.webcam_settings.updateWebcamSettings(results.settings);
-                            if (success_callback)
-                            {
-                                success_callback();
-                            }
-                        }
-                    );
-                }
-                else
-                {
-                    self.webcam_settings.updateWebcamSettings(results.settings);
-                    if (success_callback)
-                    {
-                        success_callback();
-                    }
-                }
-            }, function(results){
-                 self.enable_custom_image_preferences(false);
-                 var message = "There was a problem retrieving webcam settings from the server.";
-                 if (results && results.error)
-                     message = message + " Details: " + results.error;
-                 var options = {
-                    title: 'Webcam Settings Error',
-                    text: message,
-                    type: 'error',
-                    hide: false,
-                    addclass: "octolapse"
-                };
-
-                Octolapse.displayPopupForKey(options, "webcam_settings_error",["webcam_settings_error"]);
-            });
-        };
-
-
-
         // update the webcam settings
         self.webcam_settings.updateWebcamSettings(values);
-
-        // Now that the webcam settings are updated, subscribe to address changes
-        // so we can update the streaming server controls
-        self.webcam_settings.address.subscribe(function(newValue){
-            if(self.enable_custom_image_preferences())
-                self.updateImagePreferencesFromServer(true);
-        });
     };
 
     Octolapse.CameraProfileValidationRules = {
