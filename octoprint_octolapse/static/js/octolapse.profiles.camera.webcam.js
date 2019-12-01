@@ -680,8 +680,12 @@ $(function() {
                 self.name(values.name);
             if ("address" in webcam_settings)
                 self.address(webcam_settings.address);
-            if ('snapshot_request_template' in webcam_settings)
+            if (
+                'snapshot_request_template' in webcam_settings &&
+                self.snapshot_request_template() != webcam_settings.snapshot_request_template
+            ) {
                 self.snapshot_request_template(webcam_settings.snapshot_request_template);
+            }
             if ("username" in webcam_settings)
                 self.username(webcam_settings.username);
             if ("password" in webcam_settings)

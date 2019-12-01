@@ -834,16 +834,21 @@ $(function () {
 
 
         },update: function(element, valueAccessor) {
-            console.log("Camera stream is updating.");
+
             // close the stream if one exists
             var options = valueAccessor();
-            $(element).unbind( "load" ).on("load", {options:options}, self.on_loaded);
-            $(element).unbind("error").on("error", {options:options}, self.on_error);
+
+            var current_src = $(element).attr('src');
+            var new_src = self.get_src(options.src);
+            console.log("Camera stream is updating from old_src: " + current_src + " to new src: " + new_src + " for id: ??.");
+            $(element).unbind("load").one("load", {options: options}, self.on_loaded);
+            $(element).unbind("error").one("error", {options: options}, self.on_error);
             $(options.loading_selector).html("<div><p>Loading webcam stream at: " + options.src + "</p></div>").show();
             $(element).hide();
             $(options.error_selector).hide();
-            $(element).attr('src', self.get_src(options.src));
+            $(element).attr('src', new_src);
             console.log("Finished updating camera stream.");
+
         }
     };
 
