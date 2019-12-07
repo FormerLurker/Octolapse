@@ -35,12 +35,12 @@ struct parsed_command_parameter
 public:
 	parsed_command_parameter();
 	~parsed_command_parameter();
-	parsed_command_parameter(char name, double value);
-	parsed_command_parameter(char name, std::string value);
-	parsed_command_parameter(char name, unsigned long value);
+	parsed_command_parameter(std::string name, double value);
+	parsed_command_parameter(std::string name, std::string value);
+	parsed_command_parameter(std::string name, unsigned long value);
 	PyObject * value_to_py_object();
 
-	char name;
+	std::string name;
 	char value_type;
 	double double_value;
 	unsigned long unsigned_long_value;

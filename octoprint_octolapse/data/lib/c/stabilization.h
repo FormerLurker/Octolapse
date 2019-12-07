@@ -134,5 +134,6 @@ protected:
 	int gcodes_processed_;
 	long file_position_;
 	int missed_snapshots_;
+	bool snapshots_enabled_;
 };
 #endif

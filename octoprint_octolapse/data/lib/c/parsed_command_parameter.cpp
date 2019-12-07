@@ -26,22 +26,23 @@
 #include "python_helpers.h"
 parsed_command_parameter::parsed_command_parameter()
 {
-	this->value_type = 'N';
+	value_type = 'N';
+	name.reserve(1);
 }
 
-parsed_command_parameter::parsed_command_parameter(const char name, double value) : name(name), double_value(value)
+parsed_command_parameter::parsed_command_parameter(const std::string name, double value) : name(name), double_value(value)
 {
-	this->value_type = 'F';
+	value_type = 'F';
 }
 
-parsed_command_parameter::parsed_command_parameter(const char name, const std::string value) : name(name), string_value(value)
+parsed_command_parameter::parsed_command_parameter(const std::string name, const std::string value) : name(name), string_value(value)
 {
-	this->value_type = 'S';
+	value_type = 'S';
 }
 
-parsed_command_parameter::parsed_command_parameter(const char name, const unsigned long value) : name(name), unsigned_long_value(value)
+parsed_command_parameter::parsed_command_parameter(const std::string name, const unsigned long value) : name(name), unsigned_long_value(value)
 {
-	this->value_type = 'U';
+	value_type = 'U';
 }
 parsed_command_parameter::~parsed_command_parameter()
 {

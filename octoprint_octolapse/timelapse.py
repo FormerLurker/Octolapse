@@ -1065,7 +1065,6 @@ class Timelapse(object):
         ):
             logger.verbose("Sending: %s", cmd)
 
-
     def on_gcode_sent(self, cmd, cmd_type, gcode, tags={}):
         if not (
             tags is not None

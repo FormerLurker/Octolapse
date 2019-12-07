@@ -111,11 +111,7 @@ PyObject * parsed_command::to_py_object()
 			{
 				return NULL;
 			}
-			char temp_c_str[2];
-			temp_c_str[0] = param.name;
-			temp_c_str[1] = '\0';
-			const char * p_name = temp_c_str;
-			if (PyDict_SetItemString(pyParametersDict, p_name, param_value) != 0)
+			if (PyDict_SetItemString(pyParametersDict, param.name.c_str(), param_value) != 0)
 			{
 				// Handle error here, display detailed message
 				std::string message = "Unable to add the command parameter to the parameters dictionary.  Parameter Name: ";

@@ -55,6 +55,7 @@ stabilization::stabilization(gcode_position_args position_args, stabilization_ar
 	missed_snapshots_ = 0;
 	stabilization_x_ = 0;
 	stabilization_y_ = 0;
+	snapshots_enabled_ = true;
 	
 }
 
@@ -78,6 +79,7 @@ stabilization::stabilization()
 	_get_coordinates_callback = NULL;
 	py_on_progress_received = NULL;
 	py_get_snapshot_position_callback = NULL;
+	snapshots_enabled_ = true;
 	
 }
 
@@ -101,6 +103,7 @@ stabilization::stabilization(gcode_position_args position_args, stabilization_ar
 	_get_coordinates_callback = NULL;
 	py_on_progress_received = NULL;
 	py_get_snapshot_position_callback = NULL;
+	snapshots_enabled_ = true;
 	
 }
 
@@ -151,6 +154,8 @@ double stabilization::get_time_elapsed(double start_clock, double end_clock)
 
 stabilization_results stabilization::process_file()
 {
+	// Make sure snapshots are enabled at the start of the process.
+	snapshots_enabled_ = true;
 	int read_lines_before_clock_check = 1000;
 	//std::cout << "stabilization::process_file - Processing file.\r\n";
 	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Processing File.");
@@ -183,16 +188,52 @@ stabilization_results stabilization::process_file()
 			{
 				lines_with_no_commands++;
 			}
+			// If the current command is an @Octolapse command, check the paramaters and update any state as necessary
+			if (cmd.command == "@OCTOLAPSE")
+			{
+				if (cmd.parameters.size() == 1)
+				{
+					parsed_command_parameter param = cmd.parameters[0];
+					if (param.name == "STOP-SNAPSHOTS")
+					{
+						if (snapshots_enabled_)
+						{
+							octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "@Octolapse command detected - STOP-SNAPSHOTS - snapshots stopped.");
+							snapshots_enabled_ = false;
+						}
+						else
+						{
+							octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "@Octolapse command detected - STOP-SNAPSHOTS - snapshots already stopped, command ignored.");
+						}
+					}
+					else if (param.name == "START-SNAPSHOTS")
+					{
+						if (!snapshots_enabled_)
+						{
+							octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "@Octolapse command detected - START-SNAPSHOTS - snapshots started.");
+							snapshots_enabled_ = true;
+						}
+						else
+						{
+							octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "@Octolapse command detected - START-SNAPSHOTS - snapshots already started, command ignored.");
+						}
+					}
+
+				}
+			}
 
 			// Always process the command through the printer, even if no command is found
 			// This is important so that comments can be analyzed
 			//std::cout << "stabilization::process_file - updating position...";
 			gcode_position_->update(cmd, lines_processed_, gcodes_processed_, file_position_);
-
+			
 			// Only continue to process if we've found a command.
 			if (found_command)
 			{
-				process_pos(gcode_position_->get_current_position_ptr(), gcode_position_->get_previous_position_ptr());
+				if (snapshots_enabled_)
+				{
+					process_pos(gcode_position_->get_current_position_ptr(), gcode_position_->get_previous_position_ptr());
+				}
 
 				if ( (lines_processed_ % read_lines_before_clock_check) == 0 && next_update_time < clock())
 				{
@@ -208,8 +249,8 @@ stabilization_results stabilization::process_file()
 					//std::cout << "Complete.\r\n";
 					next_update_time = get_next_update_time();
 				}
-
 			}
+			
 		}
 		// deallocate the parsed_command object
 		

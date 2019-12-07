@@ -825,27 +825,27 @@ void gcode_position::process_g0_g1(position* pos, parsed_command& cmd)
 	for (unsigned int index = 0; index < cmd.parameters.size(); index++)
 	{
 		const parsed_command_parameter p_cur_param = cmd.parameters[index];
-		if (p_cur_param.name == 'X')
+		if (p_cur_param.name == "X")
 		{
 			update_x = true;
 			x = p_cur_param.double_value;
 		}
-		else if (p_cur_param.name == 'Y')
+		else if (p_cur_param.name == "Y")
 		{
 			update_y = true;
 			y = p_cur_param.double_value;
 		}
-		else if (p_cur_param.name == 'E')
+		else if (p_cur_param.name == "E")
 		{
 			update_e = true;
 			e = p_cur_param.double_value;
 		}
-		else if (p_cur_param.name == 'Z')
+		else if (p_cur_param.name == "Z")
 		{
 			update_z = true;
 			z = p_cur_param.double_value;
 		}
-		else if (p_cur_param.name == 'F')
+		else if (p_cur_param.name == "F")
 		{
 			update_f = true;
 			f = p_cur_param.double_value;
@@ -881,7 +881,7 @@ void gcode_position::process_g10(position* pos, parsed_command& cmd)
 	for (unsigned int index = 0; index < cmd.parameters.size(); index++)
 	{
 		parsed_command_parameter p_cur_param = cmd.parameters[index];
-		if (p_cur_param.name == 'S')
+		if (p_cur_param.name == "S")
 		{
 			has_s = true;
 			if (p_cur_param.value_type == 'F')
@@ -889,7 +889,7 @@ void gcode_position::process_g10(position* pos, parsed_command& cmd)
 			else
 				has_s = false;
 		}
-		else if (p_cur_param.name == 'P')
+		else if (p_cur_param.name == "P")
 		{
 			has_p = true;
 			if (p_cur_param.value_type == 'L')
@@ -905,7 +905,7 @@ void gcode_position::process_g10(position* pos, parsed_command& cmd)
 			else
 				has_p = false;
 		}
-		else if (p_cur_param.name == 'X')
+		else if (p_cur_param.name == "X")
 		{
 			has_x = true;
 			if (p_cur_param.value_type == 'F')
@@ -913,7 +913,7 @@ void gcode_position::process_g10(position* pos, parsed_command& cmd)
 			else
 				has_x = false;
 		}
-		else if (p_cur_param.name == 'Y')
+		else if (p_cur_param.name == "Y")
 		{
 			has_y = true;
 			if (p_cur_param.value_type == 'F')
@@ -921,7 +921,7 @@ void gcode_position::process_g10(position* pos, parsed_command& cmd)
 			else
 				has_y = false;
 		}
-		else if (p_cur_param.name == 'Z')
+		else if (p_cur_param.name == "Z")
 		{
 			has_z = true;
 			if (p_cur_param.value_type == 'F')
@@ -987,11 +987,11 @@ void gcode_position::process_g28(position* pos, parsed_command& cmd)
 	for (unsigned int index = 0; index < cmd.parameters.size(); index++)
 	{
 		parsed_command_parameter p_cur_param = cmd.parameters[index];
-		if (p_cur_param.name == 'X')
+		if (p_cur_param.name == "X")
 			has_x = true;
-		else if (p_cur_param.name == 'Y')
+		else if (p_cur_param.name == "Y")
 			has_y = true;
-		else if (p_cur_param.name == 'Z')
+		else if (p_cur_param.name == "Z")
 			has_z = true;
 	}
 	if (has_x)
@@ -1091,28 +1091,27 @@ void gcode_position::process_g92(position* pos, parsed_command& cmd)
 	for (unsigned int index = 0; index < cmd.parameters.size(); index++)
 	{
 		parsed_command_parameter p_cur_param = cmd.parameters[index];
-		char cmdName = p_cur_param.name;
-		if (cmdName == 'X')
+		if (p_cur_param.name == "X")
 		{
 			update_x = true;
 			x = p_cur_param.double_value;
 		}
-		else if (cmdName == 'Y')
+		else if (p_cur_param.name == "Y")
 		{
 			update_y = true;
 			y = p_cur_param.double_value;
 		}
-		else if (cmdName == 'E')
+		else if (p_cur_param.name == "E")
 		{
 			update_e = true;
 			e = p_cur_param.double_value;
 		}
-		else if (cmdName == 'Z')
+		else if (p_cur_param.name == "Z")
 		{
 			update_z = true;
 			z = p_cur_param.double_value;
 		}
-		else if (cmdName == 'O')
+		else if (p_cur_param.name == "O")
 		{
 			o_exists = true;
 		}
@@ -1225,7 +1224,7 @@ void gcode_position::process_m218(position* pos, parsed_command& cmd)
 	{
 		parsed_command_parameter p_cur_param = cmd.parameters[index];
 		
-		if (p_cur_param.name == 'T')
+		if (p_cur_param.name == "T")
 		{
 			has_t = true;
 			if (p_cur_param.value_type == 'L')
@@ -1242,7 +1241,7 @@ void gcode_position::process_m218(position* pos, parsed_command& cmd)
 				has_t = false;
 
 		}
-		else if (p_cur_param.name == 'X')
+		else if (p_cur_param.name == "X")
 		{
 			has_x = true;
 			if (p_cur_param.value_type == 'F')
@@ -1250,7 +1249,7 @@ void gcode_position::process_m218(position* pos, parsed_command& cmd)
 			else
 				has_x = false;
 		}
-		else if (p_cur_param.name == 'Y')
+		else if (p_cur_param.name == "Y")
 		{
 			has_y = true;
 			if (p_cur_param.value_type == 'F')
@@ -1258,7 +1257,7 @@ void gcode_position::process_m218(position* pos, parsed_command& cmd)
 			else
 				has_y = false;
 		}
-		else if (p_cur_param.name == 'Z')
+		else if (p_cur_param.name == "Z")
 		{
 			has_z = true;
 			if (p_cur_param.value_type == 'F')
@@ -1306,7 +1305,7 @@ void gcode_position::process_t(position* pos, parsed_command& cmd)
 	for (unsigned int index = 0; index < cmd.parameters.size(); index++)
 	{
 		parsed_command_parameter p_cur_param = cmd.parameters[index];
-		if (p_cur_param.name == 'T' && p_cur_param.value_type == 'U')
+		if (p_cur_param.name == "T" && p_cur_param.value_type == 'U')
 		{
 			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::DEBUG, "GcodePosition.process_t: Tool change Detected.");
 			pos->current_tool = static_cast<int>(p_cur_param.unsigned_long_value);

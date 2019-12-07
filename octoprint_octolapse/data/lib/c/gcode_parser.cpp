@@ -75,6 +75,7 @@ gcode_parser::gcode_parser()
 	parsable_command_names.push_back("M400");
 	parsable_command_names.push_back("M563");
 	parsable_command_names.push_back("T");
+	parsable_command_names.push_back("@OCTOLAPSE");
 
 	for (unsigned int index = 0; index < text_only_function_names.size(); index++)
 	{
@@ -169,20 +170,35 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::VERBOSE, message);
 			return true;
 		}
-
-		if (text_only_functions_.find(command.command) != text_only_functions_.end())
+		if (command.command.length() > 0 && command.command == "@OCTOLAPSE")
 		{
+			parsed_command_parameter octolapse_parameter;
+			if (!try_extract_octolapse_parameter(&p, &octolapse_parameter))
+			{
+				std::string message = "Unable to extract an octolapse parameter from: ";
+				message += p;
+				octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::WARNING, message);
+				return true;
+			}
+			command.parameters.push_back(octolapse_parameter);
+		}
+		else if (
+			text_only_functions_.find(command.command) != text_only_functions_.end() ||
+			(
+				command.command.length() > 0 && command.command[0] == '@'
+			)
+		){
 			//std::cout << "GcodeParser.try_parse_gcode - Text only parameter found.\r\n";
-			parsed_command_parameter * p_text_command = new parsed_command_parameter();
-
-			if (!try_extract_text_parameter(&p, &(p_text_command->string_value)))
+			parsed_command_parameter text_command;
+			if (!try_extract_text_parameter(&p, &(text_command.string_value)))
 			{
 				std::string message = "Unable to extract a text parameter from: ";
 				message += p;
 				octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::WARNING, message);
 				return true;
 			}
-			p_text_command->name = '\0';
+			text_command.name = '\0';
+			command.parameters.push_back(text_command);
 		}
 		else
 		{
@@ -234,6 +250,15 @@ bool gcode_parser::try_extract_gcode_command(char ** p_p_gcode, std::string * p_
 	while (*p == ' ')
 	{
 		p++;
+	}
+	// See if this is an @ command, which can be used in octoprint for controlling octolapse
+	if (*p == '@')
+	{
+		found_command = gcode_parser::try_extract_at_command(&p, p_command);
+	}
+	else
+	{
+
 	}
 	// Deal with case sensitivity
 	if (*p >= 'a' && *p <= 'z')
@@ -330,6 +355,27 @@ bool gcode_parser::try_extract_gcode_command(char ** p_p_gcode, std::string * p_
 	}
 	*p_p_gcode = p;
 	return found_command;
+}
+
+bool gcode_parser::try_extract_at_command(char ** p_p_gcode, std::string * p_command)
+{
+	char *p = *p_p_gcode;
+	bool found_command = false;
+	while (*p != '\0' && *p != ';' && *p!= ' ')
+	{
+		if (!found_command)
+		{
+			found_command = true;
+		}
+		if (*p >= 'a' && *p <= 'z')
+			(*p_command).push_back(*p++ - 32);
+		else
+			(*p_command).push_back(*p++);
+		
+	}
+	*p_p_gcode = p;
+	return found_command;
+
 }
 
 bool gcode_parser::try_extract_unsigned_long(char ** p_p_gcode, unsigned long * p_value) {
@@ -449,6 +495,60 @@ bool gcode_parser::try_extract_text_parameter(char ** p_p_gcode, std::string * p
 	*p_p_gcode = p;
 	return true;
 
+}
+
+bool gcode_parser::try_extract_octolapse_parameter(char ** p_p_gcode, parsed_command_parameter * p_parameter)
+{
+	p_parameter->name = "";
+	p_parameter->value_type = 'N';
+	// Skip initial whitespace
+	//std::cout << "GcodeParser.try_extract_parameter - Trying to extract a text parameter from  " << *p_p_gcode << "\r\n";
+	char * p = *p_p_gcode;
+	bool has_found_parameter = false;
+	// Ignore Leading Spaces
+	while (*p == ' ')
+	{
+		p++;
+	}
+	// extract name, make all caps.
+	while (*p != '\0' && *p != ';' && *p != ' ')
+	{
+		if (!has_found_parameter)
+		{
+			has_found_parameter = true;
+		}
+
+		if (*p >= 'a' && *p <= 'z')
+		{
+			p_parameter->name.push_back(*p++ - 32);
+		}
+		else
+		{
+			p_parameter->name.push_back(*p++);
+		}
+	}
+	// Ignore spaces after the command name
+	while (*p == ' ')
+	{
+		p++;
+	}
+	// Extract the value (we may do this per command in the future).  This will output mixed case.
+	bool has_parameter_value = false;
+	while (*p != '\0' && *p != ';')
+	{
+		if (!has_parameter_value)
+		{
+			p_parameter->value_type = 'S';
+			has_parameter_value = true;
+		}
+		p_parameter->string_value.push_back(*p++);
+	}
+	if (has_parameter_value)
+	{
+		p_parameter->string_value = utilities::rtrim(p_parameter->string_value);
+	}
+
+	return has_found_parameter;
 }
 
 bool gcode_parser::try_extract_parameter(char ** p_p_gcode, parsed_command_parameter * parameter) const

@@ -50,5 +50,7 @@ private:
 	static bool try_extract_unsigned_long(char ** p_p_gcode, unsigned long * p_value);
 	double static ten_pow(unsigned short n);
 	bool try_extract_comment(char ** p_p_gcode, std::string * p_comment);
+	static bool try_extract_at_command(char ** p_p_gcode, std::string * p_command);
+	bool try_extract_octolapse_parameter(char ** p_p_gcode, parsed_command_parameter * p_parameter);
 };
 #endif
