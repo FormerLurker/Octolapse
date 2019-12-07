@@ -129,7 +129,7 @@ public:
 	gcode_position();
 	virtual ~gcode_position();
 
-	void update(parsed_command &command, int file_line_number, int gcode_number);
+	void update(parsed_command &command, long file_line_number, long gcode_number, const long file_position);
 	void update_position(position *position, double x, bool update_x, double y, bool update_y, double z, bool update_z, double e, bool update_e, double f, bool update_f, bool force, bool is_g1_g0) const;
 	void undo_update();
 	position get_current_position() const;

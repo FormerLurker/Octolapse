@@ -86,8 +86,9 @@ struct position
 	bool has_received_home_command;
 	bool is_in_position;
 	bool in_path_position;
-	int file_line_number;
-	int gcode_number;
+	long file_line_number;
+	long gcode_number;
+	long file_position;
 	bool gcode_ignored;
 	bool is_in_bounds;
 	bool is_empty;

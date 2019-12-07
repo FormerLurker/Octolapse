@@ -131,6 +131,7 @@ class SnapshotPlan(object):
     def __init__(self,
                  file_line_number=None,
                  file_gcode_number=None,
+                 file_position=None,
                  travel_distance=None,
                  saved_travel_distance=None,
                  triggering_command=None,
@@ -143,6 +144,7 @@ class SnapshotPlan(object):
         self.saved_travel_distance = saved_travel_distance
         self.file_line_number = file_line_number
         self.file_gcode_number = file_gcode_number
+        self.file_position = file_position
         self.triggering_command = triggering_command
         self.initial_position = initial_position
         self.return_position = return_position
@@ -160,6 +162,7 @@ class SnapshotPlan(object):
             return {
                 "file_line_number": self.file_line_number,
                 "file_gcode_number": self.file_gcode_number,
+                "file_position": self.file_position,
                 'travel_distance': self.travel_distance,
                 'saved_travel_distance': self.saved_travel_distance,
                 "triggering_command": None if self.triggering_command is None else self.triggering_command.to_dict(),
@@ -182,17 +185,18 @@ class SnapshotPlan(object):
                 # extract the arguments
                 file_line_number = cpp_plan[0]
                 file_gcode_number = cpp_plan[1]
-                travel_distance = cpp_plan[2]
-                saved_travel_distance = cpp_plan[3]
+                file_position = cpp_plan[2]
+                travel_distance = cpp_plan[3]
+                saved_travel_distance = cpp_plan[4]
                 triggering_command = (
-                    None if cpp_plan[4] is None else ParsedCommand.create_from_cpp_parsed_command(cpp_plan[4])
-                )
-                start_command = (
                     None if cpp_plan[5] is None else ParsedCommand.create_from_cpp_parsed_command(cpp_plan[5])
                 )
-                initial_position = Pos.create_from_cpp_pos(cpp_plan[6])
+                start_command = (
+                    None if cpp_plan[6] is None else ParsedCommand.create_from_cpp_parsed_command(cpp_plan[6])
+                )
+                initial_position = Pos.create_from_cpp_pos(cpp_plan[7])
                 steps = []
-                for step in cpp_plan[7]:
+                for step in cpp_plan[8]:
                     action = step[0]
                     x = step[1]
                     y = step[2]
@@ -200,11 +204,12 @@ class SnapshotPlan(object):
                     e = step[4]
                     f = step[5]
                     steps.append(SnapshotPlanStep(action, x, y, z, e, f))
-                return_position = None if cpp_plan[8] is None else Pos.create_from_cpp_pos(cpp_plan[8])
-                end_command = None if cpp_plan[9] is None else ParsedCommand.create_from_cpp_parsed_command(cpp_plan[9])
+                return_position = None if cpp_plan[9] is None else Pos.create_from_cpp_pos(cpp_plan[9])
+                end_command = None if cpp_plan[10] is None else ParsedCommand.create_from_cpp_parsed_command(cpp_plan[10])
                 snapshot_plan = SnapshotPlan(
                     file_line_number,
                     file_gcode_number,
+                    file_position,
                     travel_distance,
                     saved_travel_distance,
                     start_command,

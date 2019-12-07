@@ -421,7 +421,7 @@ position * gcode_position::get_previous_position_ptr()
 	return &positions_[(cur_pos_ - 1 + NUM_POSITIONS) % NUM_POSITIONS];
 }
 
-void gcode_position::update(parsed_command& command, const int file_line_number, const int gcode_number)
+void gcode_position::update(parsed_command& command, const long file_line_number, const long gcode_number, const long file_position)
 {
 	
 	if (command.is_empty)
@@ -436,6 +436,7 @@ void gcode_position::update(parsed_command& command, const int file_line_number,
 	position * p_previous_pos = get_previous_position_ptr();
 	p_current_pos->file_line_number = file_line_number;
 	p_current_pos->gcode_number = gcode_number;
+	p_current_pos->file_position = file_position;
 	comment_processor_.update(*p_current_pos);
 
 	if (!command.is_known_command)

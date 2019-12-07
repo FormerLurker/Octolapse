@@ -224,6 +224,7 @@ void stabilization_smart_layer::add_plan()
 
 		p_plan.file_line = p_closest.pos.file_line_number;
 		p_plan.file_gcode_number = p_closest.pos.gcode_number;
+		p_plan.file_position = p_closest.pos.file_position;
 
 		// Add the plan
 		p_snapshot_plans_.push_back(p_plan);

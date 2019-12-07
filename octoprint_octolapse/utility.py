@@ -88,7 +88,7 @@ def get_string(value, default):
 
 # global for bitrate regex
 octoprint_ffmpeg_bitrate_regex = re.compile(
-    "^\d+[KkMm]$", re.IGNORECASE)
+    r"^\d+[KkMm]$", re.IGNORECASE)
 
 
 def get_bitrate(value, default):

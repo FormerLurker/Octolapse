@@ -108,7 +108,7 @@ void set_internal_log_levels(bool check_real_time)
 			PyErr_Print();
 			PyErr_SetString(PyExc_ValueError, "Logging.octolapse_log - Could not retrieve the log level for the gcode parser logger.");
 		}
-		gcode_parser_log_level = PyInt_AsLong(py_gcode_parser_log_level);
+		gcode_parser_log_level = PyIntOrLong_AsLong(py_gcode_parser_log_level);
 
 		PyObject* py_gcode_position_log_level = PyObject_CallMethodObjArgs(py_octolapse_gcode_position_logger, py_get_effective_level_function_name, NULL);
 		if (py_gcode_position_log_level == NULL)
@@ -116,7 +116,7 @@ void set_internal_log_levels(bool check_real_time)
 			PyErr_Print();
 			PyErr_SetString(PyExc_ValueError, "Logging.octolapse_log - Could not retrieve the log level for the gcode position logger.");
 		}
-		gcode_position_log_level = PyInt_AsLong(py_gcode_position_log_level);
+		gcode_position_log_level = PyIntOrLong_AsLong(py_gcode_position_log_level);
 
 		PyObject* py_snapshot_plan_log_level = PyObject_CallMethodObjArgs(py_octolapse_snapshot_plan_logger, py_get_effective_level_function_name, NULL);
 		if (py_snapshot_plan_log_level == NULL)
@@ -124,7 +124,7 @@ void set_internal_log_levels(bool check_real_time)
 			PyErr_Print();
 			PyErr_SetString(PyExc_ValueError, "Logging.octolapse_log - Could not retrieve the log level for the snapshot plan logger.");
 		}
-		snapshot_plan_log_level = PyInt_AsLong(py_snapshot_plan_log_level);
+		snapshot_plan_log_level = PyIntOrLong_AsLong(py_snapshot_plan_log_level);
 
 		Py_XDECREF(py_gcode_parser_log_level);
 		Py_XDECREF(py_gcode_position_log_level);

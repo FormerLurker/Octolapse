@@ -12,3 +12,5 @@ const char* PyUnicode_SafeAsString(PyObject * py);
 PyObject * PyString_SafeFromString(const char * str);
 PyObject * PyUnicode_SafeFromString(std::string str);
 double PyFloatOrInt_AsDouble(PyObject* py_double_or_int);
+long PyIntOrLong_AsLong(PyObject * value);
+bool PyFloatLongOrInt_Check(PyObject* value);

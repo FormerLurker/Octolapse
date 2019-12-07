@@ -116,6 +116,7 @@ position::position()
 	has_received_home_command = false;
 	file_line_number = -1;
 	gcode_number = -1;
+	file_position = -1;
 	gcode_ignored = true;
 	is_in_bounds = true;
 	current_tool = -1;
@@ -170,6 +171,7 @@ position::position(int extruder_count)
 	has_received_home_command = false;
 	file_line_number = -1;
 	gcode_number = -1;
+	file_position = -1;
 	gcode_ignored = true;
 	is_in_bounds = true;
 	current_tool = 0;
@@ -225,6 +227,7 @@ position::position(const position &pos)
 	has_received_home_command = pos.has_received_home_command;
 	file_line_number = pos.file_line_number;
 	gcode_number = pos.gcode_number;
+	file_position = pos.file_position;
 	gcode_ignored = pos.gcode_ignored;
 	is_in_bounds = pos.is_in_bounds;
 	current_tool = pos.current_tool;
@@ -287,6 +290,7 @@ position& position::operator=(const position& pos) {
 	has_position_changed = pos.has_position_changed;
 	has_received_home_command = pos.has_received_home_command;
 	file_line_number = pos.file_line_number;
+	file_position = pos.file_position;
 	gcode_number = pos.gcode_number;
 	gcode_ignored = pos.gcode_ignored;
 	is_in_bounds = pos.is_in_bounds;
@@ -397,7 +401,7 @@ PyObject* position::to_py_tuple()
 	//std::cout << "Building position py_tuple.\r\n";
 	PyObject* pyPosition = Py_BuildValue(
 		// ReSharper disable once StringLiteralTypo
-		"ddddddddddddddddddlllllllllllllllllllllllllllllllllllllOO",
+		"ddddddddddddddddddllllllllllllllllllllllllllllllllllllllOO",
 		// Floats
 		x, // 0
 		y, // 1
@@ -458,10 +462,11 @@ PyObject* position::to_py_tuple()
 		// file statistics
 		file_line_number, // 53
 		gcode_number, // 54
+		file_position, // 55
 		
 		// Objects
-		py_command, // 55
-		py_extruders // 56
+		py_command, // 56
+		py_extruders // 57
 
 	);
 	if (pyPosition == NULL)
@@ -614,6 +619,8 @@ PyObject* position::to_py_dict()
 		in_path_position,
 		"file_line_number",
 		file_line_number,
+		"file_position",
+		file_position,
 		"gcode_number",
 		gcode_number,
 		"is_in_bounds",

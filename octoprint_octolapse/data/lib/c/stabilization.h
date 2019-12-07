@@ -132,9 +132,7 @@ protected:
 	long file_size_;
 	int lines_processed_;
 	int gcodes_processed_;
+	long file_position_;
 	int missed_snapshots_;
-	
-
-	
 };
 #endif

@@ -20,12 +20,13 @@
 // following email address : FormerLurker@pm.me
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "stabilization.h"
-#include <fstream>
 #include <time.h>
 #include <vector>
 #include <sstream>
 #include "logging.h"
 #include "utilities.h"
+#include <iostream>
+#include <fstream>
 
 stabilization::stabilization(gcode_position_args position_args, stabilization_args stab_args, pythonGetCoordinatesCallback get_coordinates_callback, PyObject* py_get_coordinates_callback, pythonProgressCallback progress_callback, PyObject* py_progress_callback)
 {
@@ -50,6 +51,7 @@ stabilization::stabilization(gcode_position_args position_args, stabilization_ar
 	file_size_ = 0;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
+	file_position_ = 0;
 	missed_snapshots_ = 0;
 	stabilization_x_ = 0;
 	stabilization_y_ = 0;
@@ -69,6 +71,7 @@ stabilization::stabilization()
 	file_size_ = 0;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
+	file_position_ = 0;
 	missed_snapshots_ = 0;
 	stabilization_x_ = 0;
 	stabilization_y_ = 0;
@@ -91,6 +94,7 @@ stabilization::stabilization(gcode_position_args position_args, stabilization_ar
 	file_size_ = 0;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
+	file_position_ = 0;
 	missed_snapshots_ = 0;
 	stabilization_x_ = 0;
 	stabilization_y_ = 0;
@@ -157,33 +161,33 @@ stabilization_results stabilization::process_file()
 
 	file_size_ = get_file_size(stabilization_args_.file_path);
 
-	//std::ifstream gcodeFile(p_stabilization_args_->file_path.c_str());
-	FILE *gcodeFile = fopen(stabilization_args_.file_path.c_str(), "r");
-	char line[9999];
-
-	if (gcodeFile != NULL)
+	std::ifstream gcodeFile(stabilization_args_.file_path.c_str());
+	std::string line;
+	int lines_with_no_commands = 0;
+	if (gcodeFile.is_open())
 	{
 		parsed_command cmd;
 		// Communicate every second
-		while (is_running_)
+		while (std::getline(gcodeFile, line) && is_running_)
 		{
-			bool has_line = fgets(line, 9999, gcodeFile);
-
-			if (!has_line)
-				break;
-
+			file_position_ = static_cast<long>(gcodeFile.tellg());
 			lines_processed_++;
+
 			cmd.clear();
-			bool found_command = gcode_parser_->try_parse_gcode(line, cmd);
-			if (!cmd.is_empty)
+			bool found_command = gcode_parser_->try_parse_gcode(line.c_str(), cmd);
+			if (cmd.gcode.length() > 0)
 			{
 				gcodes_processed_++;
+			}
+			else
+			{
+				lines_with_no_commands++;
 			}
 
 			// Always process the command through the printer, even if no command is found
 			// This is important so that comments can be analyzed
 			//std::cout << "stabilization::process_file - updating position...";
-			gcode_position_->update(cmd, lines_processed_, gcodes_processed_);
+			gcode_position_->update(cmd, lines_processed_, gcodes_processed_, file_position_);
 
 			// Only continue to process if we've found a command.
 			if (found_command)
@@ -193,11 +197,10 @@ stabilization_results stabilization::process_file()
 				if ( (lines_processed_ % read_lines_before_clock_check) == 0 && next_update_time < clock())
 				{
 					// ToDo: tellg does not do what I think it does, but why?
-					long currentPosition = ftell (gcodeFile);
-					long bytesRemaining = file_size_ - currentPosition;
-					double percentProgress = (double)currentPosition / (double)file_size_*100.0;
+					long bytesRemaining = file_size_ - file_position_;
+					double percentProgress = static_cast<double>(file_position_) / static_cast<double>(file_size_)*100.0;
 					double secondsElapsed = get_time_elapsed(start_clock, clock());
-					double bytesPerSecond = (double)currentPosition / secondsElapsed;
+					double bytesPerSecond = static_cast<double>(file_position_) / secondsElapsed;
 					double secondsToComplete = bytesRemaining / bytesPerSecond;
 					//std::cout << "stabilization::process_file - notifying progress...";
 					notify_progress(percentProgress, secondsElapsed, secondsToComplete, gcodes_processed_,
@@ -210,7 +213,7 @@ stabilization_results stabilization::process_file()
 		}
 		// deallocate the parsed_command object
 		
-		fclose(gcodeFile);
+		gcodeFile.close();
 		on_processing_complete();
 		//std::cout << "stabilization::process_file - Completed Processing file.\r\n";
 	}
@@ -250,6 +253,7 @@ stabilization_results stabilization::process_file()
 		sstm << "\t\tPlan# " << index + 1;
 		sstm << ", Layer:" << pPlan.initial_position.layer;
 		sstm << ", Line:" << pPlan.file_line;
+		sstm << ", Position:" << pPlan.file_position;
 		sstm << ", StartX:" << pPlan.initial_position.x;
 		sstm << ", StartY:" << pPlan.initial_position.y;
 		sstm << ", StartZ:" << pPlan.initial_position.z;

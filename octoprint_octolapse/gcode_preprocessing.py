@@ -28,6 +28,7 @@ import datetime
 from file_read_backwards import FileReadBackwards
 import re
 import six
+import string
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
@@ -531,7 +532,7 @@ class Slic3rParsingFunctions(ParsingFunctions):
         str_array = parse_string.split(u' ')
         if len(str_array) == 2:
             mm_used = Slic3rParsingFunctions.parse_mm(str_array[0])
-            cm3_used = Slic3rParsingFunctions.parse_cm3(str_array[1].encode(u'utf-8').translate(None, b'()'))
+            cm3_used = Slic3rParsingFunctions.parse_cm3(str_array[1].encode(u'utf-8').decode().translate({"()": None}))
             return {
                 u'mm': mm_used,
                 u'cm3': cm3_used
@@ -542,9 +543,9 @@ class Slic3rParsingFunctions(ParsingFunctions):
         # separate the two values
         str_array = parse_string.split(u' ')
         if len(str_array) == 3:
-            hh = Slic3rParsingFunctions.parse_int(str_array[0].encode(u'utf-8').translate(None, b'h'))
-            mm = Slic3rParsingFunctions.parse_int(str_array[1].encode(u'utf-8').translate(None, b'm'))
-            ss = Slic3rParsingFunctions.parse_int(str_array[2].encode(u'utf-8').translate(None, b's'))
+            hh = Slic3rParsingFunctions.parse_int(str_array[0].encode(u'utf-8').decode().translate({ord(c):None for c in 'h'}))
+            mm = Slic3rParsingFunctions.parse_int(str_array[1].encode(u'utf-8').decode().translate({ord(c):None for c in 'm'}))
+            ss = Slic3rParsingFunctions.parse_int(str_array[2].encode(u'utf-8').decode().translate({ord(c):None for c in 's'}))
             return {
                 u'hours': hh,
                 u'minutes': mm,
@@ -639,7 +640,7 @@ class Slic3rParsingFunctions(ParsingFunctions):
         if percent_index < 1:
             return None
         try:
-            return float(parse_string.encode(u'utf-8').translate(None, b'%'))
+            return float(parse_string.encode(u'utf-8').decode().translate({ord(c):None for c in '%'}))
         except ValueError:
             return 0
 
@@ -652,7 +653,7 @@ class Slic3rParsingFunctions(ParsingFunctions):
             if percent_index < 1:
                 percents.append(None)
             try:
-                percents.append(percent.encode(u'utf-8').translate(None, b'%'))
+                percents.append(percent.encode(u'utf-8').decode().translate({ord(c):None for c in '%'}))
             except ValueError:
                 percents.append(0)
         return percents
@@ -662,7 +663,7 @@ class Slic3rParsingFunctions(ParsingFunctions):
         percent_index = parse_string.find(u'%')
         try:
             if percent_index > -1:
-                percent = float(parse_string.encode(u'utf-8').translate(None, b'%'))
+                percent = float(parse_string.encode(u'utf-8').decode().translate({ord(c):None for c in '%'}))
                 return {
                     u'percent': percent
                 }
@@ -682,7 +683,7 @@ class CuraParsingFunctions(ParsingFunctions):
         str_array = parse_string.split(u' ')
         if len(str_array) == 2:
             mm_used = Slic3rParsingFunctions.parse_mm(str_array[0])
-            cm3_used = Slic3rParsingFunctions.parse_cm3(str_array[1].encode(u'utf-8').translate(None, b'()'))
+            cm3_used = Slic3rParsingFunctions.parse_cm3(str_array[1].encode(u'utf-8').decode().translate({'()': None}))
             return {
                 u'mm': mm_used,
                 u'cm3': cm3_used
@@ -979,10 +980,10 @@ class Simplify3dSettingsProcessor(GcodeSettingsProcessor):
 
     def get_regex_definitions(self):
         return {
-            "general_setting": RegexDefinition("general_setting", "^;\s\s\s(?P<key>.*?),(?P<val>.*)$", self.default_matching_function, tags=[u'octolapse_setting']),
-            "printer_models_override": RegexDefinition("printer_models_override", "^;\s\s\sprinterModelsOverride$", self.printer_modesl_override_matched, True),
-            "version": RegexDefinition("version", ";\sG\-Code\sgenerated\sby\sSimplify3D\(R\)\sVersion\s(?P<ver>.*)$", self.version_matched, True, tags=[u'octolapse_setting']),
-            "gocde_date": RegexDefinition("gocde_date", "^; (?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s(?P<day>[0-9]?[0-9]), (?P<year>[0-9]?[0-9]?[0-9]?[0-9]) at (?P<hour>[0-9]?[0-9]):(?P<min>[0-9]?[0-9]):(?P<sec>[0-9]?[0-9])\s(?P<period>AM|PM)$", self.gcode_date_matched, True)
+            "general_setting": RegexDefinition("general_setting", r"^;\s\s\s(?P<key>.*?),(?P<val>.*)$", self.default_matching_function, tags=[u'octolapse_setting']),
+            "printer_models_override": RegexDefinition("printer_models_override", r"^;\s\s\sprinterModelsOverride$", self.printer_modesl_override_matched, True),
+            "version": RegexDefinition("version", r";\sG\-Code\sgenerated\sby\sSimplify3D\(R\)\sVersion\s(?P<ver>.*)$", self.version_matched, True, tags=[u'octolapse_setting']),
+            "gocde_date": RegexDefinition("gocde_date", r"^; (?P<month>Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s(?P<day>[0-9]?[0-9]), (?P<year>[0-9]?[0-9]?[0-9]?[0-9]) at (?P<hour>[0-9]?[0-9]):(?P<min>[0-9]?[0-9]):(?P<sec>[0-9]?[0-9])\s(?P<period>AM|PM)$", self.gcode_date_matched, True)
         }
 
     @staticmethod
@@ -1228,10 +1229,10 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
     def get_regex_definitions(self):
         return {
             "general_setting": RegexDefinition(u"general_setting", u"^; (?P<key>[^,]*?) = (?P<val>.*)", self.default_matching_function, tags=[u'octolapse_setting']),
-            "version": RegexDefinition(u"version", u"^;Generated\swith\sCura_SteamEngine\s(?P<ver>.*)$",self.version_matched,True, tags=[u'octolapse_setting']),
-            "filament_used_meters": RegexDefinition(u"filament_used_meters", u"^;Filament\sused:\s(?P<meters>.*)m$", self.filament_used_meters_matched, True),
+            "version": RegexDefinition(u"version", r"^;Generated\swith\sCura_SteamEngine\s(?P<ver>.*)$", self.version_matched,True, tags=[u'octolapse_setting']),
+            "filament_used_meters": RegexDefinition(r"filament_used_meters", r"^;Filament\sused:\s(?P<meters>.*)m$", self.filament_used_meters_matched, True),
             "firmware_flavor": RegexDefinition(u"firmware_flavor", u"^;FLAVOR:(?P<flavor>.*)$", self.firmware_flavor_matched, True),
-            "layer_height": RegexDefinition(u"layer_height", u"^;Layer\sheight:\s(?P<height>.*)$", self.layer_height_matched, True),
+            "layer_height": RegexDefinition(r"layer_height", r"^;Layer\sheight:\s(?P<height>.*)$", self.layer_height_matched, True),
         }
 
     @staticmethod

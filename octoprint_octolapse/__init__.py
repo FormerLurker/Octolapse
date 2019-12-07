@@ -41,7 +41,8 @@ import base64
 import json
 import os
 import shutil
-import flask
+from flask import Flask, request, send_file, jsonify
+from flask_principal import Permission, RoleNeed
 import threading
 import uuid
 import six
@@ -58,7 +59,7 @@ import octoprint.plugin
 import octoprint.server
 import octoprint.filemanager
 from octoprint.events import Events
-from octoprint.server import admin_permission
+#from octoprint.server import admin_permission
 from octoprint.server.util.flask import restricted_access
 import octoprint_octolapse.stabilization_preprocessing
 import octoprint_octolapse.camera as camera
@@ -101,6 +102,7 @@ class OctolapsePlugin(
     TIMEOUT_DELAY = 1000
     PREPROCESSING_CANCEL_TIMEOUT_SECONDS = 5
     PREPROCESSING_NOTIFICATION_PERIOD_SECONDS = 1
+    admin_permission = Permission(RoleNeed('admin'))
 
     def __init__(self):
         super(OctolapsePlugin, self).__init__()
@@ -146,15 +148,15 @@ class OctolapsePlugin(
     # Blueprint Plugin Mixin Requests
     @octoprint.plugin.BlueprintPlugin.route("/downloadTimelapse/<filename>", methods=["GET"])
     @restricted_access
-    @admin_permission.require(403)
     def download_timelapse_request(self, filename):
         """Restricted access function to download a timelapse"""
-        return self.get_download_file_response(self.get_timelapse_folder() + filename, filename)
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            return self.get_download_file_response(self.get_timelapse_folder() + filename, filename)
 
     @octoprint.plugin.BlueprintPlugin.route("/snapshot", methods=["GET"])
     def snapshot_request(self):
-        file_type = flask.request.args.get('file_type')
-        guid = flask.request.args.get('camera_guid')
+        file_type = request.args.get('file_type')
+        guid = request.args.get('camera_guid')
         """Public access function to get the latest snapshot image"""
         if file_type == 'snapshot':
             # get the latest snapshot image
@@ -182,229 +184,224 @@ class OctolapsePlugin(
             filename = utility.get_error_image_download_path(self._basefolder)
 
         # not getting the latest image
-        return flask.send_file(filename, mimetype=mime_type, cache_timeout=-1)
+        return send_file(filename, mimetype=mime_type, cache_timeout=-1)
 
     @octoprint.plugin.BlueprintPlugin.route("/downloadSettings", methods=["GET"])
     @restricted_access
-    @admin_permission.require(403)
     def download_settings_request(self):
-        return self.get_download_file_response(self.get_settings_file_path(), "Settings.json")
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            return self.get_download_file_response(self.get_settings_file_path(), "Settings.json")
 
     @octoprint.plugin.BlueprintPlugin.route("/downloadProfile", methods=["GET"])
     @restricted_access
-    @admin_permission.require(403)
     def download_profile_request(self):
-        # get the parameters
-        profile_type = flask.request.args["profile_type"]
-        guid = flask.request.args["guid"]
-        # get the profile settings
-        profile_json = self._octolapse_settings.get_profile_export_json(profile_type, guid)
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            # get the parameters
+            profile_type = request.args["profile_type"]
+            guid = request.args["guid"]
+            # get the profile settings
+            profile_json = self._octolapse_settings.get_profile_export_json(profile_type, guid)
 
-        # create a temp file
-        temp_directory = mkdtemp()
-        file_path = os.path.join(temp_directory,"profile_setting_json.json")
-        # see if the filename is valid
-        def delete_temp_path(filepath, tempdirectory):
-            # delete the temp file and directory
-            os.unlink(filepath)
-            shutil.rmtree(tempdirectory)
+            # create a temp file
+            temp_directory = mkdtemp()
+            file_path = os.path.join(temp_directory,"profile_setting_json.json")
+            # see if the filename is valid
+            def delete_temp_path(filepath, tempdirectory):
+                # delete the temp file and directory
+                os.unlink(filepath)
+                shutil.rmtree(tempdirectory)
 
-        with open(file_path, "w") as settings_file:
-            settings_file.write(profile_json)
-            # create the download file response
-            download_file_response = self.get_download_file_response(
-                file_path,
-                "{0}_Profile.json".format(profile_type),
-                on_complete_callback=delete_temp_path,
-                on_complete_additional_args=temp_directory
-            )
-
-        return download_file_response
+            with open(file_path, "w") as settings_file:
+                settings_file.write(profile_json)
+                # create the download file response
+                download_file_response = self.get_download_file_response(
+                    file_path,
+                    "{0}_Profile.json".format(profile_type),
+                    on_complete_callback=delete_temp_path,
+                    on_complete_additional_args=temp_directory
+                )
+            return download_file_response
 
     @octoprint.plugin.BlueprintPlugin.route("/stopTimelapse", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def stop_timelapse_request(self):
-        self._timelapse.stop_snapshots()
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            self._timelapse.stop_snapshots()
+            return jsonify({'success': True})
 
     @octoprint.plugin.BlueprintPlugin.route("/previewStabilization", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def preview_stabilization(self):
-        # make sure we aren't printing
-        if not self._printer.is_ready():
-            error = "Cannot preview the stabilization because the printer is either printing or is a non-operational " \
-                    "state, or is disconnected.  Check the 'State' of your printer on the left side of the screen " \
-                    "and make sure it is connected and operational"
-            logger.error(error)
-            return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
-        with self._printer.job_on_hold():
-            # get the current stabilization
-            current_stabilization = self._octolapse_settings.profiles.current_stabilization()
-            assert(isinstance(current_stabilization, StabilizationProfile))
-            # get the current trigger
-            current_trigger = self._octolapse_settings.profiles.current_trigger()
-            assert (isinstance(current_trigger, TriggerProfile))
-            # get the current printer
-            current_printer = self._octolapse_settings.profiles.current_printer()
-            if current_printer is None:
-                error = "Cannot preview the stabilization because no printer profile is selected.  Please select " \
-                        "and configure a printer profile and try again."
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            # make sure we aren't printing
+            if not self._printer.is_ready():
+                error = "Cannot preview the stabilization because the printer is either printing or is a non-operational " \
+                        "state, or is disconnected.  Check the 'State' of your printer on the left side of the screen " \
+                        "and make sure it is connected and operational"
                 logger.error(error)
-                return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
-            assert (isinstance(current_printer, PrinterProfile))
-            # if both the X and Y axis are disabled, or the trigger is a smart trigger with snap to print enabled, return
-            # an error.
-            if (
-                current_stabilization.x_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_DISABLED and
-                current_stabilization.y_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_DISABLED
-            ):
-                error = "Cannot preview the stabilization because both the X and Y axis are disabled.  Please enable at " \
-                        "least one stabilized axis and try again."
-                logger.error(error)
-                return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
+                return jsonify({'success': False, 'error': error})
+            with self._printer.job_on_hold():
+                # get the current stabilization
+                current_stabilization = self._octolapse_settings.profiles.current_stabilization()
+                assert(isinstance(current_stabilization, StabilizationProfile))
+                # get the current trigger
+                current_trigger = self._octolapse_settings.profiles.current_trigger()
+                assert (isinstance(current_trigger, TriggerProfile))
+                # get the current printer
+                current_printer = self._octolapse_settings.profiles.current_printer()
+                if current_printer is None:
+                    error = "Cannot preview the stabilization because no printer profile is selected.  Please select " \
+                            "and configure a printer profile and try again."
+                    logger.error(error)
+                    return jsonify({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
+                assert (isinstance(current_printer, PrinterProfile))
+                # if both the X and Y axis are disabled, or the trigger is a smart trigger with snap to print enabled, return
+                # an error.
+                if (
+                    current_stabilization.x_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_DISABLED and
+                    current_stabilization.y_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_DISABLED
+                ):
+                    error = "Cannot preview the stabilization because both the X and Y axis are disabled.  Please enable at " \
+                            "least one stabilized axis and try again."
+                    logger.error(error)
+                    return jsonify({'success': False, 'error': error})
 
-            if (
-                    current_trigger.trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER and
-                    current_trigger.smart_layer_trigger_type == TriggerProfile.SMART_TRIGGER_TYPE_SNAP_TO_PRINT
-            ):
-                error = "Cannot preview the stabilization when using a snap-to-print trigger."
-                logger.error(error)
-                return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
+                if (
+                        current_trigger.trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER and
+                        current_trigger.smart_layer_trigger_type == TriggerProfile.SMART_TRIGGER_TYPE_SNAP_TO_PRINT
+                ):
+                    error = "Cannot preview the stabilization when using a snap-to-print trigger."
+                    logger.error(error)
+                    return jsonify({'success': False, 'error': error})
 
-            gcode_array = Commands.string_to_gcode_array(current_printer.home_axis_gcode)
-            if len(gcode_array) < 1:
-                error = "Cannot preview stabilization.  The home axis gcode script in your printer profile does not " \
-                        "contain any valid gcodes.  Please add a script to home your printer to the printer profile and " \
-                        "try again."
-                logger.error(error)
-                return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
+                gcode_array = Commands.string_to_gcode_array(current_printer.home_axis_gcode)
+                if len(gcode_array) < 1:
+                    error = "Cannot preview stabilization.  The home axis gcode script in your printer profile does not " \
+                            "contain any valid gcodes.  Please add a script to home your printer to the printer profile and " \
+                            "try again."
+                    logger.error(error)
+                    return jsonify({'success': False, 'error': error})
 
 
-            overridable_printer_profile_settings = current_printer.get_overridable_profile_settings(
-                self.get_octoprint_g90_influences_extruder(),
-                self.get_octoprint_printer_profile()
-            )
-            # create a snapshot gcode generator object
-            gcode_generator = SnapshotGcodeGenerator(
-                self._octolapse_settings, overridable_printer_profile_settings
-            )
+                overridable_printer_profile_settings = current_printer.get_overridable_profile_settings(
+                    self.get_octoprint_g90_influences_extruder(),
+                    self.get_octoprint_printer_profile()
+                )
+                # create a snapshot gcode generator object
+                gcode_generator = SnapshotGcodeGenerator(
+                    self._octolapse_settings, overridable_printer_profile_settings
+                )
 
-            # get the stabilization point
-            stabilization_point = gcode_generator.get_snapshot_position(None, None)
-            if stabilization_point is None and stabilization_point["x"] is None and stabilization_point["y"] is None:
-                error = "No stabilization points were returned.  Cannot preview stabilization."
-                logger.error(error)
-                return json.dumps({'success': False, 'error': error}), 200, {'ContentType': 'application/json'}
+                # get the stabilization point
+                stabilization_point = gcode_generator.get_snapshot_position(None, None)
+                if stabilization_point is None and stabilization_point["x"] is None and stabilization_point["y"] is None:
+                    error = "No stabilization points were returned.  Cannot preview stabilization."
+                    logger.error(error)
+                    return jsonify({'success': False, 'error': error})
 
-            # get the movement feedrate from the Octoprint printer profile, or use 6000 as a default
+                # get the movement feedrate from the Octoprint printer profile, or use 6000 as a default
 
-            default_feedrate = 6000
+                default_feedrate = 6000
 
-            feedrate_x = default_feedrate
-            feedrate_y = default_feedrate
-            octoprint_printer_profile = self.get_octoprint_printer_profile()
-            axes = octoprint_printer_profile.get("axes", None)
-            if axes is not None:
-                x_axis = axes.get("x", {"speed": default_feedrate})
-                feedrate_x = x_axis.get("speed", default_feedrate)
-                y_axis = axes.get("y", {"speed": default_feedrate})
-                feedrate_y = y_axis.get("speed", default_feedrate)
+                feedrate_x = default_feedrate
+                feedrate_y = default_feedrate
+                octoprint_printer_profile = self.get_octoprint_printer_profile()
+                axes = octoprint_printer_profile.get("axes", None)
+                if axes is not None:
+                    x_axis = axes.get("x", {"speed": default_feedrate})
+                    feedrate_x = x_axis.get("speed", default_feedrate)
+                    y_axis = axes.get("y", {"speed": default_feedrate})
+                    feedrate_y = y_axis.get("speed", default_feedrate)
 
-            feedrate = min(feedrate_x, feedrate_y)
-            # create the gcode necessary to move the extruder to the stabilization position and add it to the gcode array
-            gcode_array.append(
-                SnapshotGcodeGenerator.get_gcode_travel(stabilization_point["x"], stabilization_point["y"], feedrate)
-            )
+                feedrate = min(feedrate_x, feedrate_y)
+                # create the gcode necessary to move the extruder to the stabilization position and add it to the gcode array
+                gcode_array.append(
+                    SnapshotGcodeGenerator.get_gcode_travel(stabilization_point["x"], stabilization_point["y"], feedrate)
+                )
 
-            # send the gcode to the printer
-            self._printer.commands(gcode_array, tags={"preview-stabilization"})
-            return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+                # send the gcode to the printer
+                self._printer.commands(gcode_array, tags={"preview-stabilization"})
+                return jsonify({'success': True})
 
     @octoprint.plugin.BlueprintPlugin.route("/saveMainSettings", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def save_main_settings_request(self):
-        request_values = flask.request.get_json()
-        self._octolapse_settings.main_settings.update(request_values)
-        # save the updated settings to a file.
-        self.save_settings()
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            self._octolapse_settings.main_settings.update(request_values)
+            # save the updated settings to a file.
+            self.save_settings()
 
-        self.send_state_loaded_message()
-        data = {'success': True}
-        return json.dumps(data), 200, {'ContentType': 'application/json'}
+            self.send_state_loaded_message()
+            data = {'success': True}
+            return jsonify(data)
 
     @octoprint.plugin.BlueprintPlugin.route("/setEnabled", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def set_enabled(self):
-        request_values = flask.request.get_json()
-        enable_octolapse = request_values["is_octolapse_enabled"]
-
-        if (
-            self._timelapse is not None and
-            self._timelapse.is_timelapse_active() and
-            self._octolapse_settings.main_settings.is_octolapse_enabled and
-            not enable_octolapse
-        ):
-            self.send_plugin_message(
-                "disabled-running",
-                "Octolapse will remain active until the current print ends."
-                "  If you wish to stop the active timelapse, click 'Stop Timelapse'."
-            )
-
-        # save the updated settings to a file.
-        self._octolapse_settings.main_settings.is_octolapse_enabled = enable_octolapse
-        self.save_settings()
-        self.send_state_loaded_message()
-        data = {'success': True}
-        return json.dumps(data), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            enable_octolapse = request_values["is_octolapse_enabled"]
+            if (
+                self._timelapse is not None and
+                self._timelapse.is_timelapse_active() and
+                self._octolapse_settings.main_settings.is_octolapse_enabled and
+                not enable_octolapse
+            ):
+                self.send_plugin_message(
+                    "disabled-running",
+                    "Octolapse will remain active until the current print ends."
+                    "  If you wish to stop the active timelapse, click 'Stop Timelapse'."
+                )
+            # save the updated settings to a file.
+            self._octolapse_settings.main_settings.is_octolapse_enabled = enable_octolapse
+            self.save_settings()
+            self.send_state_loaded_message()
+            data = {'success': True}
+            return jsonify(data)
 
     @octoprint.plugin.BlueprintPlugin.route("/toggleInfoPanel", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def toggle_info_panel(self):
-        request_values = flask.request.get_json()
-        panel_type = request_values["panel_type"]
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            panel_type = request_values["panel_type"]
 
-        if panel_type == "show_printer_state_changes":
-            self._octolapse_settings.main_settings.show_printer_state_changes = (
-                not self._octolapse_settings.main_settings.show_printer_state_changes
-            )
-        elif panel_type == "show_position_changes":
-            self._octolapse_settings.main_settings.show_position_changes = (
-                not self._octolapse_settings.main_settings.show_position_changes
-            )
-        elif panel_type == "show_extruder_state_changes":
-            self._octolapse_settings.main_settings.show_extruder_state_changes = (
-                not self._octolapse_settings.main_settings.show_extruder_state_changes
-            )
-        elif panel_type == "show_trigger_state_changes":
-            self._octolapse_settings.main_settings.show_trigger_state_changes = (
-                not self._octolapse_settings.main_settings.show_trigger_state_changes
-            )
+            if panel_type == "show_printer_state_changes":
+                self._octolapse_settings.main_settings.show_printer_state_changes = (
+                    not self._octolapse_settings.main_settings.show_printer_state_changes
+                )
+            elif panel_type == "show_position_changes":
+                self._octolapse_settings.main_settings.show_position_changes = (
+                    not self._octolapse_settings.main_settings.show_position_changes
+                )
+            elif panel_type == "show_extruder_state_changes":
+                self._octolapse_settings.main_settings.show_extruder_state_changes = (
+                    not self._octolapse_settings.main_settings.show_extruder_state_changes
+                )
+            elif panel_type == "show_trigger_state_changes":
+                self._octolapse_settings.main_settings.show_trigger_state_changes = (
+                    not self._octolapse_settings.main_settings.show_trigger_state_changes
+                )
+            elif panel_type == "show_snapshot_plan_information":
+                self._octolapse_settings.main_settings.show_snapshot_plan_information = (
+                    not self._octolapse_settings.main_settings.show_snapshot_plan_information
+                )
+            else:
+                return jsonify({'error': "Unknown panel_type."}), 500
 
-        elif panel_type == "show_snapshot_plan_information":
-            self._octolapse_settings.main_settings.show_snapshot_plan_information = (
-                not self._octolapse_settings.main_settings.show_snapshot_plan_information
-            )
+            # save the updated settings to a file.
+            self.save_settings()
 
-        else:
-            return json.dumps({'error': "Unknown panel_type."}), 500, {'ContentType': 'application/json'}
-
-        # save the updated settings to a file.
-        self.save_settings()
-
-        self.send_state_loaded_message()
-        data = {'success': True}
-        return json.dumps(data), 200, {'ContentType': 'application/json'}
+            self.send_state_loaded_message()
+            data = {'success': True}
+            return jsonify(data)
 
     @octoprint.plugin.BlueprintPlugin.route("/loadMainSettings", methods=["POST"])
     def load_main_settings_request(self):
         data = {'success': True}
         data.update(self._octolapse_settings.main_settings.to_dict())
-        return json.dumps(data), 200, {'ContentType': 'application/json'}
+        return jsonify(data)
 
     @octoprint.plugin.BlueprintPlugin.route("/loadState", methods=["POST"])
     def load_state_request(self):
@@ -419,267 +416,431 @@ class OctolapsePlugin(
                 "Unable to load values from Octolapse.Timelapse, it hasn't been initialized yet.  Please wait a few "
                 "minutes and try again.  If the problem persists, please check plugin_octolapse.log for exceptions.")
         self.send_state_loaded_message()
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+        return jsonify({'success': True})
 
     @octoprint.plugin.BlueprintPlugin.route("/addUpdateProfile", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def add_update_profile_request(self):
-        try:
-            request_values = flask.request.get_json()
-            profile_type = request_values["profileType"]
-            profile = request_values["profile"]
-            client_id = request_values["client_id"]
-            updated_profile = self._octolapse_settings.profiles.add_update_profile(profile_type, profile)
-            # save the updated settings to a file.
-            self.save_settings()
-            self.send_settings_changed_message(client_id)
-            return updated_profile.to_json(), 200, {'ContentType': 'application/json'}
-        except Exception as e:
-            logger.exception("Error encountered in /addUpdateProfile.")
-        return {}, 500, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            try:
+                request_values = request.get_json()
+                profile_type = request_values["profileType"]
+                profile = request_values["profile"]
+                client_id = request_values["client_id"]
+                updated_profile = self._octolapse_settings.profiles.add_update_profile(profile_type, profile)
+                # save the updated settings to a file.
+                self.save_settings()
+                self.send_settings_changed_message(client_id)
+                return updated_profile.to_json(), 200, {'ContentType': 'application/json'}
+            except Exception as e:
+                logger.exception("Error encountered in /addUpdateProfile.")
+            return jsonify({}), 500
 
     @octoprint.plugin.BlueprintPlugin.route("/removeProfile", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def remove_profile_request(self):
-        request_values = flask.request.get_json()
-        profile_type = request_values["profileType"]
-        guid = request_values["guid"]
-        client_id = request_values["client_id"]
-        if not self._octolapse_settings.profiles.remove_profile(profile_type, guid):
-            return (
-                json.dumps({'success': False, 'error': "Cannot delete the default profile."}),
-                200,
-                {'ContentType': 'application/json'}
-            )
-        # save the updated settings to a file.
-        self.save_settings()
-        self.send_settings_changed_message(client_id)
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            profile_type = request_values["profileType"]
+            guid = request_values["guid"]
+            client_id = request_values["client_id"]
+            if not self._octolapse_settings.profiles.remove_profile(profile_type, guid):
+                return (
+                    jsonify({
+                        'success': False,
+                        'error': "Cannot delete the default profile."
+                    })
+                )
+            # save the updated settings to a file.
+            self.save_settings()
+            self.send_settings_changed_message(client_id)
+            return jsonify({'success': True})
 
     @octoprint.plugin.BlueprintPlugin.route("/setCurrentProfile", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def set_current_profile_request(self):
-        request_values = flask.request.get_json()
-        profile_type = request_values["profileType"]
-        guid = request_values["guid"]
-        client_id = request_values["client_id"]
-        self._octolapse_settings.profiles.set_current_profile(profile_type, guid)
-        self.save_settings()
-        self.send_settings_changed_message(client_id)
-        return json.dumps({'success': True, 'guid': request_values["guid"]}), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            profile_type = request_values["profileType"]
+            guid = request_values["guid"]
+            client_id = request_values["client_id"]
+            self._octolapse_settings.profiles.set_current_profile(profile_type, guid)
+            self.save_settings()
+            self.send_settings_changed_message(client_id)
+            return jsonify({'success': True, 'guid': request_values["guid"]})
 
     @octoprint.plugin.BlueprintPlugin.route("/setCurrentCameraProfile", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def set_current_camera_profile(self):
-        # this setting will only determine which profile will be the default within
-        # the snapshot preview if a new instance is loaded.  Save the settings, but
-        # do not notify other clients
-        request_values = flask.request.get_json()
-        guid = request_values["guid"]
-        self._octolapse_settings.profiles.current_camera_profile_guid = guid
-        self.save_settings()
-        return json.dumps({'success': True, 'guid': request_values["guid"]}), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            # this setting will only determine which profile will be the default within
+            # the snapshot preview if a new instance is loaded.  Save the settings, but
+            # do not notify other clients
+            request_values = request.get_json()
+            guid = request_values["guid"]
+            self._octolapse_settings.profiles.current_camera_profile_guid = guid
+            self.save_settings()
+            return jsonify({'success': True, 'guid': request_values["guid"]})
 
     @octoprint.plugin.BlueprintPlugin.route("/restoreDefaults", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def restore_defaults_request(self):
-        request_values = flask.request.get_json()
-        client_id = request_values["client_id"]
-        try:
-            self.load_settings(force_defaults=True)
-            self.send_settings_changed_message(client_id)
-            self.check_for_updates(force_updates=True)
-            return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
-        except Exception as e:
-            logger.exception("Failed to restore the defaults in /restoreDefaults.")
-        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            client_id = request_values["client_id"]
+            try:
+                self.load_settings(force_defaults=True)
+                self.send_settings_changed_message(client_id)
+                self.check_for_updates(force_updates=True)
+                return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
+            except Exception as e:
+                logger.exception("Failed to restore the defaults in /restoreDefaults.")
+            return jsonify({'success': False}), 500
 
     @octoprint.plugin.BlueprintPlugin.route("/loadSettings", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def load_settings_request(self):
-        return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/updateProfileFromServer", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def update_profile_from_server(self):
-        logger.info("Attempting to update the current profile from the server")
-        request_values = flask.request.get_json()
-        profile_type = request_values["type"]
-        key_values = request_values["key_values"]
-        profile_dict = request_values["profile"]
-        try:
-            server_profile_dict = ExternalSettings.get_profile(self._plugin_version, profile_type, key_values)
-        except ExternalSettingsError as e:
-            logger.exception("An error occurred while retrieving profiles from the profile server.")
-            return json.dumps(
-                {
-                    "success": False,
-                    "message": e.message
-                }
-            ), 500, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            logger.info("Attempting to update the current profile from the server")
+            request_values = request.get_json()
+            profile_type = request_values["type"]
+            key_values = request_values["key_values"]
+            profile_dict = request_values["profile"]
+            try:
+                server_profile_dict = ExternalSettings.get_profile(self._plugin_version, profile_type, key_values)
+            except ExternalSettingsError as e:
+                logger.exception("An error occurred while retrieving profiles from the profile server.")
+                return jsonify(
+                    {
+                        "success": False,
+                        "message": e.message
+                    }
+                ), 500
 
-        # update the profile
-        updated_profile = self._octolapse_settings.profiles.update_from_server_profile(
-            profile_type, profile_dict, server_profile_dict
-        )
-        return json.dumps(
-            {
-                "success": True,
-                "profile_json": updated_profile.to_json()
-            }
-        ), 200, {'ContentType': 'application/json'}
+            # update the profile
+            updated_profile = self._octolapse_settings.profiles.update_from_server_profile(
+                profile_type, profile_dict, server_profile_dict
+            )
+            return jsonify(
+                {
+                    "success": True,
+                    "profile_json": updated_profile.to_json()
+                }
+            )
 
     @octoprint.plugin.BlueprintPlugin.route("/updateProfilesFromServer", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def update_profiles_from_server(self):
-        logger.info("Attempting to update all current profile from the server")
-        request_values = flask.request.get_json()
-        client_id = request_values["client_id"]
-        self.check_for_updates(True)
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            logger.info("Attempting to update all current profile from the server")
+            request_values = request.get_json()
+            client_id = request_values["client_id"]
+            self.check_for_updates(True)
 
-        with self.automatic_update_lock:
-            if not self.automatic_updates_available:
-                return json.dumps({
-                    "num_updated": 0
-                }), 200, {'ContentType': 'application/json'}
-            num_profiles = 0
-            for profile_type, updatable_profiles in six.iteritems(self._octolapse_settings.profiles.get_updatable_profiles_dict()):
-                # now iterate through the printer profiles
-                for updatable_profile in updatable_profiles:
-                    current_profile = self._octolapse_settings.profiles.get_profile(
-                        profile_type, updatable_profile["guid"]
-                    )
-                    try:
-                        server_profile_dict = ExternalSettings.get_profile(
-                            self._plugin_version, profile_type,
-                            updatable_profile["key_values"]
-                        )
-                    except ExternalSettingsError as e:
-                        logger.exception("An error occurred while getting a profile from the profile server.")
-                        return json.dumps(
-                            {
-                                "message": e.message
-                            }
-                        ), 500, {'ContentType': 'application/json'}
-
-                    # update the profile
-
-                    updated_profile = self._octolapse_settings.profiles.update_from_server_profile(
-                        profile_type, current_profile.to_dict(), server_profile_dict
-                    )
-                    current_profile.update(updated_profile)
-                    num_profiles += 1
-
-            self.automatic_updates_available = False
-            self.save_settings()
-            self.send_settings_changed_message(client_id)
-            return json.dumps({
-                "settings": self._octolapse_settings.to_json(),
-                "num_updated": num_profiles
-            }), 200, {'ContentType': 'application/json'}
-
-    @octoprint.plugin.BlueprintPlugin.route("/suppressServerUpdates", methods=["POST"])
-    @restricted_access
-    @admin_permission.require(403)
-    def suppress_server_updates(self):
-        logger.info("Suppressing updates for all current updatable profiles.")
-        request_values = flask.request.get_json()
-        client_id = request_values["client_id"]
-        if self.automatic_updates_available:
             with self.automatic_update_lock:
+                if not self.automatic_updates_available:
+                    return jsonify({
+                        "num_updated": 0
+                    })
+                num_profiles = 0
                 for profile_type, updatable_profiles in six.iteritems(self._octolapse_settings.profiles.get_updatable_profiles_dict()):
                     # now iterate through the printer profiles
                     for updatable_profile in updatable_profiles:
                         current_profile = self._octolapse_settings.profiles.get_profile(
                             profile_type, updatable_profile["guid"]
                         )
-                        # get the server profile info
-                        server_profile = ExternalSettings.get_available_profile_for_profile(
-                            self.available_profiles, current_profile, profile_type
+                        try:
+                            server_profile_dict = ExternalSettings.get_profile(
+                                self._plugin_version, profile_type,
+                                updatable_profile["key_values"]
+                            )
+                        except ExternalSettingsError as e:
+                            logger.exception("An error occurred while getting a profile from the profile server.")
+                            return jsonify(
+                                {
+                                    "message": e.message
+                                }
+                            ), 500
+
+                        # update the profile
+
+                        updated_profile = self._octolapse_settings.profiles.update_from_server_profile(
+                            profile_type, current_profile.to_dict(), server_profile_dict
                         )
-                        if server_profile is not None:
-                            current_profile.suppress_updates(server_profile)
+                        current_profile.update(updated_profile)
+                        num_profiles += 1
+
                 self.automatic_updates_available = False
                 self.save_settings()
                 self.send_settings_changed_message(client_id)
-        return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
+                return jsonify({
+                    "settings": self._octolapse_settings.to_json(),
+                    "num_updated": num_profiles
+                })
+
+    @octoprint.plugin.BlueprintPlugin.route("/suppressServerUpdates", methods=["POST"])
+    @restricted_access
+    def suppress_server_updates(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            logger.info("Suppressing updates for all current updatable profiles.")
+            request_values = request.get_json()
+            client_id = request_values["client_id"]
+            if self.automatic_updates_available:
+                with self.automatic_update_lock:
+                    for profile_type, updatable_profiles in six.iteritems(self._octolapse_settings.profiles.get_updatable_profiles_dict()):
+                        # now iterate through the printer profiles
+                        for updatable_profile in updatable_profiles:
+                            current_profile = self._octolapse_settings.profiles.get_profile(
+                                profile_type, updatable_profile["guid"]
+                            )
+                            # get the server profile info
+                            server_profile = ExternalSettings.get_available_profile_for_profile(
+                                self.available_profiles, current_profile, profile_type
+                            )
+                            if server_profile is not None:
+                                current_profile.suppress_updates(server_profile)
+                    self.automatic_updates_available = False
+                    self.save_settings()
+                    self.send_settings_changed_message(client_id)
+            return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/importSettings", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def import_settings(self):
-        logger.info("Importing settings from file")
-        import_method = 'file'
-        import_text = ''
-        client_id = ''
-        # get the json request values
-        request_values = flask.request.get_json()
-        message=""
-        if request_values is not None:
-            import_method = request_values["import_method"]
-            import_text = request_values["import_text"]
-            client_id = request_values["client_id"]
-        if import_method == "file":
-            logger.debug("Importing settings from file.")
-            # Parse the request.
-            settings_path = flask.request.values['octolapse_settings_import_path_upload.path']
-            client_id = flask.request.values['client_id']
-            self._octolapse_settings = self._octolapse_settings.import_settings_from_file(
-                settings_path,
-                self._plugin_version,
-                self.get_default_settings_folder(),
-                self.get_plugin_data_folder(),
-                self.available_profiles
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            logger.info("Importing settings from file")
+            import_method = 'file'
+            import_text = ''
+            client_id = ''
+            # get the json request values
+            request_values = request.get_json()
+            message = ""
+
+            if request_values is not None:
+                import_method = request_values["import_method"]
+                import_text = request_values["import_text"]
+                client_id = request_values["client_id"]
+            if import_method == "file":
+                logger.debug("Importing settings from file.")
+                # Parse the request.
+                settings_path = request.values['octolapse_settings_import_path_upload.path']
+                client_id = request.values['client_id']
+                self._octolapse_settings = self._octolapse_settings.import_settings_from_file(
+                    settings_path,
+                    self._plugin_version,
+                    self.get_default_settings_folder(),
+                    self.get_plugin_data_folder(),
+                    self.available_profiles
+                )
+                message = "Your settings have been updated from the supplied file."
+            elif import_method == "text":
+                logger.debug("Importing settings from text.")
+                # convert the settings json to a python object
+                self._octolapse_settings = self._octolapse_settings.import_settings_from_text(
+                    import_text,
+                    self._plugin_version,
+                    self.get_default_settings_folder(),
+                    self.get_plugin_data_folder(),
+                    self.available_profiles
+                )
+                message = "Your settings have been updated from the uploaded text."
+
+            # if we're this far we need to save the settings.
+            self.save_settings()
+
+            # send a state changed message
+            self.send_settings_changed_message(client_id)
+
+            return jsonify(
+                {
+                    "settings": self._octolapse_settings.to_json(), "msg": message
+                }
             )
-            message = "Your settings have been updated from the supplied file."
-
-        elif import_method == "text":
-            logger.debug("Importing settings from text.")
-            # convert the settings json to a python object
-            self._octolapse_settings = self._octolapse_settings.import_settings_from_text(
-                import_text,
-                self._plugin_version,
-                self.get_default_settings_folder(),
-                self.get_plugin_data_folder(),
-                self.available_profiles
-            )
-            message = "Your settings have been updated from the uploaded text."
-
-        # if we're this far we need to save the settings.
-        self.save_settings()
-
-        # send a state changed message
-        self.send_settings_changed_message(client_id)
-
-        return json.dumps(
-            {
-                "settings": self._octolapse_settings.to_json(), "msg": message
-            }
-        ), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/getMjpgStreamerControls", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def get_mjpg_streamer_controls(self):
-        request_values = flask.request.get_json()
-        profile = request_values["profile"]
-        server_type = profile["server_type"]
-        camera_name = profile["name"]
-        address = profile["address"]
-        username = profile["username"]
-        password = profile["password"]
-        ignore_ssl_error = profile["ignore_ssl_error"]
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            profile = request_values["profile"]
+            server_type = profile["server_type"]
+            camera_name = profile["name"]
+            address = profile["address"]
+            username = profile["username"]
+            password = profile["password"]
+            ignore_ssl_error = profile["ignore_ssl_error"]
 
-        guid = None if "guid" not in profile else profile["guid"]
-        try:
+            guid = None if "guid" not in profile else profile["guid"]
+            try:
+                success, errors, webcam_settings = camera.CameraControl.get_webcam_settings(
+                    server_type,
+                    camera_name,
+                    address,
+                    username,
+                    password,
+                    ignore_ssl_error
+                )
+            except Exception as e:
+                logger.exception("An exception occurred while retrieving the current camera settings.")
+                raise e
+
+            if not success:
+                return jsonify({'success': False, 'error': errors}), 500
+
+            if guid and guid in self._octolapse_settings.profiles.cameras:
+                # Create a new camera profile and update from the supplied profile.
+                camera_profile = CameraProfile()
+                camera_profile.update(profile)
+                matches = False
+                if server_type == MjpgStreamer.server_type:
+                    if camera_profile.webcam_settings.mjpg_streamer.controls_match_server(
+                        webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]
+                    ):
+                        matches = True
+
+                if len(camera_profile.webcam_settings.mjpg_streamer.controls) == 0:
+                    # get the existing settings since we don't want to use the defaults
+                    camera_profile.webcam_settings.mjpg_streamer.controls = {}
+                    camera_profile.webcam_settings.mjpg_streamer.update(
+                        webcam_settings["webcam_settings"]["mjpg_streamer"]
+                    )
+
+                    # see if we know about the camera type
+                    webcam_type = camera.CameraControl.get_webcam_type(
+                        self._basefolder,
+                        MjpgStreamer.server_type,
+                        webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]
+                    )
+                    # turn the controls into a dict
+                    webcam_settings = {
+                        "webcam_settings": {
+                            "type": webcam_type,
+                            "mjpg_streamer": {
+                                "controls": camera_profile.webcam_settings.mjpg_streamer.controls
+                            }
+                        },
+                        "new_preferences_available": False
+                    }
+                else:
+                    webcam_settings = {
+                        "webcam_settings": {
+                            "mjpg_streamer": {
+                                "controls": camera_profile.webcam_settings.mjpg_streamer.controls
+                            }
+                        },
+                        "new_preferences_available": (
+                            not matches and len(webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]) > 0
+                        )
+                    }
+            # if we're here, we should be good, extract and return the camera settings
+            return json.dumps(
+                {
+                    'success': True, 'settings': webcam_settings
+                }, cls=SettingsJsonEncoder), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/getWebcamImagePreferences", methods=["POST"])
+    @restricted_access
+    def get_webcam_image_preferences(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            guid = request_values["guid"]
+            replace = request_values["replace"]
+            if guid not in self._octolapse_settings.profiles.cameras:
+                return (
+                    jsonify({
+                        'success': False,
+                        'error': 'The requested camera profile does not exist.  Cannot adjust settings.'
+                    }), 404
+                )
+            profile = self._octolapse_settings.profiles.cameras[guid]
+            if not profile.camera_type == 'webcam':
+                return jsonify({
+                    'success': False,
+                    'error': 'The selected camera is not a webcam.  Cannot adjust settings.'
+                }), 500
+
+            camera_profile = self._octolapse_settings.profiles.cameras[guid].clone()
+
+            success, errors, webcam_settings = camera.CameraControl.get_webcam_settings(
+                camera_profile.webcam_settings.server_type,
+                camera_profile.name,
+                camera_profile.webcam_settings.address,
+                camera_profile.webcam_settings.username,
+                camera_profile.webcam_settings.password,
+                camera_profile.webcam_settings.ignore_ssl_error
+            )
+
+            if not success:
+                return jsonify({
+                    'success': False, 'error': errors
+                }), 500
+
+            # Check to see if we need to update our existing camera image settings.  We only want to do this
+            # if the control set has changed (minus the actual value)
+
+            if camera_profile.webcam_settings.server_type == MjpgStreamer.server_type:
+                matches = False
+                if camera_profile.webcam_settings.mjpg_streamer.controls_match_server(
+                    webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]
+                ):
+                    matches = True
+
+                if replace or len(camera_profile.webcam_settings.mjpg_streamer.controls) == 0:
+                    # get the existing settings since we don't want to use the defaults
+                    camera_profile.webcam_settings.mjpg_streamer.controls = {}
+                    camera_profile.webcam_settings.mjpg_streamer.update(
+                        webcam_settings["webcam_settings"]["mjpg_streamer"]
+                    )
+                    # see if we know about the camera type
+                    webcam_type = camera.CameraControl.get_webcam_type(
+                        self._basefolder,
+                        MjpgStreamer.server_type,
+                        webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]
+                    )
+                    camera_profile.webcam_settings.type = webcam_type
+                    webcam_settings = {
+                        "name": camera_profile.name,
+                        "guid": camera_profile.guid,
+                        "new_preferences_available": False,
+                        "webcam_settings": camera_profile.webcam_settings
+                    }
+                else:
+                    webcam_settings = {
+                        "name": camera_profile.name,
+                        "guid": camera_profile.guid,
+                        "new_preferences_available": (
+                            not matches and len(webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]) > 0
+                        ),
+                        "webcam_settings": camera_profile.webcam_settings
+                    }
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'The webcam you are using is not streaming via mjpg-streamer, which is the only server '
+                             'supported currently. '
+                }), 500
+            # if we're here, we should be good, extract and return the camera settings
+            return json.dumps({
+                    'success': True, 'settings': webcam_settings
+                }, cls=SettingsJsonEncoder), 200, {'ContentType': 'application/json'}
+
+    @octoprint.plugin.BlueprintPlugin.route("/getWebcamType", methods=["POST"])
+    @restricted_access
+    def get_webcam_type(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            server_type = request_values["server_type"]
+            camera_name = request_values["camera_name"]
+            address = request_values["address"]
+            username = request_values["username"]
+            password = request_values["password"]
+            ignore_ssl_error = request_values["ignore_ssl_error"]
             success, errors, webcam_settings = camera.CameraControl.get_webcam_settings(
                 server_type,
                 camera_name,
@@ -688,399 +849,284 @@ class OctolapsePlugin(
                 password,
                 ignore_ssl_error
             )
-        except Exception as e:
-            logger.exception("An exception occurred while retrieving the current camera settings.")
-            raise e
-
-        if not success:
-            return json.dumps(
-                {'success': False, 'error': errors}, 500,
-                {'ContentType': 'application/json'})
-
-        if guid and guid in self._octolapse_settings.profiles.cameras:
-            # Create a new camera profile and update from the supplied profile.
-            camera_profile = CameraProfile()
-            camera_profile.update(profile)
-            matches = False
-            if server_type == MjpgStreamer.server_type:
-                if camera_profile.webcam_settings.mjpg_streamer.controls_match_server(
-                    webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]
-                ):
-                    matches = True
-
-            if len(camera_profile.webcam_settings.mjpg_streamer.controls) == 0:
-                # get the existing settings since we don't want to use the defaults
-                camera_profile.webcam_settings.mjpg_streamer.controls = {}
-                camera_profile.webcam_settings.mjpg_streamer.update(
-                    webcam_settings["webcam_settings"]["mjpg_streamer"]
-                )
-
-                # see if we know about the camera type
-                webcam_type = camera.CameraControl.get_webcam_type(
-                    self._basefolder,
-                    MjpgStreamer.server_type,
-                    webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]
-                )
-                # turn the controls into a dict
-                webcam_settings = {
-                    "webcam_settings": {
-                        "type": webcam_type,
-                        "mjpg_streamer": {
-                            "controls": camera_profile.webcam_settings.mjpg_streamer.controls
-                        }
-                    },
-                    "new_preferences_available": False
-                }
-            else:
-                webcam_settings = {
-                    "webcam_settings": {
-                        "mjpg_streamer": {
-                            "controls": camera_profile.webcam_settings.mjpg_streamer.controls
-                        }
-                    },
-                    "new_preferences_available": (
-                        not matches and len(webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]) > 0
-                    )
-                }
-        # if we're here, we should be good, extract and return the camera settings
-        return json.dumps(
-            {
-                'success': True, 'settings': webcam_settings
-            }, cls=SettingsJsonEncoder), 200, {'ContentType': 'application/json'}
-
-    @octoprint.plugin.BlueprintPlugin.route("/getWebcamImagePreferences", methods=["POST"])
-    @restricted_access
-    @admin_permission.require(403)
-    def get_webcam_image_preferences(self):
-        request_values = flask.request.get_json()
-        guid = request_values["guid"]
-        replace = request_values["replace"]
-        if guid not in self._octolapse_settings.profiles.cameras:
-            return json.dumps({'success': False, 'error': 'The requested camera profile does not exist.  Cannot adjust settings.'}, 404, {'ContentType': 'application/json'})
-        profile = self._octolapse_settings.profiles.cameras[guid]
-        if not profile.camera_type == 'webcam':
-            return json.dumps({'success': False, 'error': 'The selected camera is not a webcam.  Cannot adjust settings.'}, 500,
-                              {'ContentType': 'application/json'})
-
-        camera_profile = self._octolapse_settings.profiles.cameras[guid].clone()
-
-        success, errors, webcam_settings = camera.CameraControl.get_webcam_settings(
-            camera_profile.webcam_settings.server_type,
-            camera_profile.name,
-            camera_profile.webcam_settings.address,
-            camera_profile.webcam_settings.username,
-            camera_profile.webcam_settings.password,
-            camera_profile.webcam_settings.ignore_ssl_error
-        )
-
-        if not success:
-            return json.dumps(
-                {'success': False, 'error': errors}, 500,
-                {'ContentType': 'application/json'})
-
-        # Check to see if we need to update our existing camera image settings.  We only want to do this
-        # if the control set has changed (minus the actual value)
-
-        if camera_profile.webcam_settings.server_type == MjpgStreamer.server_type:
-            matches = False
-            if camera_profile.webcam_settings.mjpg_streamer.controls_match_server(
-                webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]
-            ):
-                matches = True
-
-            if replace or len(camera_profile.webcam_settings.mjpg_streamer.controls) == 0:
-                # get the existing settings since we don't want to use the defaults
-                camera_profile.webcam_settings.mjpg_streamer.controls = {}
-                camera_profile.webcam_settings.mjpg_streamer.update(
-                    webcam_settings["webcam_settings"]["mjpg_streamer"]
-                )
-                # see if we know about the camera type
-                webcam_type = camera.CameraControl.get_webcam_type(
-                    self._basefolder,
-                    MjpgStreamer.server_type,
-                    webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]
-                )
-                camera_profile.webcam_settings.type = webcam_type
-                webcam_settings = {
-                    "name": camera_profile.name,
-                    "guid": camera_profile.guid,
-                    "new_preferences_available": False,
-                    "webcam_settings": camera_profile.webcam_settings
-                }
-            else:
-                webcam_settings = {
-                    "name": camera_profile.name,
-                    "guid": camera_profile.guid,
-                    "new_preferences_available": (
-                        not matches and len(webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]) > 0
-                    ),
-                    "webcam_settings": camera_profile.webcam_settings
-                }
-        else:
-            return json.dumps(
-                {
+            if not success:
+                return jsonify({
                     'success': False,
-                    'error': 'The webcam you are using is not streaming via mjpg-streamer, which is the only server supported currently.'
-                }, 500,{'ContentType': 'application/json'}
-            )
-        # if we're here, we should be good, extract and return the camera settings
-        return json.dumps({
-                'success': True, 'settings': webcam_settings
+                    'error': errors
+                }), 500,
+
+            if server_type == MjpgStreamer.server_type:
+                webcam_type = camera.CameraControl.get_webcam_type(
+                    self._basefolder, server_type, webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]
+                )
+            else:
+                webcam_type = False
+
+            # if we're here, we should be good, extract and return the camera settings
+            return json.dumps({
+                'success': True, 'type': webcam_type
             }, cls=SettingsJsonEncoder), 200, {'ContentType': 'application/json'}
-
-    @octoprint.plugin.BlueprintPlugin.route("/getWebcamType", methods=["POST"])
-    @restricted_access
-    @admin_permission.require(403)
-    def get_webcam_type(self):
-        request_values = flask.request.get_json()
-        server_type = request_values["server_type"]
-        camera_name = request_values["camera_name"]
-        address = request_values["address"]
-        username = request_values["username"]
-        password = request_values["password"]
-        ignore_ssl_error = request_values["ignore_ssl_error"]
-        success, errors, webcam_settings = camera.CameraControl.get_webcam_settings(
-            server_type,
-            camera_name,
-            address,
-            username,
-            password,
-            ignore_ssl_error
-        )
-        if not success:
-            return json.dumps(
-                {'success': False, 'error': errors}, 500,
-                {'ContentType': 'application/json'})
-
-        if server_type == MjpgStreamer.server_type:
-
-            webcam_type = camera.CameraControl.get_webcam_type(
-                self._basefolder, server_type, webcam_settings["webcam_settings"]["mjpg_streamer"]["controls"]
-            )
-        else:
-            webcam_type = False
-
-        # if we're here, we should be good, extract and return the camera settings
-        return json.dumps({
-            'success': True, 'type': webcam_type
-        }, cls=SettingsJsonEncoder), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/testCameraSettingsApply", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def test_camera_settings_apply(self):
-        request_values = flask.request.get_json()
-        profile = request_values["profile"]
-        camera_profile = CameraProfile.create_from(profile)
-        success, errors = camera.CameraControl.test_web_camera_image_preferences(camera_profile)
-        return json.dumps({'success': success, 'error': errors}, 200, {'ContentType': 'application/json'})
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            profile = request_values["profile"]
+            camera_profile = CameraProfile.create_from(profile)
+            success, errors = camera.CameraControl.test_web_camera_image_preferences(camera_profile)
+            return jsonify({
+                'success': success,
+                'error': errors
+            })
 
     @octoprint.plugin.BlueprintPlugin.route("/applyCameraSettings", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def apply_camera_settings_request(self):
-        request_values = flask.request.get_json()
-        request_type = request_values["type"]
-        # Get the settings we need to run apply cameras ettings
-        if request_type == "by_guid":
-            guid = request_values["guid"]
-            # get the current camera profile
-            if guid not in self._octolapse_settings.profiles.cameras:
-                return json.dumps({'success': False, 'error': 'The requested camera profile does not exist.  Cannot adjust settings.'}, 404,
-                                  {'ContentType': 'application/json'})
-            camera_profile = self._octolapse_settings.profiles.cameras[guid]
-        elif request_type == "ui-settings-update":
-            # create a new profile from the profile dict
-            webcam_settings = request_values["settings"]
-            camera_profile = CameraProfile()
-            camera_profile.name = webcam_settings["name"]
-            camera_profile.guid = webcam_settings["guid"]
-            camera_profile.webcam_settings.update(webcam_settings)
-        else:
-            return json.dumps(
-                {'success': False, 'error': 'Unknown request type: {0}.'.format(request_type)},
-                500,
-                {'ContentType': 'application/json'})
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            request_type = request_values["type"]
+            # Get the settings we need to run apply cameras ettings
+            if request_type == "by_guid":
+                guid = request_values["guid"]
+                # get the current camera profile
+                if guid not in self._octolapse_settings.profiles.cameras:
+                    return jsonify({
+                        'success': False,
+                        'error': 'The requested camera profile does not exist.  Cannot adjust settings.'
+                    }), 404
+                camera_profile = self._octolapse_settings.profiles.cameras[guid]
+            elif request_type == "ui-settings-update":
+                # create a new profile from the profile dict
+                webcam_settings = request_values["settings"]
+                camera_profile = CameraProfile()
+                camera_profile.name = webcam_settings["name"]
+                camera_profile.guid = webcam_settings["guid"]
+                camera_profile.webcam_settings.update(webcam_settings)
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'Unknown request type: {0}.'.format(request_type)
+                }), 500
 
-        # Make sure the current profile is a webcam
-        if not camera_profile.camera_type == 'webcam':
-            return json.dumps({'success': False, 'error': 'The selected camera is not a webcam.  Cannot adjust settings.'}, 500,
-                              {'ContentType': 'application/json'})
+            # Make sure the current profile is a webcam
+            if not camera_profile.camera_type == 'webcam':
+                return jsonify({
+                    'success': False,
+                    'error': 'The selected camera is not a webcam.  Cannot adjust settings.'
+                }), 500
 
-        # Apply the settings
-        try:
-            success, error = self.apply_camera_settings([camera_profile])
-        except camera.CameraError as e:
-            logger.exception("Failed to apply webcam settings in /applyCameraSettings.")
-            return json.dumps(
-                {'success': False,
-                 'error': "Octolapse was unable to apply image preferences to your webcam.  See plugin_octolapse.log "
-                          "for details. "
-                 }, 200, {'ContentType': 'application/json'})
+            # Apply the settings
+            try:
+                success, error = self.apply_camera_settings([camera_profile])
+            except camera.CameraError as e:
+                logger.exception("Failed to apply webcam settings in /applyCameraSettings.")
+                return jsonify({
+                    'success': False,
+                    'error': "Octolapse was unable to apply image preferences to your webcam.  See plugin_octolapse.log for details. "
+                 })
 
-        return json.dumps({'success': success, 'error': error}, 200, {'ContentType': 'application/json'})
+            return jsonify({
+                'success': success,
+                'error': error
+            })
 
     @octoprint.plugin.BlueprintPlugin.route("/saveWebcamSettings", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def save_webcam_settings(self):
-        request_values = flask.request.get_json()
-        guid = request_values["guid"]
-        webcam_settings = request_values["webcam_settings"]
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            guid = request_values["guid"]
+            webcam_settings = request_values["webcam_settings"]
 
-        # get the current camera profile
-        if guid not in self._octolapse_settings.profiles.cameras:
-            return json.dumps({'success': False, 'error': 'The requested camera profile does not exist.  Cannot adjust settings.'}, 404,
-                              {'ContentType': 'application/json'})
-        profile = self._octolapse_settings.profiles.cameras[guid]
-        if not profile.camera_type == 'webcam':
-            return json.dumps({'success': False, 'error': 'The selected camera is not a webcam.  Cannot adjust settings.'}, 500,
-                              {'ContentType': 'application/json'})
+            # get the current camera profile
+            if guid not in self._octolapse_settings.profiles.cameras:
+                return jsonify({
+                    'success': False,
+                    'error': 'The requested camera profile does not exist.  Cannot adjust settings.'
+                }), 404
+            profile = self._octolapse_settings.profiles.cameras[guid]
+            if not profile.camera_type == 'webcam':
+                return jsonify({
+                    'success': False,
+                    'error': 'The selected camera is not a webcam.  Cannot adjust settings.'
+                }), 500
 
-        camera_profile = self._octolapse_settings.profiles.cameras[guid]
-        camera_profile.webcam_settings.update(webcam_settings)
-        self.save_settings()
+            camera_profile = self._octolapse_settings.profiles.cameras[guid]
+            camera_profile.webcam_settings.update(webcam_settings)
+            self.save_settings()
 
-        try:
-            success, error = camera.CameraControl.apply_camera_settings([camera_profile])
-        except camera.CameraError as e:
-            logger.exception("Failed to save webcam settings in /saveWebcamSettings.")
-            return json.dumps({'success': False, 'error': e.message}, 200, {'ContentType': 'application/json'})
+            try:
+                success, error = camera.CameraControl.apply_camera_settings([camera_profile])
+            except camera.CameraError as e:
+                logger.exception("Failed to save webcam settings in /saveWebcamSettings.")
+                return jsonify({
+                    'success': False,
+                    'error': e.message
+                })
 
-        return json.dumps({'success': success, 'error': error}, 200, {'ContentType': 'application/json'})
+            return jsonify({
+                'success': success,
+                'error': error
+            })
 
     @octoprint.plugin.BlueprintPlugin.route("/loadWebcamDefaults", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def load_webcam_defaults(self):
-        request_values = flask.request.get_json()
-        server_type = request_values["server_type"]
-        camera_name = request_values["camera_name"]
-        address = request_values["address"]
-        username = request_values["username"]
-        password = request_values["password"]
-        ignore_ssl_error = request_values["ignore_ssl_error"]
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            server_type = request_values["server_type"]
+            camera_name = request_values["camera_name"]
+            address = request_values["address"]
+            username = request_values["username"]
+            password = request_values["password"]
+            ignore_ssl_error = request_values["ignore_ssl_error"]
 
-        success, errors, defaults = camera.CameraControl.load_webcam_defaults(
-            server_type,
-            camera_name,
-            address,
-            username,
-            password,
-            ignore_ssl_error
-        )
-        ret_val = {
-            'webcam_settings': {
-                'mjpg_streamer': {
-                    'controls': defaults
-                }
-            }
-        }
-        return json.dumps({'success': success, 'defaults': ret_val, 'error': errors}, 200, {'ContentType': 'application/json'})
-
-
-    @octoprint.plugin.BlueprintPlugin.route("/applyWebcamSetting", methods=["POST"])
-    @restricted_access
-    @admin_permission.require(403)
-    def apply_webcam_setting_request(self):
-        request_values = flask.request.get_json()
-        server_type = request_values["server_type"]
-        camera_name = request_values["camera_name"]
-        address = request_values["address"]
-        username = request_values["username"]
-        password = request_values["password"]
-        ignore_ssl_error = request_values["ignore_ssl_error"]
-        setting = request_values["setting"]
-
-        # apply a single setting to the camera
-        try:
-            success, error = camera.CameraControl.apply_webcam_setting(
+            success, errors, defaults = camera.CameraControl.load_webcam_defaults(
                 server_type,
-                setting,
                 camera_name,
                 address,
                 username,
                 password,
-                ignore_ssl_error,
+                ignore_ssl_error
             )
+            ret_val = {
+                'webcam_settings': {
+                    'mjpg_streamer': {
+                        'controls': defaults
+                    }
+                }
+            }
+            return jsonify({
+                'success': success,
+                'defaults': ret_val,
+                'error': errors
+            })
+
+
+    @octoprint.plugin.BlueprintPlugin.route("/applyWebcamSetting", methods=["POST"])
+    @restricted_access
+    def apply_webcam_setting_request(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            server_type = request_values["server_type"]
+            camera_name = request_values["camera_name"]
+            address = request_values["address"]
+            username = request_values["username"]
+            password = request_values["password"]
+            ignore_ssl_error = request_values["ignore_ssl_error"]
+            setting = request_values["setting"]
+
+            # apply a single setting to the camera
+            try:
+                success, error = camera.CameraControl.apply_webcam_setting(
+                    server_type,
+                    setting,
+                    camera_name,
+                    address,
+                    username,
+                    password,
+                    ignore_ssl_error,
+                )
+                if not success:
+                    logger.error(error)
+            except camera.CameraError as e:
+                logger.exception("Failed to apply webcam settings in /applyWebcamSetting")
+                return jsonify({
+                    'success': False,
+                    'error': e.message
+                })
+            error_string = ""
             if not success:
-                logger.error(error)
-        except camera.CameraError as e:
-            logger.exception("Failed to apply webcam settings in /applyWebcamSetting")
-            return json.dumps({'success': False, 'error': e.message}, 200, {'ContentType': 'application/json'})
-        error_string = ""
-        if not success:
-            error_string = error.message
-        return json.dumps({'success': success, 'error': error_string}, 200, {'ContentType': 'application/json'})
+                error_string = error.message
+            return jsonify({
+                'success': success,
+                'error': error_string
+            })
 
     @octoprint.plugin.BlueprintPlugin.route("/testCamera", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def test_camera_request(self):
-        request_values = flask.request.get_json()
-        profile = request_values["profile"]
-        camera_profile = CameraProfile.create_from(profile)
-        success, errors = camera.CameraControl.test_web_camera(camera_profile)
-        return json.dumps({'success': success, 'error': errors}), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            profile = request_values["profile"]
+            camera_profile = CameraProfile.create_from(profile)
+            success, errors = camera.CameraControl.test_web_camera(camera_profile)
+            return jsonify({
+                'success': success,
+                'error': errors
+            })
 
 
     @octoprint.plugin.BlueprintPlugin.route("/cancelPreprocessing", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def cancel_preprocessing_request(self):
-        request_values = flask.request.get_json()
-        preprocessing_job_guid = request_values["preprocessing_job_guid"]
-        if (
-            self.preprocessing_job_guid is None
-            or preprocessing_job_guid != str(self.preprocessing_job_guid)
-        ):
-            # return without doing anything, this job is already over
-            return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            preprocessing_job_guid = request_values["preprocessing_job_guid"]
+            if (
+                self.preprocessing_job_guid is None
+                or preprocessing_job_guid != str(self.preprocessing_job_guid)
+            ):
+                # return without doing anything, this job is already over
+                return jsonify({
+                    'success': True
+                })
 
-        logger.info("Cancelling Preprocessing for /cancelPreprocessing.")
-        # todo:  Check the current printing session and make sure it matches before canceling the print!
-        self.preprocessing_job_guid = None
-        self.cancel_preprocessing()
-        if self._printer.is_printing():
-            self._printer.cancel_print(tags={'startup-failed'})
-        self.send_snapshot_preview_complete_message()
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+            logger.info("Cancelling Preprocessing for /cancelPreprocessing.")
+            # todo:  Check the current printing session and make sure it matches before canceling the print!
+            self.preprocessing_job_guid = None
+            self.cancel_preprocessing()
+            if self._printer.is_printing():
+                self._printer.cancel_print(tags={'startup-failed'})
+            self.send_snapshot_preview_complete_message()
+            return jsonify({
+                'success': True
+            })
 
     @octoprint.plugin.BlueprintPlugin.route("/acceptSnapshotPlanPreview", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def accept_snapshot_plan_preview_request(self):
-        request_values = flask.request.get_json()
-        preprocessing_job_guid = request_values["preprocessing_job_guid"]
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            preprocessing_job_guid = request_values["preprocessing_job_guid"]
 
-        if (
-            preprocessing_job_guid is not None and
-            self._printer.get_state_id() == 'STARTING' and
-            not self.accept_snapshot_plan_preview(preprocessing_job_guid)
-        ):
-            # return without doing anything, this job is already over
-            message = "Unable to accept the snapshot plan. Either the printer not operational, is currently printing, " \
-                      "or this plan has been deleted. "
-            return json.dumps({'success': False, 'error': message}), 200, {'ContentType': 'application/json'}
+            if (
+                preprocessing_job_guid is not None and
+                self._printer.get_state_id() == 'STARTING' and
+                not self.accept_snapshot_plan_preview(preprocessing_job_guid)
+            ):
+                # return without doing anything, this job is already over
+                message = "Unable to accept the snapshot plan. Either the printer not operational, is currently printing, " \
+                          "or this plan has been deleted. "
+                return jsonify({
+                    'success': False,
+                    'error': message
+                })
 
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+            return jsonify({
+                'success': True
+            })
 
     @octoprint.plugin.BlueprintPlugin.route("/toggleCamera", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def toggle_camera(self):
-        request_values = flask.request.get_json()
-        guid = request_values["guid"]
-        client_id = request_values["client_id"]
-        new_value = not self._octolapse_settings.profiles.cameras[guid].enabled
-        self._octolapse_settings.profiles.cameras[guid].enabled = new_value
-        self.save_settings()
-        self.send_settings_changed_message(client_id)
-        return json.dumps({'success': True, 'enabled': new_value}), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            guid = request_values["guid"]
+            client_id = request_values["client_id"]
+            new_value = not self._octolapse_settings.profiles.cameras[guid].enabled
+            self._octolapse_settings.profiles.cameras[guid].enabled = new_value
+            self.save_settings()
+            self.send_settings_changed_message(client_id)
+            return jsonify({
+                'success': True,
+                'enabled': new_value
+            })
 
     @octoprint.plugin.BlueprintPlugin.route("/validateRenderingTemplate", methods=["POST"])
     def validate_rendering_template(self):
-        template = flask.request.form['octolapse_rendering_output_template']
+        template = request.form['octolapse_rendering_output_template']
         result = render.is_rendering_template_valid(
             template,
             self._octolapse_settings.profiles.options.rendering["rendering_file_templates"]
@@ -1093,7 +1139,7 @@ class OctolapsePlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/validateOverlayTextTemplate", methods=["POST"])
     def validate_overlay_text_template(self):
-        template = flask.request.form['octolapse_rendering_overlay_text_template']
+        template = request.form['octolapse_rendering_overlay_text_template']
         result = render.is_overlay_text_template_valid(
             template,
             self._octolapse_settings.profiles.options.rendering["overlay_text_templates"]
@@ -1106,16 +1152,16 @@ class OctolapsePlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/font", methods=["GET"])
     @restricted_access
-    @admin_permission.require(403)
     def get_available_fonts(self):
-        font_list = utility.get_system_fonts(self._basefolder)
-        return json.dumps(font_list), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            font_list = utility.get_system_fonts(self._basefolder)
+            return jsonify(font_list)
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/previewOverlay", methods=["POST"])
     def preview_overlay(self):
         preview_image = None
         camera_image = None
-        request_values = flask.request.get_json()
+        request_values = request.get_json()
         try:
             # Take a snapshot from the first active camera.
             active_cameras = self._octolapse_settings.profiles.active_cameras()
@@ -1130,15 +1176,17 @@ class OctolapsePlugin(
                 rendering_profile = RenderingProfile().create_from(request_values)
             except Exception as e:
                 logger.exception('Preview overlay request did not provide valid Rendering profile.')
-                return json.dumps({
+                return jsonify({
                     'error': 'Request did not contain valid Rendering profile. Check octolapse log for details.'
-                }), 400, {}
+                }), 400
 
             # Render a preview image.
             preview_image = render.preview_overlay(rendering_profile, image=camera_image)
 
             if preview_image is None:
-                return json.dumps({'success': False}), 404, {'ContentType': 'application/json'}
+                return jsonify({
+                    'success': False
+                }), 404
 
             # Use a buffer to base64 encode the image.
             img_io = BytesIO()
@@ -1147,7 +1195,9 @@ class OctolapsePlugin(
             base64_encoded_image = base64.b64encode(img_io.getvalue())
 
             # Return a response. We have to return JSON because jQuery only knows how to parse JSON.
-            return json.dumps({'image': base64_encoded_image}), 200, {'ContentType': 'application/json'}
+            return jsonify({
+                'image': base64_encoded_image
+            })
         finally:
             # cleanup
             if camera_image is not None:
@@ -1157,102 +1207,106 @@ class OctolapsePlugin(
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark", methods=["GET"])
     @restricted_access
-    @admin_permission.require(403)
     def get_available_watermarks(self):
-        # TODO(Shadowen): Retrieve watermarks_directory_name from config.yaml.
-        watermarks_directory_name = "watermarks"
-        full_watermarks_dir = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
-        files = []
-        if os.path.exists(full_watermarks_dir):
-            files = [
-                os.path.join(
-                    self.get_plugin_data_folder(), watermarks_directory_name, f
-                ) for f in os.listdir(full_watermarks_dir)
-            ]
-        data = {'filepaths': files}
-        return json.dumps(data), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            # TODO(Shadowen): Retrieve watermarks_directory_name from config.yaml.
+            watermarks_directory_name = "watermarks"
+            full_watermarks_dir = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
+            files = []
+            if os.path.exists(full_watermarks_dir):
+                files = [
+                    os.path.join(
+                        self.get_plugin_data_folder(), watermarks_directory_name, f
+                    ) for f in os.listdir(full_watermarks_dir)
+                ]
+            data = {'filepaths': files}
+            return jsonify(data)
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark/upload", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def upload_watermark(self):
         # TODO(Shadowen): Receive chunked uploads properly.
         # It seems like this function is called once PER CHUNK rather than when the entire upload has completed.
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            # Parse the request.
+            image_filename = request.values['image.name']
+            # The path where the watermark file was saved by the uploader.
+            watermark_temp_path = request.values['image.path']
+            logger.debug("Receiving uploaded watermark %s.", image_filename)
 
-        # Parse the request.
-        image_filename = flask.request.values['image.name']
-        # The path where the watermark file was saved by the uploader.
-        watermark_temp_path = flask.request.values['image.path']
-        logger.debug("Receiving uploaded watermark %s.", image_filename)
+            # Move the watermark from the (temp) upload location to a permanent location.
+            # Maybe it could be uploaded directly there, but I don't know how to do that.
+            # TODO(Shadowen): Retrieve watermarks_directory_name from config.yaml.
+            watermarks_directory_name = "watermarks"
+            # Ensure the watermarks directory exists.
+            full_watermarks_dir = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
+            if not os.path.exists(full_watermarks_dir):
+                logger.info("Creating watermarks directory at %s.".format(full_watermarks_dir))
+                os.makedirs(full_watermarks_dir)
 
-        # Move the watermark from the (temp) upload location to a permanent location.
-        # Maybe it could be uploaded directly there, but I don't know how to do that.
-        # TODO(Shadowen): Retrieve watermarks_directory_name from config.yaml.
-        watermarks_directory_name = "watermarks"
-        # Ensure the watermarks directory exists.
-        full_watermarks_dir = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
-        if not os.path.exists(full_watermarks_dir):
-            logger.info("Creating watermarks directory at %s.".format(full_watermarks_dir))
-            os.makedirs(full_watermarks_dir)
+            # Move the image.
+            watermark_destination_path = os.path.join(full_watermarks_dir, image_filename)
+            if os.path.exists(watermark_destination_path):
+                if os.path.isdir(watermark_destination_path):
+                    logger.error(
+                        "Tried to upload watermark to %s but already contains a directory! Aborting!",
+                        watermark_destination_path
+                    )
+                    return jsonify({
+                        'error': 'Bad file name.'
+                    }), 501
+                else:
+                    # TODO(Shadowen): Maybe offer a config.yaml option for this.
+                    logger.warning(
+                        "Tried to upload watermark to %s but file already exists! Overwriting...",
+                        watermark_destination_path
+                    )
+                    os.remove(watermark_destination_path)
+            logger.info(
+                "Moving watermark from %s to %s.",
+                watermark_temp_path,
+                watermark_destination_path
+            )
+            shutil.move(watermark_temp_path, watermark_destination_path)
 
-        # Move the image.
-        watermark_destination_path = os.path.join(full_watermarks_dir, image_filename)
-        if os.path.exists(watermark_destination_path):
-            if os.path.isdir(watermark_destination_path):
-                logger.error(
-                    "Tried to upload watermark to %s but already contains a directory! Aborting!",
-                    watermark_destination_path
-                )
-                return json.dumps({'error': 'Bad file name.'}, 501, {'ContentType': 'application/json'})
-            else:
-                # TODO(Shadowen): Maybe offer a config.yaml option for this.
-                logger.warning(
-                    "Tried to upload watermark to %s but file already exists! Overwriting...",
-                    watermark_destination_path
-                )
-                os.remove(watermark_destination_path)
-        logger.info(
-            "Moving watermark from %s to %s.",
-            watermark_temp_path,
-            watermark_destination_path
-        )
-        shutil.move(watermark_temp_path, watermark_destination_path)
-
-        return json.dumps({}, 200, {'ContentType': 'application/json'})
+            return jsonify({}), 200
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/watermark/delete", methods=["POST"])
     @restricted_access
-    @admin_permission.require(403)
     def delete_watermark(self):
         """Delete the watermark given in the HTTP POST name field."""
-        # Parse the request.
-        filepath = flask.request.get_json()['path']
-        logger.debug("Deleting watermark %s.", filepath)
-        if not os.path.exists(filepath):
-            logger.error("Tried to delete watermark at %s but file doesn't exists!", filepath)
-            return json.dumps({'error': 'No such file.'}, 501, {'ContentType': 'application/json'})
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            # Parse the request.
+            filepath = request.get_json()['path']
+            logger.debug("Deleting watermark %s.", filepath)
+            if not os.path.exists(filepath):
+                logger.error("Tried to delete watermark at %s but file doesn't exists!", filepath)
+                return jsonify({
+                    'error': 'No such file.'
+                }), 501
 
-        def is_subdirectory(a, b):
-            """Returns true if a is (or is in) a subdirectory of b."""
-            real_a = os.path.join(os.path.realpath(a), '')
-            real_b = os.path.join(os.path.realpath(b), '')
-            return os.path.commonprefix([real_a, real_b]) == real_a
+            def is_subdirectory(a, b):
+                """Returns true if a is (or is in) a subdirectory of b."""
+                real_a = os.path.join(os.path.realpath(a), '')
+                real_b = os.path.join(os.path.realpath(b), '')
+                return os.path.commonprefix([real_a, real_b]) == real_a
 
-        # TODO(Shadowen): Retrieve watermarks_directory_name from config.yaml.
-        watermarks_directory_name = "watermarks"
-        # Ensure the file we are trying to delete is in the watermarks folder.
-        watermarks_directory = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
-        if not is_subdirectory(watermarks_directory, filepath):
-            logger.error(
-                "Tried to delete watermark at %s but file doesn't exists!",
-                filepath
-            )
-            return json.dumps({'error': "Cannot delete file outside watermarks folder."}, 400,
-                              {'ContentType': 'application/json'})
-
-        os.remove(filepath)
-        return json.dumps({'success': "Deleted {} successfully.".format(filepath)}), 200, {
-            'ContentType': 'application/json'}
+            # TODO(Shadowen): Retrieve watermarks_directory_name from config.yaml.
+            watermarks_directory_name = "watermarks"
+            # Ensure the file we are trying to delete is in the watermarks folder.
+            watermarks_directory = os.path.join(self.get_plugin_data_folder(), watermarks_directory_name)
+            if not is_subdirectory(watermarks_directory, filepath):
+                logger.error(
+                    "Tried to delete watermark at %s but file doesn't exists!",
+                    filepath
+                )
+                return jsonify({
+                    'error': "Cannot delete file outside watermarks folder."
+                }), 400
+            os.remove(filepath)
+            return jsonify({
+                'success': "Deleted {} successfully.".format(filepath)
+            })
 
     # blueprint helpers
     @staticmethod
@@ -1267,15 +1321,15 @@ class OctolapsePlugin(
                         yield chunk
                 if on_complete_callback is not None:
                     on_complete_callback(download_filepath, on_complete_additional_args)
-
-
-            response = flask.Response(flask.stream_with_context(
+            response = Flask.Response(Flask.stream_with_context(
                 single_chunk_generator(file_path)))
             response.headers.set('Content-Disposition',
                                  'attachment', filename=download_filename)
             response.headers.set('Content-Type', 'application/octet-stream')
             return response
-        return json.dumps({'success': False}), 404, {'ContentType': 'application/json'}
+        return jsonify({
+            'success': False
+        }), 404
 
     def apply_camera_settings(self, camera_profiles):
 
@@ -1654,7 +1708,7 @@ class OctolapsePlugin(
             elif event == Events.PRINT_PAUSED:
                 self.on_print_paused()
             elif event == Events.HOME:
-                logger.info("homing to payload:%s.".format(payload))
+                logger.info("homing to payload: %s.",payload)
             elif event == Events.PRINT_RESUMED:
                 logger.info("Print Resumed.")
                 self.on_print_resumed()
@@ -2760,7 +2814,7 @@ class OctolapsePlugin(
         allowed_extensions = ["mpg", "mpeg", "mp4", "m4v", "mkv", "gif", "avi", "flv", "vob"]
 
         if sys.version_info < (3,0):
-            return [i.encode('ascii', 'replace') for i in allowed_extensions]
+            return [i.encode('ascii', 'replace').decode() for i in allowed_extensions]
 
         return allowed_extensions
 

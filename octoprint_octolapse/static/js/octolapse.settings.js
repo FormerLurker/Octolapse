@@ -320,7 +320,7 @@ $(function () {
         /*
             load all settings default settings
         */
-        self.loadSettings = function () {
+        self.loadSettings = function (success_callback) {
 
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             $.ajax({
@@ -331,6 +331,10 @@ $(function () {
                 success: function (newSettings) {
                     self.updateSettings(newSettings);
                     Octolapse.Globals.loadState();
+                    if(success_callback)
+                    {
+                        success_callback();
+                    }
                     //console.log("Settings have been loaded.");
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {

@@ -26,6 +26,7 @@ snapshot_plan::snapshot_plan()
 {
 	file_line = 0;
 	file_gcode_number = 0;
+	file_position = 0;
 	total_travel_distance = 0;
 	saved_travel_distance = 0;
 	distance_from_stabilization_point = 0;
@@ -171,9 +172,10 @@ PyObject * snapshot_plan::to_py_object()
 		}
 	}
 	PyObject *py_snapshot_plan = Py_BuildValue(
-		"llddOOOOOO",
+		"lllddOOOOOO",
 		file_line,
 		file_gcode_number,
+		file_position,
 		total_travel_distance,
 		saved_travel_distance,
 		py_triggering_command,

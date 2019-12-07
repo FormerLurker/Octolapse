@@ -1,6 +1,8 @@
 #include "utilities.h"
 #include <math.h>
 #include <sstream>
+#include <iostream>
+
 // Had to increase the zero tolerance because prusa slicer doesn't always retract enough while wiping.
 const double ZERO_TOLERANCE = 0.00005;
 const std::string utilities::WHITESPACE_ = " \n\r\t\f\v";
@@ -72,4 +74,36 @@ std::string utilities::rtrim(const std::string& s)
 std::string utilities::trim(const std::string& s)
 {
 	return rtrim(ltrim(s));
+}
+
+std::istream& utilities::safe_get_line(std::istream& is, std::string& t)
+{
+	t.clear();
+	// The characters in the stream are read one-by-one using a std::streambuf.
+	// That is faster than reading them one-by-one using the std::istream.
+	// Code that uses streambuf this way must be guarded by a sentry object.
+	// The sentry object performs various tasks,
+	// such as thread synchronization and updating the stream state.
+
+	std::istream::sentry se(is, true);
+	std::streambuf* sb = is.rdbuf();
+
+	for (;;) {
+		const int c = sb->sbumpc();
+		switch (c) {
+		case '\n':
+			return is;
+		case '\r':
+			if (sb->sgetc() == '\n')
+				sb->sbumpc();
+			return is;
+		case EOF:
+			// Also handle the case when the last line has no line ending
+			if (t.empty())
+				is.setstate(std::ios::eofbit);
+			return is;
+		default:
+			t += static_cast<char>(c);
+		}
+	}
 }

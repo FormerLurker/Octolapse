@@ -649,7 +649,7 @@ class Timelapse(object):
             return_value = self.process_realtime_gcode(command_string, tags)
             parsed_command = self._position.current_pos.parsed_command
         else:
-            parsed_command_cpp = GcodePositionProcessor.Parse(command_string.encode('ascii', errors="replace"))
+            parsed_command_cpp = GcodePositionProcessor.Parse(command_string.encode('ascii', errors="replace").decode())
             if parsed_command_cpp:
                 parsed_command = ParsedCommand.create_from_cpp_parsed_command(parsed_command_cpp)
             else:
@@ -694,6 +694,14 @@ class Timelapse(object):
             if self.current_snapshot_plan is None:
                 return None
             current_file_line = self.get_current_file_line(tags)
+            # skip plans if we need to in case any were missed.
+            if self.current_snapshot_plan.file_gcode_number < current_file_line:
+                while (
+                    self.current_snapshot_plan.file_gcode_number < current_file_line and
+                    len(self.snapshot_plans) > self.current_snapshot_plan_index
+                ):
+                    self.set_next_snapshot_plan()
+
             if (
                 self._state == TimelapseState.WaitingForTrigger
                 and self._octoprint_printer.is_printing()
@@ -702,10 +710,11 @@ class Timelapse(object):
                 # time to take a snapshot!
                 if self.current_snapshot_plan.triggering_command.gcode != parsed_command.gcode:
                     logger.error(
-                        "The snapshot plan position (%s:%s) does not match the actual position (%s:%s)!  "
+                        "The snapshot plan position (gcode number: %s, gcode:%s, line number: %s) does not match the actual position (gcode number: %s, gcode: %s)!  "
                         "Aborting Snapshot, moving to next plan.",
                         self.current_snapshot_plan.file_gcode_number,
-                        self.current_snapshot_plan.parsed_command.gcode,
+                        self.current_snapshot_plan.triggering_command.gcode,
+                        self.current_snapshot_plan.file_line_number,
                         current_file_line,
                         parsed_command.gcode
                     )
@@ -837,7 +846,8 @@ class Timelapse(object):
                 )
                 # parse the command string
                 try:
-                    fast_cmd = GcodePositionProcessor.Parse(command_string.encode('ascii', errors="replace"))
+                    cmd = command_string.encode('ascii', errors="replace").decode()
+                    fast_cmd = GcodePositionProcessor.Parse(cmd)
                 except ValueError as e:
                     logger.exception("Unable to parse the command string.")
                     # if we don't return NONE here, we will have problems with the print!
@@ -882,6 +892,16 @@ class Timelapse(object):
                 if len(tag) > 9 and tag.startswith("fileline:"):
                     actual_file_line = tag[9:]
                     return int(actual_file_line)
+        return None
+
+    @staticmethod
+    def get_current_file_position(tags):
+        # check the current line number
+        if 'source:file' in tags:
+            for tag in tags:
+                if len(tag) > 9 and tag.startswith("filepos:"):
+                    actual_file_position = tag[8:]
+                    return int(actual_file_position)
         return None
 
     def check_current_line_number(self, tags):

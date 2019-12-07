@@ -53,9 +53,40 @@ double PyFloatOrInt_AsDouble(PyObject* py_double_or_int)
 {
 	if (PyFloat_CheckExact(py_double_or_int))
 		return PyFloat_AsDouble(py_double_or_int);
+#if PY_MAJOR_VERSION < 3
 	else if (PyInt_CheckExact(py_double_or_int))
 		return static_cast<double>(PyInt_AsLong(py_double_or_int));
+#endif
 	else if (PyLong_CheckExact(py_double_or_int))
 		return static_cast<double>(PyLong_AsLong(py_double_or_int));
-	return NULL;
+	return 0;
+}
+
+long PyIntOrLong_AsLong(PyObject * value)
+{
+	long ret_val;
+#if PY_MAJOR_VERSION < 3
+	if (PyInt_Check(value))
+	{
+		ret_val = PyInt_AsLong(value);
+	}
+	else
+	{
+		ret_val = PyLong_AsLong(value);
+	}
+#else
+	ret_val = PyLong_AsLong(value);
+#endif
+	return ret_val;
+}
+
+bool PyFloatLongOrInt_Check(PyObject* py_object)
+{
+	return (
+		PyFloat_Check(py_object) || PyLong_Check(py_object)
+#if PY_MAJOR_VERSION < 3
+		|| PyInt_Check(py_object)
+#endif
+		);
+
 }

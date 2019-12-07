@@ -2454,7 +2454,7 @@ class CuraExtruder(SlicerExtruder):
 
 
 class CuraSettings(SlicerSettings):
-    ExtruderNumberSearchRegex = "([\w\W]*)_(\d+)$"
+    ExtruderNumberSearchRegex = r"([\w\W]*)_(\d+)$"
 
     def __init__(self, version="unknown"):
         super(CuraSettings, self).__init__(SlicerSettings.SlicerTypeCura, version)
@@ -2934,7 +2934,7 @@ class Slic3rPeSettings(SlicerSettings):
                 if percent_index < 1:
                     return None
                 try:
-                    percent = float("{}".format(parse_string).encode(u'utf-8').translate(None, b'%')) / 100.0
+                    percent = float("{}".format(parse_string).encode(u'utf-8').decode().translate({ord(c):None for c in '%'})) / 100.0
                     return percent
                 except ValueError:
                     return None

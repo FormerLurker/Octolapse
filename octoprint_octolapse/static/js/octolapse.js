@@ -1259,10 +1259,14 @@ $(function () {
             //console.log("Getting initial state");
             if (!self.startup_complete && self.is_admin()) {
                 //console.log("octolapse.js - Loading settings for current user after startup.");
-                Octolapse.Settings.loadSettings();
+                Octolapse.Settings.loadSettings(function(){
+                    self.has_loaded_state(true);
+                });
             } else
             {
-                self.loadState();
+                self.loadState(function(){
+                    self.has_loaded_state(true);
+                });
             }
 
             // reset snapshot error state
@@ -1271,7 +1275,7 @@ $(function () {
 
         };
 
-        self.loadState = function () {
+        self.loadState = function (success_callback) {
             //console.log("octolapse.js - Loading State");
             $.ajax({
                 url: "./plugin/octolapse/loadState",
@@ -1283,6 +1287,9 @@ $(function () {
                 success: function (result) {
                     //console.log("The state has been loaded.  Waiting for message");
                     self.initial_state_loaded = true;
+                    if(success_callback) {
+                        success_callback();
+                    }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
 
@@ -1349,7 +1356,6 @@ $(function () {
                 Octolapse.Status.updateLatestSnapshotThumbnail(true);
             }
             */
-            self.has_loaded_state(true);
         };
 
         self.update = function (settings) {

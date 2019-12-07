@@ -21,6 +21,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "gcode_parser.h"
 #include "logging.h"
+#include "utilities.h"
 #include <cmath>
 #include <iostream>
 gcode_parser::gcode_parser()
@@ -139,16 +140,22 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 	}
 	else
 		command.is_empty = false;
-	
+
+	bool has_seen_character = false;
 	while (true)
 	{
 		char cur_char = *p_gcode;
 		if (cur_char == '\0' || cur_char == ';')
 			break;
-		else if (cur_char > 31)
+		else if (cur_char > 32 || cur_char == ' ' && has_seen_character)
+		{
 			command.gcode.push_back(cur_char);
+			has_seen_character = true;
+		}
 		p_gcode++;
 	}
+	//command.gcode = utilities::trim(command.gcode);
+
 	if (command.is_known_command)
 	{
 		//command->gcode_ = gcode;

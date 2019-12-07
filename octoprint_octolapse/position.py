@@ -197,6 +197,7 @@ class Pos(object):
         "in_path_position",
         "file_line_number",
         "gcode_number",
+        "file_position",
         "is_in_bounds",
         "parsed_command",
         "extruders"
@@ -252,6 +253,7 @@ class Pos(object):
         # Gcode File Tracking
         self.file_line_number = -1
         self.gcode_number = -1
+        self.file_position = -1
 
     @staticmethod
     def copy_from_cpp_pos(cpp_pos, target):
@@ -299,12 +301,13 @@ class Pos(object):
         target.is_in_bounds = cpp_pos[39] > 0
         target.file_line_number = cpp_pos[53]
         target.gcode_number = cpp_pos[54]
-        parsed_command = cpp_pos[55]
+        target.file_position = cpp_pos[55]
+        parsed_command = cpp_pos[56]
         if parsed_command is not None:
             target.parsed_command = ParsedCommand(parsed_command[0], parsed_command[1], parsed_command[2])
         else:
             target.parsed_command = None
-        extruders = cpp_pos[56]
+        extruders = cpp_pos[57]
         if extruders is not None:
             target.extruders = []
             for extruder in extruders:
@@ -435,6 +438,7 @@ class Pos(object):
             "has_received_home_command": self.has_received_home_command,
             "file_line_number": self.file_line_number,
             "gcode_number": self.gcode_number,
+            "file_position": self.file_position,
             "is_in_bounds": self.is_in_bounds,
             "extruders": [x.to_dict() for x in self.extruders]
         }

@@ -712,10 +712,10 @@ class Response(object):
     # This code was copied from the OctoPrint comm.pi file in order to sidestep an issue
     # where position responses with spaces after a colon (for example:  ok X:150.0 Y:150.0 Z:  0.7 E:  0.0)
     # were not being detected as a position response, and failed to file a PositionReceived event
-    regex_float_pattern = "[-+]?[0-9]*\.?[0-9]+"
-    regex_e_positions = re.compile("E(?P<id>\d+):(?P<value>{float})".format(float=regex_float_pattern))
+    regex_float_pattern = r"[-+]?[0-9]*\.?[0-9]+"
+    regex_e_positions = re.compile(r"E(?P<id>\d+):(?P<value>{float})".format(float=regex_float_pattern))
     regex_position = re.compile(
-        "X:\s*(?P<x>{float})\s*Y:\s*(?P<y>{float})\s*Z:\s*(?P<z>{float})\s*((E:\s*(?P<e>{float}))|(?P<es>(E\d+:{float}\s*)+))"
+        r"X:\s*(?P<x>{float})\s*Y:\s*(?P<y>{float})\s*Z:\s*(?P<z>{float})\s*((E:\s*(?P<e>{float}))|(?P<es>(E\d+:{float}\s*)+))"
         .format(float=regex_float_pattern))
 
     @staticmethod

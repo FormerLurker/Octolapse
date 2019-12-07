@@ -140,7 +140,7 @@ PyInit_GcodePositionProcessor(void)
 extern "C" void initGcodePositionProcessor(void)
 #endif
 {
-		std::cout << "Initializing GcodePositionProcessor V1.0.0 - Copyright (C) 2019  Brad Hochgesang...";
+		std::cout << "Initializing GcodePositionProcessor V1.0.1 - Copyright (C) 2019  Brad Hochgesang...";
 		
 #if PY_MAJOR_VERSION >= 3
 		std::cout << "Python 3+ Detected...";
@@ -356,7 +356,7 @@ extern "C"
 
 		parsed_command command;
 		gpp::parser->try_parse_gcode(gcode, command);
-		p_gcode_position->update(command, -1, -1);
+		p_gcode_position->update(command, -1, -1, -1);
 
 		return p_gcode_position->get_current_position_ptr()->to_py_tuple();
 	}
@@ -1039,11 +1039,14 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
 		}
-		if (!(PyFloat_Check(py_z_lift_height) || PyInt_Check(py_z_lift_height) || PyLong_Check(py_z_lift_height) || py_z_lift_height == Py_None)) {
+		
+		if (!(PyFloatLongOrInt_Check(py_z_lift_height) || py_z_lift_height == Py_None))
+		{
 			std::string message = "GcodePositionProcessor.ParsePositionArgs - The z_lift_height object must a float or int.";
 			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
 		}
+
 		if (py_z_lift_height == Py_None)
 		{
 			args->z_lift_heights[index] = 0;
@@ -1053,7 +1056,6 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 			double height = PyFloatOrInt_AsDouble(py_z_lift_height);
 			args->z_lift_heights[index] = height;
 		}
-		
 
 		// Extract the retraction_length from the current extruder
 		PyObject * py_retraction_length = PyDict_GetItemString(py_extruder, "retraction_length");
@@ -1063,7 +1065,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
 		}
-		if (!(PyFloat_Check(py_retraction_length) || PyLong_Check(py_retraction_length) || PyInt_Check(py_retraction_length) || py_retraction_length == Py_None)) {
+		if (!(PyFloatLongOrInt_Check(py_retraction_length) || py_retraction_length == Py_None)) {
 			std::string message = "GcodePositionProcessor.ParsePositionArgs - The z_lift_height object must a float or int.";
 			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 			return false;
@@ -1139,7 +1141,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 				return false;
 			}
 			std::cout << "Checking x offset value.\r\n";
-			if (!(PyFloat_Check(py_extruder_offset_x) || PyLong_Check(py_extruder_offset_x) || PyInt_Check(py_extruder_offset_x) || py_extruder_offset_x == Py_None)) {
+			if (!(PyFloatLongOrInt_Check(py_extruder_offset_x) || py_extruder_offset_x == Py_None)) {
 				std::string message = "GcodePositionProcessor.ParsePositionArgs - The extruder_offset.x object must a float or int.";
 				octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 				return false;
@@ -1163,7 +1165,7 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 				return false;
 			}
 			std::cout << "Checking y offset value.\r\n";
-			if (!(PyFloat_Check(py_extruder_offset_y) || PyLong_Check(py_extruder_offset_y) || PyInt_Check(py_extruder_offset_y) || py_extruder_offset_y == Py_None)) {
+			if (!(PyFloatLongOrInt_Check(py_extruder_offset_y) || py_extruder_offset_y == Py_None)) {
 				std::string message = "GcodePositionProcessor.ParsePositionArgs - The extruder_offset.y object must a float or int.";
 				octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
 				return false;
