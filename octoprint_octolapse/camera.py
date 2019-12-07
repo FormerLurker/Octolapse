@@ -181,6 +181,7 @@ class CameraControl(object):
 
             if current_camera.webcam_settings.server_type == MjpgStreamer.server_type:
                 thread = MjpgStreamerSettingsThread(profile=current_camera)
+                thread.daemon = True
 
             if thread:
                 threads.append(thread)
@@ -258,12 +259,14 @@ class CameraControl(object):
         # create the threads
         threads = []
         for args in args_list:
-            threads.append(CameraSettingScriptThread(
+            thread = CameraSettingScriptThread(
                 args['camera'],
                 args['script_path'],
                 args['script_args'],
                 args['script_type']
-            ))
+            )
+            thread.daemon = True
+            threads.append(thread)
 
         # start the threads
         for thread in threads:
@@ -322,6 +325,7 @@ class CameraControl(object):
                 ignore_ssl_error=ignore_ssl_error,
                 timeout_seconds=timeout_seconds
             )
+            thread.daemon = True
             thread.start()
             thread.join()
             return thread.success, thread.errors
@@ -353,6 +357,7 @@ class CameraControl(object):
                     camera_name=camera_name,
                     timeout_seconds=timeout_seconds
                 )
+                thread.daemon = True
                 thread.start()
                 thread.join()
                 if thread.errors:
@@ -642,6 +647,7 @@ class CameraControl(object):
                 camera_name=camera_name,
                 timeout_seconds=timeout_seconds
             )
+            thread.daemon = True
             thread.start()
             thread.join()
 
@@ -841,6 +847,7 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
                 self.camera_name,
                 timeout_seconds=self.timeout_seconds
             )
+            thread.daemon = True
             threads.append(thread)
 
         if len(threads) > 0:

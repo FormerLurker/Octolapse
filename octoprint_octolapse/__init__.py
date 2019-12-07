@@ -109,7 +109,7 @@ class OctolapsePlugin(
         self._octolapse_settings = None  # type: OctolapseSettings
         self._timelapse = None  # type: Timelapse
         self.gcode_preprocessor = None
-        self._preprocessing_progress_queue = None
+        self._stabilization_preprocessor_thread = None
         self._preprocessing_cancel_event = threading.Event()
 
         self._plugin_message_queue = queue.Queue()
@@ -1577,6 +1577,7 @@ class OctolapsePlugin(
                 self.automatic_update_thread = utility.RecurringTimerThread(
                     update_interval, _update, self.automatic_update_cancel
                 )
+                self.automatic_update_thread.daemon = True
                 # do an initial update now
                 _update()
 
@@ -1588,7 +1589,7 @@ class OctolapsePlugin(
                 self.automatic_updates_notification_thread = utility.RecurringTimerThread(
                     update_interval, self.notify_updates, self.automatic_update_cancel
                 )
-
+                self.automatic_updates_notification_thread.daemon = True
                 self.automatic_updates_notification_thread.start()
 
     # create function to update all existing automatic profiles
@@ -2101,9 +2102,11 @@ class OctolapsePlugin(
     def pre_process_stabilization(
         self, timelapse_settings,  parsed_command
     ):
-        self._preprocessing_progress_queue = queue.Queue()
-        # create the   thread
-        preprocessor = StabilizationPreprocessingThread(
+        if self._stabilization_preprocessor_thread is not None:
+            self._stabilization_preprocessor_thread.join()
+            self._stabilization_preprocessor_thread = None
+
+        self._stabilization_preprocessor_thread = StabilizationPreprocessingThread(
             timelapse_settings,
             self.send_pre_processing_progress_message,
             self.on_pre_processing_start,
@@ -2113,7 +2116,8 @@ class OctolapsePlugin(
             notification_period_seconds=self.PREPROCESSING_NOTIFICATION_PERIOD_SECONDS,
 
         )
-        preprocessor.start()
+        self._stabilization_preprocessor_thread.daemon = True
+        self._stabilization_preprocessor_thread.start()
 
     def pre_preocessing_complete(self, success, is_cancelled, snapshot_plans, seconds_elapsed,
                                  gcodes_processed, lines_processed, missed_snapshots, quality_issues,
@@ -2161,7 +2165,6 @@ class OctolapsePlugin(
         # close the UI progress popup
         self.send_pre_processing_progress_message(
             100, 0, 0, 0, 0)
-
         self.preprocessing_job_guid = None
 
     def pre_processing_success(
@@ -2195,6 +2198,7 @@ class OctolapsePlugin(
                         return
                     time.sleep(1)
             autoclose_thread = threading.Thread(target=autoclose_snapshot_preview, args=[self.preprocessing_job_guid])
+            autoclose_thread.daemon = True
             autoclose_thread.start()
         else:
             self.snapshot_plan_preview_autoclose = False

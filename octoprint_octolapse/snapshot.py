@@ -68,6 +68,7 @@ def take_in_memory_snapshot(settings, current_camera):
             snapshot_job = ExternalScriptSnapshotJob(snapshot_job_info, settings)
         else:
             snapshot_job = WebcamSnapshotJob(snapshot_job_info, settings)
+        snapshot_job.daemon = True
         snapshot_job.start()
         snapshot_job.join()
         # Copy the image into memory so that we can delete the original file.
@@ -117,8 +118,10 @@ class CaptureSnapshot(object):
                 before_snapshot_job_info = SnapshotJobInfo(
                     self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_attempt, current_camera
                 )
+                thread = ExternalScriptSnapshotJob(before_snapshot_job_info, self.Settings, 'before-snapshot')
+                thread.daemon = True
                 before_snapshot_threads.append(
-                    ExternalScriptSnapshotJob(before_snapshot_job_info, self.Settings, 'before-snapshot')
+                    thread
                 )
 
             snapshot_job_info = SnapshotJobInfo(
@@ -132,6 +135,7 @@ class CaptureSnapshot(object):
                     on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback,
                     on_post_processing_error_callback=self.on_post_processing_error_callback
                 )
+                thread.daemon = True
                 snapshot_threads.append((thread, snapshot_job_info, None))
             elif current_camera.camera_type == "webcam":
                 download_started_event = Event()
@@ -142,6 +146,7 @@ class CaptureSnapshot(object):
                     on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback,
                     on_post_processing_error_callback=self.on_post_processing_error_callback
                 )
+                thread.daemon = True
                 snapshot_threads.append((thread, snapshot_job_info, download_started_event))
 
             after_snapshot_job_info = SnapshotJobInfo(
@@ -149,8 +154,10 @@ class CaptureSnapshot(object):
             )
             # post_snapshot threads
             if current_camera.on_after_snapshot_script:
+                thread = ExternalScriptSnapshotJob(after_snapshot_job_info, self.Settings, 'after-snapshot')
+                thread.daemon = True
                 after_snapshot_threads.append(
-                    ExternalScriptSnapshotJob(after_snapshot_job_info, self.Settings, 'after-snapshot')
+                    thread
                 )
 
         if len(before_snapshot_threads) > 0:
@@ -495,6 +502,7 @@ class SnapshotThread(Thread):
                 request=request)
             if not block and not request:
                 processing_thread = Thread(target=post_process_thread, args=[image_post_processor])
+                processing_thread.daemon = True
                 processing_thread.start()
             else:
                 image_post_processor.process()

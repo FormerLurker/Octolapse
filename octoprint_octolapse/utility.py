@@ -760,6 +760,7 @@ class POpenWithTimeout(object):
                 self.lock.release()
 
         thread = threading.Thread(target=execute_process, args=[args])
+        thread.daemon = True
         # start the thread
         thread.start()
         # join the thread with a timeout

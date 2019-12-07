@@ -202,7 +202,6 @@ class Trigger(object):
         self._settings = octolapse_settings
         self.printer = self._settings.profiles.current_printer()
         self.trigger_profile = self._settings.profiles.current_trigger()
-
         self.type = 'Trigger'
         self._state_history = []
         self._max_states = max_states

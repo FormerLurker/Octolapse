@@ -531,7 +531,6 @@ class Timelapse(object):
             self._octoprint_printer.set_job_on_hold(False)
             self.job_on_hold = False
 
-
     def on_print_canceled(self):
         if self._state != TimelapseState.Idle:
             self.end_timelapse("CANCELED")
@@ -539,6 +538,9 @@ class Timelapse(object):
     def on_print_completed(self):
         if self._state != TimelapseState.Idle:
             self.end_timelapse("COMPLETED")
+
+    def on_print_ended(self):
+        self.snapshot_plans = []
 
     def end_timelapse(self, print_status):
         self._print_end_status = print_status
