@@ -2814,7 +2814,7 @@ class OctolapsePlugin(
         allowed_extensions = ["mpg", "mpeg", "mp4", "m4v", "mkv", "gif", "avi", "flv", "vob"]
 
         if sys.version_info < (3,0):
-            return [i.encode('ascii', 'replace').decode() for i in allowed_extensions]
+            return [i.encode('ascii', 'replace') for i in allowed_extensions]
 
         return allowed_extensions
 
