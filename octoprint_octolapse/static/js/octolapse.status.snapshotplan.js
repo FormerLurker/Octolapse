@@ -184,10 +184,17 @@ Octolapse.snapshotPlanStateViewModel = function() {
             {
                 self.is_animating_plans(false);
                 self.view_current_plan(false);
+                if (self.snapshot_plans().length < 1)
+                    return;
+
                 var index = self.plan_index()+1;
                 if (index < self.snapshot_plans().length)
                 {
                     self.plan_index(index);
+                }
+                else
+                {
+                    self.plan_index(0);
                 }
                 self.update_current_plan();
                 return false;
@@ -197,10 +204,16 @@ Octolapse.snapshotPlanStateViewModel = function() {
             {
                 self.is_animating_plans(false);
                 self.view_current_plan(false);
+                if (self.snapshot_plans().length < 1)
+                    return false;
                 var index = self.plan_index()-1;
-                if (index > -1 && self.snapshot_plans().length > 0)
+                if (index > -1)
                 {
                     self.plan_index(index);
+                }
+                else
+                {
+                    self.plan_index(self.snapshot_plans().length - 1);
                 }
                 self.update_current_plan();
                 return false;
