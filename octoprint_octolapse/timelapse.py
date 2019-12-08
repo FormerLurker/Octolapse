@@ -779,7 +779,7 @@ class Timelapse(object):
                     elif (self._state == TimelapseState.WaitingForTrigger
                           and self._octoprint_printer.is_printing()):
                         # update the triggers with the current position
-                        self._triggers.update(self._position, parsed_command)
+                        self._triggers.update(self._position)
 
                         # see if at least one trigger is triggering
                         _first_triggering = self.get_first_triggering()

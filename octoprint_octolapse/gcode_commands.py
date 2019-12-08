@@ -193,6 +193,9 @@ class ParsedCommand(object):
 
         return "{0}{1}{2}".format(parsed_command.cmd, separator, " ".join(parameter_strings))
 
+    def is_octolapse_command(self):
+        return self.cmd == "@OCTOLAPSE" and len(self.parameters) == 1
+
 
 class Command(object):
 

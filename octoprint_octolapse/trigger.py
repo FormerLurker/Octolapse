@@ -77,7 +77,7 @@ class Triggers(object):
             if type(trigger) == TimerTrigger:
                 trigger.pause()
 
-    def update(self, position, parsed_command):
+    def update(self, position):
         # the previous command (not just the current) MUST have homed positions else
         # we may have some null coordinates.
         #if not position.current_pos.has_definite_position:
@@ -89,7 +89,7 @@ class Triggers(object):
             for current_trigger in self._triggers:
                 # determine what type the current trigger is and update appropriately
                 if isinstance(current_trigger, GcodeTrigger):
-                    current_trigger.update(position, parsed_command)
+                    current_trigger.update(position)
                 elif isinstance(current_trigger, TimerTrigger):
                     current_trigger.update(position)
                 elif isinstance(current_trigger, LayerTrigger):
@@ -207,6 +207,15 @@ class Trigger(object):
         self._max_states = max_states
         self.extruder_triggers = None
         self.trigger_count = 0
+        self.snapshots_enabled = True
+
+    def update(self, position):
+        parsed_command = position.current_pos.parsed_command
+        if parsed_command.is_octolapse_command:
+            if "STOP-SNAPSHOTS" in parsed_command.parameters:
+                self.snapshots_enabled = False
+            elif "START-SNAPSHOTS" in parsed_command.parameters:
+                self.snapshots_enabled = True
 
     def name(self):
         return self.trigger_profile.name + " Trigger"
@@ -326,9 +335,12 @@ class GcodeTrigger(Trigger):
         # add an initial state
         self.add_state(GcodeTriggerState())
 
-    def update(self, position, parsed_command):
+    def update(self, position):
+        super(GcodeTrigger, self).update(position)
+        parsed_command = position.current_pos.parsed_command
         """If the provided command matches the trigger command, sets is_triggered to true, else false"""
         try:
+
             # get the last state to use as a starting point for the update
             # if there is no state, this will return the default state
             state = self.get_state(0)
@@ -357,7 +369,11 @@ class GcodeTrigger(Trigger):
                 state.in_path_position = position.current_pos.in_path_position
 
                 if self.snapshot_command.lower() == parsed_command.gcode.lower():
-                    state.is_waiting = True
+                    if self.snapshots_enabled:
+                        state.is_waiting = True
+                    else:
+                        logger.info("GcodeTrigger - A snapshot was detected, but snapshots were disabled via "
+                                    "@Octolapse stop-snapshots.")
                 if state.is_waiting:
                     if position.is_previous_extruder_triggered(self.extruder_triggers):
                         if not trigger_position.has_definite_position:
@@ -382,6 +398,12 @@ class GcodeTrigger(Trigger):
                             # run into the part!
                             logger.debug(
                                 "GcodeTrigger - Waiting for extruder to move above the highest extrusion point."
+                            )
+                        elif not self.snapshots_enabled:
+                            # Snapshot have been disabled by an octolapse gcode command
+                            logger.debug(
+                                "GcodeTrigger - Waiting for snapshots to be enabled via @Octolapse start-snapshots "
+                                "command. "
                             )
                         else:
                             state.is_triggered = True
@@ -507,6 +529,7 @@ class LayerTrigger(Trigger):
 
     def update(self, position):
         """Updates the layer monitor position.  x, y and z may be absolute, but e must always be relative"""
+        super(LayerTrigger, self).update(position)
         try:
             # get the last state to use as a starting point for the update
             # if there is no state, this will return the default state
@@ -623,6 +646,12 @@ class LayerTrigger(Trigger):
                         # run into the part!
                             logger.debug(
                                 "LayerTrigger - Waiting for extruder to move above the highest extrusion point."
+                            )
+                        elif not self.snapshots_enabled:
+                            # Snapshot have been disabled by an octolapse gcode command
+                            logger.debug(
+                                "LayerTrigger - Waiting for snapshots to be enabled via @Octolapse start-snapshots "
+                                "command. "
                             )
                         else:
                             if state.is_height_change_wait:
@@ -768,6 +797,7 @@ class TimerTrigger(Trigger):
             state.pause_time = None
 
     def update(self, position):
+        super(TimerTrigger, self).update(position)
         try:
             # get the last state to use as a starting point for the update
             # if there is no state, this will return the default state
@@ -846,6 +876,12 @@ class TimerTrigger(Trigger):
                         # run into the part!
                             logger.debug(
                                 "TimerTrigger - Waiting for extruder to move above the highest extrusion point."
+                            )
+                        elif not self.snapshots_enabled:
+                            # Snapshot have been disabled by an octolapse gcode command
+                            logger.debug(
+                                "TimerTrigger - Waiting for snapshots to be enabled via @Octolapse start-snapshots "
+                                "command. "
                             )
                         else:
                             # Is Triggering
