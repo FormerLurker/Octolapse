@@ -552,7 +552,7 @@ class CameraControl(object):
                     )
                     logger.error(message)
                     raise CameraError('not-an-image', message)
-                elif not is_before_print_test or (
+                elif (
                     is_before_print_test and
                     camera_profile.enable_custom_image_preferences and
                     camera_profile.apply_settings_before_print
@@ -561,7 +561,7 @@ class CameraControl(object):
             else:
                 message = (
                     "An invalid status code or {0} was returned from the '{1}' camera profile."
-                        .format(r.status_code, camera_profile.name)
+                    .format(r.status_code, camera_profile.name)
                 )
                 logger.error(message)
                 raise CameraError('invalid-status-code', message)
