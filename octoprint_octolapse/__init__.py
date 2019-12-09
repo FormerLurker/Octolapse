@@ -23,10 +23,6 @@
 
 from __future__ import absolute_import
 from __future__ import unicode_literals
-# uncomment to enable faulthandler.  Also need to uncomment faulthandler in plugin_requries in setup.py
-#import faulthandler
-#faulthandler.enable()
-# enable faulthandler for c extension
 # Create the root logger.  Note that it MUST be created before any imports that use the
 # plugin_octolapse.log.LoggingConfigurator, since it is a singleton and we want to be
 # the first to create it so that the name is correct.
@@ -41,7 +37,7 @@ import base64
 import json
 import os
 import shutil
-from flask import Flask, request, send_file, jsonify
+from flask import request, send_file, jsonify, Response, stream_with_context
 from flask_principal import Permission, RoleNeed
 import threading
 import uuid
@@ -49,10 +45,6 @@ import six
 import time
 from six.moves import queue
 from tempfile import mkdtemp
-# import python 3 specific modules
-if (sys.version_info) > (3,0):
-    import faulthandler
-    faulthandler.enable()
 from distutils.version import LooseVersion
 from io import BytesIO
 import octoprint.plugin
@@ -88,6 +80,26 @@ except ImportError:
 
 # configure all imported loggers
 logging_configurator.configure_loggers()
+
+
+def configure_debug_mode():
+    # Conditional imports for OctoPrint or Python debug mode
+    # detect debug mode
+    if hasattr(sys, 'gettotalrefcount') or "--debug" in sys.argv:
+        logger.info("Debug mode detected.")
+        # import python 3 specific debug modules
+        logger.info("Python %s detected.", sys.version)
+        if sys.version_info > (3, 0):
+            import faulthandler
+            faulthandler.enable()
+            logger.info("Faulthandler enabled.")
+    else:
+        logger.info("Release mode detected.")
+
+
+# configure debug mode
+configure_debug_mode()
+
 
 class OctolapsePlugin(
     octoprint.plugin.SettingsPlugin,
@@ -1321,7 +1333,7 @@ class OctolapsePlugin(
                         yield chunk
                 if on_complete_callback is not None:
                     on_complete_callback(download_filepath, on_complete_additional_args)
-            response = Flask.Response(Flask.stream_with_context(
+            response = Response(stream_with_context(
                 single_chunk_generator(file_path)))
             response.headers.set('Content-Disposition',
                                  'attachment', filename=download_filename)
