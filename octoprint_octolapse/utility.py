@@ -623,17 +623,8 @@ def get_system_fonts(base_directory):
         # I don't know how to find these for Mac OS  Maybe someone can help with this?
         pass
 
-    def sort_fonts(a, b):
-        a_name = os.path.basename(a).lower()
-        b_name = os.path.basename(b).lower()
-        if a_name > b_name:
-            return 1
-        elif a_name == b_name:
-            return 0
-        else:
-            return -1
     # sort the fonts
-    font_paths.sort(sort_fonts)
+    font_paths.sort(key=(lambda b: os.path.basename(b).lower()))
     return font_paths
 
 
