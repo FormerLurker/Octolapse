@@ -368,7 +368,7 @@ class GcodeTrigger(Trigger):
                 state.is_in_position = trigger_position.is_in_position and trigger_position.is_in_bounds
                 state.in_path_position = position.current_pos.in_path_position
 
-                if self.snapshot_command.lower() == parsed_command.gcode.lower():
+                if utility.is_snapshot_command(self.snapshot_command, parsed_command.gcode):
                     if self.snapshots_enabled:
                         state.is_waiting = True
                     else:
@@ -574,7 +574,7 @@ class LayerTrigger(Trigger):
 
                     if new_increment <= state.current_increment:
                         message = (
-                            "Layer Trigger - Warning - The height increment was expected to increase, but it did not." 
+                            "Layer Trigger - Warning - The height increment was expected to increase, but it did not."
                             " Height Increment:%s, Current Increment:%s, Calculated Increment:%s"
                         )
                         logger.warning(

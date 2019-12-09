@@ -277,12 +277,13 @@ class ExtruderOffset(Settings):
 
 
 class PrinterProfile(AutomaticConfigurationProfile):
+    DEFAULT_SNAPSHOT_COMMAND = "@OCTOLAPSE TAKE-SNAPSHOT"
     minimum_height_increment = 0.05
     bed_type_rectangular = 'rectangular'
     bed_type_circular = 'circular'
     origin_type_front_left = 'front_left'
     origin_type_center = 'center'
-    
+
     def __init__(self, name="New Printer Profile"):
         super(PrinterProfile, self).__init__(name)
         # flag that is false until the profile has been saved by the user at least once
@@ -2010,7 +2011,7 @@ class Profiles(Settings):
                 has_profiles = True
                 identifiers = printer_profile.get_server_update_identifiers_dict()
                 profiles["printer"].append(identifiers)
-                
+
         for key, stabilization_profile in six.iteritems(self.stabilizations):
             if stabilization_profile.is_updatable_from_server():
                 has_profiles = True

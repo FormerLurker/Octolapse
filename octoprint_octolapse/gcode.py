@@ -242,7 +242,7 @@ class SnapshotGcodeGenerator(object):
         self.g90_g91_affect_extruder = None
         # variables for gcode generation
         # return (original) values
-        
+
         # current valuse
         self.x_current = None
         self.y_current = None
@@ -811,7 +811,7 @@ class SnapshotGcodeGenerator(object):
         # Move to Snapshot Position
         self.snapshot_gcode.append(
             SnapshotGcode.SNAPSHOT_COMMANDS,
-            self.Printer.snapshot_command
+            PrinterProfile.DEFAULT_SNAPSHOT_COMMAND
         )
 
     def return_to_original_coordinate_systems(self):
