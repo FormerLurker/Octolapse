@@ -1,7 +1,15 @@
 # coding=utf-8
 from distutils.core import Extension
 from distutils.command.build_ext import build_ext
+from distutils.ccompiler import CCompiler
+from distutils.unixccompiler import UnixCCompiler
+from distutils.msvccompiler import MSVCCompiler
+from distutils.bcppcompiler import BCPPCompiler
+from distutils.cygwinccompiler import CygwinCCompiler
+
 import sys
+import sysconfig
+
 import os
 ########################################################################################################################
 # The plugin's identifier, has to be unique
@@ -31,10 +39,10 @@ plugin_license = "AGPLv3"
 plugin_requires = ["pillow >=6.2.0<7.0.0", "sarge", "six", "OctoPrint>1.3.8", "psutil", "file_read_backwards",
                    "setuptools>=6.0", "awesome-slugify>=1.6.5,<1.7"]
 
-# uncomment to enable faulthandler.
-# Also need to uncomment faulthandler lines on the top of plugin_octolapse/__init__.py
-# plugin_requires.append("faulthandler>=3.1")
-#
+# enable faulthandler for python 3.
+if (3, 0) < sys.version_info < (3, 3):
+    print("Adding faulthandler requirement.")
+    plugin_requires.append("faulthandler>=3.1")
 
 # TODO:  Get fontconfig to work
 #from sys import platform
@@ -64,38 +72,84 @@ plugin_additional_packages = []
 # Any python packages within <plugin_package>.* you do NOT want to install with your plugin
 plugin_ignored_packages = []
 
-# Additional parameters for the call to setuptools.setup. If your plugin wants to register additional entry points,
-# define dependency links or other things like that, this is the place to go. Will be merged recursively with the
-# default setup parameters as provided by octoprint_setuptools.create_plugin_setup_parameters using
-# octoprint.util.dict_merge.
-#
-# Example: plugin_requires = ["someDependency==dev"] additional_setup_parameters = {"dependency_links": [
-#   "https://github.com/someUser/someRepo/archive/master.zip#egg=someDependency-dev"]}
-
-copt = {
-    'msvc': ['/Ox', '/fp:fast', '/GS', '/GL', '/analyze', '/Gy', '/Oi', '/MD', '/EHsc', '/Ot', 'std=c++11'],
-    'mingw32': ['-fopenmp', '-O3', '-ffast-math', '-march=native', '-std=c++11'],
-    'gcc': ['-O3', '-std=c++11'],
-    'unix': ['-O3', '-std=c++11']
+# C++ Extension compiler options
+# Set debug mode
+DEBUG = False
+# define compiler flags
+compiler_opts = {
+    CCompiler.compiler_type: {
+        'extra_compile_args': ['-O3', '-std=c++11'],
+        'extra_link_args': [],
+        'define_macros': []
+    },
+    MSVCCompiler.compiler_type: {
+        'extra_compile_args': ['/O2', '/fp:fast', '/GL', '/analyze', '/Gy', '/MD', '/EHsc'],
+        'extra_link_args': [],
+        'define_macros': []
+    },
+    UnixCCompiler.compiler_type: {
+        'extra_compile_args': ['-O3', '-std=c++11'],
+        'extra_link_args': [],
+        'define_macros': []
+    },
+    BCPPCompiler.compiler_type: {
+        'extra_compile_args': ['-O3', '-std=c++11'],
+        'extra_link_args': [],
+        'define_macros': []
+    },
+    CygwinCCompiler.compiler_type: {
+        'extra_compile_args': ['-O3', '-std=c++11'],
+        'extra_link_args': [],
+        'define_macros': []
+    }
 }
 
-lopt = {
-    'mingw32': ['-fopenmp'],
-    #'msvc': ['/DEBUG']
-}
+if DEBUG:
+    compiler_opts = {
+        CCompiler.compiler_type: {
+            'extra_compile_args': [],
+            'extra_link_args': [],
+            'define_macros': [('DEBUG_chardet', '1')]
+        },
+        MSVCCompiler.compiler_type: {
+            'extra_compile_args': ['/EHsc', '/Z7'],
+            'extra_link_args': ['/DEBUG'],
+            'define_macros': []
+        },
+        UnixCCompiler.compiler_type: {
+            'extra_compile_args': ['-g'],
+            'extra_link_args': ['-g'],
+            'define_macros': []
+        },
+        BCPPCompiler.compiler_type: {
+            'extra_compile_args': [],
+            'extra_link_args': [],
+            'define_macros': []
+        },
+        CygwinCCompiler.compiler_type: {
+            'extra_compile_args': [],
+            'extra_link_args': [],
+            'define_macros': []
+        }
+    }
 
-
-class build_ext_subclass( build_ext ):
+class build_ext_subclass(build_ext):
     def build_extensions(self):
-        c = self.compiler.compiler_type
-        print("Compiling Octolapse Parser Extension with {0}".format(c))
-        if c in copt:
-            for e in self.extensions:
-                e.extra_compile_args = copt[c]
-        if c in lopt:
-            for e in self.extensions:
-                e.extra_link_args = lopt[c]
+        print("Compiling Octolapse Parser Extension with {0}.".format(self.compiler))
+
+        c = self.compiler
+        opts = [v for k, v in compiler_opts.items() if c.compiler_type == k]
+        for e in self.extensions:
+            for o in opts:
+                for attrib, value in o.items():
+                    getattr(e, attrib).extend(value)
         build_ext.build_extensions(self)
+
+        for extension in self.extensions:
+            print("Build Extensions for {0} - extra_compile_args:{1} - extra_link_args:{2}".format(
+                extension.name, extension.extra_compile_args, extension.extra_link_args)
+            )
+
 
 ## Build our c++ parser extension
 plugin_ext_sources = [
