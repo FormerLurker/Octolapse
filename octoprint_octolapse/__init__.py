@@ -1136,6 +1136,13 @@ class OctolapsePlugin(
                 'enabled': new_value
             })
 
+    @octoprint.plugin.BlueprintPlugin.route("/validateSnapshotCommand", methods=["POST"])
+    def validate_snapshot_command(self):
+        request_values = request.get_json()
+        snapshot_command = request_values["snapshot_command"]
+        valid = "true" if self._timelapse.validate_snapshot_command(snapshot_command) else ""
+        return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
+
     @octoprint.plugin.BlueprintPlugin.route("/validateRenderingTemplate", methods=["POST"])
     def validate_rendering_template(self):
         template = request.form['octolapse_rendering_output_template']

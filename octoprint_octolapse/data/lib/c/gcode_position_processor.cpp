@@ -443,12 +443,7 @@ extern "C"
 			return NULL;
 		}
 		parsed_command command;
-		bool success = gpp::parser->try_parse_gcode(gcode, command);
-		if (!success)
-			return Py_BuildValue("O", Py_False);
-		// Convert ParsedCommand to python object
-		// note that all error handling will be done within the 
-		// to_py_object function
+		gpp::parser->try_parse_gcode(gcode, command);
 		return command.to_py_object();
 		
 	}

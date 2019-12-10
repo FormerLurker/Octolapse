@@ -39,6 +39,7 @@ $(function() {
             octolapse_printer_minimum_layer_height: { lessThanOrEqual: "#octolapse_printer_priming_height" },
             octolapse_printer_priming_height: { greaterThanOrEqual: "#octolapse_printer_minimum_layer_height" },
             octolapse_printer_auto_position_detection_commands: { csvString: true },
+            octolapse_printer_snapshot_command: {octolapsePrinterSnapshotCommand: true},
             octolapse_other_slicer_retract_length: {required: true},
             octolapse_other_slicer_z_hop: {required: true},
             octolapse_other_slicer_vase_mode: {ifCheckedEnsureNonNull: ["#octolapse_other_slicer_layer_height"] },

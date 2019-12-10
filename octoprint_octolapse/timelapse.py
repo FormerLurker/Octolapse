@@ -131,6 +131,15 @@ class Timelapse(object):
 
         self._reset()
 
+    def validate_snapshot_command(self, command_string):
+        # there needs to be at least one non-comment non-whitespace character for the gcode command to work.
+        parsed_command_cpp = GcodePositionProcessor.Parse(command_string.encode('ascii', errors="replace").decode())
+        if parsed_command_cpp:
+            parsed_command = ParsedCommand.create_from_cpp_parsed_command(parsed_command_cpp)
+            if len(parsed_command.gcode.strip()) > 0:
+                return True
+        return False
+
     def get_snapshot_count(self):
         if self._capture_snapshot is None:
             return 0
