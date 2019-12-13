@@ -102,6 +102,7 @@ static PyMethodDef GcodePositionProcessorMethods[] = {
 	{ "GetPreviousPositionTuple",  (PyCFunction)GetPreviousPositionTuple,  METH_VARARGS  ,"Returns the previous position of the global GcodePosition tracker in a faster but harder to handle tuple form." },
 	{ "GetPreviousPositionDict",  (PyCFunction)GetPreviousPositionDict,  METH_VARARGS  ,"Returns the previous position of the global GcodePosition tracker in a slower but easier to deal with dict form." },
 	{ "GetSnapshotPlans_SmartLayer", (PyCFunction)GetSnapshotPlans_SmartLayer, METH_VARARGS, "Parses a gcode file and returns snapshot plans for a 'SmartLayer' stabilization." },
+	{ "GetSnapshotPlans_SmartGcode", (PyCFunction)GetSnapshotPlans_SmartGcode, METH_VARARGS, "Parses a gcode file and returns snapshot plans for a 'SmartGcode' stabilization." },
 	{ NULL, NULL, 0, NULL }
 };
 
@@ -243,6 +244,76 @@ extern "C"
 		//std::cout << "py_progress_callback refcount = " << py_progress_callback->ob_refcnt << "\r\n";
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Snapshot plan creation complete, returning plans.");
 		//std::cout << "py_results refcount = " << py_results->ob_refcnt << "\r\n";
+		return py_results;
+	}
+
+	
+	static PyObject * GetSnapshotPlans_SmartGcode(PyObject *self, PyObject *args)
+	{
+		set_internal_log_levels(true);
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Running smart gcode stabilization preprocessing.");
+		// TODO:  add error reporting and logging
+		PyObject *py_position_args;
+		PyObject *py_stabilization_args;
+		PyObject *py_stabilization_type_args;
+		//std::cout << "Parsing Arguments\r\n";
+		if (!PyArg_ParseTuple(
+			args,
+			"OOO",
+			&py_position_args,
+			&py_stabilization_args,
+			&py_stabilization_type_args))
+		{
+			std::string message = "GcodePositionProcessor.GetSnapshotPlans_SmartGcode - Error parsing parameters.";
+			octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
+			return NULL;
+		}
+		// Removed by BH on 4-28-2019
+		// Extract the position args
+		gcode_position_args p_args;
+		//std::cout << "Parsing position arguments\r\n";
+		if (!ParsePositionArgs(py_position_args, &p_args))
+		{
+			return NULL;
+		}
+
+		// Extract the stabilization args
+		stabilization_args s_args;
+		//std::cout << "Parsing stabilization arguments\r\n";
+		PyObject* py_progress_received_callback = NULL;
+		PyObject* py_snapshot_position_callback = NULL;
+		if (!ParseStabilizationArgs(py_stabilization_args, &s_args, &py_progress_received_callback, &py_snapshot_position_callback))
+		{
+			return NULL;
+		}
+		//std::cout << "Parsing smart layer arguments\r\n";
+		smart_gcode_args mt_args;
+		if (!ParseStabilizationArgs_SmartGcode(py_stabilization_type_args, &mt_args))
+		{
+			return NULL;
+		}
+		//std::cout << "Creating Stabilization.\r\n";
+		// Create our stabilization object
+		set_internal_log_levels(false);
+		stabilization_smart_gcode stabilization(
+			p_args,
+			s_args,
+			mt_args,
+			pythonGetCoordinatesCallback(ExecuteGetSnapshotPositionCallback),
+			py_snapshot_position_callback,
+			pythonProgressCallback(ExecuteStabilizationProgressCallback),
+			py_progress_received_callback
+		);
+		stabilization_results results = stabilization.process_file();
+		set_internal_log_levels(true);
+
+
+		PyObject * py_results = results.to_py_object();
+		if (py_results == NULL)
+		{
+			return NULL;
+		}
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Snapshot plan creation complete, returning plans.");
 		return py_results;
 	}
 
@@ -1318,7 +1389,7 @@ static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_arg
 {
 	octolapse_log(
 		octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO,
-		"Parsing Stabilization Args."
+		"Parsing Smart Layer Stabilization Args."
 	);
 	//std::cout << "Parsing smart layer args.\r\n";
 	// Extract trigger_on_extrude
@@ -1349,5 +1420,36 @@ static bool ParseStabilizationArgs_SmartLayer(PyObject *py_args, smart_layer_arg
 	}
 	args->snap_to_print_smooth = PyLong_AsLong(py_snap_to_print_smooth) > 0;
 	
+	return true;
+}
+
+static bool ParseStabilizationArgs_SmartGcode(PyObject *py_args, smart_gcode_args* args)
+{
+	octolapse_log(
+		octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO,
+		"Parsing Smart Gcode Stabilization Args."
+	);
+
+	args->snapshot_command.clear();
+
+	// Extract the snapshot_command
+	PyObject * py_snapshot_command = PyDict_GetItemString(py_args, "snapshot_command");
+	if (py_snapshot_command == NULL)
+	{
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs_SmartGcode - Unable to retrieve snapshot_command from the smart gcode trigger stabilization args.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
+		return false;
+	}
+	std::string snapshot_command = PyUnicode_SafeAsString(py_snapshot_command);
+	gcode_parser parser;
+	parser.try_parse_gcode(snapshot_command.c_str(), args->snapshot_command);
+	if (args->snapshot_command.gcode.empty())
+	{
+		std::string message = "GcodePositionProcessor.ParseStabilizationArgs_SmartGcode - No valid snapshot command could be parsed from the supplied snapshot gcode: ";
+		message += snapshot_command;
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
+		return false;
+	}
+
 	return true;
 }

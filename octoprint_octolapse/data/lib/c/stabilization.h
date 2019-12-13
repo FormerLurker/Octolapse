@@ -28,7 +28,7 @@
 #include "gcode_position.h"
 #include "snapshot_plan.h"
 #include "stabilization_results.h"
-
+#include <vector>
 #ifdef _DEBUG
 #undef _DEBUG
 #include <Python.h>
@@ -36,7 +36,7 @@
 #else
 #include <Python.h>
 #endif
-#include <vector>
+
 static const char* travel_action = "travel";
 static const char* snapshot_action = "snapshot";
 static const char* send_parsed_command_first = "first";
@@ -117,8 +117,9 @@ protected:
 	 * \param y The current y stabilization point, will be replaced with the next y point
 	 */
 	void get_next_xy_coordinates(double &x, double &y) const;
-	virtual void process_pos(position* p_current_pos, position* p_previous_pos);
+	virtual void process_pos(position* p_current_pos, position* p_previous_pos, bool found_command);
 	virtual void on_processing_complete();
+	virtual std::vector<stabilization_processing_issue> get_internal_processing_issues();
 	virtual std::vector<stabilization_quality_issue> get_quality_issues();
 	virtual std::vector<stabilization_processing_issue> get_processing_issues();
 	std::vector<snapshot_plan> p_snapshot_plans_;

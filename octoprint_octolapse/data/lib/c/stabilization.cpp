@@ -232,7 +232,7 @@ stabilization_results stabilization::process_file()
 			{
 				if (snapshots_enabled_)
 				{
-					process_pos(gcode_position_->get_current_position_ptr(), gcode_position_->get_previous_position_ptr());
+					process_pos(gcode_position_->get_current_position_ptr(), gcode_position_->get_previous_position_ptr(), found_command);
 				}
 
 				if ( (lines_processed_ % read_lines_before_clock_check) == 0 && next_update_time < clock())
@@ -326,7 +326,7 @@ void stabilization::notify_progress(const double percent_progress, const double 
 
 }
 
-void stabilization::process_pos(position* current_pos, position* previous_pos)
+void stabilization::process_pos(position* current_pos, position* previous_pos, bool found_command)
 {
 	throw std::exception();
 }
@@ -339,6 +339,11 @@ void stabilization::on_processing_complete()
 std::vector<stabilization_quality_issue> stabilization::get_quality_issues()
 {
 	throw std::exception();
+}
+
+std::vector<stabilization_processing_issue> stabilization::get_internal_processing_issues()
+{
+	return std::vector<stabilization_processing_issue>();
 }
 
 std::vector<stabilization_processing_issue> stabilization::get_processing_issues()
@@ -392,7 +397,13 @@ std::vector<stabilization_processing_issue> stabilization::get_processing_issues
 		issue.issue_type = stabilization_processing_issue_type_no_metric_units;
 		issues.push_back(issue);
 	}
-	
+
+	// Get all internal issues of any override classes
+	std::vector<stabilization_processing_issue> internal_issues = get_internal_processing_issues();
+	// Add these issues to the master list
+	for (std::vector<stabilization_processing_issue>::iterator it = internal_issues.begin(); it != internal_issues.end(); ++it) {
+		issues.push_back(*it);
+	}
 	return issues;
 }
 

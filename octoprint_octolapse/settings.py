@@ -903,6 +903,7 @@ class StabilizationProfile(AutomaticConfigurationProfile):
 class TriggerProfile(AutomaticConfigurationProfile):
     TRIGGER_TYPE_REAL_TIME = "real-time"
     TRIGGER_TYPE_SMART_LAYER = "smart-layer"
+    TRIGGER_TYPE_SMART_GCODE = "smart-gcode"
     SMART_TRIGGER_TYPE_SNAP_TO_PRINT = 0
     SMART_TRIGGER_TYPE_FAST = 1
     SMART_TRIGGER_TYPE_COMPATIBILITY = 2
@@ -967,7 +968,8 @@ class TriggerProfile(AutomaticConfigurationProfile):
     @staticmethod
     def get_precalculated_trigger_types():
         return [
-            TriggerProfile.TRIGGER_TYPE_SMART_LAYER
+            TriggerProfile.TRIGGER_TYPE_SMART_LAYER,
+            TriggerProfile.TRIGGER_TYPE_SMART_GCODE
         ]
 
     def get_extruder_trigger_value_string(self, value):
@@ -983,7 +985,8 @@ class TriggerProfile(AutomaticConfigurationProfile):
         return {
             'trigger_type_options': [
                 dict(value=TriggerProfile.TRIGGER_TYPE_REAL_TIME, name='Real-Time Triggers'),
-                dict(value=TriggerProfile.TRIGGER_TYPE_SMART_LAYER, name='Smart Layer Trigger')
+                dict(value=TriggerProfile.TRIGGER_TYPE_SMART_LAYER, name='Smart Layer Trigger'),
+                dict(value=TriggerProfile.TRIGGER_TYPE_SMART_GCODE, name='Smart Gcode Trigger')
             ], 'real_time_xy_trigger_type_options': [
                 dict(value='disabled', name='Disabled'),
                 dict(value='fixed_coordinate', name='Fixed Coordinate'),

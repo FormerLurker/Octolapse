@@ -21,6 +21,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "stabilization_results.h"
 #include "logging.h"
+#include "python_helpers.h"
 stabilization_results::stabilization_results()
 {
 	gcodes_processed = 0;
@@ -114,7 +115,36 @@ PyObject * stabilization_quality_issue::to_py_object() const
 
 PyObject * stabilization_processing_issue::to_py_object() const
 {
-	PyObject * py_results = Py_BuildValue("(l,s)", static_cast<int>(issue_type), description.c_str());
+	
+	PyObject *py_replacement_tokens_dict = PyDict_New();
+	if (py_replacement_tokens_dict == NULL)
+	{
+		std::string message = "Error executing stabilization_processing_issue.build_py_object: Unable to create issue replacement token PyDict object.";
+		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
+		return NULL;
+	}
+	// Create each replacement token
+	for ( std::vector<replacement_token>::const_iterator it = replacement_tokens.begin(); it != replacement_tokens.end(); ++it)
+	{
+		PyObject * py_replacement_value = PyString_SafeFromString((*it).value.c_str());
+		if (py_replacement_value == NULL)
+		{
+			std::string message = "Error executing stabilization_processing_issue.build_py_object: Unable to create issue replacement token value PyString object from the token value string.";
+			octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
+			return NULL;
+		}
+
+		bool success = !(PyDict_SetItemString(py_replacement_tokens_dict, (*it).key.c_str(), py_replacement_value) < 0); // reference to pSnapshotPlan stolen
+		if (!success)
+		{
+			std::string message = "Error executing stabilization_processing_issue.build_py_object: Unable to append the issue replacement token to the to the replacement tokens dict.";
+			octolapse_log_exception(octolapse_log::GCODE_POSITION, message);
+			return NULL;
+		}
+		// Need to decref after PyList_Append, since it increfs the PyObject
+		Py_DECREF(py_replacement_value);
+	}
+	PyObject * py_results = Py_BuildValue("(l,s,O)", static_cast<int>(issue_type), description.c_str(), py_replacement_tokens_dict);
 	if (py_results == NULL)
 	{
 		std::string message = "stabilization_processing_issue.to_py_object - Unable to create a Tuple from a stabilization_processing_issue.";

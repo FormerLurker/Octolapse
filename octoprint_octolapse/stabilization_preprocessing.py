@@ -166,7 +166,7 @@ class StabilizationPreprocessingThread(Thread):
         processing_issues = []
         for issue in issues:
             processing_issues.append(
-                error_messages.get_error(["preprocessor", "cpp_processing_errors", str(issue[0])])
+                error_messages.get_error(["preprocessor", "cpp_processing_errors", str(issue[0])], **issue[2])
             )
 
         return processing_issues
@@ -249,6 +249,23 @@ class StabilizationPreprocessingThread(Thread):
             # set the results as the ret_val in tuple form
             results = tuple(ret_val)
             logger.info("Stabilization results received, returning.")
+        elif trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_GCODE:
+            # run smart gcode trigger
+            smart_gcode_args = {
+                'snapshot_command': self.printer_profile.snapshot_command,
+            }
+            ret_val = list(GcodePositionProcessor.GetSnapshotPlans_SmartGcode(
+                self.cpp_position_args,
+                stabilization_args,
+                smart_gcode_args
+            ))
+            # add the success indicator
+            ret_val.insert(0, True)
+            # add the 'other' errors (errors not related to the C++ call)
+            ret_val.append([])
+            # set the results as the ret_val in tuple form
+            results = tuple(ret_val)
+            logger.info("Stabilization results received, returning.")
         else:
             # If this is an unknown trigger type, report the error
             # This could happen if there is settings corruption, manual edits, or profile repo errors
@@ -268,7 +285,6 @@ class StabilizationPreprocessingThread(Thread):
                 [other_error]
             )
             logger.error("The current precalculated trigger type is unknown.")
-
 
         return results, options
 

@@ -96,17 +96,6 @@ $(function() {
         }
     };
 
-    Octolapse.OctolapseGcodeSettings = function(values){
-        /*
-        var self = this;
-        self.retraction_length = ko.observable(values.retraction_length);
-        self.retraction_speed = ko.observable(values.retraction_speed);
-        self.deretraction_speed = ko.observable(values.deretraction_speed);
-        self.x_y_travel_speed = ko.observable(values.x_y_travel_speed);
-        self.z_lift_height = ko.observable(values.z_lift_height);
-        self.z_lift_speed = ko.observable(values.z_lift_speed);*/
-    };
-
     Octolapse.Slicers = function(values, num_extruders_observable) {
         //console.log("Creating Slicers");
         var self = this;
@@ -114,16 +103,7 @@ $(function() {
         self.other = new Octolapse.OtherSlicerViewModel(values.other, num_extruders_observable);
         self.simplify_3d = new Octolapse.Simplify3dViewModel(values.simplify_3d, num_extruders_observable);
         self.slic3r_pe = new Octolapse.Slic3rPeViewModel(values.slic3r_pe, num_extruders_observable);
-/*
-        self.toJS = function()
-        {
-            var copy = ko.toJS(self);
-            copy.cura = cura.toJS();
-            copy.other = other.toJS();
-            copy.simplify_3d = simplify_3d.toJS();
-            copy.slic3r_pe = slic3r_pe.toJS();
-            return copy;
-        } */
+
     };
 
     Octolapse.PrinterProfileViewModel = function (values) {
@@ -132,11 +112,6 @@ $(function() {
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);
-        /*
-        self.automatic_configuration = new Octolapse.AutomaticPrinterConfigurationViewModel(
-            values.automatic_configuration, self
-        );
-        */
         self.num_extruders = ko.observable(values.num_extruders);
         self.shared_extruder = ko.observable(values.shared_extruder);
         self.extruder_offsets = ko.observableArray([]);
@@ -147,14 +122,11 @@ $(function() {
         }
         self.default_extruder = ko.observable(values.default_extruder);
         self.zero_based_extruder = ko.observable(values.zero_based_extruder);
-
-        //self.gcode_generation_settings = new Octolapse.OctolapseGcodeSettings(values.gcode_generation_settings);
         self.slicers = new Octolapse.Slicers(values.slicers, self.num_extruders);
         // has_been_saved_by_user profile setting, computed and always returns true
         // This will switch has_been_saved_by_user from false to true
         // after any user save
         self.has_been_saved_by_user = ko.observable(true);
-
         self.slicer_type = ko.observable(values.slicer_type);
         self.snapshot_command = ko.observable(values.snapshot_command);
         self.auto_detect_position = ko.observable(values.auto_detect_position);

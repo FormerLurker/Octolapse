@@ -31,9 +31,9 @@
             <label class="control-label">Name</label>
             <div class="controls">
                 <input id="octolapse_trigger_name" name="octolapse_trigger_name"
-                       class="input-block-level form-input" 
+                       class="input-block-level form-input"
                        data-bind="value: name"
-                       type="text" 
+                       type="text"
                 />
                 <div class="error_label_container text-error" data-error-for="octolapse_trigger_name"></div>
             </div>
@@ -70,6 +70,11 @@
                     <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_type"></div>
                 </div>
             </div>
+            <div data-bind="visible: trigger_type() == 'smart-gcode'">
+            <p>
+                The smart gcode trigger will take a snapshot whenever the snapshot command is encountered if possible.  Edit your printer profile to view/adjust the snapshot command.
+            </p>
+        </div>
         </div>
         <hr />
 
@@ -83,7 +88,7 @@
             <hr />
         </div>
 
-        <div>
+        <div data-bind="visible: trigger_type() != 'smart-gcode'">
             <div class="control-group">
                 <label class="control-label">When to Trigger</label>
                 <div class="controls">

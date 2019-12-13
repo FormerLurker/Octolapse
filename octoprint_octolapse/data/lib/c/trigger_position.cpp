@@ -240,6 +240,7 @@ bool trigger_positions::get_fast_position(trigger_position &pos)
 		pos = position_list_[current_closest_index];
 		return true;
 	}
+	return false;
 }
 
 bool trigger_positions::get_compatibility_position(trigger_position &pos)

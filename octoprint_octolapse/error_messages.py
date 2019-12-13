@@ -84,6 +84,13 @@ _octolapse_errors = {
                 'cpp_name': "stabilization_processing_issue_type_no_metric_units",
                 'is_fatal': True,
                 'description': "Gcode unites are not in millimeters."
+            },
+            "6": {
+                'name': "No Snapshot Commands Found",
+                'help_link': "error_help_preprocessor_no_snapshot_commands_found.md",
+                'cpp_name': "stabilization_processing_issue_type_no_snapshot_commands_found",
+                'is_fatal': True,
+                'description': "No snapshot commands ({snapshot_command}) were found."
             }
         },
         'preprocessor_errors': {
@@ -182,7 +189,7 @@ _octolapse_errors = {
         },
         'rendering_file_template_invalid': {
             "name": "Invalid Rendering Template",
-            "description": "The rendering file template is invalid.  Please correct the template" 
+            "description": "The rendering file template is invalid.  Please correct the template"
                            " within the current rendering profile.",
             'help_link': "error_help_init_rendering_file_template_invalid.md"
         },
@@ -318,7 +325,7 @@ _error_not_a_valid_error_dict = {
 }
 
 
-def get_error(keys, **kwargs):
+def get_error(keys,  **kwargs):
     current_error_dict = _octolapse_errors
     for key in keys:
         try:

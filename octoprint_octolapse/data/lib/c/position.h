@@ -105,5 +105,6 @@ struct position
 	void set_xyz_axis_mode(const std::string& xyz_axis_default_mode);
 	void set_e_axis_mode(const std::string& e_axis_default_mode);
 	void set_units_default(const std::string& units_default);
+	bool can_take_snapshot();
 };
 #endif

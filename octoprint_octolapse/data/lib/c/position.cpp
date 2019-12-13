@@ -69,6 +69,17 @@ void position::set_units_default(const std::string&	units_default)
 	}
 }
 
+bool position::can_take_snapshot()
+{
+	return (
+		!is_relative_null && 
+		!is_extruder_relative_null &&
+		has_definite_position &&
+		is_printer_primed &&
+		!is_metric_null
+	);
+}
+
 position::position()
 {
 	is_empty = true;

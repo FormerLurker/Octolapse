@@ -119,8 +119,11 @@ void stabilization_smart_layer::update_stabilization_coordinates()
 	}
 	closest_positions_.set_stabilization_coordinates(stabilization_x_, stabilization_y_);
 }
-void stabilization_smart_layer::process_pos(position* p_current_pos, position* p_previous_pos)
+
+void stabilization_smart_layer::process_pos(position* p_current_pos, position* p_previous_pos, bool found_command)
 {
+	if (!found_command)
+		return;
 	//std::cout << "StabilizationSmartLayer::process_pos - Processing Position...";
 	// if we're at a layer change, add the current saved plan
 	if (p_current_pos->is_layer_change && p_current_pos->layer > 1)

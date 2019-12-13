@@ -38,6 +38,7 @@ enum stabilization_processing_issue_type
 	stabilization_processing_issue_type_no_definite_position = 3,
 	stabilization_processing_issue_type_printer_not_primed = 4,
 	stabilization_processing_issue_type_no_metric_units = 5,
+	stabilization_processing_issue_type_no_snapshot_commands_found = 6
 };
 
 struct stabilization_quality_issue
@@ -47,10 +48,17 @@ struct stabilization_quality_issue
 	PyObject * to_py_object() const;
 };
 
+struct replacement_token
+{
+	std::string key;
+	std::string value;
+};
+
 struct stabilization_processing_issue
 {
 	std::string description;
 	stabilization_processing_issue_type issue_type;
+	std::vector<replacement_token> replacement_tokens;
 	PyObject * to_py_object() const;
 };
 

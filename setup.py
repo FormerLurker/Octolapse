@@ -165,6 +165,7 @@ plugin_ext_sources = [
     'octoprint_octolapse/data/lib/c/stabilization.cpp',
     'octoprint_octolapse/data/lib/c/stabilization_results.cpp',
     'octoprint_octolapse/data/lib/c/stabilization_smart_layer.cpp',
+    'octoprint_octolapse/data/lib/c/stabilization_smart_gcode.cpp',
     'octoprint_octolapse/data/lib/c/logging.cpp',
     'octoprint_octolapse/data/lib/c/utilities.cpp',
     'octoprint_octolapse/data/lib/c/trigger_position.cpp',
