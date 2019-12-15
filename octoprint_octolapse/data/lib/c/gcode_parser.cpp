@@ -158,7 +158,7 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 		}
 		p_gcode++;
 	}
-	//command.gcode = utilities::trim(command.gcode);
+	command.gcode = utilities::rtrim(command.gcode);
 
 	if (command.is_known_command)
 	{
