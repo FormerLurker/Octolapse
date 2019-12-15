@@ -318,6 +318,9 @@ a.disabled {
     color: #ccc;
     cursor: default;
 }
+.ui-pnotify.octolapse{
+    width:375px !important;
+}
 
 .ui-pnotify.octolapse .ui-pnotify-text{
     word-wrap: break-word;
