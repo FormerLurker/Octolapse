@@ -210,6 +210,7 @@ class StabilizationPreprocessingThread(Thread):
         if self.printer_profile.gcode_generation_settings.vase_mode:
             self.cpp_position_args["minimum_layer_height"] = stabilization_args["height_increment"]
         trigger_type = self.trigger_profile.trigger_type
+        trigger_subtype = self.trigger_profile.trigger_subtype
         is_precalculated = (
             self.trigger_profile.trigger_type in TriggerProfile.get_precalculated_trigger_types()
         )
@@ -230,7 +231,10 @@ class StabilizationPreprocessingThread(Thread):
                 [],  # processing_issues
                 [other_error]  # other_errors
             )
-        elif trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER:
+        elif (
+            trigger_type == TriggerProfile.TRIGGER_TYPE_SMART and
+            trigger_subtype == TriggerProfile.LAYER_TRIGGER_TYPE
+        ):
             # run smart layer trigger
             smart_layer_args = {
                 'trigger_type': int(self.trigger_profile.smart_layer_trigger_type),
@@ -249,7 +253,10 @@ class StabilizationPreprocessingThread(Thread):
             # set the results as the ret_val in tuple form
             results = tuple(ret_val)
             logger.info("Stabilization results received, returning.")
-        elif trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_GCODE:
+        elif (
+                trigger_type == TriggerProfile.TRIGGER_TYPE_SMART and
+                trigger_subtype == TriggerProfile.GCODE_TRIGGER_TYPE
+        ):
             # run smart gcode trigger
             smart_gcode_args = {
                 'snapshot_command': self.printer_profile.snapshot_command,

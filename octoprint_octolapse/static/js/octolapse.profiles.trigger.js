@@ -23,7 +23,7 @@
 */
 $(function () {
     Octolapse.TriggerProfileViewModel = function (values) {
-        
+
         var self = this;
         self.profileTypeName = ko.observable("Trigger");
         self.guid = ko.observable(values.guid);
@@ -46,7 +46,7 @@ $(function () {
             Layer/Height Trigger Settings
         */
         self.layer_trigger_height = ko.observable(values.layer_trigger_height);
-        
+
         /*
         * Quaity Settiings
         */
@@ -63,7 +63,7 @@ $(function () {
         self.trigger_on_deretracting = ko.observable(values.trigger_on_deretracting);
         self.trigger_on_deretracted = ko.observable(values.trigger_on_deretracted);
         self.require_zhop = ko.observable(values.require_zhop);
-        
+
         /*
         * Position Restrictions
         * */
@@ -87,11 +87,11 @@ $(function () {
         // Hold the parent dialog.
         self.dialog = null;
         self.get_trigger_subtype_options = ko.pureComputed( function () {
-                if (self.trigger_type() !== 'real-time') {
+                if (self.trigger_type() == 'smart') {
                     var options = [];
                     for (var index = 0; index < Octolapse.Triggers.profileOptions.trigger_subtype_options.length; index++) {
                         var curItem = Octolapse.Triggers.profileOptions.trigger_subtype_options[index];
-                        if (curItem.value !== 'layer') {
+                        if (curItem.value == 'timer') {
                             continue;
                         }
                         options.push(curItem);
@@ -145,7 +145,7 @@ $(function () {
             //console.log("Removing restriction at index: " + index);
             self.position_restrictions.splice(index, 1);
         };
-        
+
         self.updateFromServer = function(values) {
             self.name(values.name);
             self.description(values.description);

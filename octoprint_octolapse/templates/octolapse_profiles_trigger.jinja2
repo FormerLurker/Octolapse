@@ -33,8 +33,7 @@
                 <input id="octolapse_trigger_name" name="octolapse_trigger_name"
                        class="input-block-level form-input"
                        data-bind="value: name"
-                       type="text"
-                />
+                       type="text" />
                 <div class="error_label_container text-error" data-error-for="octolapse_trigger_name"></div>
             </div>
         </div>
@@ -49,46 +48,38 @@
             </div>
         </div>
     </div>
+    <div data-bind="visible: trigger_type() == 'real-time' && (position_restrictions_enabled() && position_restrictions().length > 0)" class="text-warning">
+        <hr />
+        <p>
+            <strong>
+                There <span data-bind="text: (position_restrictions().length > 1 ? 'are' : 'is')"></span> <span data-bind="text: position_restrictions().length"></span> position restriction<span data-bind="text: (position_restrictions().length > 1 ? 's' : '')"></span>
+                currently enabled.
+            </strong>
+        </p>
+
+    </div>
     <div data-bind="template: {name:'octolapse-profile-library-test-template', data: automatic_configuration}"></div>
     <div data-bind="slideVisible: !automatic_configuration.updating_from_server()">
         <hr />
         <div>
             <div>
-                <h4>Trigger Type</h4>
+                <h4>Trigger Settings</h4>
                 <p>
-                    Choose different ways your printer can stabilize before taking a snapshot.
+                    Control how and when Octolapse will decide to take a snapshot.
                 </p>
             </div>
             <div class="control-group">
+                <label class="control-label">Trigger Type</label>
                 <div class="controls">
                     <select id="octolapse_trigger_trigger_type" name="octolapse_trigger_trigger_type"
                             data-bind="options: Octolapse.Triggers.profileOptions.trigger_type_options,
                                        optionsText: 'name',
                                        optionsValue: 'value',
                                        value: trigger_type"></select>
-                    <a class="octolapse_help" data-help-url="profiles.trigger.trigger_type.md" data-help-title="Trigger Type"/>
+                    <a class="octolapse_help" data-help-url="profiles.trigger.trigger_type.md" data-help-title="Trigger Type" />
                     <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_type"></div>
                 </div>
             </div>
-            <div data-bind="visible: trigger_type() == 'smart-gcode'">
-            <p>
-                The smart gcode trigger will take a snapshot whenever the snapshot command is encountered if possible.  Edit your printer profile to view/adjust the snapshot command.
-            </p>
-        </div>
-        </div>
-        <hr />
-
-        <div data-bind="visible:(position_restrictions_enabled() && position_restrictions().length > 0)" class="text-warning">
-            <p>
-                <strong>
-                    There <span data-bind="text: (position_restrictions().length > 1 ? 'are' : 'is')"></span> <span data-bind="text: position_restrictions().length"></span> position restriction<span data-bind="text: (position_restrictions().length > 1 ? 's' : '')"></span>
-                    currently enabled.
-                </strong>
-            </p>
-            <hr />
-        </div>
-
-        <div data-bind="visible: trigger_type() != 'smart-gcode'">
             <div class="control-group">
                 <label class="control-label">When to Trigger</label>
                 <div class="controls">
@@ -97,7 +88,7 @@
                                        optionsText: 'name',
                                        optionsValue: 'value',
                                        value: trigger_subtype"></select>
-                    <a class="octolapse_help" data-help-url="profiles.trigger.trigger_subtype.md" data-help-title="When to Trigger"/>
+                    <a class="octolapse_help" data-help-url="profiles.trigger.trigger_subtype.md" data-help-title="When to Trigger" />
                     <div class="error_label_container text-error" data-error-for="octolapse_trigger_trigger_subtype"></div>
                 </div>
             </div>
@@ -113,12 +104,12 @@
                                    type="number" min="0.0" step="0.01" required="true" />
                             <span class="add-on">mm</span>
                         </span>
-                        <a class="octolapse_help" data-help-url="profiles.trigger.layer_trigger_height.md" data-help-title="Trigger Height"/>
+                        <a class="octolapse_help" data-help-url="profiles.trigger.layer_trigger_height.md" data-help-title="Trigger Height" />
                         <div class="error_label_container text-error" data-error-for="octolapse_trigger_layer_trigger_height"></div>
                         <span class="help-inline">Use 0mm to trigger on every layer, regardless of the layer height.</span>
                     </div>
                 </div>
-                <div data-bind="visible: jQuery.inArray(trigger_type(), ['smart-layer'])>-1">
+                <div data-bind="visible: jQuery.inArray(trigger_type(), ['smart'])>-1 && trigger_subtype()=='layer'">
 
                     <div class="control-group">
                         <label class="control-label">Smart Layer Trigger Type</label>
@@ -128,7 +119,7 @@
                                                optionsText: 'name',
                                                optionsValue: 'value',
                                                value: smart_layer_trigger_type"></select>
-                            <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_trigger_type.md" data-help-title="Smart Layer Trigger Type"/>
+                            <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_trigger_type.md" data-help-title="Smart Layer Trigger Type" />
                             <div class="error_label_container text-error" data-error-for="octolapse_trigger_smart_layer_trigger_type"></div>
                         </div>
                     </div>
@@ -138,9 +129,8 @@
                                 <label class="checkbox">
                                     <input id="octolapse_trigger_smart_layer_disable_z_lift" name="octolapse_trigger_smart_layer_disable_z_lift"
                                            data-bind="checked: smart_layer_disable_z_lift"
-                                           type="checkbox"
-                                    />Disable Lift Before Snapshot
-                                    <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_disable_z_lift.md" data-help-title="Disable Lift Before Snapshot"/>
+                                           type="checkbox" />Disable Lift Before Snapshot
+                                    <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_disable_z_lift.md" data-help-title="Disable Lift Before Snapshot" />
                                     <span class="help-inline">Disabling z-lift is generally recommended when using snap-to-print.  If it takes a long time to capture an image, consider enabling z_lift to prevent the extruder from melting your print.</span>
                                 </label>
                             </div>
@@ -150,9 +140,8 @@
                                 <label class="checkbox">
                                     <input id="octolapse_trigger_smart_layer_snap_to_print_high_quality" name="octolapse_trigger_smart_layer_snap_to_print_high_quality"
                                            data-bind="checked: smart_layer_snap_to_print_high_quality"
-                                           type="checkbox"
-                                    />High Quality Mode
-                                    <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_snap_to_print_high_quality.md" data-help-title="High Quality Mode"/>
+                                           type="checkbox" />High Quality Mode
+                                    <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_snap_to_print_high_quality.md" data-help-title="High Quality Mode" />
                                     <span class="help-inline">This setting can improve print when using snap-to-print, especially if your image capture time is high (DSLR).  However, this may result in a less stable timelapse.</span>
                                 </label>
                             </div>
@@ -162,9 +151,8 @@
                                 <label class="checkbox">
                                     <input id="octolapse_trigger_smart_layer_snap_to_print_smooth" name="octolapse_trigger_smart_layer_snap_to_print_smooth"
                                            data-bind="checked: smart_layer_snap_to_print_smooth"
-                                           type="checkbox"
-                                    />Smooth Mode
-                                    <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_snap_to_print_smooth.md" data-help-title="Snap To Fastest Feedrate"/>
+                                           type="checkbox" />Smooth Mode
+                                    <a class="octolapse_help" data-help-url="profiles.trigger.smart_layer_snap_to_print_smooth.md" data-help-title="Snap To Fastest Feedrate" />
                                     <span class="help-inline">When enabled, the first snapshot will be stabilized, and every snapshot thereafter will be taken at the closest point to the previous snapshot, usually resulting in a much smoother timelapse.</span>
                                 </label>
                             </div>
@@ -180,17 +168,21 @@
                         <input id="octolapse_trigger_timer_trigger_seconds" name="octolapse_trigger_timer_trigger_seconds"
                                class="input-small ignore_hidden_errors"
                                data-bind="value: timer_trigger_seconds"
-                               type="number" min="0" required="true"
-                        />
-                        <a class="octolapse_help" data-help-url="profiles.trigger.timer_trigger_seconds.md" data-help-title="Seconds to Trigger"/>
+                               type="number" min="0" required="true" />
+                        <a class="octolapse_help" data-help-url="profiles.trigger.timer_trigger_seconds.md" data-help-title="Seconds to Trigger" />
                         <div class="error_label_container text-error" data-error-for="octolapse_trigger_timer_trigger_seconds"></div>
-                        <span class="help-inline">Pause time is not counted when determining when to trigger.</span>
+                        <p class="help-inline">Pause time is not counted when determining when to trigger.</p>
                     </div>
                 </div>
             </div>
+            <div data-bind="visible: trigger_type() == 'smart' && trigger_subtype() == 'gcode'">
+                <p>
+                    The smart gcode trigger will take a snapshot whenever the snapshot command is encountered.  You can always use the <strong>@OCTOLAPSE TAKE-SNAPSHOT<a class="octolapse_help" data-help-url="profiles.printer.snapshot_command.md" data-help-title="Triggering Snapshots via GCode" /></strong> command to trigger a snapshot.  Alternatively you can add a custom snapshot command by editing your printer profile entering an alternative snapshot command.
+                </p>
+            </div>
         </div>
-        <hr />
         <div data-bind="visible: print_quality_settings_available">
+            <hr />
             <h4>Print Quality Settings</h4>
             <p>Here you can place restrictions on when Octolapse can trigger a snapshot.</p>
 
@@ -202,11 +194,9 @@
                 <div class="control-group">
                     <div class="controls">
                         <label class="checkbox">
-                            <input
-                                    data-bind="checked: require_zhop"
-                                    type="checkbox"
-                            />Enabled
-                            <a class="octolapse_help" data-help-url="profiles.trigger.require_zhop.md" data-help-title="Trigger on Z-Hop Only"/>
+                            <input data-bind="checked: require_zhop"
+                                   type="checkbox" />Enabled
+                            <a class="octolapse_help" data-help-url="profiles.trigger.require_zhop.md" data-help-title="Trigger on Z-Hop Only" />
                         </label>
                     </div>
                 </div>
@@ -223,9 +213,8 @@
                         <label class="checkbox">
                             <input id="octolapse_trigger_extruder_state_requirements_enabled" name="octolapse_trigger_extruder_state_requirements_enabled"
                                    data-bind="checked: extruder_state_requirements_enabled"
-                                   type="checkbox"
-                            />Enabled
-                            <a class="octolapse_help" data-help-url="profiles.trigger.extruder_state_requirements_enabled.md" data-help-title="Extruder Trigger Requirements"/>
+                                   type="checkbox" />Enabled
+                            <a class="octolapse_help" data-help-url="profiles.trigger.extruder_state_requirements_enabled.md" data-help-title="Extruder Trigger Requirements" />
                         </label>
                     </div>
                 </div>
@@ -356,9 +345,8 @@
                         <div class="controls">
                             <label class="checkbox" title="Enable or disable position restrictions">
                                 <input data-bind="checked: position_restrictions_enabled"
-                                       type="checkbox"
-                                /> Enabled
-                                <a class="octolapse_help" data-help-url="profiles.trigger.position_restrictions_enabled.md" data-help-title="Enable Position Restrictions"/>
+                                       type="checkbox" /> Enabled
+                                <a class="octolapse_help" data-help-url="profiles.trigger.position_restrictions_enabled.md" data-help-title="Enable Position Restrictions" />
                             </label>
                         </div>
                     </div>
@@ -373,7 +361,7 @@
                                                optionsText: 'name',
                                                optionsValue: 'value',
                                                value: new_position_restriction_type"></select>
-                            <a class="octolapse_help" data-help-url="profiles.trigger.position_restriction_type.md" data-help-title="Position Restriction Type"/>
+                            <a class="octolapse_help" data-help-url="profiles.trigger.position_restriction_type.md" data-help-title="Position Restriction Type" />
                             <div class="error_label_container text-error" data-error-for="octolapse_trigger_new_position_restriction_type"></div>
                         </div>
                     </div>
@@ -385,7 +373,7 @@
                                                optionsText: 'name',
                                                optionsValue: 'value',
                                                value: new_position_restriction_shape"></select>
-                            <a class="octolapse_help" data-help-url="profiles.trigger.position_restriction_shape.md" data-help-title="Position Restriction Shape"/>
+                            <a class="octolapse_help" data-help-url="profiles.trigger.position_restriction_shape.md" data-help-title="Position Restriction Shape" />
                             <div class="error_label_container text-error" data-error-for="octolapse_trigger_new_position_restriction_shape"></div>
                         </div>
                     </div>
@@ -467,9 +455,8 @@
                             <label class="checkbox">
                                 <input data-bind="checked: new_calculate_intersections"
                                        title="Calculate intersections and trigger if an intersection is in position."
-                                       type="checkbox"
-                                />Calculate Intersections
-                                <a class="octolapse_help" data-help-url="profiles.trigger.calculate_intersections.md" data-help-title="Calculate Intersections"/>
+                                       type="checkbox" />Calculate Intersections
+                                <a class="octolapse_help" data-help-url="profiles.trigger.calculate_intersections.md" data-help-title="Calculate Intersections" />
                             </label>
                             <span class="help-inline">
                                 When selected, Octolapse will attempt to calculate an intersection between the currently printing line and any position restrictions.  If there are intersections, Octolapse alters the gcode so that a snapshot can trigger at one of the in-position intersections.

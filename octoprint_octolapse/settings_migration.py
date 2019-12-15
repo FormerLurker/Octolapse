@@ -563,6 +563,11 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
             render["snapshots_to_skip_end"] = render["snapshot_to_skip_end"]
             del render["snapshot_to_skip_end"]
 
+    triggers = settings_dict["profiles"]["triggers"]
+    for key, trigger in six.iteritems(triggers):
+        if "trigger_type" in trigger and trigger["trigger_type"] == 'smart-layer':
+            trigger["trigger_type"] = "smart"
+
     debug_profiles = settings_dict["profiles"]["debug"]
     for key, debug in six.iteritems(debug_profiles):
         if "enabled_loggers" in debug:
@@ -571,7 +576,7 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
                     enabled_logger["name"] = "octolapse.settings_preprocessor"
                 elif enabled_logger["name"] == "octolapse.gcode":
                     enabled_logger["name"] = "octolapse.stabilization_gcode"
-            # todo:  Add the octolapse.error_messages logger where appropriate. Not sure how to do this!
+
     settings_dict["main_settings"]["version"] = "0.4.0rc1.dev3"
     return settings_dict
 

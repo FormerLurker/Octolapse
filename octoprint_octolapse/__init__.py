@@ -279,7 +279,7 @@ class OctolapsePlugin(
                     return jsonify({'success': False, 'error': error})
 
                 if (
-                        current_trigger.trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER and
+                        current_trigger.trigger_type == TriggerProfile.TRIGGER_TYPE_SMART and
                         current_trigger.smart_layer_trigger_type == TriggerProfile.SMART_TRIGGER_TYPE_SNAP_TO_PRINT
                 ):
                     error = "Cannot preview the stabilization when using a snap-to-print trigger."

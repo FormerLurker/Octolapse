@@ -954,8 +954,7 @@ class StabilizationProfile(AutomaticConfigurationProfile):
 
 class TriggerProfile(AutomaticConfigurationProfile):
     TRIGGER_TYPE_REAL_TIME = "real-time"
-    TRIGGER_TYPE_SMART_LAYER = "smart-layer"
-    TRIGGER_TYPE_SMART_GCODE = "smart-gcode"
+    TRIGGER_TYPE_SMART = "smart"
     SMART_TRIGGER_TYPE_SNAP_TO_PRINT = 0
     SMART_TRIGGER_TYPE_FAST = 1
     SMART_TRIGGER_TYPE_COMPATIBILITY = 2
@@ -969,7 +968,7 @@ class TriggerProfile(AutomaticConfigurationProfile):
 
     def __init__(self, name="New Trigger Profile"):
         super(TriggerProfile, self).__init__(name)
-        self.trigger_type = TriggerProfile.TRIGGER_TYPE_SMART_LAYER
+        self.trigger_type = TriggerProfile.TRIGGER_TYPE_SMART
         # smart layer trigger options
         self.smart_layer_trigger_type = TriggerProfile.SMART_TRIGGER_TYPE_COMPATIBILITY
         self.smart_layer_snap_to_print_high_quality = False
@@ -1009,7 +1008,7 @@ class TriggerProfile(AutomaticConfigurationProfile):
                 'disable_z_lift': self.snap_to_print_disable_z_lift,
             }
         if (
-            self.trigger_type == TriggerProfile.TRIGGER_TYPE_SMART_LAYER and
+            self.trigger_type == TriggerProfile.TRIGGER_TYPE_SMART and
             self.smart_layer_trigger_type == TriggerProfile.SMART_TRIGGER_TYPE_SNAP_TO_PRINT
         ):
             return {
@@ -1020,8 +1019,7 @@ class TriggerProfile(AutomaticConfigurationProfile):
     @staticmethod
     def get_precalculated_trigger_types():
         return [
-            TriggerProfile.TRIGGER_TYPE_SMART_LAYER,
-            TriggerProfile.TRIGGER_TYPE_SMART_GCODE
+            TriggerProfile.TRIGGER_TYPE_SMART
         ]
 
     def get_extruder_trigger_value_string(self, value):
@@ -1037,8 +1035,7 @@ class TriggerProfile(AutomaticConfigurationProfile):
         return {
             'trigger_type_options': [
                 dict(value=TriggerProfile.TRIGGER_TYPE_REAL_TIME, name='Real-Time Triggers'),
-                dict(value=TriggerProfile.TRIGGER_TYPE_SMART_LAYER, name='Smart Layer Trigger'),
-                dict(value=TriggerProfile.TRIGGER_TYPE_SMART_GCODE, name='Smart Gcode Trigger')
+                dict(value=TriggerProfile.TRIGGER_TYPE_SMART, name='Smart Triggers')
             ], 'real_time_xy_trigger_type_options': [
                 dict(value='disabled', name='Disabled'),
                 dict(value='fixed_coordinate', name='Fixed Coordinate'),
