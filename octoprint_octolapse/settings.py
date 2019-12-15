@@ -1312,7 +1312,7 @@ class MjpgStreamer(StreamingServer):
                     # don't update any static settings, those come from the class itself!
                     continue
                 else:
-                    setattr(source, key, source.try_convert_value(class_item, value, key))
+                    setattr(self, key, self.try_convert_value(class_item, value, key))
 
 
 class OtherStreamingServer(StreamingServer):
