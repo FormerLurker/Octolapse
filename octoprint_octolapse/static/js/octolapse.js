@@ -405,29 +405,58 @@ $(function () {
         }
     };
 
-    Octolapse.showConfirmDialog = function(key, title, text, onConfirm, onCancel, onComplete)
+    Octolapse.showConfirmDialog = function(key, title, text, onConfirm, onCancel, onComplete, onOption, optionButtonText)
     {
         Octolapse.closeConfirmDialogsForKeys([key]);
         // Make sure that the default pnotify buttons exist
         Octolapse.checkPNotifyDefaultConfirmButtons();
-        Octolapse.ConfirmDialogs[key] = (
-            new PNotify({
-                title: title,
-                text: text,
-                icon: 'fa fa-question',
-                hide: false,
-                addclass: "octolapse",
-                confirm: {
-                    confirm: true
+        options = {
+            title: title,
+            text: text,
+            icon: 'fa fa-question',
+            hide: false,
+            addclass: "octolapse",
+            confirm: {
+                confirm: true,
+            },
+            buttons: {
+                closer: false,
+                sticker: false
+            },
+            history: {
+                history: false
+            }
+        };
+        if (onOption && optionButtonText)
+        {
+            var confirmButtons = [
+                {
+                    text: "Ok",
+                    addClass: "",
+                    promptTrigger: true,
+                    click: function(b,a){b.remove();b.get().trigger("pnotify.confirm",[b,a])}
                 },
-                buttons: {
-                    closer: false,
-                    sticker: false
+                {
+                    text: optionButtonText,
+                    click: function() {
+                        if(onOption)
+                            onOption();
+                        if(onComplete)
+                            onComplete();
+                        Octolapse.closeConfirmDialogsForKeys([key]);
+                    }
                 },
-                history: {
-                    history: false
+                {
+                    text: "Cancel",
+                    addClass: "",
+                    promptTrigger: true,
+                    click: function(b){b.remove();b.get().trigger("pnotify.cancel",b)}
                 }
-            })
+            ];
+            options.confirm.buttons = confirmButtons;
+        }
+        Octolapse.ConfirmDialogs[key] = (
+            new PNotify(options)
         ).get().on('pnotify.confirm', function(){
             if(onConfirm)
                 onConfirm();
