@@ -1290,6 +1290,8 @@ $(function () {
             self.getInitialState();
             self.startup_complete = true;
             Octolapse.Help = new OctolapseHelp();
+            if (self.is_admin())
+                Octolapse.Settings.checkForProfileUpdates(true);
         };
 
         self.onDataUpdaterReconnect = function () {
@@ -1654,29 +1656,7 @@ $(function () {
                 case "updated-profiles-available":
                     if (self.is_admin())
                     {
-                        var message;
-                        if (Octolapse.Status.is_timelapse_active())
-                        {
-                            message = "There are profiles available to update. " +
-                                      "It is safe to update these profiles while a timelapse is running. " +
-                                      "Would you like to update these now?";
-                        }
-                        else
-                        {
-                            message = "There are profiles available to update. " +
-                                      " Would you like to update these now?";
-                        }
-                        Octolapse.showConfirmDialog(
-                            "update-all-automatic-profiles",
-                            "Update Octolapse Profiles",
-                            message,
-                            function(){
-                                Octolapse.Settings.updateProfilesFromServer();
-                            },
-                            function() {
-                                Octolapse.Settings.suppressServerUpdates();
-                            }
-                        );
+                        Octolapse.Settings.showProfileUpdateConfirmation(data.available_profile_count);
                     }
                     break;
                 case "external_profiles_list_changed":

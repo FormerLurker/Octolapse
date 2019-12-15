@@ -92,7 +92,7 @@ $(function () {
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Stabilizations = new Octolapse.ProfilesViewModel(stabilizationSettings);
-            
+
             /*
                 Create our triggers view model
             */
@@ -112,7 +112,7 @@ $(function () {
                     , 'setCurrentProfilePath': 'setCurrentProfile'
                 };
             Octolapse.Triggers = new Octolapse.ProfilesViewModel(triggerSettings);
-            
+
             /*
                 Create our rendering view model
             */
@@ -217,7 +217,7 @@ $(function () {
                 triggers.push(new Octolapse.TriggerProfileViewModel(settings.profiles.triggers[key]));
             });
             Octolapse.Triggers.profiles(triggers);
-            
+
             // Renderings
             var renderings = [];
             Octolapse.Renderings.default_profile(settings.profiles.defaults.rendering);
@@ -286,7 +286,7 @@ $(function () {
 
                             self.updateSettings(newSettings);
                             Octolapse.Globals.update(newSettings.main_settings);
-                            var message = "The default settings have been restored.  It is recommended that you restart the OctoPrint server now.";
+                            var message = "The default settings have been restored. Octolapse is checking for profile updates now.";
                             var options = {
                                 title: 'Default Settings Restored',
                                 text: message,
@@ -298,6 +298,7 @@ $(function () {
                                 }
                             };
                             Octolapse.displayPopup(options);
+                            self.checkForProfileUpdates();
                         },
                         error: function (XMLHttpRequest, textStatus, errorThrown) {
                             var message = "Unable to restore the default settings.  Status: " + textStatus + ".  Error: " + errorThrown;
@@ -389,6 +390,101 @@ $(function () {
             Octolapse.DebugProfiles.profileOptions = {};
         };
 
+        self.checkForProfileUpdates = function(is_silent_test){
+            //console.log("Updating Octolapse profiles from the server.");
+            // is_silent_test is optional, make sure it is either true or false
+            is_silent_test = is_silent_test == true
+            var data = {
+                'is_silent_test': is_silent_test
+            };
+            $.ajax({
+                url: "./plugin/octolapse/checkForProfileUpdates",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (values) {
+                    var available_profile_count = values.available_profile_count;
+                    var options;
+                    if (available_profile_count > 0)
+                    {
+                        // Always show profile update confirmation if updates are found at startup
+                        self.showProfileUpdateConfirmation(available_profile_count);
+                    }
+                    else if (!is_silent_test)
+                    {
+                        // Only report that settings are up-to-date if this is NOT a silent update request
+                        options = {
+                            title: 'Octolapse Updates',
+                            text: "Your Octolapse profiles are all up-to-date.",
+                            type: 'success',
+                            hide: true,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopupForKey(options, 'update-profile-from-server','update-profile-from-server');
+                    }
+                    console.log("Check for updates complete.");
+
+
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                    var message = "Octolapse was unable to check for updates.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    console.error(message);
+                    var options = {
+                        title: 'Profile Update Error',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopupForKey(options, 'update-profile-from-server','update-profile-from-server');
+                }
+            });
+        };
+
+        self.showProfileUpdateConfirmation = function(num_profiles_available){
+            var message = "There are updates available for " + num_profiles_available.toString() +
+                          " profiles. " +
+                          "Would you like to apply these updates now?";
+            Octolapse.showConfirmDialog(
+                "update-all-automatic-profiles",
+                "Apply Octolapse Updates",
+                message,
+                function(){
+                    var options = {
+                        title: 'Octolapse is Updating',
+                        text: num_profiles_available.toString() +" update are being applied.  Please wait.",
+                        type: 'info',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopupForKey(options, 'update-profile-from-server','update-profile-from-server');
+                    Octolapse.Settings.updateProfilesFromServer();
+                },
+                function() {
+
+                },
+                function() {
+
+                },
+                function(){
+                    Octolapse.Settings.suppressServerUpdates();
+                },
+                "Ignore"
+            );
+        };
+
+
         self.updateProfilesFromServer = function() {
 
             //console.log("Updating Octolapse profiles from the server.");
@@ -404,28 +500,31 @@ $(function () {
                 dataType: "json",
                 success: function (values) {
                     var message;
+                    var title;
                     //console.log("Octolapse profiles updated from the server.");
                     var num_updated = values.num_updated;
-                    if (num_updated > 0) {
-                        var settings = JSON.parse(values.settings);
-                        self.updateSettings(settings);
-                        Octolapse.Globals.loadState();
-                        message = num_updated.toString() + " Octolapse profiles were updated.";
-                    }
-                    else
-                    {
-                        message = "Your Octolapse profiles are all up-to-date."
-                    }
                     var options = {
-                        title: 'Octolapse Updates',
-                        text: message,
-                        type: 'success',
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
                             desktop: true
                         }
                     };
+                    if (num_updated > 0) {
+                        var settings = JSON.parse(values.settings);
+                        self.updateSettings(settings);
+                        Octolapse.Globals.loadState();
+                        options.title = "Octolapse Update Complete";
+                        options.text = num_updated.toString() + " profiles were updated successfully!";
+                        options.type = 'success';
+                    }
+                    else
+                    {
+                        options.title = "No Updates Applied";
+                        options.text = "Octolapse was already up-to-date.";
+                        options.type = 'warning';
+                    }
+
                     Octolapse.displayPopupForKey(options, 'update-profile-from-server','update-profile-from-server');
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
@@ -471,7 +570,7 @@ $(function () {
                 success: function (newSettings) {
                     self.updateSettings(newSettings);
                     Octolapse.Globals.loadState();
-                    var message = "Update notifications have been suppressed.  You can force an update at any time within the main settings page..";
+                    var message = "Update notifications have been suppressed.  You can force an update at any time within the main settings page.";
                     var options = {
                         title: 'Updates Suppressed',
                         text: message,

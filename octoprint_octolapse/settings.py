@@ -209,7 +209,7 @@ class AutomaticConfiguration(Settings):
             return False
 
         for key in self.key_values:
-            if not key:
+            if "value" not in key or key["value"] is None or key["value"] == "null":
                 return False
 
         return not self.is_custom

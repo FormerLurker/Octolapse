@@ -122,7 +122,7 @@ class ExternalSettings(object):
 
 
     @staticmethod
-    def check_for_updates(available_profiles, updatable_profiles, force_updates):
+    def check_for_updates(available_profiles, updatable_profiles, force_updates, ignore_suppression):
         profiles_to_update = {
             "printer": [],
             "stabilization": [],
@@ -159,7 +159,7 @@ class ExternalSettings(object):
                             (
                                 not updatable_profile["suppress_update_notification_version"] or
                                 (
-                                    force_updates or
+                                    force_updates or ignore_suppression or
                                     LooseVersion(str(available_profile["version"])) >
                                     LooseVersion(str(updatable_profile["suppress_update_notification_version"]))
                                 )

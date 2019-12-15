@@ -142,7 +142,6 @@ class OctolapsePlugin(
         self.automatic_update_lock = threading.RLock()
         self.automatic_update_cancel = threading.Event()
         # contains a list of all profiles with available updates
-        self.automatic_updates_available = None
         # holds a list of all available profiles on the server for the current version
         self.available_profiles = None
 
@@ -503,7 +502,7 @@ class OctolapsePlugin(
             try:
                 self.load_settings(force_defaults=True)
                 self.send_settings_changed_message(client_id)
-                self.check_for_updates(force_updates=True)
+                # TODO:  Check for updates after settings restore, but send request from client.
                 return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
             except Exception as e:
                 logger.exception("Failed to restore the defaults in /restoreDefaults.")
@@ -546,6 +545,32 @@ class OctolapsePlugin(
                 }
             )
 
+    @octoprint.plugin.BlueprintPlugin.route("/checkForProfileUpdates", methods=["POST"])
+    @restricted_access
+    def check_for_profile_updates_request(self):
+        request_values = request.get_json()
+        is_silent_test = request_values["is_silent_test"]
+        # if this is a silent update, make sure automatic updates are enabled
+        if is_silent_test and not self._octolapse_settings.main_settings.automatic_updates_enabled:
+            return jsonify({
+                "success": True,
+                "available_profile_count": 0
+            })
+        # ignore suppression only if this is not a silent test, which is performed when the client is done
+        # loading
+        ignore_suppression = not is_silent_test
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            logger.info("Attempting to update all current profile from the server")
+            available_profiles = self.check_for_updates(ignore_suppression=ignore_suppression)
+            available_profile_count = 0
+            if available_profiles:
+                for key, profile_type in six.iteritems(available_profiles):
+                    available_profile_count += len(profile_type)
+            return jsonify({
+                "success": True,
+                "available_profile_count": available_profile_count
+            })
+
     @octoprint.plugin.BlueprintPlugin.route("/updateProfilesFromServer", methods=["POST"])
     @restricted_access
     def update_profiles_from_server(self):
@@ -553,15 +578,15 @@ class OctolapsePlugin(
             logger.info("Attempting to update all current profile from the server")
             request_values = request.get_json()
             client_id = request_values["client_id"]
-            self.check_for_updates(True)
+            profiles_to_update = self.check_for_updates(True)
 
             with self.automatic_update_lock:
-                if not self.automatic_updates_available:
+                if not profiles_to_update:
                     return jsonify({
                         "num_updated": 0
                     })
                 num_profiles = 0
-                for profile_type, updatable_profiles in six.iteritems(self._octolapse_settings.profiles.get_updatable_profiles_dict()):
+                for profile_type, updatable_profiles in six.iteritems(profiles_to_update):
                     # now iterate through the printer profiles
                     for updatable_profile in updatable_profiles:
                         current_profile = self._octolapse_settings.profiles.get_profile(
@@ -588,7 +613,6 @@ class OctolapsePlugin(
                         current_profile.update(updated_profile)
                         num_profiles += 1
 
-                self.automatic_updates_available = False
                 self.save_settings()
                 self.send_settings_changed_message(client_id)
                 return jsonify({
@@ -603,21 +627,23 @@ class OctolapsePlugin(
             logger.info("Suppressing updates for all current updatable profiles.")
             request_values = request.get_json()
             client_id = request_values["client_id"]
-            if self.automatic_updates_available:
-                with self.automatic_update_lock:
-                    for profile_type, updatable_profiles in six.iteritems(self._octolapse_settings.profiles.get_updatable_profiles_dict()):
-                        # now iterate through the printer profiles
-                        for updatable_profile in updatable_profiles:
-                            current_profile = self._octolapse_settings.profiles.get_profile(
-                                profile_type, updatable_profile["guid"]
-                            )
-                            # get the server profile info
-                            server_profile = ExternalSettings.get_available_profile_for_profile(
-                                self.available_profiles, current_profile, profile_type
-                            )
-                            if server_profile is not None:
-                                current_profile.suppress_updates(server_profile)
-                    self.automatic_updates_available = False
+
+            with self.automatic_update_lock:
+                has_updated = False
+                for profile_type, updatable_profiles in six.iteritems(self._octolapse_settings.profiles.get_updatable_profiles_dict()):
+                    # now iterate through the printer profiles
+                    for updatable_profile in updatable_profiles:
+                        current_profile = self._octolapse_settings.profiles.get_profile(
+                            profile_type, updatable_profile["guid"]
+                        )
+                        # get the server profile info
+                        server_profile = ExternalSettings.get_available_profile_for_profile(
+                            self.available_profiles, current_profile, profile_type
+                        )
+                        if server_profile is not None:
+                            has_updated = True
+                            current_profile.suppress_updates(server_profile)
+                if has_updated:
                     self.save_settings()
                     self.send_settings_changed_message(client_id)
             return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
@@ -1582,37 +1608,26 @@ class OctolapsePlugin(
                 if not self._octolapse_settings.main_settings.automatic_updates_enabled:
                     return
                 logger.info("Checking for profile updates.")
-                self.check_for_updates()
+                self.check_for_updates(notify=True)
 
             update_interval = 60 * 60 * 24 * self._octolapse_settings.main_settings.automatic_update_interval_days
 
             with self.automatic_update_lock:
-                if self.automatic_update_thread is not None and self.automatic_updates_notification_thread is not None:
+                if self.automatic_update_thread is not None:
                     self.automatic_update_cancel.set()
                     self.automatic_update_cancel.clear()
                     self.automatic_update_thread.join()
-                    self.automatic_updates_notification_thread.join()
 
                 self.automatic_update_thread = utility.RecurringTimerThread(
                     update_interval, _update, self.automatic_update_cancel
                 )
                 self.automatic_update_thread.daemon = True
-                # do an initial update now
-                _update()
 
-                self.automatic_update_thread.start()
+            # load available server profiles before starting the automatic server profile update
+            self.load_available_server_profiles()
+            self.automatic_update_thread.start()
 
-                update_interval = 30  # three minutes
-
-                # create another thread to notify users when new updates are available
-                self.automatic_updates_notification_thread = utility.RecurringTimerThread(
-                    update_interval, self.notify_updates, self.automatic_update_cancel
-                )
-                self.automatic_updates_notification_thread.daemon = True
-                self.automatic_updates_notification_thread.start()
-
-    # create function to update all existing automatic profiles
-    def check_for_updates(self, force_updates=False):
+    def load_available_server_profiles(self):
         with self.automatic_update_lock:
             if self._update_available_server_profiles():
                 # notify the clients of the makes and models changes
@@ -1625,13 +1640,35 @@ class OctolapsePlugin(
                 logger.warning("No server profiles are available.")
                 return
 
-            self.automatic_updates_available = ExternalSettings.check_for_updates(
-                self.available_profiles, self._octolapse_settings.profiles.get_updatable_profiles_dict(), force_updates
+    # create function to update all existing automatic profiles
+    def check_for_updates(self, force_updates=False, notify=False, ignore_suppression=False):
+        self.load_available_server_profiles()
+        with self.automatic_update_lock:
+            if not self.available_profiles:
+                logger.warning("Can't check for profile updates when no server profiles are available.")
+                return
+
+            profiles_to_update = ExternalSettings.check_for_updates(
+                self.available_profiles,
+                self._octolapse_settings.profiles.get_updatable_profiles_dict(),
+                force_updates,
+                ignore_suppression
             )
-            if self.automatic_updates_available:
+            if profiles_to_update:
+                if notify:
+                    num_available = 0
+                    for key, profile_type in six.iteritems(profiles_to_update):
+                        num_available += len(profile_type)
+                    data = {
+                        "type": "updated-profiles-available",
+                        "available_profile_count": num_available
+                    }
+                    self._plugin_manager.send_plugin_message(self._identifier, data)
                 logger.info("Profile updates are available.")
             else:
                 logger.info("No profile updates are available.")
+
+            return profiles_to_update
 
     def notify_updates(self):
         if not self._octolapse_settings.main_settings.automatic_updates_enabled:
@@ -1640,10 +1677,7 @@ class OctolapsePlugin(
         if self.automatic_updates_available:
             logger.info("Profile updates are available from the server.")
             # create an automatic updates available message
-            data = {
-                "type": "updated-profiles-available"
-            }
-            self._plugin_manager.send_plugin_message(self._identifier, data)
+
 
     def on_startup(self, host, port):
         try:
