@@ -2335,7 +2335,10 @@ class OctolapseGcodeSettings(Settings):
     def to_dict(self):
         extruders_list = []
         for extruder in self.extruders:
-            extruders_list.append(extruder.to_dict())
+            if isinstance(extruder, dict):
+                extruders_list.append(extruder)
+            else:
+                extruders_list.append(extruder.to_dict())
         return {
             "vase_mode": self.vase_mode,
             "layer_height": self.layer_height,
