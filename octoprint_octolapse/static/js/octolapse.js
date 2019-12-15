@@ -1290,8 +1290,7 @@ $(function () {
             self.getInitialState();
             self.startup_complete = true;
             Octolapse.Help = new OctolapseHelp();
-            if (self.is_admin())
-                Octolapse.Settings.checkForProfileUpdates(true);
+
         };
 
         self.onDataUpdaterReconnect = function () {
@@ -1306,6 +1305,8 @@ $(function () {
                 //console.log("octolapse.js - Loading settings for current user after startup.");
                 Octolapse.Settings.loadSettings(function(){
                     self.has_loaded_state(true);
+                    //  Check for updates
+                    Octolapse.Settings.checkForProfileUpdates(true);
                 });
             } else
             {
