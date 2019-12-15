@@ -565,7 +565,7 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
 
     debug_profiles = settings_dict["profiles"]["debug"]
     for key, debug in six.iteritems(debug_profiles):
-        if "enabled_loggers" in render:
+        if "enabled_loggers" in debug:
             for enabled_logger in debug["enabled_loggers"]:
                 if enabled_logger["name"] == "octolapse.gcode_preprocessing":
                     enabled_logger["name"] = "octolapse.settings_preprocessor"
