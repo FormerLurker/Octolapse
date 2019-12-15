@@ -199,9 +199,6 @@ $(function () {
                 self.is_real_time(self.getCurrentTriggerProfileIsRealTime());
                 self.current_camera_guid(self.getInitialCameraSelection());
                 self.set_current_camera_enabled();
-                // Update snapshots
-                //self.updateLatestSnapshotImage(true);
-                //self.updateLatestSnapshotThumbnail(true, false);
             };
 
             // Subscribe to current camera guid changes
@@ -406,9 +403,13 @@ $(function () {
 
                 if (self.current_camera_guid() === null || self.current_camera_guid() === "")
                     console.error("Current camera guid requested, but it is null.");
-                else
-                    self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl(self.current_camera_guid())
-                    + "&time=" + new Date().getTime());
+                else {
+                    if (getLatestSnapshotThumbnailUrl(self.current_camera_guid()))
+                    {
+                        self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl(self.current_camera_guid())
+                            + "&time=" + new Date().getTime());
+                    }
+                }
 
             };
 
