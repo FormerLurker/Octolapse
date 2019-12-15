@@ -25,7 +25,7 @@ import unittest
 from tempfile import NamedTemporaryFile
 
 from octoprint_octolapse.extruder import Extruder
-from octoprint_octolapse.gcode import SnapshotGcodeGenerator
+from octoprint_octolapse.stabilization_gcode import SnapshotGcodeGenerator
 from octoprint_octolapse.settings import OctolapseSettings
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.trigger import Triggers

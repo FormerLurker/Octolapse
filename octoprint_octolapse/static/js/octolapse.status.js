@@ -926,6 +926,7 @@ $(function () {
             self.last_extruder_height = ko.observable(0).extend({numeric: 2});
             self.is_metric = ko.observable(null);
             self.is_initialized = ko.observable(false);
+            self.is_printer_primed = ko.observable(false);
 
             self.update = function (state) {
                 this.gcode(state.gcode);
@@ -944,6 +945,7 @@ $(function () {
                 this.height(state.height);
                 this.last_extruder_height(state.last_extruder_height);
                 this.is_metric(state.is_metric);
+                this.is_printer_primed(state.is_printer_primed);
                 this.is_initialized(true);
             };
 
@@ -1067,6 +1069,13 @@ $(function () {
                     return "Layer change detected";
                 else
                     return "Not changing layers";
+            }, self);
+
+            self.getIsPrinterPrimedStateTitle = ko.pureComputed(function(){
+                if(self.is_printer_primed())
+                    return "Primed";
+                else
+                    return "Not Primed";
             }, self);
         };
         Octolapse.positionViewModel = function () {
@@ -1394,6 +1403,15 @@ $(function () {
                 self.is_in_position(state.is_in_position);
                 self.in_path_position(state.in_path_position);
             };
+
+            self.getSnapshotCommands =  ko.pureComputed(function () {
+                commands = ["@OCTOLAPSE TAKE-SNAPSHOT"];
+                if (self.snapshot_command().length > 0)
+                {
+                    commands.push(self.snapshot_command)
+                }
+                return commands;
+            }, self);
 
             self.triggerBackgroundIconClass = ko.pureComputed(function () {
                 if (!self.has_definite_position())

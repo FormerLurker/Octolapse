@@ -24,12 +24,9 @@ from __future__ import unicode_literals
 import logging
 import datetime as datetime
 import os
-import functools
-import types
 import six
-import copy
 from octoprint.logging.handlers import AsyncLogHandlerMixin, CleaningTimedRotatingFileHandler
-
+from octoprint_octolapse.utility import Singleton
 # custom log level - VERBOSE
 VERBOSE = 5
 DEBUG = logging.DEBUG
@@ -68,15 +65,6 @@ class OctolapseFormatter(logging.Formatter):
         return s
 
 
-class Singleton(type):
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-
 class OctolapseConsoleHandler(logging.StreamHandler, AsyncLogHandlerMixin):
     def __init__(self, *args, **kwargs):
         super(OctolapseConsoleHandler, self).__init__(*args, **kwargs)
@@ -85,6 +73,7 @@ class OctolapseConsoleHandler(logging.StreamHandler, AsyncLogHandlerMixin):
 class OctolapseFileHandler(CleaningTimedRotatingFileHandler, AsyncLogHandlerMixin):
     def __init__(self, *args, **kwargs):
         super(OctolapseFileHandler, self).__init__(*args, **kwargs)
+
 
 @six.add_metaclass(Singleton)
 class LoggingConfigurator(object):

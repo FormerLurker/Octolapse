@@ -22,7 +22,7 @@
 ##################################################################################
 from __future__ import unicode_literals
 from octoprint_octolapse.position import Pos
-from octoprint_octolapse.gcode_commands import ParsedCommand, Commands
+from octoprint_octolapse.gcode_commands import Commands
 from octoprint_octolapse.settings import *
 from octoprint_octolapse.trigger import Triggers
 # create the module level logger
@@ -234,7 +234,6 @@ class SnapshotGcodeGenerator(object):
         self._stabilization = self.Settings.profiles.current_stabilization()
         self.StabilizationPaths = self._stabilization.get_stabilization_paths()
         self.Printer = self.Settings.profiles.current_printer()
-        self.snapshot_command = self.Printer.snapshot_command
         self.overridable_printer_profile_settings = overridable_printer_profile_settings
         self.gcode_generation_settings = self.Printer.get_current_state_detection_settings()
         # assert(isinstance(self.gcode_generation_settings, OctolapseGcodeSettings))
@@ -272,6 +271,7 @@ class SnapshotGcodeGenerator(object):
 
         # Snapshot Gcode Variable
         self.snapshot_gcode = None
+
         # state flags
         self.retracted_by_start_gcode = None
         self.lifted_by_start_gcode = None
@@ -502,7 +502,7 @@ class SnapshotGcodeGenerator(object):
             self.is_relative_current = False
             # this may also influence the extruder
             if self.g90_influences_extruder:
-                self.is_extruder_relative_current = True
+                self.is_extruder_relative_current = False
 
     def get_altered_feedrate(self, feedrate):
         if feedrate != self.f_current:
@@ -815,9 +815,10 @@ class SnapshotGcodeGenerator(object):
         )
 
     def return_to_original_coordinate_systems(self):
-        is_relative_return = self.snapshot_plan.initial_position.is_relative
         if self.snapshot_plan.return_position is not None:
             is_relative_return = self.snapshot_plan.return_position.is_relative
+        else:
+            is_relative_return = self.snapshot_plan.initial_position.is_relative
 
         if is_relative_return != self.is_relative_current:
             if self.is_relative_current:
@@ -831,10 +832,13 @@ class SnapshotGcodeGenerator(object):
                     self.get_gcode_axes_relative()
                 )
             self.is_relative_current = is_relative_return
+            if self.g90_influences_extruder:
+                self.is_extruder_relative_current = is_relative_return
 
-        is_extruder_relative_return = self.snapshot_plan.initial_position.is_extruder_relative
         if self.snapshot_plan.return_position is not None:
             is_extruder_relative_return = self.snapshot_plan.return_position.is_extruder_relative
+        else:
+            is_extruder_relative_return = self.snapshot_plan.initial_position.is_extruder_relative
 
         if is_extruder_relative_return != self.is_extruder_relative_current:
             if is_extruder_relative_return:
@@ -932,7 +936,7 @@ class SnapshotGcodeGenerator(object):
             snapshot_plan.return_position = current_position
             # make sure the current command is not the snapshot command before adding it as the end command
             if (
-                not utility.is_snapshot_command(snapshot_plan.triggering_command.gcode, self.Printer.snapshot_command)
+                not self.Printer.is_snapshot_command(snapshot_plan.triggering_command.gcode)
                 and not snapshot_plan.triggering_command.cmd in Commands.SuppressedSavedCommands
             ):
                 snapshot_plan.end_command = snapshot_plan.triggering_command

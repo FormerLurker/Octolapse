@@ -21,7 +21,6 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 
-
 _octolapse_errors = {
     'preprocessor': {
         'cpp_quality_issues': {
@@ -90,7 +89,8 @@ _octolapse_errors = {
                 'help_link': "error_help_preprocessor_no_snapshot_commands_found.md",
                 'cpp_name': "stabilization_processing_issue_type_no_snapshot_commands_found",
                 'is_fatal': True,
-                'description': "No snapshot commands ({snapshot_command}) were found."
+                'description': "No snapshot commands were found.  Current Snapshot Commands: @OCTOLAPSE "
+                               "TAKE-SNAPSHOT{snapshot_command_gcode} "
             }
         },
         'preprocessor_errors': {

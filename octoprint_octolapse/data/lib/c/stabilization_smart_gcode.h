@@ -8,6 +8,7 @@ struct smart_gcode_args
 {
 	smart_gcode_args()
 	{
+		snapshot_command_text = "@OCTOLAPSE TAKE-SNAPSHOT";
 		snapshot_command.command = "@OCTOLAPSE";
 		parsed_command_parameter parameter;
 		parameter.name = "TAKE-SNAPSHOT";
@@ -15,6 +16,7 @@ struct smart_gcode_args
 		snapshot_command.parameters.push_back(parameter);
 	}
 	parsed_command snapshot_command;
+	std::string snapshot_command_text;
 };
 
 class stabilization_smart_gcode :
@@ -26,11 +28,13 @@ public:
 	stabilization_smart_gcode(gcode_position_args position_args, stabilization_args stab_args, smart_gcode_args mt_args, pythonGetCoordinatesCallback get_coordinates, PyObject* py_get_coordinates_callback, pythonProgressCallback progress, PyObject* py_progress_callback);
 	virtual ~stabilization_smart_gcode();
 private:
+	const std::string default_snapshot_gcode_ = "@OCTOLAPSE TAKE-SNAPSHOT";
 	stabilization_smart_gcode(const stabilization_smart_gcode &source); // don't copy me
 	void process_pos(position* p_current_pos, position* p_previous_pos, bool found_command) override;
 	void on_processing_complete() override;
 	std::vector<stabilization_quality_issue> get_quality_issues() override;
 	std::vector<stabilization_processing_issue> get_internal_processing_issues() override;
+	bool is_snapshot_command(std::string gcode);
 	void add_plan(position * p_position);
 	smart_gcode_args smart_gcode_args_;
 	double stabilization_x_;

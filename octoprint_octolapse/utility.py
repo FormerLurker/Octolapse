@@ -33,12 +33,6 @@ import threading
 import psutil
 from slugify import Slugify
 from threading import Timer
-
-# create the module level logger
-from octoprint_octolapse.log import LoggingConfigurator
-logging_configurator = LoggingConfigurator()
-logger = logging_configurator.get_logger(__name__)
-
 FLOAT_MATH_EQUALITY_RANGE = 0.0000001
 
 
@@ -434,13 +428,6 @@ def get_closest_in_bounds_position(bounding_box, x=None, y=None, z=None):
         return {'X': c_x, 'Y': c_y, 'Z': c_z}
     else:
         raise ValueError("We've not implemented circular bed stuff yet!")
-
-
-def is_snapshot_command(command_string, snapshot_command):
-    # note that self.Printer.snapshot_command is stripped of comments.
-    if snapshot_command is not None and len(snapshot_command) > 0:
-        return command_string.upper().strip() == snapshot_command.upper().strip()
-    return False
 
 
 def get_intersections_circle(x1, y1, x2, y2, c_x, c_y, c_radius):
@@ -839,3 +826,12 @@ class RecurringTimerThread(threading.Thread):
     def run(self):
         while not self._cancel_event.wait(self._interval_seconds):
             self._callback()
+
+
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]

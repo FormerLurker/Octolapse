@@ -27,8 +27,9 @@ import uuid
 from six.moves import queue
 
 import octoprint_octolapse.utility as utility
-from octoprint_octolapse.gcode import SnapshotGcodeGenerator, SnapshotGcode
-from octoprint_octolapse.gcode_commands import Commands, ParsedCommand, Response
+from octoprint_octolapse.stabilization_gcode import SnapshotGcodeGenerator, SnapshotGcode
+from octoprint_octolapse.gcode_commands import Commands, Response
+from octoprint_octolapse.gcode_processor import GcodeProcessor, ParsedCommand
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.render import RenderError, RenderingProcessor, RenderingCallbackArgs, RenderJobInfo, TimelapseRenderJob
 from octoprint_octolapse.settings import PrinterProfile, OctolapseSettings
@@ -36,7 +37,7 @@ from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotJobInfo, Snaps
 from octoprint_octolapse.trigger import Triggers
 import octoprint_octolapse.error_messages as error_messages
 import octoprint_octolapse.stabilization_preprocessing as preprocessing
-import GcodePositionProcessor
+from octoprint_octolapse.gcode_processor import GcodeProcessor
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 
@@ -95,7 +96,6 @@ class Timelapse(object):
         self._position = None
         self._state = TimelapseState.Idle
         self._is_test_mode = False
-        self._snapshot_command = None
         # State Tracking that should only be reset when starting a timelapse
         self._has_been_stopped = False
         self._timelapse_stop_requested = False
@@ -133,12 +133,8 @@ class Timelapse(object):
 
     def validate_snapshot_command(self, command_string):
         # there needs to be at least one non-comment non-whitespace character for the gcode command to work.
-        parsed_command_cpp = GcodePositionProcessor.Parse(command_string.encode('ascii', errors="replace").decode())
-        if parsed_command_cpp:
-            parsed_command = ParsedCommand.create_from_cpp_parsed_command(parsed_command_cpp)
-            if len(parsed_command.gcode.strip()) > 0:
-                return True
-        return False
+        parsed_command = GcodeProcessor.parse(command_string)
+        return len(parsed_command.gcode)>0
 
     def get_snapshot_count(self):
         if self._capture_snapshot is None:
@@ -162,7 +158,7 @@ class Timelapse(object):
         # ToDo:  all cloning should be removed after this point.  We already have a settings object copy.
         #  Also, we no longer need the original settings since we can use the global OctolapseSettings.Logger now
         self._printer = self._settings.profiles.current_printer()
-        self._snapshot_command = self._printer.snapshot_command
+
         self._stabilization = self._settings.profiles.current_stabilization()
         self._trigger_profile = self._settings.profiles.current_trigger()
         self.snapshot_plans = snapshot_plans
@@ -200,8 +196,7 @@ class Timelapse(object):
             )
             self._rendering_processor.start()
 
-        self._gcode = SnapshotGcodeGenerator(
-            self._settings, self.overridable_printer_profile_settings)
+        self._gcode = SnapshotGcodeGenerator(self._settings, self.overridable_printer_profile_settings)
 
         self._capture_snapshot = CaptureSnapshot(
             self._settings,
@@ -636,7 +631,7 @@ class Timelapse(object):
             if (
                 current_printer is not None and
                 current_printer.suppress_snapshot_command_always and
-                utility.is_snapshot_command(command_string, current_printer.snapshot_command)
+                current_printer.is_snapshot_command(command_string)
             ):
                 logger.info(
                     "Snapshot command %s detected while octolapse was disabled."
@@ -660,18 +655,17 @@ class Timelapse(object):
             return_value = self.process_realtime_gcode(command_string, tags)
             parsed_command = self._position.current_pos.parsed_command
         else:
-            parsed_command_cpp = GcodePositionProcessor.Parse(command_string.encode('ascii', errors="replace").decode())
-            if parsed_command_cpp:
-                parsed_command = ParsedCommand.create_from_cpp_parsed_command(parsed_command_cpp)
-            else:
-                parsed_command = ParsedCommand(None, None, command_string)
-
+            parsed_command = GcodeProcessor.parse(command_string)
             return_value = self.process_pre_calculated_gcode(parsed_command, tags)
 
         # notify any callbacks
         self._send_state_changed_message()
 
-        if return_value == (None,) or utility.is_snapshot_command(command_string, self._snapshot_command):
+        if (
+            return_value == (None,) or (
+                self._printer.is_snapshot_command(command_string)
+            )
+        ):
             return None,
 
         if parsed_command is not None and parsed_command.cmd is not None:
@@ -857,8 +851,7 @@ class Timelapse(object):
                 )
                 # parse the command string
                 try:
-                    cmd = command_string.encode('ascii', errors="replace").decode()
-                    fast_cmd = GcodePositionProcessor.Parse(cmd)
+                    parsed_command = GcodeProcessor.parse(command_string)
                 except ValueError as e:
                     logger.exception("Unable to parse the command string.")
                     # if we don't return NONE here, we will have problems with the print!
@@ -868,11 +861,6 @@ class Timelapse(object):
                     # TODO:  REMOVE THIS BECAUSE IT'S TOO BROAD!
                     # if we don't return NONE here, we will have problems with the print!
                     raise e
-
-                if fast_cmd:
-                    parsed_command = ParsedCommand(fast_cmd[0], fast_cmd[1], command_string)
-                else:
-                    parsed_command = ParsedCommand(None, None, command_string)
 
                 # call the synchronous callback on_print_start
                 if self.on_print_start(parsed_command):

@@ -768,15 +768,15 @@
             </div>
             <div>
                 <div class="control-group">
-                    <label class="control-label" for="octolapse_printer_snapshot_command">Snapshot Command</label>
+                    <label class="control-label" for="octolapse_printer_snapshot_command">Alternative Snapshot Command</label>
                     <div class="controls">
                         <input id="octolapse_printer_snapshot_command" name="octolapse_printer_snapshot_command"
                                class="input-small text-right"
                                data-bind="value: snapshot_command"
-                               type="text" required />
-                        <a class="octolapse_help" data-help-url="profiles.printer.printer_profile_snapshot_command.md" data-help-title="Snapshot Command" />
+                               type="text"/>
+                        <a class="octolapse_help" data-help-url="profiles.printer.snapshot_command.md" data-help-title="Alternative Snapshot Command" />
                         <div class="error_label_container text-error" data-error-for="octolapse_printer_snapshot_command"></div>
-                        <span class="help-inline">This custom command can be used in conjunction with the gcode trigger to initiate a snapshot.  All comments will be stripped from the command entered here after saving.</span>
+                        <p class="help-inline">Use this setting to create an alternative snapshot command in addition to the default command (<strong>@OCTOLAPSE TAKE-SNAPSHOT</strong>).  Please see the help link for more info, since this setting has changed in V0.4.</p>
                     </div>
                 </div>
                 <div class="control-group">

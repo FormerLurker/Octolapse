@@ -60,7 +60,7 @@ import octoprint_octolapse.snapshot as snapshot
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.error_messages as error_messages
 from octoprint_octolapse.position import Position
-from octoprint_octolapse.gcode import SnapshotGcodeGenerator
+from octoprint_octolapse.stabilization_gcode import SnapshotGcodeGenerator
 from octoprint_octolapse.gcode_commands import Commands
 from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, TriggerProfile, \

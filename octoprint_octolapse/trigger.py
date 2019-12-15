@@ -36,35 +36,31 @@ class Triggers(object):
     TRIGGER_TYPE_IN_PATH = 'in-path'
 
     def __init__(self, settings):
-        self.trigger_profile = None
         self._triggers = []
         self.reset()
         self._settings = settings
         self.name = "Unknown"
-        self.printer = None
 
     def count(self):
         return len(self._triggers)
 
     def reset(self):
-        self.trigger_profile = None
         self._triggers = []
 
     def create(self):
         self.reset()
-        self.printer = self._settings.profiles.current_printer()
-        self.trigger_profile = self._settings.profiles.current_trigger()
-        self.name = self.trigger_profile.name
+        trigger_profile = self._settings.profiles.current_trigger()
+        self.name = trigger_profile.name
         # create the triggers
         # If the gcode trigger is enabled, add it
-        if self.trigger_profile.trigger_subtype == TriggerProfile.GCODE_TRIGGER_TYPE:
+        if trigger_profile.trigger_subtype == TriggerProfile.GCODE_TRIGGER_TYPE:
             # Add the trigger to the list
             self._triggers.append(GcodeTrigger(self._settings))
         # If the layer trigger is enabled, add it
-        elif self.trigger_profile.trigger_subtype == TriggerProfile.LAYER_TRIGGER_TYPE:
+        elif trigger_profile.trigger_subtype == TriggerProfile.LAYER_TRIGGER_TYPE:
             self._triggers.append(LayerTrigger(self._settings))
         # If the layer trigger is enabled, add it
-        elif self.trigger_profile.trigger_subtype == TriggerProfile.TIMER_TRIGGER_TYPE:
+        elif trigger_profile.trigger_subtype == TriggerProfile.TIMER_TRIGGER_TYPE:
             self._triggers.append(TimerTrigger(self._settings))
 
     def resume(self):
@@ -288,10 +284,9 @@ class GcodeTrigger(Trigger):
     def __init__(self, octolapse_settings):
         # call parent constructor
         super(GcodeTrigger, self).__init__(octolapse_settings)
-        self.snapshot_command = self.printer.snapshot_command
         self.type = "gcode"
         self.require_zhop = self.trigger_profile.require_zhop
-
+        self.snapshot_command = octolapse_settings.profiles.current_printer().snapshot_command
         if self.trigger_profile.extruder_state_requirements_enabled:
             self.extruder_triggers = ExtruderTriggers(
                 self.trigger_profile.trigger_on_extruding_start,
@@ -328,7 +323,7 @@ class GcodeTrigger(Trigger):
         message = "Creating Gcode Trigger - Gcode Command:%s, require_zhop:%s"
         logger.info(
             message,
-            self.printer.snapshot_command,
+            self.snapshot_command,
             self.trigger_profile.require_zhop
         )
 
@@ -368,7 +363,7 @@ class GcodeTrigger(Trigger):
                 state.is_in_position = trigger_position.is_in_position and trigger_position.is_in_bounds
                 state.in_path_position = position.current_pos.in_path_position
 
-                if utility.is_snapshot_command(self.snapshot_command, parsed_command.gcode):
+                if self.printer.is_snapshot_command(parsed_command.gcode):
                     if self.snapshots_enabled:
                         state.is_waiting = True
                     else:

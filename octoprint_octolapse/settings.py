@@ -34,11 +34,12 @@ import octoprint_octolapse.utility as utility
 import octoprint_octolapse.log as log
 import math
 import collections
-import octoprint_octolapse.gcode_preprocessing as gcode_preprocessing
+import octoprint_octolapse.settings_preprocessor as settings_preprocessor
 import octoprint_octolapse.settings_migration as settings_migration
+from octoprint_octolapse.gcode_processor import GcodeProcessor, ParsedCommand
 import six
 from octoprint_octolapse.error_messages import OctolapseException
-
+import inspect
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
@@ -47,7 +48,9 @@ logger = logging_configurator.get_logger(__name__)
 
 class SettingsJsonEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, Settings) or isinstance(obj, StaticSettings):
+        if issubclass(type(obj), Settings):
+            return {k: v for (k, v) in six.iteritems(obj.to_dict()) if not k.startswith("_")}
+        elif issubclass(type(obj), StaticSettings):
             return obj.__dict__
         # Let the base class default method raise the TypeError
         elif isinstance(obj, bool):
@@ -84,10 +87,16 @@ class Settings(object):
         return copy.deepcopy(self)
 
     def to_dict(self):
-        return self.__dict__.copy()
+        copy_dict = self.__dict__.copy()
+        property_list = [p for p in dir(self) if isinstance(getattr(type(self), p, None), property)]
+        for prop in property_list:
+            copy_dict[prop] = getattr(self, prop)
+        return copy_dict
 
     def to_json(self):
-        return json.dumps(self.to_dict(), cls=SettingsJsonEncoder)
+        # remove private variables
+        filtered_dict = {k: v for (k, v) in six.iteritems(self.to_dict()) if not k.startswith("_")}
+        return json.dumps(filtered_dict, cls=SettingsJsonEncoder)
 
     @classmethod
     def encode_json(cls, o):
@@ -107,6 +116,8 @@ class Settings(object):
 
         for key, value in item_to_iterate.items():
             try:
+                if key.startswith("_"):
+                    continue
                 class_item = getattr(source, key, '{octolapse_no_property_found}')
                 if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                     if isinstance(class_item, Settings):
@@ -114,7 +125,8 @@ class Settings(object):
                     elif isinstance(class_item, StaticSettings):
                         pass
                     else:
-                        source.__dict__[key] = source.try_convert_value(class_item, value, key)
+                        # todo - Do not set the dict directly in other places.  Consider rewriting whole file since this methos of updating/serializing/deserializing is extremely painful
+                        setattr(source, key, source.try_convert_value(class_item, value, key))
             except Exception as e:
                 logger.exception("Settings._update - Failed to update settings.  Key:%s, Value:%s", key, value)
                 continue
@@ -158,6 +170,14 @@ class Settings(object):
         new_object.update(iterable)
         return new_object
 
+    def __setattr__(self, a, v):
+        attr = getattr(self.__class__, a, None)
+        if isinstance(attr, property):
+            if attr.fset is None:
+                raise AttributeError("No setter is available for the current attribute.")
+            attr.fset(self, v)
+        else:
+            super(Settings, self).__setattr__(a, v)
 
 class ProfileSettings(Settings):
 
@@ -294,7 +314,8 @@ class PrinterProfile(AutomaticConfigurationProfile):
         self.slicer_type = "automatic"
         self.gcode_generation_settings = OctolapseGcodeSettings()
         self.slicers = PrinterProfileSlicers()
-        self.snapshot_command = "snap"
+        self._snapshot_command_text = ""
+        self._parsed_snapshot_command = ParsedCommand(None,None,None)
         self.suppress_snapshot_command_always = True
         self.auto_detect_position = True
         self.origin_type = PrinterProfile.origin_type_front_left
@@ -339,6 +360,37 @@ class PrinterProfile(AutomaticConfigurationProfile):
         self.zero_based_extruder = True
         self.extruder_offsets = []
         self.default_extruder = 1  # The default extruder is 1 based!  It is not an index.
+
+    @property
+    def snapshot_command(self):
+        return self._snapshot_command_text
+
+    @snapshot_command.setter
+    def snapshot_command(self, snapshot_command_text):
+        parsed_command = GcodeProcessor.parse(snapshot_command_text)
+        self._parsed_snapshot_command = parsed_command
+        self._snapshot_command_text = snapshot_command_text
+        return len(parsed_command.gcode) > 0
+
+    def get_snapshot_command_gcode(self):
+        if self._parsed_snapshot_command.gcode is None or len(self._parsed_snapshot_command.gcode) == 0:
+            return None
+        return self._parsed_snapshot_command.gcode
+
+    @staticmethod
+    def validate_snapshot_command(command_string):
+        # there needs to be at least one non-comment non-whitespace character for the gcode command to work.
+        parsed_command = GcodeProcessor.parse(command_string)
+        return len(parsed_command.gcode)>0
+
+    def is_snapshot_command(self, command_string):
+        if command_string is None or len(command_string) == 0:
+            return False
+        snapshot_command_gcode = self.get_snapshot_command_gcode()
+        return (
+            snapshot_command_gcode == command_string or
+            PrinterProfile.DEFAULT_SNAPSHOT_COMMAND == command_string
+        )
 
     @classmethod
     def update_from_server_profile(cls, current_profile, server_profile_dict):
@@ -579,16 +631,16 @@ class PrinterProfile(AutomaticConfigurationProfile):
         return self.get_current_slicer_settings().get_gcode_generation_settings(slicer_type=self.slicer_type)
 
     def get_gcode_settings_from_file(self, gcode_file_path):
-        simplify_preprocessor = gcode_preprocessing.Simplify3dSettingsProcessor(
+        simplify_preprocessor = settings_preprocessor.Simplify3dSettingsProcessor(
             search_direction="both", max_forward_search=1000, max_reverse_search=1000
         )
-        slic3r_preprocessor = gcode_preprocessing.Slic3rSettingsProcessor(
+        slic3r_preprocessor = settings_preprocessor.Slic3rSettingsProcessor(
             search_direction="both", max_forward_search=1000, max_reverse_search=1000
         )
-        cura_preprocessor = gcode_preprocessing.CuraSettingsProcessor(
+        cura_preprocessor = settings_preprocessor.CuraSettingsProcessor(
             search_direction="both", max_forward_search=1000, max_reverse_search=1000
         )
-        file_processor = gcode_preprocessing.GcodeFileProcessor(
+        file_processor = settings_preprocessor.GcodeFileProcessor(
             [simplify_preprocessor, slic3r_preprocessor, cura_preprocessor], 1, None
         )
         results = file_processor.process_file(gcode_file_path, filter_tags=['octolapse_setting'])
@@ -1263,7 +1315,7 @@ class MjpgStreamer(StreamingServer):
                     # don't update any static settings, those come from the class itself!
                     continue
                 else:
-                    self.__dict__[key] = self.try_convert_value(class_item, value, key)
+                    setattr(source, key, source.try_convert_value(class_item, value, key))
 
 
 class OtherStreamingServer(StreamingServer):
@@ -2318,30 +2370,32 @@ class SlicerSettings(Settings):
         assert(isinstance(settings, OctolapseGcodeSettings))
         issue_list = []
         extruder_number = 1
-        for extruder in settings.extruders:
-            if len(settings.extruders) == 1:
-                extruder_label = ""
-            else:
-                extruder_label = "Extruder {0} - ".format(extruder_number)
-                # Per Extruder Settings
-            if extruder.retract_before_move is None:
-                issue_list.append("{}Retract Before Move".format(extruder_label))
-            if extruder.retraction_length is None:
-                issue_list.append("{}Retraction Length".format(extruder_label))
-            if extruder.retraction_speed is None:
-                issue_list.append("{}Retraction Speed".format(extruder_label))
-            if extruder.deretraction_speed is None:
-                issue_list.append("{}Deretraction Speed".format(extruder_label))
-            if extruder.lift_when_retracted is None:
-                issue_list.append("{}Lift When Retracted".format(extruder_label))
-            if extruder.z_lift_height is None:
-                issue_list.append("{}Z Lift Height".format(extruder_label))
-            if extruder.x_y_travel_speed is None:
-                issue_list.append("{}X/Y Travel Speed".format(extruder_label))
-            if extruder.z_lift_speed is None:
-                issue_list.append("{}Z Travel Speed".format(extruder_label))
-            extruder_number += 1
-
+        if len(settings.extruders) == 0:
+            issue_list.append("No extruder settings were found in your gcode file.")
+        else:
+            for extruder in settings.extruders:
+                if len(settings.extruders) == 1:
+                    extruder_label = ""
+                else:
+                    extruder_label = "Extruder {0} - ".format(extruder_number)
+                    # Per Extruder Settings
+                if extruder.retract_before_move is None:
+                    issue_list.append("{}Retract Before Move".format(extruder_label))
+                if extruder.retraction_length is None:
+                    issue_list.append("{}Retraction Length".format(extruder_label))
+                if extruder.retraction_speed is None:
+                    issue_list.append("{}Retraction Speed".format(extruder_label))
+                if extruder.deretraction_speed is None:
+                    issue_list.append("{}Deretraction Speed".format(extruder_label))
+                if extruder.lift_when_retracted is None:
+                    issue_list.append("{}Lift When Retracted".format(extruder_label))
+                if extruder.z_lift_height is None:
+                    issue_list.append("{}Z Lift Height".format(extruder_label))
+                if extruder.x_y_travel_speed is None:
+                    issue_list.append("{}X/Y Travel Speed".format(extruder_label))
+                if extruder.z_lift_speed is None:
+                    issue_list.append("{}Z Travel Speed".format(extruder_label))
+                extruder_number += 1
         # Print Settings
         if settings.vase_mode is None:
             issue_list.append("Is Vase Mode")

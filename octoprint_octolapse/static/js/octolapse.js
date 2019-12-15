@@ -700,6 +700,8 @@ $(function () {
         });
 
     $.validator.addMethod('octolapsePrinterSnapshotCommand',function (value, element, param) {
+        if (value == "")
+            return true;
         var data = {"snapshot_command": value};
         var param = {
             url: "./plugin/octolapse/validateSnapshotCommand",
@@ -709,7 +711,7 @@ $(function () {
             contentType: "application/json",
         };
         return $.validator.methods.remote.call(this, value, element, param, 'octolapsePrinterSnapshotCommand');
-    },"The snapshot command must contain at least one non-whitespace character that is not part of a gcode comment.");
+    },"Must be empty, or must contain at least one non-whitespace character that is not part of a gcode comment.");
 
     jQuery.extend(jQuery.validator.messages, {
         name: "Please enter a name.",

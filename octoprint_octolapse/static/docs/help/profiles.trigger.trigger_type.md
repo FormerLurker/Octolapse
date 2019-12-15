@@ -10,3 +10,9 @@ The smart layer trigger is new, and is not as well tested as the real-time trigg
 
 ### Smart Gcode Trigger
 This trigger functions in the same way as the Real-Time (classic) gcode trigger except that your gcode will be preprocessed.  Just like the **Smart Layer Trigger** you will be able to preview all of the snapshots Octolapse will take before your print starts.  Also, Just like the **Smart Layer Trigger**, this option uses fewer resources while printing, but pre-processing can take a while to complete.
+
+When using this trigger, you can initiate a snapshot by including the following command in your gcode file:
+
+```@OCTOLAPSE TAKE-SNAPSHOT```
+
+You can also use any custom command you desire by setting the **Alternative Snapshot Command** within your Octolapse printer profile.

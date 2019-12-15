@@ -247,7 +247,6 @@ extern "C"
 		return py_results;
 	}
 
-	
 	static PyObject * GetSnapshotPlans_SmartGcode(PyObject *self, PyObject *args)
 	{
 		set_internal_log_levels(true);
@@ -1436,19 +1435,26 @@ static bool ParseStabilizationArgs_SmartGcode(PyObject *py_args, smart_gcode_arg
 	PyObject * py_snapshot_command = PyDict_GetItemString(py_args, "snapshot_command");
 	if (py_snapshot_command == NULL)
 	{
-		std::string message = "GcodePositionProcessor.ParseStabilizationArgs_SmartGcode - Unable to retrieve snapshot_command from the smart gcode trigger stabilization args.";
+		std::string message = "ParseStabilizationArgs_SmartGcode - Unable to retrieve snapshot_command from the smart gcode trigger stabilization args.";
 		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
 		return false;
 	}
-	std::string snapshot_command = PyUnicode_SafeAsString(py_snapshot_command);
+	args->snapshot_command_text = PyUnicode_SafeAsString(py_snapshot_command);
+	
 	gcode_parser parser;
-	parser.try_parse_gcode(snapshot_command.c_str(), args->snapshot_command);
+	parser.try_parse_gcode(args->snapshot_command_text.c_str(), args->snapshot_command);
 	if (args->snapshot_command.gcode.empty())
 	{
-		std::string message = "GcodePositionProcessor.ParseStabilizationArgs_SmartGcode - No valid snapshot command could be parsed from the supplied snapshot gcode: ";
-		message += snapshot_command;
-		octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
-		return false;
+		std::string message = "ParseStabilizationArgs_SmartGcode - No alternative snapshot command was provided, using default command only.";
+		message += args->snapshot_command_text;
+		octolapse_log( octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, message);
+	}
+	else
+	{
+		std::string message = "ParseStabilizationArgs_SmartGcode - Alternative snapshot gcode (";
+		message += args->snapshot_command.gcode;
+		message += ") parsed successfully.";
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, message);
 	}
 
 	return true;

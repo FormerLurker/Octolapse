@@ -78,7 +78,7 @@ PyObject * parsed_command::to_py_object()
 	
 	if (parameters.empty())
 	{
-		ret_val = PyTuple_Pack(3, pyCommandName, Py_None, pyGcode, pyComment);
+		ret_val = PyTuple_Pack(4, pyCommandName, Py_None, pyGcode, pyComment);
 		if (ret_val == NULL)
 		{
 			std::string message = "Unable to convert the parsed_command (no parameters) to a tuple.  Command: ";
@@ -155,7 +155,7 @@ PyObject * parsed_command::to_py_object()
 			
 		}
 
-		ret_val = PyTuple_Pack(3, pyCommandName, pyParametersDict, pyGcode, pyComment);
+		ret_val = PyTuple_Pack(4, pyCommandName, pyParametersDict, pyGcode, pyComment);
 		if (ret_val == NULL)
 		{
 			std::string message = "Unable to convert the parsed_command (with parameters) to a tuple.  Command: ";

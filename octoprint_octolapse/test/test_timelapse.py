@@ -24,7 +24,7 @@
 import time
 import unittest
 
-from octoprint_octolapse.gcode import SnapshotGcode
+from octoprint_octolapse.stabilization_gcode import SnapshotGcode
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.settings import OctolapseSettings
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState

@@ -23,7 +23,7 @@
 from __future__ import unicode_literals
 from threading import Thread
 from six.moves import queue
-from octoprint_octolapse.gcode import SnapshotPlan, SnapshotGcodeGenerator
+from octoprint_octolapse.stabilization_gcode import SnapshotPlan, SnapshotGcodeGenerator
 from octoprint_octolapse.settings import PrinterProfile, TriggerProfile, StabilizationProfile
 import GcodePositionProcessor
 import octoprint_octolapse.error_messages as error_messages

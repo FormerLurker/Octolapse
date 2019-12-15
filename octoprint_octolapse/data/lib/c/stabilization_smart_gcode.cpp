@@ -47,7 +47,7 @@ stabilization_smart_gcode::stabilization_smart_gcode(const stabilization_smart_g
 
 void stabilization_smart_gcode::process_pos(position * p_current_pos, position * p_previous_pos, bool found_command)
 {
-	if (p_current_pos->command.gcode == smart_gcode_args_.snapshot_command.gcode)
+	if (is_snapshot_command(p_current_pos->command.gcode))
 	{
 		snapshot_commands_found_++;
 		if (!p_current_pos->can_take_snapshot())
@@ -79,14 +79,45 @@ std::vector<stabilization_processing_issue> stabilization_smart_gcode::get_inter
 	{
 		stabilization_processing_issue issue;
 		issue.description = "No snapshot commands were found.";
-		replacement_token token;
-		token.key = "snapshot_command";
-		token.value = smart_gcode_args_.snapshot_command.gcode;
-		issue.replacement_tokens.push_back(token);
+		replacement_token snapshot_command_text_token;
+		snapshot_command_text_token.key = "snapshot_command_text";
+		if (smart_gcode_args_.snapshot_command.gcode.size() > 0)
+		{
+			snapshot_command_text_token.value = ", ";
+			snapshot_command_text_token.value += smart_gcode_args_.snapshot_command_text;
+		}
+		else
+		{
+			snapshot_command_text_token.value = "";
+		}
+		issue.replacement_tokens.push_back(snapshot_command_text_token);
+
+		replacement_token snapshot_command_token;
+		snapshot_command_token.key = "snapshot_command_gcode";
+		if (smart_gcode_args_.snapshot_command.gcode.size() > 0)
+		{
+			snapshot_command_token.value = ", ";
+			snapshot_command_token.value += smart_gcode_args_.snapshot_command.gcode;
+		}
+		else
+		{
+			snapshot_command_token.value = "";
+		}
+		issue.replacement_tokens.push_back(snapshot_command_token);
+
+
 		issue.issue_type = stabilization_processing_issue_type_no_snapshot_commands_found;
 		issues.push_back(issue);
 	}
 	return issues;
+}
+
+bool stabilization_smart_gcode::is_snapshot_command(std::string gcode)
+{
+	return (
+		gcode == default_snapshot_gcode_ ||
+		(smart_gcode_args_.snapshot_command.gcode.size() > 0 && smart_gcode_args_.snapshot_command.gcode == gcode)
+	);
 }
 
 void stabilization_smart_gcode::add_plan(position * p_position)
