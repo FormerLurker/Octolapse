@@ -816,14 +816,18 @@ class TimelapseJobInfo(object):
 
 
 class RecurringTimerThread(threading.Thread):
-    def __init__(self, interval_seconds, callback, cancel_event):
+    def __init__(self, interval_seconds, callback, cancel_event, first_run_delay_seconds=None):
         threading.Thread.__init__(self)
         self._interval_seconds = interval_seconds
         self._callback = callback
         self._cancel_event = cancel_event
         self._trigger = threading.Event()
+        self._first_run_delay_seconds = first_run_delay_seconds
 
     def run(self):
+        if self._first_run_delay_seconds is not None:
+            time.sleep(self._first_run_delay_seconds)
+            self._callback()
         while not self._cancel_event.wait(self._interval_seconds):
             self._callback()
 
