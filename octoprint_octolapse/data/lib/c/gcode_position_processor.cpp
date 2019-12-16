@@ -625,7 +625,7 @@ extern "C"
 
 static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, const double percent_complete, const double seconds_elapsed, const double estimated_seconds_remaining, const int gcodes_processed, const int lines_processed)
 {
-	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Executing the stabilization progress callback.");
+	//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Executing the stabilization progress callback.");
 	PyObject * funcArgs = Py_BuildValue("(d,d,d,i,i)", percent_complete, seconds_elapsed, estimated_seconds_remaining, gcodes_processed, lines_processed);
 	if (funcArgs == NULL)
 	{
@@ -656,7 +656,7 @@ static bool ExecuteStabilizationProgressCallback(PyObject* progress_callback, co
 
 static bool ExecuteGetSnapshotPositionCallback(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double& x_result, double& y_result )
 {
-	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Executing the get_snapshot_position callback.");
+	//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Executing the get_snapshot_position callback.");
 	PyObject * funcArgs = Py_BuildValue("(d,d)", x_initial, y_initial);
 	if (funcArgs == NULL)
 	{
@@ -1249,7 +1249,6 @@ static bool ParsePositionArgs(PyObject *py_args, gcode_position_args *args)
 	}
 	
 #pragma endregion Extract firmware extruder offsets from the printer settings
-	std::cout << "Finished extracting offsets.\r\n";
 	// priming_height
 	PyObject * py_priming_height = PyDict_GetItemString(py_args, "priming_height");
 	if (py_priming_height == NULL)
