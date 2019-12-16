@@ -133,10 +133,10 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 			}
 			p_gcode++;
 		}
-
-		std::string message = "No gcode command was found: ";
-		message += gcode;
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::DEBUG, message);
+		// Don't bother logging this...  Not worth it
+		//std::string message = "No gcode command was found: ";
+		//message += gcode;
+		//octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::DEBUG, message);
 		command.command = "";
 	}
 	else
@@ -167,10 +167,10 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 
 		if (parsable_commands_.find(command.command) == parsable_commands_.end())
 		{
-			//std::cout << "GcodeParser.try_parse_gcode - Not in command list, exiting.\r\n";
-			std::string message = "The gcode command is not in the parsable commands set: ";
-			message += gcode;
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::VERBOSE, message);
+			// Don't bother logging this.  Too much logging.
+			//std::string message = "The gcode command is not in the parsable commands set: ";
+			//message += gcode;
+			//octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::VERBOSE, message);
 			return true;
 		}
 		if (command.command.length() > 0 && command.command == "@OCTOLAPSE")
