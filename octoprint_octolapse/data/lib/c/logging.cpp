@@ -132,6 +132,36 @@ void set_internal_log_levels(bool check_real_time)
 	}
 }
 
+bool octolapse_may_be_logged(const int logger_type, const int log_level)
+{
+	int current_log_level;
+	switch (logger_type)
+	{
+	case octolapse_log::GCODE_PARSER:
+		current_log_level = gcode_parser_log_level;
+		break;
+	case octolapse_log::GCODE_POSITION:
+		current_log_level = gcode_position_log_level;
+		break;
+	case octolapse_log::SNAPSHOT_PLAN:
+		current_log_level = snapshot_plan_log_level;
+		break;
+	default:
+		return false;
+	}
+
+	if (!check_log_levels_real_time)
+	{
+		//std::cout << "Current Log Level: " << current_log_level << " requested:" << log_level;
+		// For speed we are going to check the log levels here before attempting to send any logging info to Python.
+		if (current_log_level > log_level)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 void octolapse_log_exception(const int logger_type, const std::string &message)
 {
 	octolapse_log(logger_type, octolapse_log::ERROR, message, true);

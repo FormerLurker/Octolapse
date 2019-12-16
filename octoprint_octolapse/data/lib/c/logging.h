@@ -9,6 +9,7 @@ struct octolapse_log
 };
 
 void octolapse_initialize_loggers();
+bool octolapse_may_be_logged(const int logger_type, const int log_level);
 void octolapse_log(const int logger_type, const int log_level, const std::string &message);
 void octolapse_log(const int logger_type, const int log_level, const std::string& message, bool is_exception);
 void octolapse_log_exception(const int logger_type, const std::string &message);
