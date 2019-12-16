@@ -154,23 +154,28 @@ double stabilization::get_time_elapsed(double start_clock, double end_clock)
 
 stabilization_results stabilization::process_file()
 {
+	// Create a stringstream we can use for messaging.
+	std::stringstream stream;
 	// Make sure snapshots are enabled at the start of the process.
 	snapshots_enabled_ = true;
-	int read_lines_before_clock_check = 1000;
+	int read_lines_before_clock_check = 2000;
 	//std::cout << "stabilization::process_file - Processing file.\r\n";
-	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, "Processing File.");
+	stream << "Stabilizing file at: " << stabilization_args_.file_path;
+	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, stream.str());
 	is_running_ = true;
 	
 	double next_update_time = get_next_update_time();
 	const clock_t start_clock = clock();
-
 	file_size_ = get_file_size(stabilization_args_.file_path);
-
 	std::ifstream gcodeFile(stabilization_args_.file_path.c_str());
 	std::string line;
 	int lines_with_no_commands = 0;
 	if (gcodeFile.is_open())
 	{
+		stream.clear();
+		stream.str("");
+		stream << "Opened file for reading.  File Size: " << utilities::to_string(file_size_);
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, stream.str());
 		parsed_command cmd;
 		// Communicate every second
 		while (std::getline(gcodeFile, line) && is_running_)
@@ -244,6 +249,12 @@ stabilization_results stabilization::process_file()
 					double bytesPerSecond = static_cast<double>(file_position_) / secondsElapsed;
 					double secondsToComplete = bytesRemaining / bytesPerSecond;
 					//std::cout << "stabilization::process_file - notifying progress...";
+					
+					stream.clear();
+					stream.str("");
+					stream << "Stabilization Progress - Bytes Remaining: " << bytesRemaining <<
+						", Seconds Elapsed: " << utilities::to_string(secondsElapsed) << ", Percent Progress:" << utilities::to_string(percentProgress);
+					octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::DEBUG, stream.str());
 					notify_progress(percentProgress, secondsElapsed, secondsToComplete, gcodes_processed_,
 						lines_processed_);
 					//std::cout << "Complete.\r\n";
@@ -260,7 +271,7 @@ stabilization_results stabilization::process_file()
 	}
 	else
 	{
-		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to open the gcode file.");
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, "Unable to open the gcode file for processing.");
 	}
 	const clock_t end_clock = clock();
 	const double total_seconds = static_cast<double>(end_clock - start_clock) / CLOCKS_PER_SEC;
@@ -271,44 +282,51 @@ stabilization_results stabilization::process_file()
 	results.quality_issues = get_quality_issues();
 	results.snapshot_plans = p_snapshot_plans_;
 	results.processing_issues = get_processing_issues();
-
-
-	std::stringstream sstm;
-	sstm << "Completed file processing\r\n";
-	sstm << "\tSnapshots Found      : " << results.snapshot_plans.size() << "\r\n";
-	sstm << "\tTotal Seconds        : " << total_seconds << "\r\n";
-	sstm << "\tSnapshot Plan Details:";
-	for (unsigned int index = 0; index < results.snapshot_plans.size(); index++)
+	stream.clear();
+	stream.str("");
+	stream << "Completed file processing\r\n";
+	stream << "\tBytes Processed      : " << file_position_ << "\r\n";
+	stream << "\tLines Processed      : " << lines_processed_ << "\r\n";
+	stream << "\tSnapshots Found      : " << results.snapshot_plans.size() << "\r\n";
+	stream << "\tTotal Seconds        : " << total_seconds << "\r\n";
+	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, stream.str());
+	// Try to avoid logging the snapshot plan if it definitely won't be logged
+	if (octolapse_may_be_logged(octolapse_log::SNAPSHOT_PLAN, octolapse_log::DEBUG))
 	{
-		snapshot_plan pPlan = results.snapshot_plans[index];
-		std::string gcode = pPlan.start_command.gcode;
-		std::string feature_type_description = "unknown";
-		if (pPlan.triggering_command_feature_type != feature_type_unknown_feature)
+		stream.clear();
+		stream.str("");
+		stream << "Snapshot Plan Details:";
+		for (unsigned int index = 0; index < results.snapshot_plans.size(); index++)
 		{
-			feature_type_description = "feature-";
-			feature_type_description += feature_type_name[pPlan.triggering_command_feature_type];
+			snapshot_plan pPlan = results.snapshot_plans[index];
+			std::string gcode = pPlan.start_command.gcode;
+			std::string feature_type_description = "unknown";
+			if (pPlan.triggering_command_feature_type != feature_type_unknown_feature)
+			{
+				feature_type_description = "feature-";
+				feature_type_description += feature_type_name[pPlan.triggering_command_feature_type];
+			}
+			else
+				feature_type_description = position_type_name[pPlan.triggering_command_type];
+			stream << "\r\n";
+			stream << "\tPlan# " << index + 1;
+			stream << ", Layer:" << pPlan.initial_position.layer;
+			stream << ", Line:" << pPlan.file_line;
+			stream << ", Position:" << pPlan.file_position;
+			stream << ", StartX:" << pPlan.initial_position.x;
+			stream << ", StartY:" << pPlan.initial_position.y;
+			stream << ", StartZ:" << pPlan.initial_position.z;
+			stream << ", Tool:" << pPlan.initial_position.current_tool;
+			stream << ", Speed:" << pPlan.initial_position.f;
+			stream << ", Distance:" << pPlan.distance_from_stabilization_point;
+			stream << ", Travel Distance:" << pPlan.total_travel_distance;
+			stream << ", Type:" << feature_type_description;
+			stream << ", Gcode:" << pPlan.start_command.gcode;
+			if (pPlan.start_command.comment.length() > 0)
+				stream << ", Comment: " << pPlan.start_command.comment;
 		}
-		else
-			feature_type_description = position_type_name[pPlan.triggering_command_type];
-		sstm << "\r\n";
-		sstm << "\t\tPlan# " << index + 1;
-		sstm << ", Layer:" << pPlan.initial_position.layer;
-		sstm << ", Line:" << pPlan.file_line;
-		sstm << ", Position:" << pPlan.file_position;
-		sstm << ", StartX:" << pPlan.initial_position.x;
-		sstm << ", StartY:" << pPlan.initial_position.y;
-		sstm << ", StartZ:" << pPlan.initial_position.z;
-		sstm << ", Tool:" << pPlan.initial_position.current_tool;
-		sstm << ", Speed:" << pPlan.initial_position.f;
-		sstm << ", Distance:" << pPlan.distance_from_stabilization_point;
-		sstm << ", Travel Distance:" << pPlan.total_travel_distance;
-		sstm << ", Type:" << feature_type_description;
-		sstm << ", Gcode:" << utilities::trim(pPlan.start_command.gcode);
-		if (pPlan.start_command.comment.length() > 0)
-			sstm << ", Comment: " << pPlan.start_command.comment;
+		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::DEBUG, stream.str());
 	}
-
-	octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, sstm.str());
 	return results;
 }
 
