@@ -203,6 +203,37 @@ class OctolapsePlugin(
         with OctolapsePlugin.admin_permission.require(http_exception=403):
             return self.get_download_file_response(self.get_settings_file_path(), "Settings.json")
 
+    @octoprint.plugin.BlueprintPlugin.route("/clearLog", methods=["POST"])
+    @restricted_access
+    def clear_log_request(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            clear_all = request_values["clear_all"]
+            if clear_all:
+                logger.info("Clearing all log files.")
+            else:
+                logger.info("Rolling over most recent log.")
+
+            logging_configurator.do_rollover(clear_all=clear_all)
+            return jsonify({"success": True})
+
+    @octoprint.plugin.BlueprintPlugin.route("/downloadLog", methods=["GET"])
+    @restricted_access
+    def download_log_request(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            debug_file_path = self.get_log_file_path()
+            if not os.path.exists(debug_file_path):
+                return jsonify({
+                    "success": False,
+                    "message": "No log file exists"
+                }), 404
+            # create the download file response
+            download_file_response = self.get_download_file_response(
+                debug_file_path,
+                "plugin_octolapse.log"
+            )
+            return download_file_response
+
     @octoprint.plugin.BlueprintPlugin.route("/downloadProfile", methods=["GET"])
     @restricted_access
     def download_profile_request(self):

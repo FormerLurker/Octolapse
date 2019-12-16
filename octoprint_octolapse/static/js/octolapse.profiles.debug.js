@@ -102,7 +102,7 @@ $(function() {
             var debug_container = document.getElementById("octolapse_add_edit_profile_model_body");
             debug_container.scrollTop = debug_container.scrollHeight;
         };
-        
+
         self.updateFromServer = function(values) {
             self.name(values.name);
             self.description(values.description);
@@ -116,6 +116,59 @@ $(function() {
                 var curItem = values.enabled_loggers[index];
                 self.enabled_loggers.push({'name':curItem.name, 'log_level':curItem.log_level});
             }
+        };
+
+        self.clearLog = function(clear_all) {
+            var title;
+            var message;
+            if (clear_all)
+            {
+                title = "Logs Cleared";
+                message = "All octolapse log files have been cleared.";
+            }
+            else
+            {
+                title = "Most Recent Log Cleared";
+                message = "The most recent octolapse log file has been cleared.";
+            }
+            var data = {
+                clear_all: clear_all
+            };
+
+            $.ajax({
+                url: "./plugin/octolapse/clearLog",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (data) {
+                    var options = {
+                        title: title,
+                        text: message,
+                        type: 'success',
+                        hide: true,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopupForKey(options,"log_file_cleared","log_file_cleared");
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    var message = "Unable to clear the log.:(  Status: " + textStatus + ".  Error: " + errorThrown;
+                    var options = {
+                        title: 'Clear Log Error',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopupForKey(options,"log_file_cleared","log_file_cleared");
+                }
+            });
         };
 
         self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
@@ -143,7 +196,7 @@ $(function() {
             //console.log("IsClickable" + value.toString());
             Octolapse.DebugProfiles.setIsClickable(!value);
         });
-        
+
     };
     Octolapse.DebugProfileValidationRules = {
         rules: {

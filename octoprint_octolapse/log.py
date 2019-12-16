@@ -74,9 +74,18 @@ class OctolapseFileHandler(CleaningTimedRotatingFileHandler, AsyncLogHandlerMixi
     def __init__(self, *args, **kwargs):
         super(OctolapseFileHandler, self).__init__(*args, **kwargs)
 
+    def delete_all_backups(self):
+        # clean up old files on handler start
+        backup_count = self.backupCount
+        self.backupCount = 0
+        for s in self.getFilesToDelete():
+            os.remove(s)
+        self.backupCount = backup_count
+
 
 @six.add_metaclass(Singleton)
 class LoggingConfigurator(object):
+    BACKUP_COUNT = 3
 
     def __init__(self):
         self.logging_formatter = OctolapseFormatter()
@@ -127,7 +136,7 @@ class LoggingConfigurator(object):
             self._console_handler = None
 
     def _add_file_handler(self, log_file_path, log_level):
-        self._file_handler = OctolapseFileHandler(log_file_path, when="D", backupCount=3)
+        self._file_handler = OctolapseFileHandler(log_file_path, when="D", backupCount=LoggingConfigurator.BACKUP_COUNT)
         self._file_handler.setFormatter(self.logging_formatter)
         self._file_handler.setLevel(log_level)
         self._root_logger.addHandler(self._file_handler)
@@ -137,6 +146,15 @@ class LoggingConfigurator(object):
         self._console_handler.setFormatter(self.logging_formatter)
         self._console_handler.setLevel(log_level)
         self._root_logger.addHandler(self._console_handler)
+
+    def do_rollover(self, clear_all=False):
+        if self._file_handler is None:
+            return
+        # To clear everything, we'll roll over every file
+        self._file_handler.doRollover()
+        if clear_all:
+            self._file_handler.delete_all_backups()
+
 
     def configure_loggers(self, log_file_path=None, debug_settings=None):
         default_log_level = logging.DEBUG

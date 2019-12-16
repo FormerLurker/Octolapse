@@ -42,6 +42,18 @@
         </div>
     </div>
     <div data-bind="template: {name:'octolapse-profile-library-test-template', data: automatic_configuration}"></div>
+    <hr/>
+    <div>
+        <h4>Manage Log Files</h4>
+         <div class="text-center">
+                <button type="button" class="btn btn-large" data-bind="click: function(){clearLog(false);}" title="Clear the most recent log."> <i class="icon-trash"></i>Clear Log</button>
+                <button type="button" class="btn btn-large" data-bind="click: function(){clearLog(true);}" title="Clear the most recent log and deletes any log file backups (up to 3)."><i class="icon-trash"></i>Clear All Logs</button>
+                 <a class="btn btn-large" title="Download the most recent logfile."
+                   data-bind="attr: {href: '{{ url_for('plugin.octolapse.download_log_request') }}' + UI_API_KEY}" download="">
+                    <i class="fa fa-download"></i> Download Log
+                </a>
+        </div>
+    </div>
     <div data-bind="slideVisible: !automatic_configuration.updating_from_server()">
         <div>
             <hr />
@@ -156,6 +168,7 @@
             </div>
         </div>
     </div>
+
 </script>
 
 
