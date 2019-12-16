@@ -331,14 +331,19 @@ $(function () {
                 dataType: "json",
                 success: function (newSettings) {
                     self.updateSettings(newSettings);
-                    Octolapse.Globals.loadState();
-                    if(success_callback)
-                    {
-                        success_callback();
-                    }
+                    // Load the current state before running the success callback.
+                    Octolapse.Globals.loadState(function(){
+                        // Todo:  Add an error callback if the current state cannot be loaded
+                        if(success_callback)
+                        {
+                            success_callback();
+                        }
+                    });
+
                     //console.log("Settings have been loaded.");
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    // Todo:  Add an error callback if the current settings cannot be loaded
                     var message = "Octolapse was unable to load the current settings.  Status: " + textStatus + ".  Error: " + errorThrown;
                     var options = {
                         title: 'Settings Load Error',

@@ -1304,6 +1304,7 @@ $(function () {
             if (!self.startup_complete && self.is_admin()) {
                 //console.log("octolapse.js - Loading settings for current user after startup.");
                 Octolapse.Settings.loadSettings(function(){
+                    // Settings are loaded, show the UI
                     self.has_loaded_state(true);
                     //  Check for updates
                     Octolapse.Settings.checkForProfileUpdates(true);
@@ -1311,6 +1312,7 @@ $(function () {
             } else
             {
                 self.loadState(function(){
+                    // Settings are loaded, show the UI
                     self.has_loaded_state(true);
                 });
             }
