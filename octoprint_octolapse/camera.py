@@ -24,8 +24,11 @@ from __future__ import unicode_literals
 import json
 import six
 import octoprint_octolapse.utility as utility
+import octoprint_octolapse.script as script
 from threading import Thread
 import time
+import uuid
+import shutil
 # This file is subject to the terms and conditions defined in
 # file called 'LICENSE', which is part of this source code package.
 import requests
@@ -34,6 +37,7 @@ import os
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import SSLError
 from octoprint_octolapse.settings import CameraProfile, MjpgStreamerControl, MjpgStreamer
+from tempfile import mkdtemp
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -272,7 +276,7 @@ class CameraControl(object):
         for thread in threads:
             thread.start()
         start_time = time.time()
-        timeout_time = start_time + 5
+        timeout_time = start_time + timeout_seconds
         # join the threads, but timeout in a reasonable way
         for thread in threads:
             timeout_sec = timeout_time - time.time()
@@ -302,7 +306,6 @@ class CameraControl(object):
         if unknown_errors_count > 0:
             unknown_errors = "{} unknown errors, check plugin.octolapse.log for details.".format(unknown_errors_count)
         return "{}{}".format(camera_errors, unknown_errors)
-
 
     @staticmethod
     def apply_webcam_setting(
@@ -605,6 +608,272 @@ class CameraControl(object):
             )
             logger.exception(message)
             raise CameraError('missing-schema', message, cause=e)
+
+    @staticmethod
+    def test_script(camera_profile, script_type, base_folder):
+        snapshot_created = None
+        if script_type == 'snapshot':
+            success, error, snapshot_created = CameraControl._test_camera_snapshot_script(camera_profile, script_type, base_folder)
+        elif script_type in ['before-snapshot', 'after-snapshot']:
+            success, error = CameraControl._test_camera_before_after_snapshot_script(
+                camera_profile, script_type, base_folder
+            )
+        elif script_type in ['before-print', 'after-print']:
+            success, error = CameraControl._test_print_script(camera_profile, script_type, base_folder)
+        elif script_type == 'before-render':
+            success, error = CameraControl._test_before_render_script(camera_profile, script_type, base_folder)
+        elif script_type == 'after-render':
+            success, error = CameraControl._test_after_render_script(camera_profile, script_type, base_folder)
+        else:
+            return False, "An unknown script type of {0} was sent.  Cannot test script".format(script), None
+
+        return success, error, snapshot_created
+
+    @staticmethod
+    def _test_camera_snapshot_script(camera_profile, script_type, base_folder):
+        """Test a script camera."""
+        # create a temp directory for use with this test
+        temp_directory = mkdtemp()
+
+        try:
+            camera_name = camera_profile.name
+            snapshot_number = 0
+            delay_seconds = camera_profile.delay
+            data_directory = temp_directory
+            snapshot_directory = os.path.join(
+                data_directory, "snapshots", "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
+            )
+            snapshot_filename = utility.get_snapshot_filename(
+                "test_snapshot", time.time(), snapshot_number
+            )
+            snapshot_full_path = os.path.join(snapshot_directory, snapshot_filename)
+            timeout_seconds = camera_profile.timeout_ms / 1000.0
+
+            script_path = camera_profile.external_camera_snapshot_script
+
+            cmd = script_job = script.CameraScriptSnapshot(
+                script_path,
+                camera_name,
+                snapshot_number,
+                delay_seconds,
+                data_directory,
+                snapshot_directory,
+                snapshot_filename,
+                snapshot_full_path,
+                timeout_seconds=timeout_seconds
+            )
+            cmd.run()
+            # check to see if the snapshot image was created
+            success = cmd.success()
+            snapshot_created = os.path.exists(snapshot_full_path)
+            return cmd.success(), cmd.error_message, snapshot_created
+        finally:
+            shutil.rmtree(temp_directory)
+
+    @staticmethod
+    def _test_camera_before_after_snapshot_script(camera_profile, script_type, base_folder):
+        """Test a script camera."""
+        # create a temp directory for use with this test
+        temp_directory = mkdtemp()
+
+        try:
+            camera_name = camera_profile.name
+            snapshot_number = 0
+            delay_seconds = camera_profile.delay
+            data_directory = temp_directory
+            snapshot_directory = os.path.join(
+                data_directory, "snapshots", "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
+            )
+            snapshot_filename = utility.get_snapshot_filename(
+                "test_snapshot", time.time(), snapshot_number
+            )
+            snapshot_full_path = os.path.join(snapshot_directory, snapshot_filename)
+            timeout_seconds = camera_profile.timeout_ms / 1000.0
+
+            # setup test depending on the script_type
+            script_path = ""
+            if script_type == 'before-snapshot':
+                script_path = camera_profile.on_before_snapshot_script
+            elif script_type == 'after-snapshot':
+                script_path = camera_profile.on_after_snapshot_script
+                # we need to add an image to the temp folder, in case the script operates on the image
+                test_image_path = os.path.join(base_folder, "data", "images", "test-snapshot-image.jpg")
+                target_directory = os.path.dirname(snapshot_full_path)
+                if not os.path.exists(target_directory):
+                    os.makedirs(target_directory)
+                shutil.copy(test_image_path, snapshot_full_path)
+
+            if script_type == 'before-snapshot':
+                cmd = script.CameraScriptBeforeSnapshot(
+                    script_path,
+                    camera_name,
+                    snapshot_number,
+                    delay_seconds,
+                    data_directory,
+                    snapshot_directory,
+                    snapshot_filename,
+                    snapshot_full_path,
+                    timeout_seconds=timeout_seconds
+                )
+            else:
+                cmd = script.CameraScriptAfterSnapshot(
+                    script_path,
+                    camera_name,
+                    snapshot_number,
+                    delay_seconds,
+                    data_directory,
+                    snapshot_directory,
+                    snapshot_filename,
+                    snapshot_full_path,
+                    timeout_seconds=timeout_seconds
+                )
+            cmd.run()
+            return cmd.success(), cmd.error_message
+        finally:
+            shutil.rmtree(temp_directory)
+
+    @staticmethod
+    def _test_print_script(camera_profile, script_type, base_folder):
+        # build the arg list
+        if script_type == "before-print":
+            script_path = camera_profile.on_print_start_script.strip()
+        else:
+            script_path = camera_profile.on_print_end_script.strip()
+
+        if script_type == "before-print":
+            cmd = script.CameraScriptBeforePrint(
+                script_path,
+                camera_profile.name,
+                timeout_seconds=10
+            )
+        else:
+            cmd = script.CameraScriptAfterPrint(
+                script_path,
+                camera_profile.name,
+                timeout_seconds=10
+            )
+        cmd.run()
+        return cmd.success(), cmd.error_message
+
+    @staticmethod
+    def _test_before_render_script(camera_profile, script_type, base_folder):
+
+        # create a temp folder for the rendered file and the snapshots
+        temp_directory = mkdtemp()
+
+        try:
+            # create 10 snapshots
+            test_image_path = os.path.join(base_folder, "data", "images", "test-snapshot-image.jpg")
+            snapshot_directory = os.path.join(
+                temp_directory, "snapshots", "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
+            )
+            if not os.path.exists(snapshot_directory):
+                os.makedirs(snapshot_directory)
+
+            for snapshot_number in range(10):
+                snapshot_file_name = utility.get_snapshot_filename(
+                    'test', time.time(), snapshot_number
+                )
+                target_snapshot_path = os.path.join(snapshot_directory, snapshot_file_name)
+                shutil.copy(test_image_path, target_snapshot_path)
+
+            snapshot_filename_format = os.path.basename(
+                utility.get_snapshot_filename(
+                    "render_script_test", time.time(), utility.SnapshotNumberFormat
+                )
+            )
+            script_path = camera_profile.on_before_render_script.strip()
+
+            if script_path is None or len(script_path) == 0:
+                return False, "No script path was provided.  Please enter a script path and try again.", ""
+
+            if not os.path.exists(script_path):
+                return False, "The script path '{0}' does not exist.  Please enter a valid script path and try again.".format(script_path), ""
+
+            console_output = ""
+            error_message = ""
+
+            cmd = script.CameraScriptBeforeRender(
+                script_path,
+                camera_profile.name,
+                snapshot_directory,
+                snapshot_filename_format,
+                os.path.join(snapshot_directory, snapshot_filename_format),
+                timeout_seconds=10
+            )
+            cmd.run()
+            return cmd.success(), cmd.error_message
+        finally:
+            shutil.rmtree(temp_directory)
+
+    @staticmethod
+    def _test_after_render_script(camera_profile, script_type, base_folder):
+
+        # create a temp folder for the rendered file and the snapshots
+        temp_directory = mkdtemp()
+
+        try:
+            # create 10 snapshots
+            test_image_path = os.path.join(base_folder, "data", "images", "test-snapshot-image.jpg")
+            snapshot_directory = os.path.join(
+                temp_directory, "snapshots", "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
+            )
+            if not os.path.exists(snapshot_directory):
+                os.makedirs(snapshot_directory)
+
+            for snapshot_number in range(10):
+                snapshot_file_name = utility.get_snapshot_filename(
+                    'test', time.time(), snapshot_number
+                )
+                target_snapshot_path = os.path.join(snapshot_directory, snapshot_file_name)
+                shutil.copy(test_image_path, target_snapshot_path)
+
+            snapshot_filename_format = os.path.basename(
+                utility.get_snapshot_filename(
+                    "render_script_test", time.time(), utility.SnapshotNumberFormat
+                )
+            )
+
+
+            script_path = camera_profile.on_after_render_script.strip()
+            rendering_path = os.path.join(temp_directory, "timelapse", "test_rendering.mp4")
+
+            output_filepath = utility.get_collision_free_filepath(rendering_path)
+            output_filename = utility.get_filename_from_full_path(rendering_path)
+            output_directory = utility.get_directory_from_full_path(rendering_path)
+            output_extension = utility.get_extension_from_full_path(rendering_path)
+            # Synchronization path info
+
+            synchronized_filepath = os.path.join(temp_directory, "timelapse_synchronized", "test_rendering.mp4")
+            synchronized_filename = utility.get_filename_from_full_path(synchronized_filepath)
+            synchronized_directory = utility.get_directory_from_full_path(synchronized_filepath)
+
+            if script_path is None or len(script_path) == 0:
+                return False, "No script path was provided.  Please enter a script path and try again.", ""
+
+            if not os.path.exists(script_path):
+                return False, "The script path '{0}' does not exist.  Please enter a valid script path and try again.".format(
+                    script_path), ""
+
+
+            cmd = script.CameraScriptAfterRender(
+                script_path,
+                camera_profile.name,
+                snapshot_directory,
+                snapshot_filename_format,
+                os.path.join(snapshot_directory, snapshot_filename_format),
+                output_directory,
+                output_filename,
+                output_extension,
+                rendering_path,
+                synchronized_directory,
+                synchronized_filename,
+                timeout_seconds=10
+            )
+            cmd.run()
+            return cmd.success(), cmd.error_message
+        finally:
+            shutil.rmtree(temp_directory)
 
     @staticmethod
     def load_webcam_defaults(
@@ -988,58 +1257,20 @@ class CameraSettingScriptThread(Thread):
         self.error = None
 
     def run(self):
-        try:
-            script = self.Camera.on_print_start_script.strip()
-            logger.info(
-                "Executing the %s script at '%s' for the '%s' camera with the following arguments: %s.",
-                self.script_type,
+        if self.script_type == "before-print":
+            cmd = script.CameraScriptBeforePrint(
                 self.script_path,
-                self.camera_name,
-                ' '.join(self.script_args)
+                self.camera_name
             )
+        else:
+            cmd = script.CameraScriptAfterPrint(
+                self.script_path,
+                self.camera_name
+            )
+        cmd.run()
+        if not cmd.success():
+            self.error = CameraError('error_message_returned', cmd.error_message)
 
-            if not self.script_path:
-                message = "The {0} script for the {1} camera is empty".format(self.script_type, self.camera_name)
-                raise CameraError('no_camera_script_path', message)
-            try:
-                command_args = [
-                    script
-                ]
-                command_args = command_args + self.script_args
-                cmd = utility.POpenWithTimeout()
-                return_code = cmd.run(command_args, None)
-                self.console_output = cmd.stdout
-                logger.debug(
-                    "The following console output was returned for the %s script at '%s' for the '%s' camera: %s.",
-                    self.script_type,
-                    self.script_path,
-                    self.camera_name,
-                    self.console_output
-                )
-                error_message = cmd.stderr
-            except utility.POpenWithTimeout.ProcessError as e:
-                message = "An OS Error error occurred while executing the custom camera initialization script"
-                raise CameraError('camera_initialization_error', message, cause=e)
-
-            if error_message is not None:
-                if error_message.endswith("\r\n"):
-                    error_message = error_message[:-2]
-            else:
-                error_message = "No error message was reported."
-            if not return_code == 0:
-                error_message = (
-                    "Error output was returned after executing executing the {0} script for the {1} camera.  "
-                    "Return Code: {2}, Error Message: {3}".format(
-                        self.script_type, self.camera_name, return_code, error_message
-                    )
-                )
-                raise CameraError('error_code_returned', error_message)
-            elif error_message is not None:
-                raise CameraError('error_message_returned', error_message)
-
-        except CameraError as e:
-            logger.exception("A camera error occurred while running the CameraSettingScriptThread.")
-            self.error = e
 
 
 class CameraError(Exception):

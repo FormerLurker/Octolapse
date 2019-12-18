@@ -24,14 +24,15 @@ from __future__ import unicode_literals
 import threading
 import time
 import uuid
+from six import iteritems
 from six.moves import queue
-
+import os
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.stabilization_gcode import SnapshotGcodeGenerator, SnapshotGcode
 from octoprint_octolapse.gcode_commands import Commands, Response
-from octoprint_octolapse.gcode_processor import GcodeProcessor, ParsedCommand
+from octoprint_octolapse.gcode_processor import ParsedCommand
 from octoprint_octolapse.position import Position
-from octoprint_octolapse.render import RenderError, RenderingProcessor, RenderingCallbackArgs, RenderJobInfo, TimelapseRenderJob
+from octoprint_octolapse.render import RenderError, RenderingProcessor, RenderingCallbackArgs, RenderJobInfo
 from octoprint_octolapse.settings import PrinterProfile, OctolapseSettings
 from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotJobInfo, SnapshotError
 from octoprint_octolapse.trigger import Triggers
@@ -311,23 +312,54 @@ class Timelapse(object):
         # todo - notify client here
         # todo - maintain snapshot number separately for each camera!
         succeeded = len(results) > 0
-        errors = []
+        errors = {}
         for result in results:
             assert(isinstance(result, SnapshotJobInfo))
             if not result.success:
                 succeeded = False
-                errors.append(result.error)
+                errors[result.job_type] = result.error
+
         snapshot_payload["success"] = succeeded
-        # todo:  format this so the errors look better
 
         error_message = ""
-        if len(errors) == 1:
-            if isinstance(errors[0], SnapshotError):
-                error_message = errors[0].message
-            else:
-                error_message = "An unexpected error occurred while taking snapshots.  See plugin_octolapse.log for details."
-        elif len(errors) > 1:
-            error_message = "{0} errors occurred while taking snapshots. See plugin_octolapse.log for details.".format(len(errors))
+        if len(errors.keys()) == 1:
+            for key, value in iteritems(errors):
+                if key == 'before-snapshot':
+                    error_message = "Before Snapshot Script Error: {0}"
+                elif key == 'after-snapshot':
+                    error_message = "After Snapshot Script Error: {0}"
+                else:
+                    error_message = "{0}"
+                if isinstance(value, SnapshotError):
+                    error_message = error_message.format(value.message)
+                else:
+                    error_message = error_message.format("An unexpected error occurred.  See plugin_octolapse.log for details.")
+        elif len(errors.keys()) > 1:
+            before_snapshot_error_count = False
+            after_snapshot_error_count = False
+            snapshot_error_count = False
+            for key, value in iteritems(errors):
+                if key == 'before-snapshot':
+                    before_snapshot_error_count += 1
+                elif key == 'after-snapshot':
+                    after_snapshot_error_count += 1
+                else:
+                    snapshot_error_count += 1
+
+            error_message = "Multiple errors occurred:"
+            if before_snapshot_error_count > 0:
+                error_message += "{0}{1} Before Snapshot Error{2}".format(
+                    os.linesep, before_snapshot_error_count, "s" if before_snapshot_error_count > 1 else ""
+                )
+            if snapshot_error_count > 0:
+                error_message += "{0}{1} Snapshot Error{2}".format(
+                    os.linesep, snapshot_error_count, "s" if snapshot_error_count > 1 else ""
+                )
+            if after_snapshot_error_count > 0:
+                error_message += "{0}{1} After Snapshot Error{2}".format(
+                    os.linesep, after_snapshot_error_count, "s" if after_snapshot_error_count > 1 else ""
+                )
+                error_message += "{0}See plugin_octolapse.log for details.".format(os.linesep)
 
         snapshot_payload["error"] = error_message
 

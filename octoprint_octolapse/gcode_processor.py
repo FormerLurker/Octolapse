@@ -23,7 +23,7 @@
 
 import GcodePositionProcessor
 import octoprint_octolapse.utility as utility
-import six
+
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()

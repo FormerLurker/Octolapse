@@ -23,9 +23,7 @@
 from __future__ import unicode_literals
 from six import string_types
 import operator
-import octoprint_octolapse.utility as utility
 import re
-import string
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator

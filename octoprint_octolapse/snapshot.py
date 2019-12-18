@@ -20,7 +20,7 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from subprocess import CalledProcessError
+from __future__ import unicode_literals
 import shutil
 import six
 import os
@@ -43,6 +43,7 @@ import octoprint_octolapse.utility as utility
 from octoprint_octolapse.gcode_commands import Commands
 from octoprint_octolapse.utility import TimelapseJobInfo
 from octoprint_octolapse.log import LoggingConfigurator
+import octoprint_octolapse.script as script
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 
@@ -62,8 +63,9 @@ def take_in_memory_snapshot(settings, current_camera):
         snapshot_job_info = SnapshotJobInfo(
             TimelapseJobInfo(job_guid=uuid4(),
                              print_start_time=time(),
-                             print_file_name='overlay_preview'),
-            temp_snapshot_dir, 0, current_camera)
+                             print_file_name='overlay_preview',
+                             ),
+            temp_snapshot_dir, 0, current_camera, 'in-memory')
         if current_camera.camera_type == "script":
             snapshot_job = ExternalScriptSnapshotJob(snapshot_job_info, settings)
         else:
@@ -83,7 +85,6 @@ class CaptureSnapshot(object):
 
     def __init__(self, settings, data_directory, cameras, timelapse_job_info, send_gcode_array_callback
                  , on_new_thumbnail_available_callback, on_post_processing_error_callback):
-        self.Settings = settings
         self.Cameras = []
         for current_camera in cameras:
             self.Cameras.append(current_camera)
@@ -116,21 +117,20 @@ class CaptureSnapshot(object):
             # pre_snapshot threads
             if current_camera.on_before_snapshot_script:
                 before_snapshot_job_info = SnapshotJobInfo(
-                    self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_attempt, current_camera
+                    self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_attempt, current_camera, 'before-snapshot'
                 )
-                thread = ExternalScriptSnapshotJob(before_snapshot_job_info, self.Settings, 'before-snapshot')
+                thread = ExternalScriptSnapshotJob(before_snapshot_job_info, 'before-snapshot')
                 thread.daemon = True
                 before_snapshot_threads.append(
                     thread
                 )
 
             snapshot_job_info = SnapshotJobInfo(
-                self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_attempt, current_camera
+                self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_attempt, current_camera, 'snapshot'
             )
             if current_camera.camera_type == "script":
                 thread = ExternalScriptSnapshotJob(
                     snapshot_job_info,
-                    self.Settings,
                     'snapshot',
                     on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback,
                     on_post_processing_error_callback=self.on_post_processing_error_callback
@@ -141,7 +141,6 @@ class CaptureSnapshot(object):
                 download_started_event = Event()
                 thread = WebcamSnapshotJob(
                     snapshot_job_info,
-                    self.Settings,
                     download_started_event=download_started_event,
                     on_new_thumbnail_available_callback=self.OnNewThumbnailAvailableCallback,
                     on_post_processing_error_callback=self.on_post_processing_error_callback
@@ -150,11 +149,11 @@ class CaptureSnapshot(object):
                 snapshot_threads.append((thread, snapshot_job_info, download_started_event))
 
             after_snapshot_job_info = SnapshotJobInfo(
-                self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_attempt, current_camera
+                self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_attempt, current_camera, 'after-snapshot'
             )
             # post_snapshot threads
             if current_camera.on_after_snapshot_script:
-                thread = ExternalScriptSnapshotJob(after_snapshot_job_info, self.Settings, 'after-snapshot')
+                thread = ExternalScriptSnapshotJob(after_snapshot_job_info, 'after-snapshot')
                 thread.daemon = True
                 after_snapshot_threads.append(
                     thread
@@ -169,13 +168,15 @@ class CaptureSnapshot(object):
 
         # join the pre-snapshot threads
         for t in before_snapshot_threads:
-            result = t.join()
-            assert (isinstance(result, SnapshotJobInfo))
-            info = self.CameraInfos[result.camera_guid]
-            if not result.success:
-                info.errors_count += 1
-                self.ErrorsTotal += 1
-            results.append(result)
+            snapshot_job_info = t.join()
+            assert (isinstance(snapshot_job_info, SnapshotJobInfo))
+            if t.snapshot_thread_error:
+                snapshot_job_info.success = False
+                snapshot_job_info.error = t.snapshot_thread_error
+            else:
+                snapshot_job_info.success = True
+
+            results.append(snapshot_job_info)
 
         if len(before_snapshot_threads) > 0:
             logger.info("Before snapshot threads finished.")
@@ -232,13 +233,15 @@ class CaptureSnapshot(object):
 
         # join the after-snapshot threads
         for t in after_snapshot_threads:
-            result = t.join()
-            assert (isinstance(result, SnapshotJobInfo))
-            info = self.CameraInfos[result.camera_guid]
-            if not result.success:
-                info.errors_count += 1
-                self.ErrorsTotal += 1
-            results.append(result)
+            snapshot_job_info = t.join()
+            assert (isinstance(snapshot_job_info, SnapshotJobInfo))
+            info = self.CameraInfos[snapshot_job_info.camera_guid]
+            if t.snapshot_thread_error:
+                snapshot_job_info.success = False
+                snapshot_job_info.error = t.snapshot_thread_error
+            else:
+                snapshot_job_info.success = True
+            results.append(snapshot_job_info)
 
         if len(after_snapshot_threads) > 0:
             logger.info("After snapshot threads complete.")
@@ -454,11 +457,10 @@ class ImagePostProcessing(object):
 
 
 class SnapshotThread(Thread):
-    def __init__(self, snapshot_job_info, settings, on_new_thumbnail_available_callback=None,
+    def __init__(self, snapshot_job_info, on_new_thumbnail_available_callback=None,
                  on_post_processing_error_callback=None):
         super(SnapshotThread, self).__init__()
         self.snapshot_job_info = snapshot_job_info
-        self.Settings = settings
         self.on_new_thumbnail_available_callback = on_new_thumbnail_available_callback
         self.on_post_processing_error_callback = on_post_processing_error_callback
         self.post_processing_error = None
@@ -521,15 +523,15 @@ class SnapshotThread(Thread):
 
 
 class ExternalScriptSnapshotJob(SnapshotThread):
-    def __init__(self, snapshot_job_info, settings, script_type, on_new_thumbnail_available_callback=None,
+    def __init__(self, snapshot_job_info, script_type, on_new_thumbnail_available_callback=None,
                  on_post_processing_error_callback=None):
         super(ExternalScriptSnapshotJob, self).__init__(
             snapshot_job_info,
-            settings,
             on_new_thumbnail_available_callback=on_new_thumbnail_available_callback,
             on_post_processing_error_callback=on_post_processing_error_callback
         )
         assert (isinstance(snapshot_job_info, SnapshotJobInfo))
+        self.ScriptPath = None
         if script_type == 'before-snapshot':
             self.ScriptPath = snapshot_job_info.camera.on_before_snapshot_script
         elif script_type == 'snapshot':
@@ -542,6 +544,14 @@ class ExternalScriptSnapshotJob(SnapshotThread):
     def run(self):
         logger.info("Snapshot - running %s script for the %s camera.",
                     self.script_type, self.snapshot_job_info.camera.name)
+        if self.ScriptPath is None or len(self.ScriptPath) == 0:
+            self.snapshot_thread_error = "No script path was provided.  Please enter a script " \
+                                         "path and try again.".format(self.ScriptPath)
+            return
+        if not os.path.exists(self.ScriptPath):
+            self.snapshot_thread_error = "The provided script path ({0}) does not exist.  Please check your script " \
+                                         "path and try again.".format(self.ScriptPath)
+            return
         # execute the script and send the parameters
         if self.script_type == 'snapshot':
             if self.snapshot_job_info.DelaySeconds < 0.001:
@@ -582,101 +592,45 @@ class ExternalScriptSnapshotJob(SnapshotThread):
         logger.info("The %s script job completed, signaling task queue.", self.script_type)
 
     def execute_script(self):
-        logger.info(
-            "Running the following %s script command for the %s camera with a timeout of %s: %s %s %s %s %s %s %s",
-            self.script_type,
-            self.snapshot_job_info.camera.name,
-            self.snapshot_job_info.TimeoutSeconds,
-            self.ScriptPath,
-            "{}".format(self.snapshot_job_info.SnapshotNumber),
-            "{}".format(self.snapshot_job_info.DelaySeconds),
-            self.snapshot_job_info.DataDirectory,
-            self.snapshot_job_info.directory,
-            self.snapshot_job_info.file_name,
-            self.snapshot_job_info.full_path
-        )
-        script_args = [
-            self.ScriptPath,
-            "{}".format(self.snapshot_job_info.SnapshotNumber),
-            "{}".format(self.snapshot_job_info.DelaySeconds),
-            self.snapshot_job_info.DataDirectory,
-            self.snapshot_job_info.directory,
-            self.snapshot_job_info.file_name,
-            self.snapshot_job_info.full_path
-        ]
-
-        try:
-            cmd = utility.POpenWithTimeout()
-            return_code = cmd.run(script_args, self.snapshot_job_info.TimeoutSeconds)
-            if cmd.stdout:
-                logger.verbose(
-                    "Console output for the %s script for the %s camera:\n%s",
-                    self.script_type,
-                    self.snapshot_job_info.camera.name,
-                    cmd.stdout)
-            else:
-                logger.verbose(
-                    "No console output was returned for the %s script for the %s camera.",
-                    self.script_type,
-                    self.snapshot_job_info.camera.name)
-            error_message = cmd.stderr
-
-        except utility.POpenWithTimeout.ProcessError as e:
-            message = "An OS Error error occurred while executing the {0} script for the {1} camera.".format(
-                self.script_type, self.snapshot_job_info.camera.name)
-            logger.exception(message)
+        if self.script_type == "before-snapshot":
+            cmd = script.CameraScriptBeforeSnapshot(
+                self.ScriptPath,
+                self.snapshot_job_info.camera.name,
+                "{}".format(self.snapshot_job_info.SnapshotNumber),
+                "{}".format(self.snapshot_job_info.DelaySeconds),
+                self.snapshot_job_info.DataDirectory,
+                self.snapshot_job_info.directory,
+                self.snapshot_job_info.file_name,
+                self.snapshot_job_info.full_path
+            )
+        elif self.script_type == "after-snapshot":
+            cmd = script.CameraScriptAfterSnapshot(
+                self.ScriptPath,
+                self.snapshot_job_info.camera.name,
+                "{}".format(self.snapshot_job_info.SnapshotNumber),
+                "{}".format(self.snapshot_job_info.DelaySeconds),
+                self.snapshot_job_info.DataDirectory,
+                self.snapshot_job_info.directory,
+                self.snapshot_job_info.file_name,
+                self.snapshot_job_info.full_path
+            )
+        else:
+            cmd = script.CameraScriptSnapshot(
+                self.ScriptPath,
+                self.snapshot_job_info.camera.name,
+                "{}".format(self.snapshot_job_info.SnapshotNumber),
+                "{}".format(self.snapshot_job_info.DelaySeconds),
+                self.snapshot_job_info.DataDirectory,
+                self.snapshot_job_info.directory,
+                self.snapshot_job_info.file_name,
+                self.snapshot_job_info.full_path
+            )
+        cmd.run()
+        if not cmd.success():
             raise SnapshotError(
                 '{0}_script_error'.format(self.script_type),
-                message,
-                cause=e
+                "The snapshot script returned an error.  Check plugin_octolapse.log for details."
             )
-
-        if error_message and error_message.endswith("\r\n"):
-            error_message = error_message[:-2]
-
-        if not return_code == 0:
-            if cmd.exception and not error_message:
-                # an exception was stored in the cmd
-                error_message = (
-                    "The {0} script raised an exception for the {1} camera with the following error "
-                    "message: {2}".format(
-                        self.script_type, self.snapshot_job_info.camera.name, error_message)
-                )
-                raise SnapshotError(
-                    '{0}_script_error'.format(self.script_type),
-                    error_message,
-                    cause=cmd.exception
-                )
-            elif cmd.exception:
-                error_message = (
-                    "The {0} script raised an exception for the {1} camera.".format(
-                        self.script_type, self.snapshot_job_info.camera.name
-                    )
-                )
-                raise SnapshotError(
-                    '{0}_script_error'.format(self.script_type),
-                    error_message,
-                    cause=cmd.exception
-                )
-            elif error_message:
-                error_message = "The {0} script failed for the {1} camera with the following error message: {2}"\
-                    .format(self.script_type, self.snapshot_job_info.camera.name, error_message)
-            else:
-                error_message = (
-                    "The {0} script for the {1} camera returned {2},"
-                    " which indicates an error.".format(
-                        self.script_type, self.snapshot_job_info.camera.name, return_code)
-                )
-            logger.error(error_message)
-            raise SnapshotError('{0}_script_error'.format(self.script_type), error_message)
-        elif error_message:
-            error_message = "Error output was returned from the {0} script for the {1} camera: {2}".format(
-                self.script_type,
-                self.snapshot_job_info.camera.name,
-                error_message
-            )
-            logger.error(error_message)
-            raise SnapshotError('{0}_script_error'.format(self.script_type), error_message)
 
 
 class WebcamSnapshotJob(SnapshotThread):
@@ -684,14 +638,12 @@ class WebcamSnapshotJob(SnapshotThread):
     def __init__(
         self,
         snapshot_job_info,
-        settings,
         download_started_event=None,
         on_new_thumbnail_available_callback=None,
         on_post_processing_error_callback=None
     ):
         super(WebcamSnapshotJob, self).__init__(
             snapshot_job_info,
-            settings,
             on_new_thumbnail_available_callback=on_new_thumbnail_available_callback,
             on_post_processing_error_callback=on_post_processing_error_callback
         )
@@ -838,7 +790,7 @@ class SnapshotError(Exception):
 
 
 class SnapshotJobInfo(object):
-    def __init__(self, timelapse_job_info, data_directory, snapshot_number, current_camera):
+    def __init__(self, timelapse_job_info, data_directory, snapshot_number, current_camera, job_type):
         self.camera = current_camera
         self.directory = os.path.join(data_directory, "snapshots", timelapse_job_info.JobGuid, current_camera.guid)
         self.file_name = utility.get_snapshot_filename(
@@ -853,6 +805,7 @@ class SnapshotJobInfo(object):
         self.SnapshotNumber = snapshot_number
         self.DataDirectory = data_directory
         self.SnapshotTranspose = current_camera.snapshot_transpose
+        self.job_type = job_type
 
     @property
     def full_path(self):

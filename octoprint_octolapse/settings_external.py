@@ -24,7 +24,6 @@ from __future__ import unicode_literals
 from distutils.version import LooseVersion
 import requests
 import uuid
-import tempfile
 import json
 import six
 import os

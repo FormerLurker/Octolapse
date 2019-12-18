@@ -139,6 +139,7 @@ $(function() {
             });
         };
 
+
         self.testCamera = function () {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             //console.log("Running camera request.");
@@ -182,6 +183,72 @@ $(function() {
                         addclass: "octolapse"
                     };
                     Octolapse.displayPopupForKey(options, "camera_settings_failed",["camera_settings_failed"]);
+                }
+            });
+        };
+
+        self.testCameraScript = function(script_type)
+        {
+            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            //console.log("Running camera request.");
+            var data = { 'profile': self.toJS(self), 'script_type': script_type };
+            $.ajax({
+                url: "./plugin/octolapse/testCameraScript",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    if (results.success){
+                        var title = "Camera Script Success";
+                        var message_type='success';
+                        var message = "The script appears to work!  No errors or error codes were returned.";
+                        var hide = true;
+                        if (script_type == 'snapshot') {
+                            if (results.snapshot_created)
+                            {
+                                 message = "The script appears to work, and a snapshot was found!  No errors or error codes were returned.";
+                            }
+                            else
+                            {
+                                 title = "Partial Camera Script Success";
+                                 message = "The script appears to work, but no snapshot was found in the target folder.  This is OK if you are leaving images on your DSLR's internal memory.  Otherwise this could be a problem.";
+                                 message_type = "warning";
+                                 hide = false;
+                            }
+                        }
+
+
+                        var success_options = {
+                            title: title,
+                            text: message,
+                            type: message_type,
+                            hide: hide,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(success_options, "camera_script_test", ["camera_script_test"]);
+                    }
+                    else {
+                        var fail_options = {
+                            title: 'Camera Script Failed',
+                            text: 'Errors were detected - ' + results.error,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(fail_options, "camera_script_test",["camera_script_test"]);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                    var options = {
+                        title: 'Camera Script Test Failed',
+                        text: "Unable to perform the test, or an unexpected error occurred.  Please check the log file for details.  Status: " + textStatus + ".  Error: " + errorThrown,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options, "camera_script_test",["camera_script_test"]);
                 }
             });
         };

@@ -11,7 +11,7 @@
     "show_trigger_state_changes": true,
     "show_snapshot_plan_information": true,
     "cancel_print_on_startup_error": true,
-    "platform": "win32",
+    "platform": "unknown",
     "version": "0.4.0rc1.dev3",
     "preview_snapshot_plans": true,
     "preview_snapshot_plan_autoclose": false,
@@ -775,7 +775,7 @@
         "min_fps": 2.0,
         "output_format": "gif",
         "sync_with_timelapse": true,
-        "bitrate": "8M",
+        "bitrate": "6000k",
         "post_roll_seconds": 2,
         "pre_roll_seconds": 2,
         "output_template": "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}",
@@ -820,7 +820,7 @@
         "min_fps": 2.0,
         "output_format": "mp4",
         "sync_with_timelapse": true,
-        "bitrate": "8M",
+        "bitrate": "6000k",
         "post_roll_seconds": 2,
         "pre_roll_seconds": 2,
         "output_template": "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}",
@@ -865,7 +865,7 @@
         "min_fps": 2.0,
         "output_format": "mp4",
         "sync_with_timelapse": true,
-        "bitrate": "10M",
+        "bitrate": "6000k",
         "post_roll_seconds": 2,
         "pre_roll_seconds": 2,
         "output_template": "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}",
@@ -910,7 +910,7 @@
         "min_fps": 2.0,
         "output_format": "mp4",
         "sync_with_timelapse": true,
-        "bitrate": "10M",
+        "bitrate": "6000k",
         "post_roll_seconds": 2,
         "pre_roll_seconds": 2,
         "output_template": "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}",
@@ -955,7 +955,7 @@
         "min_fps": 2.0,
         "output_format": "mp4",
         "sync_with_timelapse": true,
-        "bitrate": "12M",
+        "bitrate": "6000k",
         "post_roll_seconds": 2,
         "pre_roll_seconds": 2,
         "output_template": "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}",
@@ -1065,7 +1065,7 @@
               "value": "live_log_debug"
             }
           ],
-          "version": "1.1",
+          "version": "1.3",
           "suppress_update_notification_version": false,
           "is_custom": false
         },
@@ -1146,6 +1146,18 @@
           {
             "name": "octolapse.settings_external",
             "log_level": 10
+          },
+          {
+            "name": "octolapse.gcode_processor",
+            "log_level": 10
+          },
+          {
+            "name": "octolapse.gcode_parser",
+            "log_level": 10
+          },
+          {
+            "name": "octolapse.script",
+            "log_level": 10
           }
         ]
       },
@@ -1160,7 +1172,7 @@
               "value": "test_log_debug"
             }
           ],
-          "version": "1.1",
+          "version": "1.3",
           "suppress_update_notification_version": false,
           "is_custom": false
         },
@@ -1240,6 +1252,18 @@
           },
           {
             "name": "octolapse.settings_external",
+            "log_level": 10
+          },
+          {
+            "name": "octolapse.gcode_processor",
+            "log_level": 10
+          },
+          {
+            "name": "octolapse.gcode_parser",
+            "log_level": 10
+          },
+          {
+            "name": "octolapse.script",
             "log_level": 10
           }
         ]

@@ -24,7 +24,6 @@ from __future__ import unicode_literals
 import math
 import os
 import shutil
-import six
 import sys
 import threading
 from six.moves import queue
@@ -40,8 +39,8 @@ import sarge
 from PIL import Image, ImageDraw, ImageFont
 
 import octoprint_octolapse.utility as utility
+import octoprint_octolapse.script as script
 from octoprint_octolapse.snapshot import SnapshotMetadata
-from octoprint_octolapse.settings import RenderingProfile
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -434,128 +433,55 @@ class TimelapseRenderJob(object):
         self._set_outputs()
 
     def _pre_render_script(self):
-        try:
-            script = self.render_job_info.camera.on_before_render_script.strip()
-            if not script:
-                return
-            try:
-                script_args = [
-                    script,
-                    self.render_job_info.camera.name,
-                    self.render_job_info.snapshot_directory,
-                    self.render_job_info.snapshot_filename_format,
-                    os.path.join(self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format)
-                ]
+        script_path = self.render_job_info.camera.on_before_render_script.strip()
+        if not script_path:
+            return
 
-                logger.info(
-                    "Running the following before-render script command: %s \"%s\" \"%s\" \"%s\" \"%s\"",
-                    script_args[0],
-                    script_args[1],
-                    script_args[2],
-                    script_args[3],
-                    script_args[4]
-                )
-                cmd = utility.POpenWithTimeout()
-                return_code = cmd.run(script_args, None)
-                console_output = cmd.stdout
-                error_message = cmd.stderr
-            except utility.POpenWithTimeout.ProcessError as e:
-                raise RenderError(
-                    'before_render_script_error',
-                    "A script occurred while executing executing the before-render script",
-                    cause=e
-                )
-            if error_message:
-                if error_message.endswith("\r\n"):
-                    error_message = error_message[:-2]
-                logger.error(
-                    "Error output was returned from the before-rendering script: %s\nThe console output for the "
-                    "error:  \n    %s",
-                    error_message,
-                    console_output
-                )
-            if not return_code == 0:
-                if error_message:
-                    error_message = "The before-render script failed with the following error message: {0}" \
-                        .format(error_message)
-                else:
-                    error_message = (
-                        "The before-render script returned {0},"
-                        " which indicates an error.".format(return_code)
-                    )
-                raise RenderError('before_render_script_error', error_message)
-        except RenderError as e:
-            self.before_render_error = e
+        cmd = script.CameraScriptBeforeRender(
+            script_path,
+            self.render_job_info.camera.name,
+            self.render_job_info.snapshot_directory,
+            self.render_job_info.snapshot_filename_format,
+            os.path.join(
+                self.render_job_info.snapshot_directory,
+                self.render_job_info.snapshot_filename_format
+            )
+        )
+        cmd.run()
+        if not cmd.success():
+            self.before_render_error = RenderError(
+                'before_render_script_error',
+                "A script occurred while executing executing the before-render script.  Check "
+                "plugin_octolapse.log for details. "
+            )
 
     def _post_render_script(self):
-        try:
-            script = self.render_job_info.camera.on_after_render_script.strip()
-            if not script:
-                return
-            try:
-                script_args = [
-                    script,
-                    self.render_job_info.camera.name,
-                    self.render_job_info.snapshot_directory,
-                    self.render_job_info.snapshot_filename_format,
-                    os.path.join(
-                        self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format
-                    ),
-                    self._output_directory,
-                    self._output_filename,
-                    self._output_extension,
-                    self._output_filepath,
-                    self._synchronized_directory,
-                    self._synchronized_filename,
+        script_path = self.render_job_info.camera.on_after_render_script.strip()
+        if not script_path:
+            return
 
-                ]
-
-                logger.info(
-                    'Running the following after-render script command: %s "%s" "%s" "%s" "%s" "%s" "%s" "%s" '
-                    '"%s" "%s" "%s"',
-
-                    script_args[0],
-                    script_args[1],
-                    script_args[2],
-                    script_args[3],
-                    script_args[4],
-                    script_args[5],
-                    script_args[6],
-                    script_args[7],
-                    script_args[8],
-                    script_args[9],
-                    script_args[10]
-                )
-
-                cmd = utility.POpenWithTimeout()
-                return_code = cmd.run(script_args, None)
-                console_output = cmd.stdout
-                error_message = cmd.stderr
-            except utility.POpenWithTimeout.ProcessError as e:
-                raise RenderError(
-                    'after_render_script_error',
-                    "A script occurred while executing executing the after-render script",
-                    cause=e
-                )
-            if error_message:
-                if error_message.endswith("\r\n"):
-                    error_message = error_message[:-2]
-                logger.error(
-                    "Error output was returned from the after-rendering script: %s",
-                    error_message
-                )
-            if not return_code == 0:
-                if error_message:
-                    error_message = "The after-render script failed with the following error message: {0}" \
-                        .format(error_message)
-                else:
-                    error_message = (
-                        "The after-render script returned {0},"
-                        " which indicates an error.".format(return_code)
-                    )
-                raise RenderError('after_render_script_error', error_message)
-        except RenderError as e:
-            self.after_render_error = e
+        cmd = script.CameraScriptAfterRender(
+            script_path,
+            self.render_job_info.camera.name,
+            self.render_job_info.snapshot_directory,
+            self.render_job_info.snapshot_filename_format,
+            os.path.join(
+                self.render_job_info.snapshot_directory, self.render_job_info.snapshot_filename_format
+            ),
+            self._output_directory,
+            self._output_filename,
+            self._output_extension,
+            self._output_filepath,
+            self._synchronized_directory,
+            self._synchronized_filename,
+        )
+        cmd.run()
+        if not cmd.success():
+            self.after_render_error = RenderError(
+                'after_render_script_error',
+                "A script occurred while executing executing the after-render script.  Check "
+                "plugin_octolapse.log for details. "
+            )
 
     def _verify_images(self):
         logger.info("Verifying all snapshot images")

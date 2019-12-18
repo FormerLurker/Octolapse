@@ -1126,6 +1126,21 @@ class OctolapsePlugin(
                 'error': errors
             })
 
+    @octoprint.plugin.BlueprintPlugin.route("/testCameraScript", methods=["POST"])
+    @restricted_access
+    def test_camera_script_request(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            profile = request_values["profile"]
+            script_type = request_values["script_type"]
+            camera_profile = CameraProfile.create_from(profile)
+            success, errors, snapshot_created = camera.CameraControl.test_script(camera_profile, script_type, self._basefolder)
+            return jsonify({
+                'success': success,
+                'error': errors,
+                'snapshot_created': snapshot_created
+            })
+
 
     @octoprint.plugin.BlueprintPlugin.route("/cancelPreprocessing", methods=["POST"])
     @restricted_access
@@ -1743,9 +1758,9 @@ class OctolapsePlugin(
 
             # run the on print start scripts for each camera
             # note that errors here will ONLY show up in the log.
-            success, errors = camera.CameraControl.run_on_print_start_script(self._octolapse_settings.profiles.cameras)
-            if not success:
-                logger.error(errors)
+            #success, errors = camera.CameraControl.run_on_print_start_script(self._octolapse_settings.profiles.cameras)
+            #if not success:
+            #    logger.error(errors)
 
             self.start_automatic_updates()
             # log the loaded state
@@ -2741,11 +2756,9 @@ class OctolapsePlugin(
         if payload.BeforeRenderError or payload.AfterRenderError:
             pre_post_render_message = "Rendering completed and was successful, but there were some script errors: "
             if payload.BeforeRenderError:
-                pre_post_render_message += " The before script failed with the following error:" \
-                                 "  {0}".format(payload.BeforeRenderError)
+                pre_post_render_message += "{0}{1}".format(os.linesep, payload.BeforeRenderError)
             if payload.AfterRenderError:
-                pre_post_render_message += " The after script failed with the following error:" \
-                                           "  {0}".format(payload.AfterRenderError)
+                pre_post_render_message += "{0}{1}".format(os.linesep, payload.AfterRenderError)
             self.send_post_render_failed_message(pre_post_render_message)
 
         if payload.Synchronize:

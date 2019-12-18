@@ -93,6 +93,7 @@
                                    data-bind="value: external_camera_snapshot_script"
                                    type="text" required="true" />
                             <a class="octolapse_help" data-help-url="profiles.camera.external_camera_snapshot_script.md" data-help-title="Snapshot Acquire Script" />
+                            <button class="btn btn-default" data-bind="click: function() {$data.testCameraScript('snapshot');}">Test Script</button>
                             <div class="error_label_container text-error" data-error-for="octolapse_camera_external_camera_snapshot_script"></div>
                             <span class="help-inline">The full path and file name of a script that will be run executed after the printer is in the stabilization position.  Should be used to take a snapshot.</span>
                         </div>
@@ -140,7 +141,7 @@
                                    data-bind="value: webcam_settings.snapshot_request_template"
                                    type="text" required="true" />
                             <a class="octolapse_help" data-help-url="profiles.camera.webcam_settings.snapshot_request_template.md" data-help-title="Webcam Snapshot Address Template" />
-                            <button class="btn btn-default input-xxl" data-bind="click: function() {$data.testCamera();}">Test</button>
+                            <button class="btn btn-default " data-bind="click: function() {$data.testCamera();}">Test Webcam</button>
                             <div class="error_label_container text-error" data-error-for="octolapse_camera_webcam_snapshot_request_template"></div>
                             <span class="help-inline">
                                 Enter a full url for accessing a snapshot image from your webcam.  The token <i>{camera_address}</i> will be replaced with the camera address above.
@@ -298,7 +299,7 @@
                                data-bind="value: on_print_start_script"
                                type="text" />
                         <a class="octolapse_help" data-help-url="profiles.camera.on_print_start_script.md" data-help-title="Before Print Start Script" />
-                        <button class="btn btn-default " data-bind="click: function() {$data.applySettingsToCamera('script');}">Test Script</button>
+                        <button class="btn btn-default" data-bind="click: function() {$data.testCameraScript('before-print');}">Test Script</button>
                         <div class="error_label_container text-error" data-error-for="octolapse_camera_on_print_start_script"></div>
                         <span class="help-inline">Octolapse will execute any script path entered here at the start of a print.</span>
                     </div>
@@ -311,6 +312,7 @@
                                data-bind="value: on_before_snapshot_script"
                                type="text" />
                         <a class="octolapse_help" data-help-url="profiles.camera.on_before_snapshot_script.md" data-help-title="Before Snapshot Script" />
+                        <button class="btn btn-default" data-bind="click: function() {$data.testCameraScript('before-snapshot');}">Test Script</button>
                         <div class="error_label_container text-error" data-error-for="octolapse_camera_on_before_snapshot_script"></div>
                         <span class="help-inline">Octolapse will execute any script path entered here after the printer has stabilized but before taking a snapshot.</span>
                     </div>
@@ -323,6 +325,7 @@
                                data-bind="value: on_after_snapshot_script"
                                type="text" />
                         <a class="octolapse_help" data-help-url="profiles.camera.on_after_snapshot_script.md" data-help-title="After Snapshot Script" />
+                        <button class="btn btn-default" data-bind="click: function() {$data.testCameraScript('after-snapshot');}">Test Script</button>
                         <div class="error_label_container text-error" data-error-for="octolapse_camera_on_after_snapshot_script"></div>
                         <span class="help-inline">Octolapse will execute any script path entered here after a snapshot is complete.</span>
                     </div>
@@ -335,6 +338,7 @@
                                data-bind="value: on_before_render_script"
                                type="text" />
                         <a class="octolapse_help" data-help-url="profiles.camera.on_before_render_script.md" data-help-title="Before Render Script" />
+                        <button class="btn btn-default" data-bind="click: function() {$data.testCameraScript('before-render');}">Test Script</button>
                         <div class="error_label_container text-error" data-error-for="octolapse_camera_on_before_render_script"></div>
                         <span class="help-inline">Octolapse will execute any script path entered here right before rendering.  This is useful to transfer images from a remote location (DSLR or printer), or to apply custom filters.</span>
                     </div>
@@ -347,6 +351,7 @@
                                data-bind="value: on_after_render_script"
                                type="text" />
                         <a class="octolapse_help" data-help-url="profiles.camera.on_after_render_script.md" data-help-title="After Render Script" />
+                        <button class="btn btn-default" data-bind="click: function() {$data.testCameraScript('after-render');}">Test Script</button>
                         <div class="error_label_container text-error" data-error-for="octolapse_camera_on_after_render_script"></div>
                         <span class="help-inline">Octolapse will execute any script path entered here after rendering is complete.</span>
                     </div>
@@ -359,6 +364,7 @@
                                data-bind="value: on_print_end_script"
                                type="text" />
                         <a class="octolapse_help" data-help-url="profiles.camera.on_print_end_script.md" data-help-title="After Print Script" />
+                        <button class="btn btn-default" data-bind="click: function() {$data.testCameraScript('after-print');}">Test Script</button>
                         <div class="error_label_container text-error" data-error-for="octolapse_camera_on_print_end_script"></div>
                         <span class="help-inline">Octolapse will execute any script path entered here after the print has completed.</span>
                     </div>
