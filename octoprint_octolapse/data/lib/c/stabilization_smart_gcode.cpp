@@ -34,7 +34,6 @@ stabilization_smart_gcode::stabilization_smart_gcode(gcode_position_args positio
 	update_stabilization_coordinates();
 }
 
-
 stabilization_smart_gcode::~stabilization_smart_gcode()
 {
 }
@@ -44,10 +43,9 @@ stabilization_smart_gcode::stabilization_smart_gcode(const stabilization_smart_g
 
 }
 
-
 void stabilization_smart_gcode::process_pos(position * p_current_pos, position * p_previous_pos, bool found_command)
 {
-	if (is_snapshot_command(p_current_pos->command.gcode))
+	if (process_snapshot_command(p_current_pos))
 	{
 		snapshot_commands_found_++;
 		if (!p_current_pos->can_take_snapshot())
@@ -112,12 +110,47 @@ std::vector<stabilization_processing_issue> stabilization_smart_gcode::get_inter
 	return issues;
 }
 
-bool stabilization_smart_gcode::is_snapshot_command(std::string gcode)
+void stabilization_smart_gcode::process_snapshot_command_parameters(position *p_cur_pos)
 {
-	return (
-		gcode == default_snapshot_gcode_ ||
-		(smart_gcode_args_.snapshot_command.gcode.size() > 0 && smart_gcode_args_.snapshot_command.gcode == gcode)
-	);
+	double x = stabilization_x_;
+	double y = stabilization_y_;
+	
+	for (std::vector<parsed_command_parameter>::const_iterator it = p_cur_pos->command.parameters.begin(); it != p_cur_pos->command.parameters.end(); ++it)
+	{
+		if ((*it).name == "X")
+		{
+			x = (*it).double_value;
+		}
+		else if ((*it).name == "Y")
+		{
+			y = (*it).double_value;
+		}
+	}
+}
+
+bool stabilization_smart_gcode::process_snapshot_command(position *p_cur_pos)
+{
+	if (p_cur_pos->command.command == "@OCTOLAPSE")
+	{
+		bool ret_val;
+		for (std::vector<parsed_command_parameter>::const_iterator it = p_cur_pos->command.parameters.begin(); it != p_cur_pos->command.parameters.end(); ++it)
+		{
+			if ((*it).name == "TAKE-SNAPSHOT")
+			{
+				// Todo:  Figure out what to do here
+				//process_snapshot_command_parameters(p_cur_pos);
+				ret_val = true;
+				break;
+			}
+		}
+		return ret_val;
+	}
+	else if (smart_gcode_args_.snapshot_command.gcode.size() > 0 && smart_gcode_args_.snapshot_command.gcode == p_cur_pos->command.gcode)
+	{
+		return true;
+	}
+	return false;
+	
 }
 
 void stabilization_smart_gcode::add_plan(position * p_position)

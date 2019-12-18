@@ -34,7 +34,8 @@ private:
 	void on_processing_complete() override;
 	std::vector<stabilization_quality_issue> get_quality_issues() override;
 	std::vector<stabilization_processing_issue> get_internal_processing_issues() override;
-	bool is_snapshot_command(std::string gcode);
+	bool process_snapshot_command(position *p_cur_pos);
+	void process_snapshot_command_parameters(position *p_cur_pos);
 	void add_plan(position * p_position);
 	smart_gcode_args smart_gcode_args_;
 	double stabilization_x_;

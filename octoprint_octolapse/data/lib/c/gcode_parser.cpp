@@ -175,7 +175,9 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 		}
 		if (command.command.length() > 0 && command.command == "@OCTOLAPSE")
 		{
+			
 			parsed_command_parameter octolapse_parameter;
+
 			if (!try_extract_octolapse_parameter(&p, &octolapse_parameter))
 			{
 				std::string message = "Unable to extract an octolapse parameter from: ";
@@ -184,6 +186,20 @@ bool gcode_parser::try_parse_gcode(const char * gcode, parsed_command & command)
 				return true;
 			}
 			command.parameters.push_back(octolapse_parameter);
+			// Extract any additional parameters the old way
+			while (true)
+			{
+				//std::cout << "GcodeParser.try_parse_gcode - Trying to extract parameters.\r\n";
+				parsed_command_parameter param;
+				if (try_extract_parameter(&p, &param))
+					command.parameters.push_back(param);
+				else
+				{
+					//std::cout << "GcodeParser.try_parse_gcode - No parameters found.\r\n";
+					break;
+				}
+			}
+
 		}
 		else if (
 			text_only_functions_.find(command.command) != text_only_functions_.end() ||
@@ -530,6 +546,8 @@ bool gcode_parser::try_extract_octolapse_parameter(char ** p_p_gcode, parsed_com
 			p_parameter->name.push_back(*p++);
 		}
 	}
+	// Todo: Handle any otolapse commands require a string parameter
+	/*
 	// Ignore spaces after the command name
 	while (*p == ' ')
 	{
@@ -550,7 +568,8 @@ bool gcode_parser::try_extract_octolapse_parameter(char ** p_p_gcode, parsed_com
 	{
 		p_parameter->string_value = utilities::rtrim(p_parameter->string_value);
 	}
-
+	*/
+	*p_p_gcode = p;
 	return has_found_parameter;
 }
 
