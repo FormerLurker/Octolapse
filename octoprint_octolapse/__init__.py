@@ -1257,11 +1257,14 @@ class OctolapsePlugin(
             # Take a snapshot from the first active camera.
             active_cameras = self._octolapse_settings.profiles.active_cameras()
 
-            if len(active_cameras) > 0:
+            for active_camera in active_cameras:
+                if active_camera.camera_type != 'webcam':
+                    continue
                 try:
-                    camera_image = snapshot.take_in_memory_snapshot(self._octolapse_settings, active_cameras[0])
+                    camera_image = snapshot.take_in_memory_snapshot(self._octolapse_settings, active_camera)
                 except Exception as e:
                     logger.exception("Failed to take a snapshot. Falling back to solid color.")
+
             # Extract the profile from the request.
             try:
                 rendering_profile = RenderingProfile().create_from(request_values)
