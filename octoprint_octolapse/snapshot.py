@@ -69,7 +69,7 @@ def take_in_memory_snapshot(settings, current_camera):
         if current_camera.camera_type == "script":
             snapshot_job = ExternalScriptSnapshotJob(snapshot_job_info, settings)
         else:
-            snapshot_job = WebcamSnapshotJob(snapshot_job_info, settings)
+            snapshot_job = WebcamSnapshotJob(snapshot_job_info)
         snapshot_job.daemon = True
         snapshot_job.start()
         snapshot_job.join()
