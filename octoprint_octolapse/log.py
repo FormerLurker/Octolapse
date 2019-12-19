@@ -26,7 +26,17 @@ import datetime as datetime
 import os
 import six
 from octoprint.logging.handlers import AsyncLogHandlerMixin, CleaningTimedRotatingFileHandler
-from octoprint_octolapse.utility import Singleton
+
+
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
 # custom log level - VERBOSE
 VERBOSE = 5
 DEBUG = logging.DEBUG
@@ -217,4 +227,3 @@ class LoggingConfigurator(object):
                 else:
                     current_logger = self._root_logger.getChild(logger_name)
                     current_logger.setLevel(default_log_level)
-

@@ -251,7 +251,6 @@ class CaptureSnapshot(object):
         return results
 
     def clean_snapshots(self, snapshot_directory, job_directory):
-
         # get snapshot directory
         logger.info("Cleaning snapshots from: %s", snapshot_directory)
 
