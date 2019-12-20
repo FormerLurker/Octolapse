@@ -425,7 +425,7 @@ def migrate_pre_0_4_0_rc1_dev2(current_version, settings_dict, default_settings_
     # add the default triggers
     triggers = default_settings["profiles"]["triggers"]
     for key, trigger in six.iteritems(triggers):
-        # remove all triggers
+        # Add default triggers
         settings_dict["profiles"]["triggers"][key] = trigger
 
     # set the current trigger
@@ -438,29 +438,40 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
     # adjust each slicer profile to account for the new multiple extruder settings
     printers = settings_dict["profiles"]["printers"]
     for key, printer in six.iteritems(printers):
-        ## Adjust gcode generation settings
-        gen = printer["gcode_generation_settings"]
-        extruder = {
-            "retract_before_move": gen['retract_before_move'],
-            "retraction_length": gen['retraction_length'],
-            "retraction_speed": gen['retraction_speed'],
-            "deretraction_speed": gen['deretraction_speed'],
-            "lift_when_retracted": gen['lift_when_retracted'],
-            "z_lift_height": gen['z_lift_height'],
-            "x_y_travel_speed": gen['x_y_travel_speed'],
-            "first_layer_travel_speed": gen['first_layer_travel_speed'],
-            "z_lift_speed": gen['z_lift_speed'],
-        }
-        gen["extruders"] = [extruder]
-        del gen["retract_before_move"]
-        del gen["retraction_length"]
-        del gen["retraction_speed"]
-        del gen["deretraction_speed"]
-        del gen["lift_when_retracted"]
-        del gen["z_lift_height"]
-        del gen["x_y_travel_speed"]
-        del gen["first_layer_travel_speed"]
-        del gen["z_lift_speed"]
+
+        # Adjust gcode generation settings
+        if "gcode_generation_settings" in printer:
+            gen = printer["gcode_generation_settings"]
+            extruder = {
+                "retract_before_move": gen['retract_before_move'] if "retract_before_move" in gen else None,
+                "retraction_length": gen['retraction_length'] if "retraction_length" in gen else None,
+                "retraction_speed": gen['retraction_speed'] if "retraction_speed" in gen else None,
+                "deretraction_speed": gen['deretraction_speed'] if "deretraction_speed" in gen else None,
+                "lift_when_retracted": gen['lift_when_retracted'] if "lift_when_retracted" in gen else None,
+                "z_lift_height": gen['z_lift_height'] if "z_lift_height" in gen else None,
+                "x_y_travel_speed": gen['x_y_travel_speed'] if "x_y_travel_speed" in gen else None,
+                "first_layer_travel_speed": gen['first_layer_travel_speed'] if "first_layer_travel_speed" in gen else None,
+                "z_lift_speed": gen['z_lift_speed'] if "z_lift_speed" in gen else None,
+            }
+            gen["extruders"] = [extruder]
+            if "retract_before_move" in gen:
+                del gen["retract_before_move"]
+            if "retraction_length" in gen:
+                del gen["retraction_length"]
+            if "retraction_speed" in gen:
+                del gen["retraction_speed"]
+            if "deretraction_speed" in gen:
+                del gen["deretraction_speed"]
+            if "lift_when_retracted" in gen:
+                del gen["lift_when_retracted"]
+            if "z_lift_height" in gen:
+                del gen["z_lift_height"]
+            if "x_y_travel_speed" in gen:
+                del gen["x_y_travel_speed"]
+            if "first_layer_travel_speed" in gen:
+                del gen["first_layer_travel_speed"]
+            if "z_lift_speed" in gen:
+                del gen["z_lift_speed"]
 
         # Adjust slicer settings
         slicers = printer["slicers"]
@@ -468,77 +479,79 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
         if "cura" in slicers:
             cura = slicers["cura"]
             cura_extruder = {
-                "version": cura["version"],
-                "speed_z_hop": cura["speed_z_hop"],
-                "max_feedrate_z_override": cura["max_feedrate_z_override"],
-                "retraction_amount": cura["retraction_amount"],
-                "retraction_hop": cura["retraction_hop"],
-                "retraction_hop_enabled": cura["retraction_hop_enabled"],
-                "retraction_enable": cura["retraction_enable"],
-                "retraction_speed": cura["retraction_speed"],
-                "retraction_retract_speed": cura["retraction_retract_speed"],
-                "retraction_prime_speed": cura["retraction_prime_speed"],
-                "speed_travel": cura["speed_travel"],
+                "version": cura.get("version", None),
+                "speed_z_hop": cura.get("speed_z_hop", None),
+                "max_feedrate_z_override": cura.get("max_feedrate_z_override", None),
+                "retraction_amount": cura.get("retraction_amount", None),
+                "retraction_hop": cura.get("retraction_hop", None),
+                "retraction_hop_enabled": cura.get("retraction_hop_enabled", None),
+                "retraction_enable": cura.get("retraction_enable", None),
+                "retraction_speed": cura.get("retraction_speed", None),
+                "retraction_retract_speed": cura.get("retraction_retract_speed", None),
+                "retraction_prime_speed": cura.get("retraction_prime_speed", None),
+                "speed_travel": cura.get("speed_travel", None),
             }
             cura["machine_extruder_count"] = 1
             cura["extruders"] = [cura_extruder]
-            del cura["speed_z_hop"]
-            del cura["max_feedrate_z_override"]
-            del cura["retraction_amount"]
-            del cura["retraction_hop"]
-            del cura["retraction_hop_enabled"]
-            del cura["retraction_enable"]
-            del cura["retraction_speed"]
-            del cura["retraction_retract_speed"]
-            del cura["retraction_prime_speed"]
-            del cura["speed_travel"]
+            cura.pop("speed_z_hop", None)
+            cura.pop("max_feedrate_z_override", None)
+            cura.pop("retraction_amount", None)
+            cura.pop("retraction_hop", None)
+            cura.pop("retraction_hop_enabled", None)
+            cura.pop("retraction_enable", None)
+            cura.pop("retraction_speed", None)
+            cura.pop("retraction_retract_speed", None)
+            cura.pop("retraction_prime_speed", None)
+            cura.pop("speed_travel", None)
 
         if "other" in slicers:
             # Adjust Other Slicer Settings
             other = slicers["other"]
+            retract_length = other.get("retract_length", None)
+            retract_before_move = other.get("retract_before_move", None)
+            z_hop = other.get("z_hop", None)
+            lift_when_retracted = other.get("lift_when_retracted", None)
             retract_before_move = (
-                other["retract_length"] > 0 if "retract_before_move" not in other else other["retract_before_move"]
+                retract_length > 0 if retract_before_move is None else retract_before_move
             )
             lift_when_retracted = (
-                retract_before_move and other["z_hop"] > 0 if "lift_when_retracted" not in other else other["lift_when_retracted"]
+                retract_before_move and z_hop > 0 if lift_when_retracted is None else lift_when_retracted
             )
 
             other_extruder = {
-                "retract_length": other["retract_length"],
-                "z_hop": other["z_hop"],
-                "retract_speed": other["retract_speed"],
-                "deretract_speed": other["deretract_speed"],
+                "retract_length": retract_length,
+                "z_hop": z_hop,
+                "retract_speed": other.get("retract_speed", None),
+                "deretract_speed": other.get("deretract_speed", None),
                 "lift_when_retracted": lift_when_retracted,
-                "travel_speed": other["travel_speed"],
-                "z_travel_speed": other["z_travel_speed"],
+                "travel_speed": other.get("travel_speed", None),
+                "z_travel_speed": other.get("z_travel_speed", None),
                 "retract_before_move": retract_before_move
             }
             other["extruders"] = [other_extruder]
-            del other["retract_length"]
-            del other["z_hop"]
-            del other["retract_speed"]
-            del other["deretract_speed"]
-            del other["travel_speed"]
-            del other["z_travel_speed"]
-            if "lift_when_retracted" in other:
-                del other["lift_when_retracted"]
-            if "retract_before_move" in other:
-                del other["retract_before_move"]
+            other.pop("retract_length", None)
+            other.pop("z_hop", None)
+            other.pop("retract_speed", None)
+            other.pop("deretract_speed", None)
+            other.pop("travel_speed", None)
+            other.pop("z_travel_speed", None)
+            other.pop("lift_when_retracted", None)
+            other.pop("retract_before_move", None)
 
         if "simplify_3d" in slicers:
             # Adjust Simplify3D Settings
             simplify = slicers["simplify_3d"]
             simplify_extruder = {
-                'retraction_distance': simplify["retraction_distance"],
-                'retraction_vertical_lift': simplify["retraction_vertical_lift"],
-                'retraction_speed': simplify["retraction_speed"],
-                'extruder_use_retract': simplify["extruder_use_retract"]
+                'retraction_distance': simplify.get("retraction_distance", None),
+                'retraction_vertical_lift': simplify.get("retraction_vertical_lift", None),
+                'retraction_speed': simplify.get("retraction_speed", None),
+                'extruder_use_retract': simplify.get("extruder_use_retract", None),
             }
-            simplify["extruders"] = [simplify_extruder]
-            del simplify["retraction_distance"]
-            del simplify["retraction_vertical_lift"]
-            del simplify["retraction_speed"]
-            del simplify["extruder_use_retract"]
+            simplify.pop("extruders", None)
+            simplify.pop("retraction_distance", None)
+            simplify.pop("retraction_vertical_lift", None)
+            simplify.pop("retraction_speed", None)
+            simplify.pop("extruder_use_retract", None)
 
         if "slic3r_pe" in slicers:
             # Adjust Slic3r Settings
@@ -546,16 +559,16 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
             if "retract_before_travel" in slic3r_pe:
                 del slic3r_pe["retract_before_travel"]
             slic3r_extruder = {
-                "retract_length": slic3r_pe["retract_length"],
-                "retract_lift": slic3r_pe["retract_lift"],
-                "retract_speed": slic3r_pe["retract_speed"],
-                "deretract_speed": slic3r_pe["deretract_speed"],
+                "retract_length": slic3r_pe.get("retract_length", None),
+                "retract_lift": slic3r_pe.get("retract_lift", None),
+                "retract_speed": slic3r_pe.get("retract_speed", None),
+                "deretract_speed": slic3r_pe.get("deretract_speed", None),
             }
             slic3r_pe["extruders"] = [slic3r_extruder]
-            del slic3r_pe["retract_length"]
-            del slic3r_pe["retract_lift"]
-            del slic3r_pe["retract_speed"]
-            del slic3r_pe["deretract_speed"]
+            slic3r_pe.pop("retract_length", None)
+            slic3r_pe.pop("retract_lift", None)
+            slic3r_pe.pop("retract_speed", None)
+            slic3r_pe.pop("deretract_speed", None)
 
     renderings = settings_dict["profiles"]["renderings"]
     for key, render in six.iteritems(renderings):
