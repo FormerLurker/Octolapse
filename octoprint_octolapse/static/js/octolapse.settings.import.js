@@ -80,6 +80,7 @@ $(function () {
                         };
                         Octolapse.displayPopup(options);
                         self.closeSettingsImportPopup();
+                        Octolapse.Settings.checkForProfileUpdates();
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         var message = "Unable to import the provided settings:(  Status: " + textStatus + ".  Error: " + errorThrown;
@@ -169,6 +170,7 @@ $(function () {
                         }
                     };
                     Octolapse.displayPopup(options);
+                    Octolapse.Settings.checkForProfileUpdates();
                 },
                 fail: function(e, data) {
                     //console.log("Upload Failed");
