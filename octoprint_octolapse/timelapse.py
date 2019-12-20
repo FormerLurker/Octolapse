@@ -24,7 +24,7 @@ from __future__ import unicode_literals
 import threading
 import time
 import uuid
-from six import iteritems
+from six import iteritems, string_types
 from six.moves import queue
 import os
 import octoprint_octolapse.utility as utility
@@ -330,10 +330,15 @@ class Timelapse(object):
                     error_message = "After Snapshot Script Error: {0}"
                 else:
                     error_message = "{0}"
+
                 if isinstance(value, SnapshotError):
                     error_message = error_message.format(value.message)
+                elif isinstance(value, string_types):
+                    error_message = error_message.format(value)
                 else:
-                    error_message = error_message.format("An unexpected error occurred.  See plugin_octolapse.log for details.")
+                    error_message = error_message.format(
+                        "An unexpected error occurred.  See plugin_octolapse.log for details.")
+
         elif len(errors.keys()) > 1:
             before_snapshot_error_count = False
             after_snapshot_error_count = False

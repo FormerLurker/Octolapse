@@ -206,16 +206,19 @@ class POpenWithTimeout(object):
 
     def _run(self, args, timeout_seconds=None):
         if len(args) < 1 or args[0] is None:
-            self.error_message = "No script path was provided.  Please enter a script path and try again."
+            self.error_message = "No script path was provided for {0}.  Please enter a script path and try again.".format(self.name)
+            logger.error(self.error_message)
             return
         script_path = args[0].strip()
         if len(script_path) == 0:
-            self.error_message = "No script path was provided.  Please enter a script path and try again."
+            self.error_message = "No script path was provided for {0}.  Please enter a script path and try again.".format(self.name)
+            logger.error(self.error_message)
             return
 
         if not os.path.exists(script_path):
-            self.error_message = "The script at path '{0}' could not be found.  Please check your script path and try " \
-                                 "again.".format(script_path)
+            self.error_message = "The script at path '{0}' could not be foundffor  for {1}.  Please check your script" \
+                                 " path and try again.".format(script_path, self.name)
+            logger.error(self.error_message)
             return
 
         self.timeout_seconds = timeout_seconds

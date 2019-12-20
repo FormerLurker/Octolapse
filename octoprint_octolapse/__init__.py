@@ -2755,13 +2755,12 @@ class OctolapsePlugin(
     def on_render_success(self, payload):
         """Called after all rendering and synchronization attempts are complete."""
         assert (isinstance(payload, RenderingCallbackArgs))
-        message = "Rendering completed and was successful."
         if payload.BeforeRenderError or payload.AfterRenderError:
-            pre_post_render_message = "Rendering completed and was successful, but there were some script errors: "
+            pre_post_render_message = "Rendering completed and was successful for the '{0}' camera, but there were some script errors: ".format(payload.CameraName)
             if payload.BeforeRenderError:
-                pre_post_render_message += "{0}{1}".format(os.linesep, payload.BeforeRenderError)
+                pre_post_render_message += "{0}Before Render Script - {1}".format(os.linesep, payload.BeforeRenderError.message)
             if payload.AfterRenderError:
-                pre_post_render_message += "{0}{1}".format(os.linesep, payload.AfterRenderError)
+                pre_post_render_message += "{0}After Render Script - {1}".format(os.linesep, payload.AfterRenderError.message)
             self.send_post_render_failed_message(pre_post_render_message)
 
         if payload.Synchronize:

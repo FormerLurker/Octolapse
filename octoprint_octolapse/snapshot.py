@@ -543,14 +543,6 @@ class ExternalScriptSnapshotJob(SnapshotThread):
     def run(self):
         logger.info("Snapshot - running %s script for the %s camera.",
                     self.script_type, self.snapshot_job_info.camera.name)
-        if self.ScriptPath is None or len(self.ScriptPath) == 0:
-            self.snapshot_thread_error = "No script path was provided.  Please enter a script " \
-                                         "path and try again.".format(self.ScriptPath)
-            return
-        if not os.path.exists(self.ScriptPath):
-            self.snapshot_thread_error = "The provided script path ({0}) does not exist.  Please check your script " \
-                                         "path and try again.".format(self.ScriptPath)
-            return
         # execute the script and send the parameters
         if self.script_type == 'snapshot':
             if self.snapshot_job_info.DelaySeconds < 0.001:
@@ -562,7 +554,7 @@ class ExternalScriptSnapshotJob(SnapshotThread):
         try:
             self.execute_script()
         except SnapshotError as e:
-            self.snapshot_thread_error = str(e)
+            self.snapshot_thread_error = e.message
             return
         except Exception as e:
             message = "An unexpected exception occurred while processing the {0} script for the " \
@@ -628,7 +620,7 @@ class ExternalScriptSnapshotJob(SnapshotThread):
         if not cmd.success():
             raise SnapshotError(
                 '{0}_script_error'.format(self.script_type),
-                "The snapshot script returned an error.  Check plugin_octolapse.log for details."
+                cmd.error_message
             )
 
 
