@@ -64,7 +64,8 @@ plugin_additional_data = [
     'data/images/*.jpeg',
     'data/lib/c/*.cpp',
     'data/lib/c/*.h',
-    'data/webcam_types/*'
+    'data/webcam_types/*',
+    'data/fonts/*'
 ]
 # Any additional python packages you need to install with your plugin that are not contained in <plugin_package>.*
 plugin_additional_packages = []
