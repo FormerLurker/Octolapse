@@ -21,7 +21,7 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 */
-$(function() {
+$(function () {
     Octolapse.DebugProfileViewModel = function (values) {
         var self = this;
         self.profileTypeName = ko.observable("Debug");
@@ -33,20 +33,17 @@ $(function() {
         self.log_to_console = ko.observable(values.log_to_console);
         self.log_all_errors = ko.observable(values.log_all_errors);
         self.enabled_loggers = ko.observableArray();
-        for (var index = 0; index < values.enabled_loggers.length; index++)
-        {
+        for (var index = 0; index < values.enabled_loggers.length; index++) {
             var curItem = values.enabled_loggers[index];
-            self.enabled_loggers.push({'name':curItem.name, 'log_level':curItem.log_level});
+            self.enabled_loggers.push({'name': curItem.name, 'log_level': curItem.log_level});
         }
 
         self.logger_name_add = ko.observable();
         self.logger_level_add = ko.observable();
         self.default_log_level = values.default_log_level;
 
-        self.get_enabled_logger_index_by_name = function (name)
-        {
-            for (var index = 0; index < self.enabled_loggers().length; index++)
-            {
+        self.get_enabled_logger_index_by_name = function (name) {
+            for (var index = 0; index < self.enabled_loggers().length; index++) {
                 var logger = self.enabled_loggers()[index];
                 if (logger.name === name) {
                     return index;
@@ -54,15 +51,13 @@ $(function() {
             }
             return -1;
         };
-        self.available_loggers = ko.computed(function() {
+        self.available_loggers = ko.computed(function () {
             var available_loggers = [];
-            for (var logger_index = 0; logger_index < Octolapse.DebugProfiles.profileOptions.all_logger_names.length; logger_index++)
-            {
+            for (var logger_index = 0; logger_index < Octolapse.DebugProfiles.profileOptions.all_logger_names.length; logger_index++) {
                 var logger_name = Octolapse.DebugProfiles.profileOptions.all_logger_names[logger_index];
                 var found_logger_index = self.get_enabled_logger_index_by_name(logger_name);
-                if (found_logger_index === -1)
-                {
-                    available_loggers.push({'name':logger_name, 'log_level': self.default_log_level});
+                if (found_logger_index === -1) {
+                    available_loggers.push({'name': logger_name, 'log_level': self.default_log_level});
                 }
             }
             return available_loggers;
@@ -76,20 +71,20 @@ $(function() {
                     return leftName === rightName ? 0 : (leftName < rightName ? -1 : 1);
                 });
         };
-        self.available_loggers_sorted = ko.computed(function() {
+        self.available_loggers_sorted = ko.computed(function () {
             return self.loggerNameSort(self.available_loggers)
         });
 
-        self.removeLogger = function(logger) {
+        self.removeLogger = function (logger) {
             //console.log("removing logger.");
             self.enabled_loggers.remove(logger);
         };
 
-        self.addLogger = function() {
+        self.addLogger = function () {
             //console.log("Adding logger");
             var index = self.get_enabled_logger_index_by_name(self.logger_name_add());
             if (index === -1) {
-                self.enabled_loggers.push({'name':self.logger_name_add(),'log_level':self.logger_level_add()});
+                self.enabled_loggers.push({'name': self.logger_name_add(), 'log_level': self.logger_level_add()});
                 self.scrollToBottom();
             }
         };
@@ -97,13 +92,12 @@ $(function() {
         // When adding loggers automatically scrolling to the bottom of the page
         // makes the control much more user friendly if you want to add several loggers.
         // TODO:  Scroll down only the width of a new control, which will be necessary if we add more controls below the logger controls.
-        self.scrollToBottom = function()
-        {
+        self.scrollToBottom = function () {
             var debug_container = document.getElementById("octolapse_add_edit_profile_model_body");
             debug_container.scrollTop = debug_container.scrollHeight;
         };
 
-        self.updateFromServer = function(values) {
+        self.updateFromServer = function (values) {
             self.name(values.name);
             self.description(values.description);
             self.enabled(values.enabled);
@@ -111,64 +105,74 @@ $(function() {
             self.log_to_console(values.log_to_console);
             self.log_all_errors(values.log_all_errors);
             self.enabled_loggers([]);
-            for (var index = 0; index < values.enabled_loggers.length; index++)
-            {
+            for (var index = 0; index < values.enabled_loggers.length; index++) {
                 var curItem = values.enabled_loggers[index];
-                self.enabled_loggers.push({'name':curItem.name, 'log_level':curItem.log_level});
+                self.enabled_loggers.push({'name': curItem.name, 'log_level': curItem.log_level});
             }
         };
 
-        self.clearLog = function(clear_all) {
+        self.clearLog = function (clear_all) {
             var title;
             var message;
-            if (clear_all)
-            {
-                title = "Logs Cleared";
-                message = "All octolapse log files have been cleared.";
+            if (clear_all) {
+                title = "Clear All Logs";
+                message = "All octolapse log files will be cleared and deleted.  Are you sure?";
+            } else {
+                title = "Clear Log";
+                message = "The most recent octolapse log file will be cleared.  Are you sure?";
             }
-            else
-            {
-                title = "Most Recent Log Cleared";
-                message = "The most recent octolapse log file has been cleared.";
-            }
-            var data = {
-                clear_all: clear_all
-            };
-
-            $.ajax({
-                url: "./plugin/octolapse/clearLog",
-                type: "POST",
-                data: JSON.stringify(data),
-                contentType: "application/json",
-                dataType: "json",
-                success: function (data) {
-                    var options = {
-                        title: title,
-                        text: message,
-                        type: 'success',
-                        hide: true,
-                        addclass: "octolapse",
-                        desktop: {
-                            desktop: true
-                        }
+            Octolapse.showConfirmDialog(
+                "clear_log",
+                title,
+                message,
+                function () {
+                    if (clear_all) {
+                        title = "Logs Cleared";
+                        message = "All octolapse log files have been cleared.";
+                    } else {
+                        title = "Most Recent Log Cleared";
+                        message = "The most recent octolapse log file has been cleared.";
+                    }
+                    var data = {
+                        clear_all: clear_all
                     };
-                    Octolapse.displayPopupForKey(options,"log_file_cleared","log_file_cleared");
-                },
-                error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    var message = "Unable to clear the log.:(  Status: " + textStatus + ".  Error: " + errorThrown;
-                    var options = {
-                        title: 'Clear Log Error',
-                        text: message,
-                        type: 'error',
-                        hide: false,
-                        addclass: "octolapse",
-                        desktop: {
-                            desktop: true
+                    $.ajax({
+                        url: "./plugin/octolapse/clearLog",
+                        type: "POST",
+                        data: JSON.stringify(data),
+                        contentType: "application/json",
+                        dataType: "json",
+                        success: function (data) {
+                            var options = {
+                                title: title,
+                                text: message,
+                                type: 'success',
+                                hide: true,
+                                addclass: "octolapse",
+                                desktop: {
+                                    desktop: true
+                                }
+                            };
+                            Octolapse.displayPopupForKey(options, "log_file_cleared", "log_file_cleared");
+                        },
+                        error: function (XMLHttpRequest, textStatus, errorThrown) {
+                            var message = "Unable to clear the log.:(  Status: " + textStatus + ".  Error: " + errorThrown;
+                            var options = {
+                                title: 'Clear Log Error',
+                                text: message,
+                                type: 'error',
+                                hide: false,
+                                addclass: "octolapse",
+                                desktop: {
+                                    desktop: true
+                                }
+                            };
+                            Octolapse.displayPopupForKey(options, "log_file_cleared", "log_file_cleared");
                         }
-                    };
-                    Octolapse.displayPopupForKey(options,"log_file_cleared","log_file_cleared");
+                    });
                 }
-            });
+            );
+
         };
 
         self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
@@ -179,8 +183,7 @@ $(function() {
             self.updateFromServer
         );
 
-        self.toJS = function()
-        {
+        self.toJS = function () {
             // need to remove the parent link from the automatic configuration to prevent a cyclic copy
             var parent = self.automatic_configuration.parent;
             self.automatic_configuration.parent = null;
@@ -188,11 +191,11 @@ $(function() {
             self.automatic_configuration.parent = parent;
             return copy;
         };
-        self.on_closed = function(){
+        self.on_closed = function () {
             self.automatic_configuration.on_closed();
         };
 
-        self.automatic_configuration.is_confirming.subscribe(function(value){
+        self.automatic_configuration.is_confirming.subscribe(function (value) {
             //console.log("IsClickable" + value.toString());
             Octolapse.DebugProfiles.setIsClickable(!value);
         });
