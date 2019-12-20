@@ -2766,7 +2766,7 @@ class OctolapsePlugin(
         if payload.Synchronize:
             # If we are synchronizing with the Octoprint timelapse plugin, we will send a tailored message
             message = "Octolapse has completed rendering a timelapse for camera '{0}'.  Your video is now available " \
-                      "within the default timelapse plugin tab as '{1}'.  Octolapse ".format(
+                      "within the default timelapse plugin tab as '{1}'.".format(
                 payload.CameraName,
                 payload.get_synchronization_filename()
             )
