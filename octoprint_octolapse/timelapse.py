@@ -408,7 +408,7 @@ class Timelapse(object):
             # loop through the snapshot commands and build up gocdes_to_send array, only sending the current commands
             # once we hit the snapshot command.
             for gcode in snapshot_gcode.snapshot_commands:
-                if gcode == PrinterProfile.DEFAULT_SNAPSHOT_COMMAND:
+                if gcode == "{0} {1}".format(PrinterProfile.OCTOLAPSE_COMMAND, PrinterProfile.DEFAULT_OCTOLAPSE_SNAPSHOT_COMMAND):
                     logger.debug(
                         "Queuing %d snapshot commands, an M400 and an M114 command.  Note that the actual snapshot command is never sent.",
                         len(gcodes_to_send)

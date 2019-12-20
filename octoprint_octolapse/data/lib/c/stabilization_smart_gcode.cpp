@@ -145,7 +145,15 @@ bool stabilization_smart_gcode::process_snapshot_command(position *p_cur_pos)
 		}
 		return ret_val;
 	}
-	else if (smart_gcode_args_.snapshot_command.gcode.size() > 0 && smart_gcode_args_.snapshot_command.gcode == p_cur_pos->command.gcode)
+	else if (
+		smart_gcode_args_.snapshot_command.gcode.size() > 0 && 
+		(
+			smart_gcode_args_.snapshot_command.gcode == p_cur_pos->command.gcode
+		)
+	){
+		return true;
+	}
+	else if (p_cur_pos->command.gcode == "SNAP")  // Backwards Compatibility
 	{
 		return true;
 	}

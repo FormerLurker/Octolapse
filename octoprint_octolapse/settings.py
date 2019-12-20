@@ -297,7 +297,9 @@ class ExtruderOffset(Settings):
 
 
 class PrinterProfile(AutomaticConfigurationProfile):
-    DEFAULT_SNAPSHOT_COMMAND = "@OCTOLAPSE TAKE-SNAPSHOT"
+    OCTOLAPSE_COMMAND = "@OCTOLAPSE"
+    DEFAULT_OCTOLAPSE_SNAPSHOT_COMMAND = "TAKE-SNAPSHOT"
+    LEGACY_SNAPSHOT_COMMAND = "SNAP"
     minimum_height_increment = 0.05
     bed_type_rectangular = 'rectangular'
     bed_type_circular = 'circular'
@@ -388,8 +390,9 @@ class PrinterProfile(AutomaticConfigurationProfile):
             return False
         snapshot_command_gcode = self.get_snapshot_command_gcode()
         return (
-            snapshot_command_gcode == command_string or
-            PrinterProfile.DEFAULT_SNAPSHOT_COMMAND == command_string
+            (snapshot_command_gcode and snapshot_command_gcode == command_string) or
+            command_string.startswith("{0} {1}".format(PrinterProfile.OCTOLAPSE_COMMAND, PrinterProfile.DEFAULT_OCTOLAPSE_SNAPSHOT_COMMAND)) or
+            PrinterProfile.LEGACY_SNAPSHOT_COMMAND == command_string
         )
 
     @classmethod

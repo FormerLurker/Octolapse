@@ -811,7 +811,7 @@ class SnapshotGcodeGenerator(object):
         # Move to Snapshot Position
         self.snapshot_gcode.append(
             SnapshotGcode.SNAPSHOT_COMMANDS,
-            PrinterProfile.DEFAULT_SNAPSHOT_COMMAND
+            "{0} {1}".format(PrinterProfile.OCTOLAPSE_COMMAND, PrinterProfile.DEFAULT_OCTOLAPSE_SNAPSHOT_COMMAND)
         )
 
     def return_to_original_coordinate_systems(self):

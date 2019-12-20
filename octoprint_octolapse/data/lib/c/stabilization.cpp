@@ -185,8 +185,10 @@ stabilization_results stabilization::process_file()
 
 			cmd.clear();
 			bool found_command = gcode_parser_->try_parse_gcode(line.c_str(), cmd);
+			bool has_gcode = false;
 			if (cmd.gcode.length() > 0)
 			{
+				has_gcode = true;
 				gcodes_processed_++;
 			}
 			else
@@ -233,7 +235,7 @@ stabilization_results stabilization::process_file()
 			gcode_position_->update(cmd, lines_processed_, gcodes_processed_, file_position_);
 			
 			// Only continue to process if we've found a command.
-			if (found_command)
+			if (has_gcode)
 			{
 				if (snapshots_enabled_)
 				{
