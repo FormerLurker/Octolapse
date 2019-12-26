@@ -50,6 +50,11 @@
         </div>
         <!--Profile Import and Update-->
         <div data-bind="template: {name:'octolapse-profile-library-test-template', data: automatic_configuration}"></div>
+        <div class="control-group" data-bind="visible:num_extruders() > 1">
+            <div class="controls">
+                <span class="label label-important">WARNING</span>&nbsp;<strong>Multi-Material and Multi-Extruder support is BETA, and may cause failed prints and/or hardware damage.  Use with caution.</strong>
+            </div>
+        </div>
         <hr />
         <div>
             <h3>Current Slicer Settings</h3>
@@ -651,6 +656,11 @@
                             <div class="error_label_container text-error" data-error-for="octolapse_printer_num_extruders"></div>
                         </div>
                     </div>
+                    <div class="control-group" data-bind="visible:num_extruders() > 1">
+                        <div class="controls">
+                            <span class="label label-important">WARNING</span>&nbsp;<strong>Multi-Material and Multi-Extruder support is BETA, and may cause failed prints and/or hardware damage.  Use with caution.</strong>
+                        </div>
+                    </div>
                     <div data-bind="visible: num_extruders() > 1">
                         <div class="control-group">
                             <label class="control-label" for="octolapse_printer_shared_extruder">Shared Nozzle</label>
@@ -824,7 +834,6 @@
 
         </div>
     </div>
-
 </script>
 {% include "octolapse_profiles_printer_slicer_other.jinja2" %}
 {% include "octolapse_profiles_printer_slicer_slic3r_pe.jinja2" %}
