@@ -170,6 +170,8 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
             cura["speed_travel"] = None if "movement_speed" not in printer or printer["movement_speed"] is None else float(printer["movement_speed"]) * speed_multiplier
             cura["max_feedrate_z_override"] = None if "maximum_z_speed" not in printer or printer["maximum_z_speed"] is None else float(printer["maximum_z_speed"]) * speed_multiplier
             cura["retraction_hop"] = None if "z_hop" not in printer or printer["z_hop"] is None else float(printer["z_hop"])
+            cura["retraction_enable"] = False if cura["retraction_amount"] is None or cura["retraction_amount"] <= 0 else True
+            cura["retraction_hop_enabled"] = False if not cura["retraction_enable"] or not cura["retraction_hop"] or float(cura["retraction_hop"]) < 0 else True
             printer['slicers']['cura'] = cura
         elif slicer_type == "other":
             ## other slicer settings
@@ -443,35 +445,26 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
         if "gcode_generation_settings" in printer:
             gen = printer["gcode_generation_settings"]
             extruder = {
-                "retract_before_move": gen['retract_before_move'] if "retract_before_move" in gen else None,
-                "retraction_length": gen['retraction_length'] if "retraction_length" in gen else None,
-                "retraction_speed": gen['retraction_speed'] if "retraction_speed" in gen else None,
-                "deretraction_speed": gen['deretraction_speed'] if "deretraction_speed" in gen else None,
-                "lift_when_retracted": gen['lift_when_retracted'] if "lift_when_retracted" in gen else None,
-                "z_lift_height": gen['z_lift_height'] if "z_lift_height" in gen else None,
-                "x_y_travel_speed": gen['x_y_travel_speed'] if "x_y_travel_speed" in gen else None,
-                "first_layer_travel_speed": gen['first_layer_travel_speed'] if "first_layer_travel_speed" in gen else None,
-                "z_lift_speed": gen['z_lift_speed'] if "z_lift_speed" in gen else None,
+                "retract_before_move": gen.get('retract_before_move', None),
+                "retraction_length": gen.get('retraction_length', None),
+                "retraction_speed": gen.get('retraction_speed', None),
+                "deretraction_speed": gen.get('deretraction_speed', None),
+                "lift_when_retracted": gen.get('lift_when_retracted', None),
+                "z_lift_height": gen.get('z_lift_height', None),
+                "x_y_travel_speed": gen.get('x_y_travel_speed', None),
+                "first_layer_travel_speed": gen.get('first_layer_travel_speed', None),
+                "z_lift_speed": gen.get('z_lift_speed', None)
             }
             gen["extruders"] = [extruder]
-            if "retract_before_move" in gen:
-                del gen["retract_before_move"]
-            if "retraction_length" in gen:
-                del gen["retraction_length"]
-            if "retraction_speed" in gen:
-                del gen["retraction_speed"]
-            if "deretraction_speed" in gen:
-                del gen["deretraction_speed"]
-            if "lift_when_retracted" in gen:
-                del gen["lift_when_retracted"]
-            if "z_lift_height" in gen:
-                del gen["z_lift_height"]
-            if "x_y_travel_speed" in gen:
-                del gen["x_y_travel_speed"]
-            if "first_layer_travel_speed" in gen:
-                del gen["first_layer_travel_speed"]
-            if "z_lift_speed" in gen:
-                del gen["z_lift_speed"]
+            gen.pop("retract_before_move", None)
+            gen.pop("retraction_length", None)
+            gen.pop("retraction_speed", None)
+            gen.pop("deretraction_speed", None)
+            gen.pop("lift_when_retracted", None)
+            gen.pop("z_lift_height", None)
+            gen.pop("x_y_travel_speed", None)
+            gen.pop("first_layer_travel_speed", None)
+            gen.pop("z_lift_speed", None)
 
         # Adjust slicer settings
         slicers = printer["slicers"]
