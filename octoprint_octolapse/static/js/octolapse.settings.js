@@ -701,12 +701,16 @@ $(function () {
                     $field_error.html(error);
                 },
                 highlight: function (element, errorClass) {
+                    if (!element)
+                        return;
                     var error_id = $(element).attr("name");
                     var $field_error = dialog.$addEditDialog.find(".error_label_container[data-error-for='" + error_id + "']");
                     $field_error.removeClass("checked");
                     $field_error.addClass(errorClass);
                 },
                 unhighlight: function (element, errorClass) {
+                    if (!element)
+                        return;
                     var error_id = $(element).attr("name");
                     var $field_error = dialog.$addEditDialog.find(".error_label_container[data-error-for='" + error_id + "']");
                     $field_error.addClass("checked");
@@ -821,7 +825,7 @@ $(function () {
                         return dialog.validator.numberOfInvalids() == 0;
                     return true;
                 };
-                dialog.bind_validation();
+
                 // Remove any click event bindings from the cancel button
                 dialog.$cancelButton.unbind("click");
                 dialog.$closeIcon.unbind("click");
@@ -882,22 +886,33 @@ $(function () {
                     // call the function
                     self.profileObservable().on_opened(dialog);
                 }
-
+                dialog.bind_validation();
             });
             dialog.unbind_validation = function()
             {
                 if (dialog.validator != null) {
-                    //console.log("octolapse.settings.js - Unbinding validation.");
+                    console.log("octolapse.settings.js - Unbinding validation.");
                     dialog.validator.destroy();
                     dialog.validator = null;
                 }
             };
             dialog.bind_validation = function()
             {
-                //console.log("octolapse.settings.js - Binding validation.");
-                dialog.unbind_validation();
+                if (dialog.validator != null) {
+                    dialog.unbind_validation();
+                }
                 dialog.validator = dialog.$addEditForm.validate(dialog.rules);
                 dialog.validator.form();
+                // Sometimes the form doesn't display the validation messages below some fields with dynamic IDs
+                // Due to an update of data.  Make sure the validator is called a bit late as a hack fix.
+                // Must investigate this, but probably has something to do with knockout binding templates.
+                setTimeout(function(){
+                    if (dialog.validator != null)
+                    {
+                        dialog.validator.form();
+                    }
+                }, 1000);
+
             };
             dialog.bind_help_links = function()
             {
