@@ -3119,8 +3119,8 @@ class OctolapsePlugin(
                 "js/octolapse.help.js",
                 "js/octolapse.profiles.library.js",
                 "js/webcams/mjpg_streamer/raspi_cam_v2.js",
-                "js/octolapse_dialog.js",
-                "js/octolapse_rendering_dialog.js",
+                "js/octolapse.dialog.js",
+                "js/octolapse.dialog.rendering.js",
             ],
             css=["css/jquery.minicolors.css", "css/octolapse.css"],
             less=["less/octolapse.less"]
