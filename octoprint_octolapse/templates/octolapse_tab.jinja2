@@ -72,12 +72,35 @@
                                 <i class="fa icon-camera fa-stack-1x fa-inverse"
                                    data-bind="style: { color: is_taking_snapshot() ? 'greenyellow' : '' }"></i>
                             </span>
-                            <span class="fa-stack fa-lg"
-                                  data-bind="attr: { title: is_rendering() ? 'Octolapse is rendering a timelapse' : (waiting_to_render ? 'Waiting for print to complete before rendering' : 'Rendering is idle')}">
-                                <i class="fa fa-square fa-stack-2x"
-                                   data-bind="style: { color: is_rendering() || waiting_to_render() ? '' : 'lightgray' }"></i>
-                                <i class="fa icon-film fa-stack-1x fa-inverse"
-                                   data-bind="style: { color: waiting_to_render() ? 'orange' : (is_rendering() ? 'greenyellow' : '') }"></i>
+                            <span data-bind="visible: is_rendering">
+                                <a data-bind="click: showRenderingProgress" class="clear_color" title="Octolapse is rendering a timelapse.">
+                                    <span class="fa-stack fa-lg">
+                                        <i class="fa fa-square fa-stack-2x"></i>
+                                        <i class="fa icon-film fa-stack-1x fa-inverse icon_active_color"></i>
+                                    </span>
+                                </a>
+                            </span>
+                            <span data-bind="visible: !is_rendering()">
+                                <span data-bind="visible: rendering_dialog.has_unfinished_renderings() && !is_timelapse_active()">
+                                    <a data-bind="click: showUnfinishedRenderings" class="clear_color" title="There are failed renderings waiting to be processed.">
+                                        <span class="fa-stack fa-lg">
+                                            <i class="fa fa-square fa-stack-2x"></i>
+                                            <i class="fa icon-film fa-stack-1x fa-inverse icon_error_color"></i>
+                                        </span>
+                                    </a>
+                                </span>
+                                <span data-bind="visible: !(rendering_dialog.has_unfinished_renderings() && !is_timelapse_active())">
+                                    <span class="fa-stack fa-lg"
+                                          data-bind="
+                                      attr: {
+                                        title: (waiting_to_render() ? 'Waiting for print to complete before rendering' : 'Rendering is idle')
+                                      }">
+                                        <i class="fa fa-square fa-stack-2x"
+                                           data-bind="style: { color: waiting_to_render() ? '' : 'lightgray' }"></i>
+                                        <i class="fa icon-film fa-stack-1x fa-inverse"
+                                           data-bind="style: { color: (waiting_to_render() ? 'orange' : '') }"></i>
+                                    </span>
+                                </span>
                             </span>
                         </div>
                     </div>
@@ -91,7 +114,7 @@
                             </a>
                         </span>
                         <span class="toggle-switch-fa octolapse-enabled-toggle" data-bind="visible: (!is_timelapse_active() && Octolapse.Globals.is_admin), attr: {title: (!Octolapse.Globals.enabled() && is_timelapse_active() ? 'Octolapse will remain active until the current timelapse ends' : (Octolapse.Globals.enabled() ? 'Octolapse is enabled, click to disable' : 'Octolapse is disabled, click to enable'))}">
-                            <input id="octolapse-enabled-toggle" type="checkbox" data-bind="checked: Octolapse.Globals.enabled, enable: Octolapse.Globals.is_admin(), click: function() {return Octolapse.SettingsMain.toggleOctolapse();};" style="display:none;"/>
+                            <input id="octolapse-enabled-toggle" type="checkbox" data-bind="checked: Octolapse.Globals.enabled, enable: Octolapse.Globals.is_admin(), click: function() {return Octolapse.SettingsMain.toggleOctolapse();};" style="display:none;" />
                             <label for="octolapse-enabled-toggle">
                                 <span class="fa-slider"><i class="fa icon-off"></i></span>
                             </label>
@@ -118,7 +141,7 @@
                                     <span class="previous-snapshots">
                                     </span>
                                     <span class="latest-snapshot">
-                                        <img class="latest" src="" >
+                                        <img class="latest" src="">
                                         <div class="snapshot_refresh_container ol-hover-button">
                                             <a class="start-animation" title="Play animation if there are enough frames stored."
                                                data-bind="click:function() { startSnapshotAnimation('octolapse_snapshot_thumbnail_container'); },visible:Octolapse.Globals.auto_reload_latest_snapshot">
@@ -148,8 +171,8 @@
                             </div>
                             <div id="octolapse-current-camera">
                                 <select id="octolapse_current_snapshot_camera"
-                                    class="input-block-level"
-                                    data-bind="
+                                        class="input-block-level"
+                                        data-bind="
                                     options: Octolapse.Status.cameras_sorted,
                                     optionsText: 'name',
                                     optionsValue: 'guid',
@@ -163,12 +186,30 @@
 
                         </div>
                     </div>
-                    <div data-bind="template:'octolapse-settings-current'"></div>
+                </div>
+
+                <div class="row-fluid" data-bind="visible: rendering_dialog.has_unfinished_renderings() || rendering_dialog.has_in_process_renderings()">
+                    <div class="span12 text-center">
+                        <button type="button"
+                                class="btn btn-default ok"
+                                data-bind="click: showRenderingProgress, visible: rendering_dialog.has_in_process_renderings">
+                            View Rendering Progress
+                        </button>
+                        <button type="button"
+                                class="btn btn-default ok"
+                                data-bind="click: showUnfinishedRenderings, visible: rendering_dialog.has_unfinished_renderings">
+                            View Failed Renderings
+                        </button>
+                    </div>
+                </div>
+                <div class="row-fluid">
+                    <div class="span12">
+                        <div data-bind="template:'octolapse-settings-current'"></div>
+                    </div>
                 </div>
             </div>
             <div class="panel-footer ol-info-footer">
                 <div class="row-fluid">
-
                     <div class="span3 text-right">
                         Snapshot Count:
                     </div>
@@ -178,6 +219,7 @@
                 </div>
             </div>
         </div>
+
         <div data-bind="visible: Octolapse.Status.is_timelapse_active() && Octolapse.Status.is_real_time()">
             <div data-bind="visible: Octolapse.Globals.show_trigger_state_changes">
                 <div class="panel panel-default">
@@ -202,7 +244,7 @@
             </div>
 
         </div>
-        <div data-bind="visible: Octolapse.Status.is_timelapse_active() && !Octolapse.Status.is_real_time()">
+        <div data-bind="visible: (Octolapse.Status.is_timelapse_active() && !Octolapse.Status.is_real_time())">
             <div id="snapshot_plan_info_panel" data-bind="visible: Octolapse.Globals.show_snapshot_plan_information, template:'snapshot-plan-template'">
             </div>
         </div>
@@ -219,20 +261,20 @@
         <span>
             Loading Octolapse... <i class="fa fa-spinner fa-spin"></i>
         </span>
-
     </div>
+    <!-- Octolapse Dialogs -->
+    <div data-bind="template: {name: 'octolapse-dialog-template', data: rendering_dialog}"></div>
 </div>
 
 
-
-    {% include "octolapse_status_triggers.jinja2" %}
-    {% include "octolapse_status_extruder.jinja2" %}
-    {% include "octolapse_status_position.jinja2" %}
-    {% include "octolapse_status_printer_state.jinja2" %}
-    {% include "octolapse_status_snapshot_plan.jinja2" %}
-    {% include "octolapse_tab_latest_snapshot.jinja2" %}
-    {% include "octolapse_tab_settings_current.jinja2" %}
-    {% include "octolapse_tab_webcam_settings_popup.jinja2" %}
-    {% include "octolapse_tab_snapshot_plan_preview_popup.jinja2" %}
-
-
+{% include "octolapse_status_triggers.jinja2" %}
+{% include "octolapse_status_extruder.jinja2" %}
+{% include "octolapse_status_position.jinja2" %}
+{% include "octolapse_status_printer_state.jinja2" %}
+{% include "octolapse_status_snapshot_plan.jinja2" %}
+{% include "octolapse_tab_latest_snapshot.jinja2" %}
+{% include "octolapse_tab_settings_current.jinja2" %}
+{% include "octolapse_tab_webcam_settings_popup.jinja2" %}
+{% include "octolapse_tab_snapshot_plan_preview_popup.jinja2" %}
+{% include "octolapse_rendering_dialog.jinja2" %}
+{% include "octolapse_dialog.jinja2" %}

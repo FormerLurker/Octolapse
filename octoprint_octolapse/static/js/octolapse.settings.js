@@ -325,20 +325,22 @@ $(function () {
 
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             $.ajax({
-                url: "./plugin/octolapse/loadSettings",
+                url: "./plugin/octolapse/loadSettingsAndState",
                 type: "POST",
                 contentType: "application/json",
                 dataType: "json",
                 success: function (newSettings) {
-                    self.updateSettings(newSettings);
+                    self.updateSettings(newSettings.settings);
+                    Octolapse.Globals.updateState(newSettings);
                     // Load the current state before running the success callback.
-                    Octolapse.Globals.loadState(function(){
-                        // Todo:  Add an error callback if the current state cannot be loaded
-                        if(success_callback)
-                        {
-                            success_callback();
-                        }
-                    });
+                    console.log("Settings and state loaded.");
+
+                    // Todo:  Add an error callback if the current state cannot be loaded
+                    if(success_callback)
+                    {
+                        success_callback();
+                    }
+
 
                     //console.log("Settings have been loaded.");
                 },

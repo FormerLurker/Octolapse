@@ -119,7 +119,6 @@ class MessengerWorker(Thread):
         while True:
             try:
                 plugin_message = self._queue.get(timeout=self.update_period_seconds)
-                logger.verbose("Sending Message.  Data: {0}".format(plugin_message))
                 assert(isinstance(plugin_message, PluginMessage))
                 # add the message to the queue
                 self.message_queue.add(plugin_message)

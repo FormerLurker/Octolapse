@@ -91,7 +91,8 @@ $(function () {
 
             var previousEnabledValue = !Octolapse.Globals.enabled();
             var data = {
-                "is_octolapse_enabled": Octolapse.Globals.enabled()
+                "is_octolapse_enabled": Octolapse.Globals.enabled(),
+                "client_id": Octolapse.Globals.client_id
             };
             //console.log("Toggling octolapse.")
             $.ajax({
@@ -310,6 +311,7 @@ $(function () {
                             dataType: "json",
                             success: function () {
                                 self.hideDialog();
+                                Octolapse.Globals.update(data);
                             },
                             error: function (XMLHttpRequest, textStatus, errorThrown) {
                                 var message = "Unable to save the main settings.  Status: " + textStatus + ".  Error: " + errorThrown;

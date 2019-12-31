@@ -565,9 +565,12 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
 
     renderings = settings_dict["profiles"]["renderings"]
     for key, render in six.iteritems(renderings):
-        if "snapshot_to_skip_end" in render:
-            render["snapshots_to_skip_end"] = render["snapshot_to_skip_end"]
-            del render["snapshot_to_skip_end"]
+        render["archive_snapshots"] = not render.get("cleanup_after_render_complete", True)
+        render.pop("cleanup_after_render_complete",None)
+        render.pop("cleanup_after_render_fail",None)
+        render.pop("snapshot_to_skip_end", None)
+        render.pop("snapshots_to_skip_end", None)
+        render.pop("snapshots_to_skip_beginning", None)
 
     triggers = settings_dict["profiles"]["triggers"]
     for key, trigger in six.iteritems(triggers):

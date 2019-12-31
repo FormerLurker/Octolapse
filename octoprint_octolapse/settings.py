@@ -1148,11 +1148,7 @@ class RenderingProfile(AutomaticConfigurationProfile):
         self.overlay_outline_width = 1
         self.thread_count = 1
         # Snapshot Cleanup
-        self.cleanup_after_render_complete = True
-        self.cleanup_after_render_fail = False
-        # Skip Snapshots
-        self.snapshots_to_skip_beginning = 0
-        self.snapshots_to_skip_end = 0
+        self.archive_snapshots = False
 
     def get_overlay_text_color(self):
         return RenderingProfile._get_color_(self.overlay_text_color)
@@ -1651,6 +1647,8 @@ class ProfileOptions(StaticSettings):
         self.debug = DebugProfile.get_options()
 
     def update_server_options(self, available_profiles):
+        if not available_profiles:
+            return
         # Printer Profile Update
         self.printer["server_profiles"] = available_profiles.get("printer", None)
         self.stabilization["server_profiles"] = available_profiles.get("stabilization", None)
@@ -2129,10 +2127,98 @@ class OctolapseSettings(Settings):
             "was_upgraded": False,
             "previous_version": None
         }
+
     def save(self, file_path):
         logger.info("Saving settings to: %s.", file_path)
         self.save_as_json(file_path)
         logger.info("Settings saved.")
+
+    def save_rendering_settings(self, data_folder, job_guid):
+        for camera in self.profiles.active_cameras():
+            snapshot_directory = os.path.join(
+                data_folder, "snapshots", job_guid, camera.guid
+            )
+            # make sure the snapshot path exists
+            if not os.path.exists(snapshot_directory):
+                os.makedirs(snapshot_directory)
+
+            # get the rendering profile json
+            rendering_profile_json = self.get_profile_export_json(
+                'rendering', self.profiles.current_rendering_profile_guid
+            )
+            # get the camera profile json
+            camera_profile_json = self.get_profile_export_json(
+                'camera', camera.guid
+            )
+
+            # save the rendering json
+            with open(os.path.join(snapshot_directory, "rendering_settings.json"), "w") as settings_file:
+                settings_file.write(rendering_profile_json)
+            # save the camera json
+            with open(os.path.join(snapshot_directory, "camera_settings.json"), "w") as settings_file:
+                settings_file.write(camera_profile_json)
+
+    # Todo: raise reasonable exceptions
+    @staticmethod
+    def load_rendering_settings(plugin_version, data_directory, job_guid, camera_guid):
+        """Attempt to load all rendering job settings from the snapshot path"""
+
+        # attempt to load the rendering settings
+        # get the settings path
+        snapshot_directory = os.path.join(data_directory, "snapshots", job_guid, camera_guid)
+
+        # load the rendering profile
+        rendering_settings_path = os.path.join(snapshot_directory, "rendering_settings.json")
+        rendering_profile = None
+        if os.path.exists(rendering_settings_path):
+            try:
+                with open(rendering_settings_path, 'r') as settings_file:
+                    settings = json.load(settings_file)
+                    if settings["version"] != plugin_version:
+                        # TODO:  Attempt to migrate the profile
+                        pass
+                    if settings["type"] == "rendering" and "profile" in settings:
+                        rendering_profile = RenderingProfile.create_from(settings["profile"])
+            except (IOError, json.JSONDecodeError) as e:
+                logger.exception(
+                    "Could not load rendering settings for the given snapshot job at %s.", rendering_settings_path
+                )
+        else:
+            logger.error(
+                "The rendering settings file does not exist for the given snapshot job at %s.", rendering_settings_path
+            )
+
+        # load the camera profile
+        camera_settings_path = os.path.join(snapshot_directory, "camera_settings.json")
+        camera_profile = None
+        if os.path.exists(camera_settings_path):
+            try:
+                with open(camera_settings_path, 'r') as settings_file:
+                    settings = json.load(settings_file)
+                    if settings["version"] != plugin_version:
+                        # TODO:  Attempt to migrate the profile
+                        pass
+                    if settings["type"] == "camera" and "profile" in settings:
+                        camera_profile = CameraProfile.create_from(settings["profile"])
+                        # ensure the guid matches the supplied guid
+                        camera_profile.guid = camera_guid
+            except (IOError, json.JSONDecodeError) as e:
+                logger.exception(
+                    "Could not load camera settings for the given snapshot job at %s.", camera_settings_path
+                )
+        else:
+            logger.error(
+                "The camera settings file does not exist for the given snapshot job at %s.", camera_settings_path
+            )
+
+        if camera_profile is None:
+            camera_profile = CameraProfile()
+            camera_profile.name = "UNKNOWN"
+
+        return (
+            rendering_profile,
+            camera_profile
+        )
 
     @classmethod
     def load(
@@ -2239,7 +2325,7 @@ class OctolapseSettings(Settings):
             if settings["version"] != plugin_version:
                 raise Exception(
                     "Cannot import settings from an old version of Octolapse.  Current Version:{0}, Settings "
-                    "Version:{1} ".format(settings.version, plugin_version)
+                    "Version:{1} ".format(settings["version"], plugin_version)
                 )
             else:
                 self.profiles.import_profile(settings["type"], settings["profile"], update_existing=update_existing)

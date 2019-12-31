@@ -6,11 +6,11 @@
                 <div class="row-fluid">
                     <div class="span10">
                         <a data-bind="visible: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active() && Octolapse.Settings.is_loaded(), click: function() { Octolapse.Status.toggleCamera(guid); }" title="Enable/disable this camera for the next timelapse.">
-                            <i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': enabled , 'fa-square-o': !enabled } "></i>
+                            <i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': enabled , 'fa-square-o': !enabled() } "></i>
                             <span data-bind="text: name"></span>
                         </a>
                         <span data-bind="visible: !(Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active())" title="Cameras cannot be enabled or disabled while a timelapse is active, or by non-administrators.">
-                            <i class="fa fa-no-shadow disabled" data-bind="css: { 'fa-check-square': enabled , 'fa-square-o': !enabled } "></i>
+                            <i class="fa fa-no-shadow disabled" data-bind="css: { 'fa-check-square': enabled , 'fa-square-o': !enabled() } "></i>
                             <span data-bind="text: name"></span>
                         </span>
                     </div>
@@ -24,7 +24,7 @@
     </div>
     <div data-bind="visible: Octolapse.Status.cameras_sorted().length == 0">
         <span class="text-error">You must add at least one camera profile.  </span>
-        <a style="float:right;" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Settings.is_loaded();, click: function() { Octolapse.Status.addNewCameraProfile(); } " title="Add a new camera profile.">
+        <a style="float:right;" data-bind="visible: (Octolapse.Globals.is_admin() && Octolapse.Settings.is_loaded()), click: function() { Octolapse.Status.addNewCameraProfile(); } " title="Add a new camera profile.">
             <i class="fa fa-plus fa-2x"></i>
         </a>
     </div>

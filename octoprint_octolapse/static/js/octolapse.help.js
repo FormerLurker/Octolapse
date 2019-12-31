@@ -91,7 +91,7 @@ $(function () {
 
         self.resize_timer = null;
         self.resize_handler = function(event, elem) {
-            //console.log("Resizing Help.");
+            console.log("Resizing Help.");
             if(self.resize_timer)
             {
                 clearTimeout(self.resize_timer);

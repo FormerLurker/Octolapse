@@ -30,7 +30,13 @@ import sys
 import time
 import traceback
 import threading
+import json
+import shutil
 from slugify import Slugify
+# create the module level logger
+from octoprint_octolapse.log import LoggingConfigurator
+logging_configurator = LoggingConfigurator()
+logger = logging_configurator.get_logger(__name__)
 
 from threading import Timer
 FLOAT_MATH_EQUALITY_RANGE = 0.0000001
@@ -233,11 +239,11 @@ def get_clean_filename(filename):
 
 
 def get_temp_snapshot_driectory_template():
-    return "{0}{1}{2}{3}".format("{DATADIRECTORY}", os.sep, "tempsnapshots", os.sep)
+    return os.path.join("{DATADIRECTORY}", "tempsnapshots")
 
 
 def get_snapshot_directory(data_directory):
-    return "{0}{1}{2}{3}".format(data_directory, os.sep, "snapshots", os.sep)
+    return os.path.join(data_directory, "snapshots")
 
 
 def get_snapshot_filename_template():
@@ -249,7 +255,7 @@ def get_rendering_directory_from_data_directory(data_directory):
 
 
 def get_latest_snapshot_download_path(data_directory, camera_guid, base_folder=None):
-    if not camera_guid or camera_guid == "undefined" and base_folder :
+    if not camera_guid or camera_guid == "undefined" and base_folder:
         return get_images_download_path(base_folder, "no-camera-selected.png")
     return "{0}{1}".format(get_snapshot_directory(data_directory), "latest_{0}.jpeg".format(camera_guid))
 
@@ -261,7 +267,7 @@ def get_latest_snapshot_thumbnail_download_path(data_directory, camera_guid, bas
 
 
 def get_images_download_path(base_folder, file_name):
-    return "{0}{1}data{2}{3}{4}{5}".format(base_folder, os.sep, os.sep, "Images", os.sep, file_name)
+    return os.path.join(base_folder, "data", "Images", file_name)
 
 
 def get_error_image_download_path(base_folder):
@@ -273,7 +279,7 @@ def get_no_snapshot_image_download_path(base_folder):
 
 
 def get_rendering_directory_template():
-    return "{0}{1}{2}{3}".format("{DATADIRECTORY}", os.sep, "timelapses", os.sep)
+    return os.path.join("{DATADIRECTORY}", "timelapses")
 
 
 def get_rendering_base_filename_template():
@@ -290,33 +296,48 @@ def get_rendering_base_filename(print_name, print_start_time, print_end_time=Non
     file_template = file_template.replace(
         "{DATETIMESTAMP}", time.strftime("%Y%m%d%H%M%S", time.localtime(time.time())))
     file_template = file_template.replace(
-        "{PRINTSTARTTIME}", time.strftime("%Y%m%d%H%M%S", time.localtime(print_start_time)))
-    if print_end_time is not None:
-        file_template = file_template.replace(
-            "{PRINTENDTIME}", time.strftime("%Y%m%d%H%M%S", time.localtime(print_end_time)))
+        "{PRINTSTARTTIME}",
+        "UNKNOWN" if not print_start_time else time.strftime("%Y%m%d%H%M%S", time.localtime(print_start_time))
+    )
+    file_template = file_template.replace(
+        "{PRINTENDTIME}",
+        "UNKNOWN" if not print_end_time else time.strftime("%Y%m%d%H%M%S", time.localtime(print_end_time))
+    )
 
     return file_template
 
 
-def get_snapshot_filename(print_name, print_start_time, snapshot_number):
-    file_template = get_snapshot_filename_template() \
-        .format(FILENAME=get_string(print_name, ""),
-                DATETIMESTAMP="{0:d}".format(math.trunc(round(time.time(), 2) * 100)),
-                PRINTSTARTTIME="{0:d}".format(math.trunc(round(print_start_time, 2) * 100)))
+def get_snapshot_filename(print_name, snapshot_number):
+    file_template = get_snapshot_filename_template().format(
+        FILENAME=get_string(print_name, ""),
+        DATETIMESTAMP="{0:d}".format(math.trunc(round(time.time(), 2) * 100))
+    )
     return "{0}{1}.{2}".format(file_template, format_snapshot_number(snapshot_number), "jpg")
 
-def get_pre_roll_snapshot_filename(print_name, print_start_time, snapshot_number):
-    file_template = get_snapshot_filename_template() \
-        .format(FILENAME=get_string(print_name, ""),
-                DATETIMESTAMP="{0:d}".format(math.trunc(round(time.time(), 2) * 100)),
-                PRINTSTARTTIME="{0:d}".format(math.trunc(round(print_start_time, 2) * 100)))
+
+def get_pre_roll_snapshot_filename(print_name, snapshot_number):
+    file_template = get_snapshot_filename_template().format(
+        FILENAME=get_string(print_name, ""),
+        DATETIMESTAMP="{0:d}".format(math.trunc(round(time.time(), 2) * 100))
+    )
     return "{0}{1}_{2}.{3}".format(
         file_template,
         format_snapshot_number(snapshot_number),
         format_snapshot_number(snapshot_number),
         "jpg")
 
-SnapshotNumberFormat = "%06d"
+
+SnaphotNumberDigits = 6
+SnapshotNumberFormat = "%0{0}d".format(SnaphotNumberDigits)
+
+
+def get_snapshot_number_from_path(path):
+    try:
+        if path.upper().endswith(".JPG") and len(path) > SnaphotNumberDigits + 4:
+            return int(path[len(path)-SnaphotNumberDigits-4:len(path)-4])
+    except ValueError:
+        pass
+    return -1
 
 
 def format_snapshot_number(number):
@@ -586,7 +607,7 @@ def get_system_fonts(base_directory):
     font_names = set()
     # first add all of our supplied fonts
     default_font_path = os.path.join(base_directory, "data", "fonts", "DejaVu")
-    for f in os.listdir(default_font_path):
+    for f in [ x for x in os.listdir(default_font_path) if os.path.isfile(x)]:
         if f.endswith(".ttf"):
             font_names.add(f)
             font_paths.append(os.path.join(default_font_path, f))
@@ -615,13 +636,38 @@ def get_system_fonts(base_directory):
     return font_paths
 
 
+def get_directory_size(root, recurse=False):
+    total_size = 0
+    try:
+        for name in os.listdir(root):
+            file_path = os.path.join(root, name)
+            if os.path.isfile(file_path):
+                total_size += os.path.getsize(file_path)
+            elif recurse and os.path.isdir(file_path):
+                total_size += get_directory_size(file_path, recurse)
+    except FileNotFoundError as e:
+        logger.exception(e)
+    return total_size
+
+# MUCH faster than the standard shutil.copy
+def fast_copy(src, dst, buffer_size=1024 * 1024 * 1):
+    #    Optimize the buffer for small files
+    buffer_size = min(buffer_size, os.path.getsize(src))
+    if buffer_size == 0:
+        buffer_size = 1024
+
+    with open(src, 'rb') as fin:
+        with open(dst, 'wb') as fout:
+            shutil.copyfileobj(fin, fout, buffer_size)
+
+
 class TimelapseJobInfo(object):
     def __init__(
         self, job_info=None, job_guid=None, print_start_time=None, print_end_time=None,
-        print_end_state=None, print_file_name=None, print_file_extension=None
+        print_end_state="INCOMPLETE", print_file_name="UNKNOWN", print_file_extension=None
      ):
         if job_info is None:
-            self.JobGuid = "{}".format(job_guid)
+            self.JobGuid = None if job_guid is None else "{}".format(job_guid)
             self.PrintStartTime = print_start_time
             self.PrintEndTime = print_end_time
             self.PrintEndState = print_end_state
@@ -634,6 +680,58 @@ class TimelapseJobInfo(object):
             self.PrintEndState = job_info.PrintEndState
             self.PrintFileName = job_info.PrintFileName
             self.PrintFileExtension = job_info.PrintFileExtension
+
+    @staticmethod
+    def load(data_folder, print_job_guid, camera_guid=None):
+        file_directory = os.path.join(data_folder, "snapshots", print_job_guid)
+        file_path = os.path.join(file_directory, "timelapse_info.json")
+        try:
+            with open(file_path, 'r') as timelapse_info:
+                data = json.load(timelapse_info)
+                return TimelapseJobInfo.from_dict(data)
+        except (OSError, IOError, json.JSONDecodeError) as e:
+            logger.exception("Unable to load TimelapseJobInfo from %s.", file_path)
+            info = TimelapseJobInfo()
+            info.PrintEndState = "UNKNOWN"
+            info.JobGuid = print_job_guid
+            if camera_guid is not None:
+                snapshot_path = os.path.join(file_directory, camera_guid)
+                if os.path.exists(snapshot_path):
+                    # look for a jpg from which to extract the print name
+                    for name in os.listdir(snapshot_path):
+                        camera_file_path = os.path.join(snapshot_path, name)
+                        if os.path.isfile(camera_file_path) and name.upper().endswith(".JPG") and len(name) > 10:
+                            info.PrintFileName = name[0:len(name)-10]
+            return info
+
+    def save(self, data_folder):
+        file_directory = os.path.join(data_folder, "snapshots", self.JobGuid)
+        file_path = os.path.join(file_directory, "timelapse_info.json")
+        if not os.path.exists(file_directory):
+            os.mkdir(file_directory)
+        with open(file_path, 'w') as timelapse_info:
+            json.dump(self.to_dict(), timelapse_info)
+
+    def to_dict(self):
+        return {
+            "job_guid": self.JobGuid,
+            "print_start_time": self.PrintStartTime,
+            "print_end_time": self.PrintEndTime,
+            "print_end_state": self.PrintEndState,
+            "print_file_name": self.PrintFileName,
+            "print_file_extension": self.PrintFileExtension
+        }
+
+    @staticmethod
+    def from_dict(dict_obj):
+        return TimelapseJobInfo(
+            job_guid=dict_obj["job_guid"],
+            print_start_time=dict_obj["print_start_time"],
+            print_end_time=dict_obj["print_end_time"],
+            print_end_state=dict_obj["print_end_state"],
+            print_file_name=dict_obj["print_file_name"],
+            print_file_extension=dict_obj["print_file_extension"],
+        )
 
 
 class RecurringTimerThread(threading.Thread):

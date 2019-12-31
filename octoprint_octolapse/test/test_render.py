@@ -143,7 +143,7 @@ class TestRender(unittest.TestCase):
         self.print_end_time = 100
 
         # Create fake snapshots.
-        self.capture_template = get_snapshot_filename(self.print_name, self.print_start_time, SnapshotNumberFormat)
+        self.capture_template = get_snapshot_filename(self.print_name, SnapshotNumberFormat)
         self.data_directory = mkdtemp()
         self.octoprint_timelapse_folder = mkdtemp()
 

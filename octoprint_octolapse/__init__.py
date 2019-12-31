@@ -66,10 +66,11 @@ from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, TriggerProfile, \
     CameraProfile, RenderingProfile, DebugProfile, SlicerSettings, CuraSettings, OtherSlicerSettings, \
     Simplify3dSettings, Slic3rPeSettings, SettingsJsonEncoder, MjpgStreamer
-from octoprint_octolapse.timelapse import Timelapse, TimelapseState
+from octoprint_octolapse.timelapse import Timelapse, TimelapseState, TimelapseStartException
 from octoprint_octolapse.stabilization_preprocessing import StabilizationPreprocessingThread
 from octoprint_octolapse.messenger_worker import MessengerWorker, PluginMessage
 from octoprint_octolapse.settings_external import ExternalSettings, ExternalSettingsError
+from octoprint_octolapse.render import RenderError, RenderingProcessor, RenderingCallbackArgs, RenderJobInfo
 
 try:
     # noinspection PyCompatibility
@@ -144,6 +145,9 @@ class OctolapsePlugin(
         # contains a list of all profiles with available updates
         # holds a list of all available profiles on the server for the current version
         self.available_profiles = None
+        # rendering processor and task queue
+        self._rendering_task_queue = queue.Queue(maxsize=0)
+        self._rendering_processor = None
 
     def get_sorting_key(self, context=None):
         return 1
@@ -370,12 +374,15 @@ class OctolapsePlugin(
     def save_main_settings_request(self):
         with OctolapsePlugin.admin_permission.require(http_exception=403):
             request_values = request.get_json()
+            client_id = request_values["client_id"]
             self._octolapse_settings.main_settings.update(request_values)
             # save the updated settings to a file.
             self.save_settings()
-
-            self.send_state_loaded_message()
-            data = {'success': True}
+            # inform any clients who are listening that they need to update their state.
+            self.send_state_changed_message(None, client_id)
+            data = {
+                'success': True
+            }
             return jsonify(data)
 
     @octoprint.plugin.BlueprintPlugin.route("/setEnabled", methods=["POST"])
@@ -383,6 +390,7 @@ class OctolapsePlugin(
     def set_enabled(self):
         with OctolapsePlugin.admin_permission.require(http_exception=403):
             request_values = request.get_json()
+            client_id = request_values["client_id"]
             enable_octolapse = request_values["is_octolapse_enabled"]
             if (
                 self._timelapse is not None and
@@ -398,7 +406,7 @@ class OctolapsePlugin(
             # save the updated settings to a file.
             self._octolapse_settings.main_settings.is_octolapse_enabled = enable_octolapse
             self.save_settings()
-            self.send_state_loaded_message()
+            self.send_state_changed_message(None, client_id)
             data = {'success': True}
             return jsonify(data)
 
@@ -407,58 +415,37 @@ class OctolapsePlugin(
     def toggle_info_panel(self):
         with OctolapsePlugin.admin_permission.require(http_exception=403):
             request_values = request.get_json()
+            client_id = request_values["client_id"]
             panel_type = request_values["panel_type"]
-
+            enabled = None
             if panel_type == "show_printer_state_changes":
-                self._octolapse_settings.main_settings.show_printer_state_changes = (
-                    not self._octolapse_settings.main_settings.show_printer_state_changes
-                )
+                enabled = not self._octolapse_settings.main_settings.show_printer_state_changes
+                self._octolapse_settings.main_settings.show_printer_state_changes = enabled
             elif panel_type == "show_position_changes":
-                self._octolapse_settings.main_settings.show_position_changes = (
-                    not self._octolapse_settings.main_settings.show_position_changes
-                )
+                enabled = not self._octolapse_settings.main_settings.show_position_changes
+                self._octolapse_settings.main_settings.show_position_changes = enabled
             elif panel_type == "show_extruder_state_changes":
-                self._octolapse_settings.main_settings.show_extruder_state_changes = (
-                    not self._octolapse_settings.main_settings.show_extruder_state_changes
-                )
+                enabled = not self._octolapse_settings.main_settings.show_extruder_state_changes
+                self._octolapse_settings.main_settings.show_extruder_state_changes = enabled
             elif panel_type == "show_trigger_state_changes":
-                self._octolapse_settings.main_settings.show_trigger_state_changes = (
-                    not self._octolapse_settings.main_settings.show_trigger_state_changes
-                )
+                enabled = not self._octolapse_settings.main_settings.show_trigger_state_changes
+                self._octolapse_settings.main_settings.show_trigger_state_changes = enabled
             elif panel_type == "show_snapshot_plan_information":
-                self._octolapse_settings.main_settings.show_snapshot_plan_information = (
-                    not self._octolapse_settings.main_settings.show_snapshot_plan_information
-                )
+                enabled = not self._octolapse_settings.main_settings.show_snapshot_plan_information
+                self._octolapse_settings.main_settings.show_snapshot_plan_information = enabled
             else:
                 return jsonify({'error': "Unknown panel_type."}), 500
 
             # save the updated settings to a file.
             self.save_settings()
 
-            self.send_state_loaded_message()
-            data = {'success': True}
+            # inform any clients who are listening that they need to update their state.
+            self.send_state_changed_message(None, client_id)
+            data = {
+                'success': True,
+                'enabled': enabled
+            }
             return jsonify(data)
-
-    @octoprint.plugin.BlueprintPlugin.route("/loadMainSettings", methods=["POST"])
-    def load_main_settings_request(self):
-        data = {'success': True}
-        data.update(self._octolapse_settings.main_settings.to_dict())
-        return jsonify(data)
-
-    @octoprint.plugin.BlueprintPlugin.route("/loadState", methods=["POST"])
-    def load_state_request(self):
-        # TODO:  add a timer to wait for the settings to load!
-        if self._octolapse_settings is None:
-            raise Exception(
-                "Unable to load values from Octolapse.Settings, it hasn't been initialized yet.  Please wait a few "
-                "minutes and try again.  If the problem persists, please check plugin_octolapse.log for exceptions.")
-        # TODO:  add a timer to wait for the timelapse to be initialized
-        if self._timelapse is None:
-            raise Exception(
-                "Unable to load values from Octolapse.Timelapse, it hasn't been initialized yet.  Please wait a few "
-                "minutes and try again.  If the problem persists, please check plugin_octolapse.log for exceptions.")
-        self.send_state_loaded_message()
-        return jsonify({'success': True})
 
     @octoprint.plugin.BlueprintPlugin.route("/addUpdateProfile", methods=["POST"])
     @restricted_access
@@ -539,11 +526,60 @@ class OctolapsePlugin(
                 logger.exception("Failed to restore the defaults in /restoreDefaults.")
             return jsonify({'success': False}), 500
 
-    @octoprint.plugin.BlueprintPlugin.route("/loadSettings", methods=["POST"])
+    @octoprint.plugin.BlueprintPlugin.route("/loadMainSettings", methods=["POST"])
+    def load_main_settings_request(self):
+        data = {'success': True}
+        data.update(self._octolapse_settings.main_settings.to_dict())
+        return jsonify(data)
+
+    @octoprint.plugin.BlueprintPlugin.route("/loadState", methods=["POST"])
+    def load_state_request(self):
+        # TODO:  add a timer to wait for the settings to load!
+        if self._octolapse_settings is None:
+            message = "Unable to load values from Octolapse.Settings, it hasn't been initialized yet.  Please wait a few minutes and try again.  If the problem persists, please check plugin_octolapse.log for exceptions."
+            logger.error(message)
+            return jsonify({"error": True, "error_message": message}), 500
+        # TODO:  add a timer to wait for the timelapse to be initialized
+        if self._timelapse is None:
+            message = "Unable to load values from Octolapse.Timelapse, it hasn't been initialized yet.  Please wait a few minutes and try again.  If the problem persists, please check plugin_octolapse.log for exceptions."
+            return jsonify({"error": True, "error_message": message}), 500
+        data = self.get_state_request_dict()
+        return jsonify(data)
+
+    def get_state_request_dict(self):
+        state_date = None
+        if self._timelapse is not None:
+            state_data = self._timelapse.to_state_dict(include_timelapse_start_data=True)
+        data = {
+            "main_settings": self._octolapse_settings.main_settings.to_dict(),
+            "status": self.get_status_dict(include_profiles=True,
+                                           include_unfinished_renderings=True),
+            "state": state_data,
+            "success": True
+        }
+        if self.preprocessing_job_guid and self.saved_snapshot_plans:
+            data["snapshot_plan_preview"] = self.get_snapshot_plan_preview_dict()
+        return data
+
+    @octoprint.plugin.BlueprintPlugin.route("/loadSettingsAndState", methods=["POST"])
     @restricted_access
-    def load_settings_request(self):
+    def load_settings_and_state_request(self):
         with OctolapsePlugin.admin_permission.require(http_exception=403):
-            return self._octolapse_settings.to_json(), 200, {'ContentType': 'application/json'}
+            if self._octolapse_settings is None:
+                message = "Unable to load values from Octolapse.Settings, it hasn't been initialized yet.  Please " \
+                          "wait a few minutes and try again.  If the problem persists, please check " \
+                          "plugin_octolapse.log for exceptions. "
+                logger.error(message)
+                return jsonify({"error": True, "error_message": message}), 500
+            # TODO:  add a timer to wait for the timelapse to be initialized
+            if self._timelapse is None:
+                message = "Unable to load values from Octolapse.Timelapse, it hasn't been initialized yet.  Please " \
+                          "wait a few minutes and try again.  If the problem persists, please check " \
+                          "plugin_octolapse.log for exceptions. "
+                return jsonify({"error": True, "error_message": message}), 500
+            data = self.get_state_request_dict()
+            data["settings"] = self._octolapse_settings
+            return json.dumps(data, cls=SettingsJsonEncoder), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/updateProfileFromServer", methods=["POST"])
     @restricted_access
@@ -1174,12 +1210,13 @@ class OctolapsePlugin(
         with OctolapsePlugin.admin_permission.require(http_exception=403):
             request_values = request.get_json()
             preprocessing_job_guid = request_values["preprocessing_job_guid"]
-
             if (
-                preprocessing_job_guid is not None and
-                self._printer.get_state_id() == 'STARTING' and
-                not self.accept_snapshot_plan_preview(preprocessing_job_guid)
+                preprocessing_job_guid is None or
+                str(self.preprocessing_job_guid) != preprocessing_job_guid or
+                self._printer.get_state_id() != 'STARTING'
             ):
+                if self._printer.is_printing():
+                    self._printer.cancel_print(tags={'startup-failed'})
                 # return without doing anything, this job is already over
                 message = "Unable to accept the snapshot plan. Either the printer not operational, is currently printing, " \
                           "or this plan has been deleted. "
@@ -1187,6 +1224,8 @@ class OctolapsePlugin(
                     'success': False,
                     'error': message
                 })
+
+            self.accept_snapshot_plan_preview(preprocessing_job_guid)
 
             return jsonify({
                 'success': True
@@ -1205,41 +1244,47 @@ class OctolapsePlugin(
             self.send_settings_changed_message(client_id)
             return jsonify({
                 'success': True,
-                'enabled': new_value
+                'enabled': new_value,
             })
 
     @octoprint.plugin.BlueprintPlugin.route("/validateSnapshotCommand", methods=["POST"])
+    @restricted_access
     def validate_snapshot_command(self):
-        request_values = request.get_json()
-        snapshot_command = request_values["snapshot_command"]
-        valid = "true" if self._timelapse.validate_snapshot_command(snapshot_command) else ""
-        return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            snapshot_command = request_values["snapshot_command"]
+            valid = "true" if self._timelapse.validate_snapshot_command(snapshot_command) else ""
+            return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/validateRenderingTemplate", methods=["POST"])
+    @restricted_access
     def validate_rendering_template(self):
-        template = request.form['octolapse_rendering_output_template']
-        result = render.is_rendering_template_valid(
-            template,
-            self._octolapse_settings.profiles.options.rendering["rendering_file_templates"]
-        )
-        if result[0]:
-            valid = "true"
-        else:
-            valid = result[1]
-        return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            template = request.form['octolapse_rendering_output_template']
+            result = render.is_rendering_template_valid(
+                template,
+                self._octolapse_settings.profiles.options.rendering["rendering_file_templates"]
+            )
+            if result[0]:
+                valid = "true"
+            else:
+                valid = result[1]
+            return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/validateOverlayTextTemplate", methods=["POST"])
+    @restricted_access
     def validate_overlay_text_template(self):
-        template = request.form['octolapse_rendering_overlay_text_template']
-        result = render.is_overlay_text_template_valid(
-            template,
-            self._octolapse_settings.profiles.options.rendering["overlay_text_templates"]
-        )
-        if result[0]:
-            valid = "true"
-        else:
-            valid = result[1]
-        return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            template = request.form['octolapse_rendering_overlay_text_template']
+            result = render.is_overlay_text_template_valid(
+                template,
+                self._octolapse_settings.profiles.options.rendering["overlay_text_templates"]
+            )
+            if result[0]:
+                valid = "true"
+            else:
+                valid = result[1]
+            return "\"{0}\"".format(valid), 200, {'ContentType': 'application/json'}
 
     @octoprint.plugin.BlueprintPlugin.route("/rendering/font", methods=["GET"])
     @restricted_access
@@ -1402,6 +1447,101 @@ class OctolapsePlugin(
                 'success': "Deleted {} successfully.".format(filepath)
             })
 
+    @octoprint.plugin.BlueprintPlugin.route("/deleteAllUnfinishedRenderings", methods=["POST"])
+    @restricted_access
+    def delete_all_unfinished_renderings_request(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            rendering_jobs = self._rendering_processor.get_all_rendering_jobs()
+            unfinished = rendering_jobs["unfinished"]
+            for unfinished_rendering in unfinished:
+                self.delete_rendering_job(
+                    unfinished_rendering["job_guid"],
+                    unfinished_rendering["camera_guid"]
+                )
+            return jsonify({
+                "success": True
+            })
+
+    @octoprint.plugin.BlueprintPlugin.route("/deleteUnfinishedRendering", methods=["POST"])
+    @restricted_access
+    def delete_unfinished_rendering_request(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            job_guid = request_values["job_guid"]
+            camera_guid = request_values["camera_guid"]
+            self.delete_rendering_job(
+                job_guid,
+                camera_guid
+            )
+            return jsonify({
+                "success": True
+            })
+
+    @octoprint.plugin.BlueprintPlugin.route("/renderAllUnfinishedRenderings", methods=["POST"])
+    @restricted_access
+    def render_all_unfinished_renderings_request(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            render_profile_override_guid = request_values["render_profile_override_guid"]
+            camera_profile_override_guid = request_values["camera_profile_override_guid"]
+            rendering_profile = None
+            camera_profile = None
+            if (
+                render_profile_override_guid and
+                render_profile_override_guid in self._octolapse_settings.profiles.renderings
+            ):
+                rendering_profile = self._octolapse_settings.profiles.renderings[render_profile_override_guid]
+
+            if (
+                camera_profile_override_guid and
+                camera_profile_override_guid in self._octolapse_settings.profiles.cameras
+            ):
+                camera_profile = self._octolapse_settings.profiles.cameras[camera_profile_override_guid].clone()
+
+            rendering_jobs = self._rendering_processor.get_all_rendering_jobs()
+            unfinished = rendering_jobs["unfinished"]
+            for unfinished_rendering in unfinished:
+                self.add_rendering_job(
+                    unfinished_rendering["job_guid"],
+                    unfinished_rendering["camera_guid"],
+                    rendering_profile=rendering_profile,
+                    camera_profile=camera_profile
+                )
+            return jsonify({
+                "success": True
+            })
+
+    @octoprint.plugin.BlueprintPlugin.route("/renderUnfinishedRendering", methods=["POST"])
+    @restricted_access
+    def render_unfinished_rendering_request(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            job_guid = request_values["job_guid"]
+            camera_guid = request_values["camera_guid"]
+            render_profile_override_guid = request_values["render_profile_override_guid"]
+            camera_profile_override_guid = request_values["camera_profile_override_guid"]
+            rendering_profile = None
+            camera_profile = None
+            if (
+                render_profile_override_guid and
+                render_profile_override_guid in self._octolapse_settings.profiles.renderings
+            ):
+                rendering_profile = self._octolapse_settings.profiles.renderings[render_profile_override_guid]
+
+            if (
+                camera_profile_override_guid and
+                camera_profile_override_guid in self._octolapse_settings.profiles.cameras
+            ):
+                camera_profile = self._octolapse_settings.profiles.cameras[camera_profile_override_guid].clone()
+
+            self.add_rendering_job(
+                job_guid, camera_guid, rendering_profile=rendering_profile, camera_profile=camera_profile
+            )
+
+            return jsonify({
+                "success": True
+            })
+
     # blueprint helpers
     @staticmethod
     def get_download_file_response(file_path, download_filename, on_complete_callback=None, on_complete_additional_args=None):
@@ -1558,7 +1698,7 @@ class OctolapsePlugin(
     def on_settings_load(self):
         return dict(load=None, restore_default_settings=None)
 
-    def get_status_dict(self):
+    def get_status_dict(self, include_profiles=False, include_unfinished_renderings=False):
         try:
             is_timelapse_active = False
             snapshot_count = 0
@@ -1566,28 +1706,44 @@ class OctolapsePlugin(
             is_rendering = False
             current_timelapse_state = TimelapseState.Idle
             is_waiting_to_render = False
-            profiles_dict = self._octolapse_settings.profiles.get_profiles_dict()
-            debug_dict = profiles_dict["debug"]
+            profiles_dict = None
             is_test_mode_active = False
-
+            unfinished_renderings = None
+            in_process_renderings = None
             if self._timelapse is not None:
                 snapshot_count = self._timelapse.get_snapshot_count()
                 is_timelapse_active = self._timelapse.is_timelapse_active()
                 if is_timelapse_active:
-                    profiles_dict = self._timelapse.get_current_profiles()
                     is_test_mode_active = self._timelapse.get_is_test_mode_active()
                 # Always get the current debug settings, else they won't update from the tab while a timelapse is
                 # running.
-                profiles_dict["current_debug_profile_guid"] = (
-                    self._octolapse_settings.profiles.current_debug_profile_guid
-                )
-                profiles_dict["debug_profiles"] = debug_dict
-                # always get the latest current camera profile guid.
-                profiles_dict["current_camera_profile_guid"] = (
-                    self._octolapse_settings.profiles.current_camera_profile_guid
-                )
+                if include_profiles:
+                    if is_timelapse_active:
+                        profiles_dict = self._timelapse.get_current_profiles()
+                    else:
+                        profiles_dict = self._octolapse_settings.profiles.get_profiles_dict()
+                    profiles_dict["current_debug_profile_guid"] = (
+                        self._octolapse_settings.profiles.current_debug_profile_guid
+                    )
+                    profiles_dict["debug_profiles"] = profiles_dict["debug"]
+                    # always get the latest current camera profile guid.
+                    profiles_dict["current_camera_profile_guid"] = (
+                        self._octolapse_settings.profiles.current_camera_profile_guid
+                    )
+                if include_unfinished_renderings:
+                    unfinished_jobs = self._rendering_processor.get_all_rendering_jobs()
+                    unfinished_renderings = {
+                        "unfinished": unfinished_jobs["unfinished"],
+                        "unfinished_size": unfinished_jobs["unfinished_size"],
+                    }
+                    in_process_renderings = {
+                        "in_process": unfinished_jobs["in_process"],
+                        "in_process_size": unfinished_jobs["in_process_size"],
+                    }
 
-                is_rendering = self._timelapse.get_is_rendering()
+                is_rendering = False
+                if self._rendering_processor:
+                    is_rendering = self._rendering_processor.is_processing()
                 current_timelapse_state = self._timelapse.get_current_state()
                 is_taking_snapshot = TimelapseState.TakingSnapshot == current_timelapse_state
 
@@ -1600,7 +1756,9 @@ class OctolapsePlugin(
                 'is_test_mode_active': is_test_mode_active,
                 'waiting_to_render': is_waiting_to_render,
                 'state': current_timelapse_state,
-                'profiles': profiles_dict
+                'profiles': profiles_dict,
+                'unfinished_renderings': unfinished_renderings,
+                'in_process_renderings': in_process_renderings
             }
         except Exception as e:
             logger.exception("Failed to create status dict.")
@@ -1615,13 +1773,10 @@ class OctolapsePlugin(
             self.get_current_octolapse_settings,
             self._printer,
             self.get_plugin_data_folder(),
-            self._settings.settings.getBaseFolder("timelapse"),
+            self.get_default_settings_folder(),
+            self._settings,
             on_print_started=self.on_print_start,
             on_print_start_failed=self.on_print_start_failed,
-            on_render_start=self.on_render_start,
-            on_render_success=self.on_render_success,
-            on_render_error=self.on_render_error,
-            on_render_end=self.on_render_end,
             on_snapshot_start=self.on_snapshot_start,
             on_snapshot_end=self.on_snapshot_end,
             on_new_thumbnail_available=self.on_new_thumbnail_available,
@@ -1630,7 +1785,8 @@ class OctolapsePlugin(
             on_timelapse_stopped=self.on_timelapse_stopped,
             on_timelapse_end=self.on_timelapse_end,
             on_state_changed=self.on_timelapse_state_changed,
-            on_snapshot_position_error=self.on_snapshot_position_error
+            on_snapshot_position_error=self.on_snapshot_position_error,
+            on_rendering_start=self.add_rendering_job
         )
 
     def get_available_server_profiles_path(self):
@@ -1727,7 +1883,6 @@ class OctolapsePlugin(
             logger.info("Profile updates are available from the server.")
             # create an automatic updates available message
 
-
     def on_startup(self, host, port):
         try:
             # tell the logging configuator what our logfile path is
@@ -1759,13 +1914,29 @@ class OctolapsePlugin(
             if len(startup_cameras) > 0:
                 self.apply_camera_settings(camera_profiles=startup_cameras)
 
-            # run the on print start scripts for each camera
-            # note that errors here will ONLY show up in the log.
-            #success, errors = camera.CameraControl.run_on_print_start_script(self._octolapse_settings.profiles.cameras)
-            #if not success:
-            #    logger.error(errors)
-
+            # start automatic updates
             self.start_automatic_updates()
+
+            # start the rendering processor
+            self._rendering_processor = RenderingProcessor(
+                self._rendering_task_queue,
+                self._data_folder,
+                self._octolapse_settings.main_settings.version,
+                self.get_default_settings_folder(),
+                self._get_rendering_settings,
+                self._get_current_rendering_profile,
+                self.on_prerender_start,
+                self.on_render_start,
+                self.on_render_success,
+                self.on_render_error,
+                self.on_render_end,
+                self.send_unfinished_renderings_changed_message,
+                self.send_in_process_renderings_changed_message,
+                self.send_unfinished_renderings_loaded_message
+            )
+
+            self._rendering_processor.start()
+
             # log the loaded state
             logger.info("Octolapse - loaded and active.")
         except Exception as e:
@@ -1777,7 +1948,6 @@ class OctolapsePlugin(
 
     # Event Mixin Handler
     def on_event(self, event, payload):
-
         try:
             # If we haven't loaded our settings yet, return.
             if self._octolapse_settings is None or self._timelapse is None:
@@ -1867,8 +2037,7 @@ class OctolapsePlugin(
                 # return false so the print job lock isn't released
                 return False
 
-            self.start_timelapse(timelapse_settings)
-            return True
+            return self.start_timelapse(timelapse_settings)
         except Exception as e:
             error = error_messages.get_error(["init", "timelapse_start_exception"])
             logger.exception("Unable to start the timelapse.")
@@ -2157,13 +2326,23 @@ class OctolapsePlugin(
         return return_value
 
     def start_timelapse(self, timelapse_settings, snapshot_plans=None):
-        self._timelapse.start_timelapse(
-            timelapse_settings["settings"],
-            timelapse_settings["overridable_printer_profile_settings"],
-            timelapse_settings["ffmpeg_path"],
-            timelapse_settings["gcode_file_path"],
-            snapshot_plans=snapshot_plans
-        )
+        try:
+            self._timelapse.start_timelapse(
+                timelapse_settings["settings"],
+                timelapse_settings["overridable_printer_profile_settings"],
+                timelapse_settings["gcode_file_path"],
+                snapshot_plans=snapshot_plans
+            )
+        except TimelapseStartException as e:
+            logger.exception("Unable to start the timelapse.  Error Details: %s", e.message)
+            self.on_print_start_failed([error_messages.get_error(['init', e.type])])
+            return False
+        except Exception as e:
+            message = "An unexpected exception occurred while starting the timelapse.  See plugin_octolapse.log for " \
+                      "details. "
+            logger.exception(message)
+            self.on_print_start_failed([error_messages.get_error(['init', 'unexpected_exception'])])
+            return False
 
         # send G90/G91 if necessary, note that this must come before M82/M83 because sometimes G90/G91 affects
         # the extruder.
@@ -2184,6 +2363,7 @@ class OctolapsePlugin(
         logger.info("Print Started - Timelapse Started.")
 
         self.on_timelapse_start()
+        return True
 
     def on_print_start_failed(self, errors):
         if not isinstance(errors, list):
@@ -2312,6 +2492,14 @@ class OctolapsePlugin(
             self.start_preprocessed_timelapse()
 
     def send_snapshot_plan_preview(self):
+        data = {
+            "type": "snapshot-plan-preview",
+            "snapshot_plan_preview": self.get_snapshot_plan_preview_dict()
+        }
+
+        self._plugin_manager.send_plugin_message(self._identifier, data)
+
+    def get_snapshot_plan_preview_dict(self):
         # set a print job guid so we know if we should cancel this print later or not
         autoclose = self.snapshot_plan_preview_autoclose
         autoclose_seconds = int(self.snapshot_plan_preview_close_time - time.time())
@@ -2335,8 +2523,7 @@ class OctolapsePlugin(
             total_saved_travel_distance += plan.saved_travel_distance
 
         data = {
-            "type": "snapshot-plan-preview",
-            "preprocessing_job_guid": str(self.preprocessing_job_guid),
+        "preprocessing_job_guid": str(self.preprocessing_job_guid),
             "snapshot_plans": {
                 "snapshot_plans": snapshot_plans,
                 "printer_volume": printer_volume,
@@ -2349,7 +2536,8 @@ class OctolapsePlugin(
                 "quality_issues": self.saved_preprocessing_quality_issues
             }
         }
-        self._plugin_manager.send_plugin_message(self._identifier, data)
+
+        return data
 
     def accept_snapshot_plan_preview(self, preprocessing_job_guid=None):
         # use a lock
@@ -2364,13 +2552,15 @@ class OctolapsePlugin(
                 self.saved_snapshot_plans is None or
                 self.saved_parsed_command is None
             ):
-                return False
+                self.on_print_start_failed(error_messages.get_error(["init", "unable_to_accept_snapshot_plan"]))
+                return
 
             logger.info("Accepting the saved snapshot plan")
             self.preprocessing_job_guid = None
-            self.start_preprocessed_timelapse()
+            if not self.start_preprocessed_timelapse():
+                # an error message will have been returned to the client, just return.
+                return
             self.send_snapshot_preview_complete_message()
-        return True
 
     def start_preprocessed_timelapse(self):
         # initialize the timelapse obeject
@@ -2383,9 +2573,11 @@ class OctolapsePlugin(
             logger.error("Unable to start the preprocessed timelapse, some required items could not be found.")
             self.cancel_preprocessing()
             return
+        if not self.start_timelapse(self.saved_timelapse_settings, self.saved_snapshot_plans):
+            return False
 
-        self.start_timelapse(self.saved_timelapse_settings, self.saved_snapshot_plans)
         self._timelapse.preprocessing_finished(self.saved_parsed_command)
+        return True
 
     def on_pre_processing_start(self):
         # set a print job guid so we know if we should cancel this print later or not
@@ -2419,10 +2611,11 @@ class OctolapsePlugin(
     def send_popup_error(self, msg):
         self.send_plugin_message("popup-error", msg)
 
-    def send_state_changed_message(self, state):
+    def send_state_changed_message(self, state, client_id=None):
         data = {
             "type": "state-changed",
-            "state": state
+            "state": state,
+            "client_id": client_id
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
@@ -2430,12 +2623,12 @@ class OctolapsePlugin(
         data = {"type": "snapshot-plan-preview-complete"}
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_settings_changed_message(self, client_id=""):
+    def send_settings_changed_message(self, client_id):
         data = {
             "type": "settings-changed",
-            "client_id": client_id,
-            "status": self.get_status_dict(),
-            "main_settings": self._octolapse_settings.main_settings.to_dict()
+            "client_id": client_id
+            #"status": self.get_status_dict(),
+            #"main_settings": self._octolapse_settings.main_settings.to_dict()
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
@@ -2455,17 +2648,74 @@ class OctolapsePlugin(
         self._plugin_manager.send_plugin_message(
             self._identifier, dict(type=message_type, msg=msg))
 
-    def send_prerender_start_message(self, payload):
+    def send_unfinished_renderings_loaded_message(self):
+        unfinished_renderings = self._rendering_processor.get_all_rendering_jobs()
         data = {
-            "type": "prerender-start", "payload": payload, "status": self.get_status_dict(),
+            "type": "unfinished-renderings-loaded",
+            "status": {
+                "unfinished_renderings": {
+                    "unfinished": unfinished_renderings["unfinished"],
+                    "unfinished_size": unfinished_renderings["unfinished_size"],
+                    "in_process": unfinished_renderings["in_process"],
+                    "in_process_size": unfinished_renderings["in_process_size"],
+                }
+            }
+        }
+        self._plugin_manager.send_plugin_message(self._identifier, data)
+
+    def send_unfinished_renderings_changed_message(self, rendering, change_type):
+        unfinished_renderings = self._rendering_processor.get_all_rendering_jobs()
+        data = {
+            "type": "unfinished-renderings-changed",
+            "status": {
+                "unfinished_renderings":
+                {
+                    "unfinished_rendering_change": rendering,
+                    "unfinished_rendering_change_type": change_type
+                }
+            }
+        }
+        self._plugin_manager.send_plugin_message(self._identifier, data)
+
+    def send_in_process_renderings_changed_message(self, rendering, change_type):
+        unfinished_renderings = self._rendering_processor.get_all_rendering_jobs()
+        data = {
+            "type": "in-process-renderings-changed",
+            "status": {
+                "in_process_renderings":
+                {
+                    "in_process_rendering_change": rendering,
+                    "in_process_rendering_change_type": change_type
+                }
+            }
+        }
+        self._plugin_manager.send_plugin_message(self._identifier, data)
+
+    def send_prerender_start_message(self, msg, job):
+        status = self.get_status_dict()
+        status["in_process_renderings"] = {
+            "in_process_rendering_change": job,
+            "in_process_rendering_change_type": "changed"
+        }
+        data = {
+            "type": "prerender-start",
+            "msg": msg,
+            "status": status,
             "main_settings": self._octolapse_settings.main_settings.to_dict()
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_render_start_message(self, msg):
+    def send_render_start_message(self, msg, job):
+        status = self.get_status_dict()
+        status["in_process_renderings"] = {
+            "in_process_rendering_change": job,
+            "in_process_rendering_change_type": "changed"
+        }
         data = {
-            "type": "render-start", "msg": msg, "status": self.get_status_dict(),
-            "main_settings": self._octolapse_settings.main_settings.to_dict()
+            "type": "render-start",
+            "msg": msg,
+            "status": status,
+            "main_settings": self._octolapse_settings.main_settings.to_dict(),
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
@@ -2474,23 +2724,28 @@ class OctolapsePlugin(
             "type": "post-render-failed",
             "msg": msg,
             "status": self.get_status_dict(),
-            "main_settings": self._octolapse_settings.main_settings.to_dict(),
-            "status": self.get_status_dict()
+            "main_settings": self._octolapse_settings.main_settings.to_dict()
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_render_failed_message(self, msg):
+    def send_render_failed_message(self, msg, job):
+        status = self.get_status_dict()
+        status["in_process_renderings"] = {
+            "in_process_rendering_change": job,
+            "in_process_rendering_change_type": "removed"
+        }
+
         data = {
             "type": "render-failed",
             "msg": msg,
-            "status": self.get_status_dict(),
-            "main_settings": self._octolapse_settings.main_settings.to_dict(),
-            "status": self.get_status_dict()
+            "status": status,
+            "main_settings": self._octolapse_settings.main_settings.to_dict()
         }
+
+
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
     def send_render_end_message(self):
-
         data = {
             "type": "render-end",
             "status": self.get_status_dict(),
@@ -2498,22 +2753,26 @@ class OctolapsePlugin(
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_render_success_message(self, message, synchronized):
+    def send_render_success_message(self, message, synchronized, job):
+        status = self.get_status_dict()
+        status["in_process_renderings"] = {
+            "in_process_rendering_change": job,
+            "in_process_rendering_change_type": "removed"
+        }
         data = {
             "type": "render-complete",
             "msg": message,
             "is_synchronized": synchronized,
-            "status": self.get_status_dict(),
+            "status": status,
             "main_settings": self._octolapse_settings.main_settings.to_dict()
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
-
 
     def on_timelapse_start(self):
         data = {
             "type": "timelapse-start",
             "msg": "Octolapse has started a timelapse.",
-            "status": self.get_status_dict(),
+            "status": self.get_status_dict(include_profiles=True),
             "main_settings": self._octolapse_settings.main_settings.to_dict(),
             "state": self._timelapse.to_state_dict(include_timelapse_start_data=True)
         }
@@ -2523,7 +2782,7 @@ class OctolapsePlugin(
         state_data = self._timelapse.to_state_dict()
         data = {
             "type": "timelapse-complete", "msg": "Octolapse has completed a timelapse.",
-            "status": self.get_status_dict(),
+            "status": self.get_status_dict(include_profiles=True),
             "main_settings": self._octolapse_settings.main_settings.to_dict()
         }
         data.update(state_data)
@@ -2538,35 +2797,9 @@ class OctolapsePlugin(
         data.update(state_data)
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_state_loaded_message(self):
-        state_date = None
-        if self._timelapse is not None:
-            state_data = self._timelapse.to_state_dict(include_timelapse_start_data=True)
-        data = {
-            "msg": "The current state has been loaded.",
-            "main_settings": self._octolapse_settings.main_settings.to_dict(),
-            "status": self.get_status_dict(),
-            "state": state_data
-        }
-        try:
-            self.queue_plugin_message(PluginMessage(data, "state-loaded"))
-            if self.preprocessing_job_guid and self.saved_snapshot_plans:
-                self.send_snapshot_plan_preview()
-        except Exception as e:
-            raise e
-
-    def on_timelapse_complete(self):
-        state_data = self._timelapse.to_state_dict()
-        data = {
-            "type": "timelapse-complete", "msg": "Octolapse has completed the timelapse.",
-            "status": self.get_status_dict(), "main_settings": self._octolapse_settings.main_settings.to_dict()
-        }
-        data.update(state_data)
-        self._plugin_manager.send_plugin_message(self._identifier, data)
-
     def on_snapshot_start(self):
         data = {
-            #"type": "snapshot-start",
+            "type": "snapshot-start",
             "msg": "Octolapse is taking a snapshot.",
             "status": self.get_status_dict(),
             "main_settings": self._octolapse_settings.main_settings.to_dict(),
@@ -2588,7 +2821,7 @@ class OctolapsePlugin(
                 snapshot_error = snapshot_payload["error"]
 
         data = {
-            #"type": "snapshot-complete",
+            "type": "snapshot-complete",
             "msg": "Octolapse has completed the current snapshot.",
             "status": status_dict,
             "state": self._timelapse.to_state_dict(),
@@ -2670,7 +2903,7 @@ class OctolapsePlugin(
         data = {
             "type": message_type,
             "msg": message,
-            "status": self.get_status_dict(),
+            "status": self.get_status_dict(include_profiles=True),
             "main_settings": self._octolapse_settings.main_settings.to_dict()
         }
         data.update(state_data)
@@ -2720,39 +2953,72 @@ class OctolapsePlugin(
         }
         self.queue_plugin_message(PluginMessage(state_change_dict, "state-changed", rate_limit_seconds=1))
 
-    def on_prerender_start(self, payload):
-        self.send_prerender_start_message(payload)
+    def _get_rendering_settings(self):
+        return {
+            "ffmpeg_path": self._settings.global_get(["webcam", "ffmpeg"]),
+            "timelapse_directory": self._settings.settings.getBaseFolder("timelapse"),
+        }
 
-    def on_render_start(self, payload):
+    def _get_current_rendering_profile(self):
+        return self.get_current_octolapse_settings().profiles.current_rendering().clone()
+
+    def add_rendering_job(self, job_guid, camera_guid, rendering_profile=None, camera_profile=None):
+        logger.info("Adding new rendering job.  JobGuid: %s, CameraGuid: %s", job_guid, camera_guid)
+        parameters = {
+            "job_guid": job_guid,
+            "camera_guid": camera_guid,
+            "action": "add",
+            "rendering_profile": rendering_profile,
+            "camera_profile": camera_profile
+        }
+        self._rendering_task_queue.put(parameters)
+
+    def delete_rendering_job(self, job_guid, camera_guid):
+        logger.info("Adding new rendering job.  JobGuid: %s, CameraGuid: %s", job_guid, camera_guid)
+        parameters = {
+            "job_guid": job_guid,
+            "camera_guid": camera_guid,
+            "action": "remove_unfinished",
+            "delete": True
+        }
+        self._rendering_task_queue.put(parameters)
+
+    def on_prerender_start(self, payload, job):
+        assert (isinstance(payload, RenderingCallbackArgs))
+
+        # Set a flag marking that we have not yet synchronized with the default Octoprint plugin, in case we do this
+        # later.
+        # Generate a notification message
+        msg = "Octolapse has started the pre-rendering process for the '{0}' camera.".format(payload.CameraName)
+        if payload.JobsRemaining > 1:
+            msg += "  {0} jobs remaining. ".format(payload.JobsRemaining)
+
+        self.send_prerender_start_message(msg, job)
+
+    def on_render_start(self, payload, job):
         """Called when a timelapse has started being rendered.  Calls any callbacks OnRenderStart callback set in the
         constructor. """
         assert (isinstance(payload, RenderingCallbackArgs))
         # Set a flag marking that we have not yet synchronized with the default Octoprint plugin, in case we do this
         # later.
         # Generate a notification message
-        job_message = ""
+        msg = "Octolapse is rendering {0} frames for the {1} camera.".format(
+            payload.SnapshotCount, payload.CameraName)
         if payload.JobsRemaining > 1:
-            job_message = "Rendering for camera '{0}'.  {1} jobs remaining.".format(
-                payload.CameraName, payload.JobsRemaining
-            )
-
-        msg = "Octolapse captured {0} frames and has started rendering your timelapse file.".format(
-            payload.SnapshotCount)
+            msg += "  {0} jobs remaining. ".format(payload.JobsRemaining)
 
         if payload.Synchronize:
-            will_sync_message = "This timelapse will synchronized with the default timelapse module, and will be " \
+            msg += " This timelapse will synchronized with the default timelapse module, and will be " \
                                 "available within the default timelapse plugin as '{0}' after rendering is " \
                                 "complete.".format(payload.get_synchronization_filename())
         else:
-            will_sync_message = "Due to your rendering settings, this timelapse will NOT be synchronized with the " \
+            msg += " Due to your rendering settings, this timelapse will NOT be synchronized with the " \
                                 "default timelapse module.  You will be able to find on your octoprint server" \
                                 " here:<br/>{0}".format(payload.get_rendering_path())
 
-        message = "{0}{1}{2}".format(job_message, msg, will_sync_message)
-        # send a message to the client
-        self.send_render_start_message(message)
+        self.send_render_start_message(msg, job)
 
-    def on_render_success(self, payload):
+    def on_render_success(self, payload, job):
         """Called after all rendering and synchronization attempts are complete."""
         assert (isinstance(payload, RenderingCallbackArgs))
         if payload.BeforeRenderError or payload.AfterRenderError:
@@ -2779,7 +3045,7 @@ class OctolapsePlugin(
                         payload.CameraName,
                         payload.get_rendering_path()
                       )
-        self.send_render_success_message(message, payload.Synchronize)
+        self.send_render_success_message(message, payload.Synchronize, job)
 
         # fire custom event for movie done
         output_file_name = "{0}.{1}".format(payload.RenderingFilename, payload.RenderingExtension)
@@ -2797,7 +3063,7 @@ class OctolapsePlugin(
         )
         self._event_bus.fire(event, payload=custom_payload)
 
-    def on_render_error(self, payload, error):
+    def on_render_error(self, payload, error, job):
         """Called after all rendering and synchronization attempts are complete."""
         if payload:
             assert (isinstance(payload, RenderingCallbackArgs))
@@ -2809,14 +3075,13 @@ class OctolapsePlugin(
                 if payload.AfterRenderError:
                     pre_post_render_message += " The after script failed with the following error:" \
                                                "  {0}".format(payload.AfterRenderError)
-                self.send_render_failed_message(pre_post_render_message)
-
-            if error != None:
+                self.send_render_failed_message(pre_post_render_message, job)
+            if error is not None:
                 message = "Rendering failed for camera '{0}'.  {1}".format(payload.CameraName, error)
-                self.send_render_failed_message(message)
+                self.send_render_failed_message(message, job)
         else:
             message = "Rendering failed.  {0}".format(error)
-            self.send_render_failed_message(message)
+            self.send_render_failed_message(message, job)
 
     def on_render_end(self):
         self.send_render_end_message()
@@ -2853,7 +3118,9 @@ class OctolapsePlugin(
                 "js/octolapse.status.snapshotplan_preview.js",
                 "js/octolapse.help.js",
                 "js/octolapse.profiles.library.js",
-                "js/webcams/mjpg_streamer/raspi_cam_v2.js"
+                "js/webcams/mjpg_streamer/raspi_cam_v2.js",
+                "js/octolapse_dialog.js",
+                "js/octolapse_rendering_dialog.js",
             ],
             css=["css/jquery.minicolors.css", "css/octolapse.css"],
             less=["less/octolapse.less"]
@@ -2915,7 +3182,6 @@ class OctolapsePlugin(
     # noinspection PyUnusedLocal
     def get_timelapse_extensions(self, *args, **kwargs):
         allowed_extensions = ["mpg", "mpeg", "mp4", "m4v", "mkv", "gif", "avi", "flv", "vob"]
-
         if sys.version_info < (3,0):
             return [i.encode('ascii', 'replace') for i in allowed_extensions]
 

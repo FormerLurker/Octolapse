@@ -22,6 +22,33 @@
 ##################################################################################
 */
 $(function () {
+
+        Octolapse.CurrentSettingViewModel = function(type, values)
+        {
+            var self = this;
+            // defaults
+            self.guid = values.guid;
+            self.name = values.name;
+            self.description = values.description;
+            if (type === "printer")
+            {
+                self.has_been_saved_by_user = values.has_been_saved_by_user;
+            }
+            else if (type ==="trigger")
+            {
+                self.trigger_type = values.trigger_type;
+            }
+            else if (type === "camera")
+            {
+                self.enabled = ko.observable(values.enabled);
+                self.enable_custom_image_preferences = values.enable_custom_image_preferences
+            }
+            else if(type === "debug_profile")
+            {
+                self.is_test_mode = values.is_test_mode;
+            }
+        };
+
         Octolapse.StatusViewModel = function () {
             // Create a reference to this object
             var self = this;
@@ -42,17 +69,18 @@ $(function () {
             self.current_debug_profile_guid = ko.observable();
             self.current_settings_showing = ko.observable(true);
             self.profiles = ko.observable({
-                'printers': ko.observableArray([{name: "Unknown", guid: "", description:"",has_been_saved_by_user: false}]),
-                'stabilizations': ko.observableArray([{name: "Unknown", guid: "", description:""}]),
-                'triggers': ko.observableArray([{name: "Unknown", guid: "", description:""}]),
-                'snapshots': ko.observableArray([{name: "Unknown", guid: "", description:""}]),
-                'renderings': ko.observableArray([{name: "Unknown", guid: "", description:""}]),
-                'cameras': ko.observableArray([{name: "Unknown", guid: "", description:"", enabled: false}]),
-                'debug_profiles': ko.observableArray([{name: "Unknown", guid: "", description:"", is_test_mode:false}])
+                'printers': ko.observableArray([new Octolapse.CurrentSettingViewModel("printer", {name: "Unknown", guid: "", description:"",has_been_saved_by_user: false})]),
+                'stabilizations': ko.observableArray([new Octolapse.CurrentSettingViewModel("stabilization", {name: "Unknown", guid: "", description:""})]),
+                'triggers': ko.observableArray([new Octolapse.CurrentSettingViewModel("trigger", {name: "Unknown", guid: "", description:""})]),
+                'snapshots': ko.observableArray([new Octolapse.CurrentSettingViewModel("snapshot", {name: "Unknown", guid: "", description:""})]),
+                'renderings': ko.observableArray([new Octolapse.CurrentSettingViewModel("rendering", {name: "Unknown", guid: "", description:""})]),
+                'cameras': ko.observableArray([new Octolapse.CurrentSettingViewModel("camera", {name: "Unknown", guid: "", description:"", enabled: false})]),
+                'debug_profiles': ko.observableArray([new Octolapse.CurrentSettingViewModel("debug_profile", {name: "Unknown", guid: "", description:"", is_test_mode:false})])
             });
             self.is_real_time = ko.observable(true);
             self.is_test_mode_active = ko.observable(false);
             self.current_camera_guid = ko.observable(null);
+            self.rendering_dialog = new Octolapse.OctolapseRenderingDialog();
             self.PrinterState = new Octolapse.printerStateViewModel();
             self.Position = new Octolapse.positionViewModel();
             self.ExtruderState = new Octolapse.extruderStateViewModel();
@@ -81,6 +109,12 @@ $(function () {
                 self.webcam_settings_popup.showWebcamSettingsForGuid(self.current_camera_guid());
             };
 
+            self.showRenderingProgress = function() {
+                self.rendering_dialog.open('in-process');
+            };
+            self.showUnfinishedRenderings = function() {
+                self.rendering_dialog.open('failed');
+            };
             self.showLatestSnapshotDialog = function () {
 
                 var $SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
@@ -148,13 +182,14 @@ $(function () {
                     //console.log("Setting local storage (" + self.SETTINGS_VISIBLE_KEY + ") to " + newData);
                     Octolapse.setLocalStorage(self.SETTINGS_VISIBLE_KEY, newData)
                 });
+                self.rendering_dialog.on_after_binding();
             };
 
             // Update the current tab state
             self.updateState = function(state){
                 //console.log("octolapse.status.js - Updating State")
                 if (state.trigger_type != null)
-                    self.is_real_time(state.trigger_type == "real-time");
+                    self.is_real_time(state.trigger_type === "real-time");
 
                 if (state.position != null) {
                     self.Position.update(state.position);
@@ -174,6 +209,19 @@ $(function () {
 
             };
 
+            self.create_current_settings_profile = function(type, values)
+            {
+                var profiles = [];
+                if (values)
+                {
+                    for (var index=0; index < values.length; index++)
+                    {
+                        profiles.push(new Octolapse.CurrentSettingViewModel(type, values[index]))
+                    }
+                }
+                return profiles;
+            };
+
             self.update = function (settings) {
                 //console.log("octolapse.status.js - Updating main settings.");
                 self.is_timelapse_active(settings.is_timelapse_active);
@@ -183,19 +231,22 @@ $(function () {
                 self.waiting_to_render(settings.waiting_to_render);
                 self.is_test_mode_active(settings.is_test_mode_active);
                 //console.log("Updating Profiles");
-                self.profiles().printers(settings.profiles.printers);
-                self.profiles().stabilizations(settings.profiles.stabilizations);
-                self.profiles().triggers(settings.profiles.triggers);
-                self.profiles().renderings(settings.profiles.renderings);
-                self.profiles().cameras(settings.profiles.cameras);
-                self.profiles().debug_profiles(settings.profiles.debug_profiles);
-                self.current_printer_profile_guid(settings.profiles.current_printer_profile_guid);
-                self.current_stabilization_profile_guid(settings.profiles.current_stabilization_profile_guid);
-                self.current_trigger_profile_guid(settings.profiles.current_trigger_profile_guid);
-                self.current_snapshot_profile_guid(settings.profiles.current_snapshot_profile_guid);
-                self.current_rendering_profile_guid(settings.profiles.current_rendering_profile_guid);
-                self.current_debug_profile_guid(settings.profiles.current_debug_profile_guid);
+                if (settings.profiles) {
+                    self.profiles().printers(self.create_current_settings_profile("printer", settings.profiles.printers));
+                    self.profiles().stabilizations(self.create_current_settings_profile("stabilization", settings.profiles.stabilizations));
+                    self.profiles().triggers(self.create_current_settings_profile("trigger", settings.profiles.triggers));
+                    self.profiles().renderings(self.create_current_settings_profile("rendering", settings.profiles.renderings));
+                    self.profiles().cameras(self.create_current_settings_profile("camera", settings.profiles.cameras));
+                    self.profiles().debug_profiles(self.create_current_settings_profile("debug_profile", settings.profiles.debug_profiles));
+                    self.current_printer_profile_guid(settings.profiles.current_printer_profile_guid);
+                    self.current_stabilization_profile_guid(settings.profiles.current_stabilization_profile_guid);
+                    self.current_trigger_profile_guid(settings.profiles.current_trigger_profile_guid);
+                    self.current_snapshot_profile_guid(settings.profiles.current_snapshot_profile_guid);
+                    self.current_rendering_profile_guid(settings.profiles.current_rendering_profile_guid);
+                    self.current_debug_profile_guid(settings.profiles.current_debug_profile_guid);
+                }
 
+                self.rendering_dialog.update(settings);
                 self.is_real_time(self.getCurrentTriggerProfileIsRealTime());
                 self.current_camera_guid(self.getInitialCameraSelection());
                 self.set_current_camera_enabled();
@@ -552,13 +603,23 @@ $(function () {
 
             };
 
-            self.toggleInfoPanel = function (panelType){
+            self.toggleInfoPanel = function (observable, panelType){
+                data = {
+                    panel_type: panelType,
+                    client_id: Octolapse.Globals.client_id
+                };
                 $.ajax({
                     url: "./plugin/octolapse/toggleInfoPanel",
                     type: "POST",
-                    data: JSON.stringify({panel_type: panelType}),
+                    data: JSON.stringify(data),
                     contentType: "application/json",
                     dataType: "json",
+                    success: function(result){
+                        if (result.success)
+                        {
+                            observable(result.enabled);
+                        }
+                    },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {
                         var message = "Unable to toggle the panel.  Status: " + textStatus + ".  Error: " + errorThrown;
                         var options = {
@@ -815,7 +876,9 @@ $(function () {
 
             self.toggleCamera = function (guid) {
                 //console.log("Opening current camera profile from tab.")
-                Octolapse.Cameras.getProfileByGuid(guid).toggleCamera();
+                Octolapse.Cameras.getProfileByGuid(guid).toggleCamera(function(value){
+                    self.getCurrentProfileByGuid(self.profiles().cameras(), guid).enabled(value);
+                });
             };
             self.set_current_camera_enabled = function() {
                 var current_camera = null;

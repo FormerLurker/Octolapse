@@ -204,30 +204,6 @@
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="control-label">Skip Snapshots At Beginning</label>
-                    <div class="controls">
-                        <input id="octolapse_rendering_snapshots_to_skip_beginning" name="octolapse_rendering_snapshots_to_skip_beginning"
-                               class="input-small ignore_hidden_errors"
-                               data-bind="value: snapshots_to_skip_beginning"
-                               type="number" min="0" max="9999" required="true" />
-                        <a class="octolapse_help" data-help-url="profiles.rendering.snapshots_to_skip_beginning.md" data-help-title="Post-Roll" />
-                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_snapshots_to_skip_beginning"></div>
-                        <span class="help-inline">Remove frames from the beginning of the timelapse</span>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Skip Snapshots At End</label>
-                    <div class="controls">
-                        <input name="octolapse_rendering_snapshots_to_skip_end" name="octolapse_rendering_snapshots_to_skip_end"
-                               class="input-small ignore_hidden_errors"
-                               data-bind="value: snapshots_to_skip_end"
-                               type="number" min="0" max="9999" required="true" />
-                        <a class="octolapse_help" data-help-url="profiles.rendering.snapshots_to_skip_end.md" data-help-title="Post-Roll" />
-                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_snapshots_to_skip_end"></div>
-                        <span class="help-inline">Remove frames from the end of the timelapse</span>
-                    </div>
-                </div>
-                <div class="control-group">
                     <label class="control-label">Bitrate</label>
                     <div class="controls">
                         <span class="input-append">
@@ -262,32 +238,17 @@
                     </div>
                 </div>
                 <div class="control-group">
-                    <label class="control-label">Clean Snapshots After Rendering</label>
+                    <label class="control-label">Archive Snapshots After Rendering</label>
                     <div class="controls">
-                        <label class="checkbox" title="Clean temporary snapshots after a timelapse is rendered">
-                            <input id="octolapse_rendering_cleanup_after_render_complete" name="octolapse_rendering_cleanup_after_render_complete"
-                                   data-bind="checked: cleanup_after_render_complete"
-                                   title="After timelapse is rendered"
+                        <label class="checkbox" title="Archive snapshots after rendering is complete">
+                            <input id="octolapse_rendering_archive_snapshots" name="octolapse_rendering_archive_snapshots"
+                                   data-bind="checked: archive_snapshots"
+                                   title="Archive snapshots after rendring is complete."
                                    type="checkbox" />Enabled
-                            <a class="octolapse_help" data-help-url="profiles.rendering.cleanup_after_render_complete.md" data-help-title="Clean Snapshots After Rendering" />
+                            <a class="octolapse_help" data-help-url="profiles.rendering.archive_snapshots.md" data-help-title="Archive Snapshots After Rendering" />
                         </label>
                         <span class="help-inline">
-                            <span class="label label-important">Warning</span>&nbsp;Currently this process will delete ALL temporary images, even those taken during a different timelapse.
-                        </span>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label class="control-label">Clean Snapshots After Rendering Failure</label>
-                    <div class="controls">
-                        <label class="checkbox">
-                            <input id="octolapse_rendering_cleanup_after_render_fail" name="octolapse_rendering_cleanup_after_render_fail"
-                                   data-bind="checked: cleanup_after_render_fail"
-                                   title="After timelapse fails"
-                                   type="checkbox" />Enabled
-                            <a class="octolapse_help" data-help-url="profiles.rendering.cleanup_after_render_fail.md" data-help-title="Clean Snapshots After Rendering Failure" />
-                        </label>
-                        <span class="help-inline">
-                            <span class="label label-important">Warning</span>&nbsp; There are known issues with this setting, but it should not cause any errors.  Currently this process will delete ALL temporary images, even those taken during a different timelapse.
+                            <span class="label label-important">Warning</span>&nbsp;This option consume a LOT of space.
                         </span>
                     </div>
                 </div>

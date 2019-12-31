@@ -71,12 +71,8 @@ $(function() {
         self.overlay_text_template = ko.observable(values.overlay_text_template);
         self.overlay_font_path = ko.observable(values.overlay_font_path);
         self.overlay_font_size = ko.observable(values.overlay_font_size);
-        self.cleanup_after_render_complete = ko.observable(values.cleanup_after_render_complete);
-        self.cleanup_after_render_fail = ko.observable(values.cleanup_after_render_fail);
+        self.archive_snapshots = ko.observable(values.archive_snapshots);
         self.thread_count = ko.observable(values.thread_count);
-        self.snapshots_to_skip_beginning = ko.observable(values.snapshots_to_skip_beginning);
-        self.snapshots_to_skip_end = ko.observable(values.snapshots_to_skip_end);
-
         self.data.font_list = ko.observableArray(); // A list of Fonts that are available for selection on the server.
         // Text position as a JSON string.
         self.overlay_text_pos = ko.pureComputed({
@@ -346,7 +342,7 @@ $(function() {
             var copy = ko.toJS(self);
             return copy;
         };
-        
+
         self.updateFromServer = function(values) {
             self.name(values.name);
             self.description(values.description);
@@ -362,9 +358,8 @@ $(function() {
             self.post_roll_seconds(values.post_roll_seconds);
             self.pre_roll_seconds(values.pre_roll_seconds);
             self.output_template(values.output_template);
-            self.cleanup_after_render_complete(values.cleanup_after_render_complete);
-            self.cleanup_after_render_fail(values.cleanup_after_render_fail);
-            self.thread_count(values.thread_count);    
+            self.archive_snapshots(values.archive_snapshots);
+            self.thread_count(values.thread_count);
         };
 
         self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(

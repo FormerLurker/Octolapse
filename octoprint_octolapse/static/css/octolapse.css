@@ -255,7 +255,9 @@ a.ol-button:hover:not(:active) span.fs-stack:nth-child(2),
 .ol-button i.fa-gear:hover, .fa-slider:hover i{
     color:green;
 }
-
+a.unclickable:hover {
+    cursor: default;
+}
 div#octolapse-current-camera{
     margin-left:auto;
     margin-right:auto;
@@ -341,46 +343,72 @@ span.octolapse-icon-text {
     text-shadow: 1px 0px black, -1px 0px black, 0px 1px black, 0px -1px black;
 }
 
-table.octolapse-profiles {
+table.octolapse-table-list {
     border-collapse: collapse;
     table-layout: fixed;
     max-width: 100%;
 }
 
-table.octolapse-profiles td {
+table.octolapse-table-list td {
     font-size: small
 }
 
-table.octolapse-profiles td.profile_name,
-table.octolapse-profiles td.profile_description{
+table.octolapse-table-list td{
     height: 20px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-table.octolapse-profiles td.profile_name, table.octolapse-profiles th.profile_name{
-    width:30%;
+/* Octolapse Profile Table Column Sizes */
+table.octolapse-table-list td.profile_name, table.octolapse-table-list th.profile_name{
+    width:35%;
 }
-table.octolapse-profiles td.profile_description, table.octolapse-profiles th.profile_description {
+table.octolapse-table-list td.profile_description, table.octolapse-table-list th.profile_description {
     width:50%;
 }
-table.octolapse-profiles td.profile_action, table.octolapse-profiles th.profile_action {
+table.octolapse-table-list td.profile_action, table.octolapse-table-list th.profile_action {
     width:20%;
 }
 
-.row-fluid.octolapse-profile-row .span1,
-.row-fluid.octolapse-profile-row .span2,
-.row-fluid.octolapse-profile-row .span3,
-.row-fluid.octolapse-profile-row .span4,
-.row-fluid.octolapse-profile-row .span5,
-.row-fluid.octolapse-profile-row .span6,
-.row-fluid.octolapse-profile-row .span7,
-.row-fluid.octolapse-profile-row .span8,
-.row-fluid.octolapse-profile-row .span9,
-.row-fluid.octolapse-profile-row .span10,
-.row-fluid.octolapse-profile-row .span11,
-.row-fluid.octolapse-profile-row .span12
+/* Octolapse Unfinished Renderings Table Column Sizes */
+table.octolapse-table-list td.rendering_print_name, table.octolapse-table-list th.rendering_print_name{
+    width:21%;
+}
+table.octolapse-table-list td.rendering_print_end_state, table.octolapse-table-list th.rendering_print_end_state{
+    width:9%;
+}
+table.octolapse-table-list td.rendering_size, table.octolapse-table-list th.rendering_size{
+    width:7%;
+}
+table.octolapse-table-list td.rendering_date, table.octolapse-table-list th.rendering_date{
+    width:9%;
+}
+table.octolapse-table-list td.rendering_camera_name, table.octolapse-table-list th.rendering_camera_name{
+    width:21%;
+}
+table.octolapse-table-list td.rendering_name, table.octolapse-table-list th.rendering_name{
+    width:22%;
+}
+table.octolapse-table-list td.rendering_action, table.octolapse-table-list th.rendering_action{
+    width:11%;
+}
+table.octolapse-table-list td.rendering_progress, table.octolapse-table-list th.rendering_progress{
+    width:11%;
+}
+
+.row-fluid.octolapse-table-list-row .span1,
+.row-fluid.octolapse-table-list-row .span2,
+.row-fluid.octolapse-table-list-row .span3,
+.row-fluid.octolapse-table-list-row .span4,
+.row-fluid.octolapse-table-list-row .span5,
+.row-fluid.octolapse-table-list-row .span6,
+.row-fluid.octolapse-table-list-row .span7,
+.row-fluid.octolapse-table-list-row .span8,
+.row-fluid.octolapse-table-list-row .span9,
+.row-fluid.octolapse-table-list-row .span10,
+.row-fluid.octolapse-table-list-row .span11,
+.row-fluid.octolapse-table-list-row .span12
 {
     margin-left:0px;
 }
@@ -422,7 +450,7 @@ div.webcam_settings_preview .loading, div.webcam_settings_preview .error{
 }
 
 
-
+div.octolapse_dialog,
 #octolapse_add_edit_profile_dialog.modal,
 #octolapse_edit_settings_main_dialog.modal,
 #octolapse_webcam_settings_dialog.modal
@@ -488,6 +516,21 @@ form.octolapse_form .modal-body {
     color: white;
 }
 
+.icon_active_color {
+    color: greenyellow;
+}
+.icon_idle_color {
+    color: lightgray;
+}
+.icon_warning_color {
+    color: orange;
+}
+.icon_error_color {
+    color: red;
+}
+.clear_color {
+    color: unset;
+}
 .position-state-icon, .extruder-icon {
     color: greenyellow;
 }

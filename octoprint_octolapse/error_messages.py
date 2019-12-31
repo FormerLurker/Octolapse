@@ -124,6 +124,17 @@ _octolapse_errors = {
         }
     },
     'init': {
+        'm114_not_supported':{
+            "name": "Printer Not Supported",
+            "description": "Your printer does not support the M114 command, and is incompatible with Octolapse",
+            'help_link': "error_help_init_m114_not_supported.md"
+        },
+        'unexpected_exception':
+        {
+            "name": "Unexpected Exception",
+            "description": "An unexpected exception was raised while starting Octolapse.  Check plugin_octolapse.log for more details.",
+            'help_link': "error_help_init_unexpected_exception.md"
+        },
         'cant_print_from_sd': {
             "name": "Can't start from SD",
             "description": "Octolapse cannot be used when printing from the SD card.  Disable Octolapse to print from "
@@ -166,7 +177,7 @@ _octolapse_errors = {
             'help_link': "error_help_init_incorrect_print_start_state.md"
         },
         'camera_init_test_failed': {
-            "name": "Incorrect Printer State",
+            "name": "Camera Test Failed",
             "description": "At least one camera failed testing.  Details: {error}",
             'help_link': "error_help_init_camera_init_test_failed.md"
         },
@@ -273,6 +284,11 @@ _octolapse_errors = {
             "name": "Extruder Count Error",
             "description": "Your printer profile has fewer extruder offsets ({num_extruder_offsets}) defined than extruders ({num_extruders}).",
             'help_link': "error_help_init_too_few_extruders_offsets_defined.md"
+        },
+        'unable_to_accept_snapshot_plan': {
+            "name": "Extruder Count Error",
+            "description": "Unable to accept the snapshot plan.  Either it has already been accepted/cancellled, or an unexpected error occurred.",
+            'help_link': "error_help_init_unable_to_accept_snapshot_plan.md"
         },
 
 

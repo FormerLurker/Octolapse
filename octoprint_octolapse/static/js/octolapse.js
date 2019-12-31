@@ -342,17 +342,22 @@ $(function () {
         for (var index = 0; index < remove_keys.length; index++) {
             var key = remove_keys[index];
             if (key in Octolapse.Popups) {
-
-                Octolapse.Popups[key].remove();
+                var notice = Octolapse.Popups[key];
+                if (notice.state==="opening")
+                {
+                    notice.options.animation = "none";
+                }
+                notice.remove();
                 delete Octolapse.Popups[key];
             }
         }
     };
 
     Octolapse.removeKeyForClosedPopup = function(key){
-            if (key in Octolapse.Popups) {
-                delete Octolapse.Popups[key];
-            }
+        if (key in Octolapse.Popups) {
+            var notice = Octolapse.Popups[key];
+            delete Octolapse.Popups[key];
+        }
     };
 
     Octolapse.checkPNotifyDefaultConfirmButtons = function(){
@@ -1170,12 +1175,33 @@ $(function () {
         return result;
     };
 
+    var byte = 1024;
+    Octolapse.toFileSizeString = function (bytes, precision) {
+        if(Math.abs(bytes) < byte) {
+            return bytes + ' B';
+        }
+        var units = ['kB','MB','GB','TB','PB','EB','ZB','YB'];
+        var u = -1;
+        do {
+            bytes /= byte;
+            ++u;
+        } while(Math.abs(bytes) >= byte && u < units.length - 1);
+        return bytes.toFixed(precision)+' '+units[u];
+    };
+
     Octolapse.pad = function pad(n, width, z)
     {
         z = z || '0';
         return (String(z).repeat(width) + String(n)).slice(String(n).length)
-    }
+    };
 
+    Octolapse.toLocalDateString = function(unix_timestamp)
+    {
+        if (unix_timestamp) {
+            return (new Date(unix_timestamp * 1000)).toLocaleDateString();
+        }
+        return "UNKNOWN";
+    };
     /**
      * @return {string}
      */
@@ -1324,7 +1350,7 @@ $(function () {
         };
 
         self.loadState = function (success_callback) {
-            //console.log("octolapse.js - Loading State");
+            console.log("octolapse.js - Loading State");
             $.ajax({
                 url: "./plugin/octolapse/loadState",
                 type: "POST",
@@ -1333,8 +1359,9 @@ $(function () {
                 contentType: "application/json",
                 dataType: "json",
                 success: function (result) {
-                    //console.log("The state has been loaded.  Waiting for message");
+                    console.log("The state has been loaded.");
                     self.initial_state_loaded = true;
+                    self.updateState(result);
                     if(success_callback) {
                         success_callback();
                     }
@@ -1354,8 +1381,6 @@ $(function () {
                 //console.log("octolapse.js - User Logged In after startup - Loading settings.  User: " + user.name);
                 Octolapse.Settings.loadSettings();
             }
-            //else
-                //console.log("octolapse.js - User Logged In before startup - waiting to load settings.  User: " + user.name);
         };
 
         self.onUserLoggedOut = function () {
@@ -1397,6 +1422,11 @@ $(function () {
             if (data.status != null) {
                 //console.log("octolapse.js - Updating Status");
                 Octolapse.Status.update(data.status);
+            }
+            if (data.snapshot_plan_preview) {
+                var plans = data.snapshot_plan_preview;
+                self.preprocessing_job_guid = plans.preprocessing_job_guid;
+                Octolapse.Status.previewSnapshotPlans(plans.snapshot_plans);
             }
             /*
             if (!self.HasLoadedState) {
@@ -1590,9 +1620,9 @@ $(function () {
             //console.log(data);
             switch (data.type) {
                 case "snapshot-plan-preview":
-                    //console.log("Previewing snapshot plans.");
-                    self.preprocessing_job_guid = data.preprocessing_job_guid;
-                    Octolapse.Status.previewSnapshotPlans(data.snapshot_plans);
+                    console.log("Previewing snapshot plans.");
+                    self.updateState(data);
+
                     break;
                 case "snapshot-plan-preview-complete":
                     // create the cancel popup
@@ -1678,18 +1708,18 @@ $(function () {
                     break;
                 case "settings-changed":
                     {
-                        if (Octolapse.Settings.is_loaded())
-                            self.updateState(data);
-                        // Was this from us?
-                        if (self.client_id !== data.client_id && self.is_admin())
+                        // See if the settings changed request came from the current client. If so, ignore it
+                        if (self.client_id !== data.client_id)
                         {
-                            Octolapse.showConfirmDialog(
-                                "reload-settings",
-                                "Reload Settings",
-                                "A settings change was detected from another client.  Reload settings?",
-                                function(){
-                                    Octolapse.Settings.loadSettings();
-                                });
+                            if (self.is_admin()) {
+                                Octolapse.Settings.loadSettings();
+                            }
+                            else {
+                                Octolapse.Globals.loadState();
+                            }
+                        }
+                        else {
+                            Octolapse.Globals.loadState();
                         }
                     }
                     break;
@@ -1712,17 +1742,18 @@ $(function () {
                         }
 
                     }
-                case "state-loaded":
-                    {
-                        //console.log('octolapse.js - state-loaded');
-                        self.updateState(data);
-                    }
-                    break;
                 case "state-changed":
                     {
                         //console.log('octolapse.js - state-changed');
-                        //console.log(data);
-                        self.updateState(data);
+                        if (data.state)
+                        {
+                            self.updateState(data);
+                        }
+                        else if (data.client_id !== self.client_id)
+                        {
+                            // The update contains no state.  See if it originated from a client
+                            self.loadState();
+                        }
                     }
                     break;
                 case "popup":
@@ -1886,15 +1917,48 @@ $(function () {
                         }
                     }
                     break;
+                case "unfinished-renderings-loaded":
+                    {
+                        console.log('octolapse.js - unfinished-renderings-loaded');
+                        self.updateState(data);
+                    }
+                    break;
+                case "unfinished-renderings-changed":
+                    {
+                        console.log('octolapse.js - unfinished-renderings-changed');
+                        self.updateState(data);
+                    }
+                    break;
+                case "in-process-renderings-changed":
+                    {
+                        console.log('octolapse.js - in-process-renderings-changed');
+                        self.updateState(data);
+                    }
+                    break;
                 case "prerender-start":
-                    self.updateState(data);
+                    {
+                        //console.log('octolapse.js - prerender-start');
+                        self.updateState(data);
+                        Octolapse.Status.snapshot_error(false);
+
+                        var options = {
+                            title: 'Octolapse Pre-Rendering Started',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopupForKey(options,"render_message", ["render_message", "unfinished_rendering"]);
+                    }
                     break;
                 case "render-start":
                     {
                         //console.log('octolapse.js - render-start');
                         self.updateState(data);
                         Octolapse.Status.snapshot_error(false);
-
                         var options = {
                             title: 'Octolapse Rendering Started',
                             text: data.msg,
@@ -1915,13 +1979,13 @@ $(function () {
                             title: 'Octolapse Rendering Failed',
                             text: data.msg,
                             type: 'error',
-                            hide: false,
+                            hide: true,
                             addclass: "octolapse",
                             desktop: {
                                 desktop: true
                             }
                         };
-                        Octolapse.displayPopupForKey(options,"render_failed",["render_message"]);
+                        Octolapse.displayPopup(options);
                         break;
                 }
                 case "post-render-failed":{
@@ -1931,13 +1995,13 @@ $(function () {
                             title: 'Octolapse Post-Rendering Failed',
                             text: data.msg,
                             type: 'error',
-                            hide: false,
+                            hide: true,
                             addclass: "octolapse",
                             desktop: {
                                 desktop: true
                             }
                         };
-                        Octolapse.displayPopupForKey(options,"post_render_error_message",["render_message"]);
+                        Octolapse.displayPopup(options);
                         break;
                 }
                 case "render-complete":
@@ -1950,13 +2014,13 @@ $(function () {
                         title: 'Octolapse Rendering Complete',
                         text: data.msg,
                         type: 'success',
-                        hide: false,
+                        hide: true,
                         addclass: "octolapse",
                         desktop: {
                             desktop: true
                         }
                     };
-                    Octolapse.displayPopupForKey(options,"render_complete",["render_message"]);
+                    Octolapse.displayPopupForKey(options,"render_complete",["render_complete", "render_message"]);
                     break;
                 case "render-end":
                     {

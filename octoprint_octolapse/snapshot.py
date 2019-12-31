@@ -24,6 +24,7 @@ from __future__ import unicode_literals
 import shutil
 import six
 import os
+import json
 from csv import DictWriter
 from time import sleep
 import requests
@@ -218,7 +219,11 @@ class CaptureSnapshot(object):
             else:
                 info.errors_count += 1
                 self.ErrorsTotal += 1
-
+            # todo:  remove unnecessary logging
+            logger.info("Saving Camera Info")
+            info.save(self.DataDirectory, self.TimelapseJobInfo.JobGuid, snapshot_job_info.camera_guid)
+            # todo:  remove unnecessary logging
+            logger.info("Camera Info Saved")
             results.append(snapshot_job_info)
 
         if len(snapshot_threads) > 0:
@@ -249,57 +254,6 @@ class CaptureSnapshot(object):
         logger.info("Snapshot acquisition completed in %.3f seconds.", time()-start_time)
 
         return results
-
-    def clean_snapshots(self, snapshot_directory, job_directory):
-        # get snapshot directory
-        logger.info("Cleaning snapshots from: %s", snapshot_directory)
-
-        path = os.path.dirname(snapshot_directory + os.sep)
-        job_path = os.path.dirname(job_directory + os.sep)
-        if os.path.isdir(path):
-            try:
-                shutil.rmtree(path)
-                logger.info("Snapshots cleaned.")
-                if not os.listdir(job_path):
-                    shutil.rmtree(job_path)
-                    logger.info("The job directory was empty, removing.")
-            except Exception:
-                # Todo:  What exceptions do I catch here?
-                exception_type = sys.exc_info()[0]
-                value = sys.exc_info()[1]
-                message = (
-                    "Snapshot - Clean - Unable to clean the snapshot "
-                    "path at {0}.  It may already have been cleaned.  "
-                    "Info:  ExceptionType:{1}, Exception Value:{2}"
-                ).format(path, exception_type, value)
-                logger.info(message)
-        else:
-            logger.info("Snapshot - No need to clean snapshots: they have already been removed.")
-
-    def clean_all_snapshots(self):
-        #TODO:  FIX THIS.  IT NEEDS TO REMOVE ALL SUBDIRECTORIES IN THE SNAPSHOT FOLDER.
-        # get snapshot directory
-        snapshot_directory = utility.get_snapshot_temp_directory(
-            self.DataDirectory)
-        logger.info("Cleaning snapshots from: %s", snapshot_directory)
-
-        path = os.path.dirname(snapshot_directory + os.sep)
-        if os.path.isdir(path):
-            try:
-                shutil.rmtree(path)
-                logger.info("Snapshots cleaned.")
-            except:
-                # Todo:  What exceptions to catch here?
-                exception_type = sys.exc_info()[0]
-                value = sys.exc_info()[1]
-                message = (
-                    "Snapshot - Clean - Unable to clean the snapshot "
-                    "path at {0}.  It may already have been cleaned.  "
-                    "Info:  ExceptionType:{1}, Exception Value:{2}"
-                ).format(path, exception_type, value)
-                logger.info(message)
-        else:
-            logger.info("Snapshot - No need to clean snapshots: they have already been removed.")
 
 
 class ImagePostProcessing(object):
@@ -427,7 +381,7 @@ class ImagePostProcessing(object):
             latest_snapshot_path = utility.get_latest_snapshot_download_path(
                 self.snapshot_job_info.DataDirectory, self.snapshot_job_info.camera.guid
             )
-            shutil.copy(self.snapshot_job_info.full_path, latest_snapshot_path)
+            utility.fast_copy(self.snapshot_job_info.full_path, latest_snapshot_path)
 
             # create a thumbnail of the image
             basewidth = 500
@@ -785,7 +739,7 @@ class SnapshotJobInfo(object):
         self.camera = current_camera
         self.directory = os.path.join(data_directory, "snapshots", timelapse_job_info.JobGuid, current_camera.guid)
         self.file_name = utility.get_snapshot_filename(
-            timelapse_job_info.PrintFileName, timelapse_job_info.PrintStartTime, snapshot_number
+            timelapse_job_info.PrintFileName, snapshot_number
         )
         self.snapshot_number = snapshot_number
         self.camera_guid = current_camera.guid
@@ -808,3 +762,40 @@ class CameraInfo(object):
         self.snapshot_attempt = 0
         self.snapshot_count = 0
         self.errors_count = 0
+        self.is_empty = False
+
+    @staticmethod
+    def load(data_folder, print_job_guid, camera_guid):
+        file_path = os.path.join(data_folder, "snapshots", print_job_guid, camera_guid, "camera_info.json")
+        try:
+            with open(file_path, 'r') as camera_info:
+                data = json.load(camera_info)
+                return CameraInfo.from_dict(data)
+        except (OSError, IOError, json.JSONDecodeError) as e:
+            logger.exception("Unable to load camera info from %s.", file_path)
+            ret_val = CameraInfo()
+            ret_val.is_empty = True
+            return ret_val
+
+    def save(self, data_folder, print_job_guid, camera_guid):
+        file_directory = os.path.join(data_folder, "snapshots",  print_job_guid, camera_guid)
+        file_path = os.path.join(file_directory, "camera_info.json")
+        if not os.path.exists(file_directory):
+            os.mkdir(file_directory)
+        with open(file_path, 'w') as camera_info:
+            json.dump(self.to_dict(), camera_info)
+
+    def to_dict(self):
+        return {
+            "snapshot_attempt": self.snapshot_attempt,
+            "snapshot_count": self.snapshot_count,
+            "errors_count": self.errors_count,
+        }
+
+    @staticmethod
+    def from_dict(dict_obj):
+        camera_info = CameraInfo()
+        camera_info.snapshot_attempt = dict_obj["snapshot_attempt"]
+        camera_info.snapshot_attempt = dict_obj["snapshot_count"]
+        camera_info.snapshot_attempt = dict_obj["errors_count"]
+        return camera_info

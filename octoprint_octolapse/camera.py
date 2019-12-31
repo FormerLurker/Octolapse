@@ -644,7 +644,7 @@ class CameraControl(object):
                 data_directory, "snapshots", "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
             )
             snapshot_filename = utility.get_snapshot_filename(
-                "test_snapshot", time.time(), snapshot_number
+                "test_snapshot", snapshot_number
             )
             snapshot_full_path = os.path.join(snapshot_directory, snapshot_filename)
             timeout_seconds = camera_profile.timeout_ms / 1000.0
@@ -685,7 +685,7 @@ class CameraControl(object):
                 data_directory, "snapshots", "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
             )
             snapshot_filename = utility.get_snapshot_filename(
-                "test_snapshot", time.time(), snapshot_number
+                "test_snapshot", snapshot_number
             )
             snapshot_full_path = os.path.join(snapshot_directory, snapshot_filename)
             timeout_seconds = camera_profile.timeout_ms / 1000.0
@@ -772,14 +772,14 @@ class CameraControl(object):
 
             for snapshot_number in range(10):
                 snapshot_file_name = utility.get_snapshot_filename(
-                    'test', time.time(), snapshot_number
+                    'test', snapshot_number
                 )
                 target_snapshot_path = os.path.join(snapshot_directory, snapshot_file_name)
                 shutil.copy(test_image_path, target_snapshot_path)
 
             snapshot_filename_format = os.path.basename(
                 utility.get_snapshot_filename(
-                    "render_script_test", time.time(), utility.SnapshotNumberFormat
+                    "render_script_test", utility.SnapshotNumberFormat
                 )
             )
             script_path = camera_profile.on_before_render_script.strip()
@@ -823,14 +823,14 @@ class CameraControl(object):
 
             for snapshot_number in range(10):
                 snapshot_file_name = utility.get_snapshot_filename(
-                    'test', time.time(), snapshot_number
+                    'test', snapshot_number
                 )
                 target_snapshot_path = os.path.join(snapshot_directory, snapshot_file_name)
                 shutil.copy(test_image_path, target_snapshot_path)
 
             snapshot_filename_format = os.path.basename(
                 utility.get_snapshot_filename(
-                    "render_script_test", time.time(), utility.SnapshotNumberFormat
+                    "render_script_test", utility.SnapshotNumberFormat
                 )
             )
 

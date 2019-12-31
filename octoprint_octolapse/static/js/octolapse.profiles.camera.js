@@ -92,7 +92,7 @@ $(function() {
             });
         };
 
-        self.toggleCamera = function(){
+        self.toggleCamera = function(callback){
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             //console.log("Running camera request.");
             var data = { 'guid': self.guid(), "client_id": Octolapse.Globals.client_id };
@@ -105,6 +105,10 @@ $(function() {
                 success: function (results) {
                     if (results.success) {
                         self.enabled(results.enabled);
+                        if (callback)
+                        {
+                            callback(results.enabled);
+                        }
                     }
                     else {
                         var options = {
@@ -118,9 +122,7 @@ $(function() {
                             }
                         };
                         Octolapse.displayPopup(options);
-
                     }
-
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     var message = "Unable to toggle the camera:(  Status: " + textStatus + ".  Error: " + errorThrown;

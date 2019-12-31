@@ -792,10 +792,8 @@
         "overlay_outline_color": [ 0, 0, 0, 1.0 ],
         "overlay_outline_width": 1,
         "thread_count": 1,
-        "cleanup_after_render_complete": true,
-        "cleanup_after_render_fail": true,
-        "snapshots_to_skip_beginning": 0,
-        "snapshots_to_skip_end": 0
+        "archive_snapshots": false,
+        "cleanup_after_render_fail": true
       },
       "d4898ba7-8d27-4479-b7d8-34c063ae7a68": {
         "name": "MP4 - 30 FPS",
@@ -837,10 +835,7 @@
         "overlay_outline_color": [ 0, 0, 0, 1.0 ],
         "overlay_outline_width": 1,
         "thread_count": 1,
-        "cleanup_after_render_complete": true,
-        "cleanup_after_render_fail": false,
-        "snapshots_to_skip_beginning": 0,
-        "snapshots_to_skip_end": 0
+        "archive_snapshots": false
       },
       "c1f97198-49b1-4b4e-bd32-e65e470d5bca": {
         "name": "MP4 - Fixed Length - 00:05",
@@ -882,10 +877,8 @@
         "overlay_outline_color": [ 0, 0, 0, 1.0 ],
         "overlay_outline_width": 1,
         "thread_count": 1,
-        "cleanup_after_render_complete": true,
-        "cleanup_after_render_fail": true,
-        "snapshots_to_skip_beginning": 0,
-        "snapshots_to_skip_end": 0
+        "archive_snapshots": false,
+        "cleanup_after_render_fail": true
       },
       "7db3e7d6-3fe6-4955-8419-7f63a10d0eee": {
         "name": "MP4 - Fixed Length - 00:10",
@@ -927,10 +920,7 @@
         "overlay_outline_color": [ 0, 0, 0, 1.0 ],
         "overlay_outline_width": 1,
         "thread_count": 1,
-        "cleanup_after_render_complete": true,
-        "cleanup_after_render_fail": false,
-        "snapshots_to_skip_beginning": 0,
-        "snapshots_to_skip_end": 0
+        "archive_snapshots": false
       },
       "b87d49db-72de-4285-87f6-50b8044d42b6": {
         "name": "MP4 - 60 FPS",
@@ -972,10 +962,7 @@
         "overlay_outline_color": [ 0, 0, 0, 1.0 ],
         "overlay_outline_width": 1,
         "thread_count": 1,
-        "cleanup_after_render_complete": true,
-        "cleanup_after_render_fail": false,
-        "snapshots_to_skip_beginning": 0,
-        "snapshots_to_skip_end": 0
+        "archive_snapshots": false
       }
     },
     "current_camera_profile_guid": "354def78-9eea-409a-ad23-ee966dfff4ba",
