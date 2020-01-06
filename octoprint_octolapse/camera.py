@@ -641,7 +641,7 @@ class CameraControl(object):
             delay_seconds = camera_profile.delay
             data_directory = temp_directory
             snapshot_directory = os.path.join(
-                data_directory, "snapshots", "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
+                data_directory, "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
             )
             snapshot_filename = utility.get_snapshot_filename(
                 "test_snapshot", snapshot_number
@@ -682,7 +682,7 @@ class CameraControl(object):
             delay_seconds = camera_profile.delay
             data_directory = temp_directory
             snapshot_directory = os.path.join(
-                data_directory, "snapshots", "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
+                data_directory, "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
             )
             snapshot_filename = utility.get_snapshot_filename(
                 "test_snapshot", snapshot_number
@@ -700,7 +700,10 @@ class CameraControl(object):
                 test_image_path = os.path.join(base_folder, "data", "images", "test-snapshot-image.jpg")
                 target_directory = os.path.dirname(snapshot_full_path)
                 if not os.path.exists(target_directory):
-                    os.makedirs(target_directory)
+                    try:
+                        os.makedirs(target_directory)
+                    except FileExistsError:
+                        pass
                 shutil.copy(test_image_path, snapshot_full_path)
 
             if script_type == 'before-snapshot':
@@ -765,10 +768,13 @@ class CameraControl(object):
             # create 10 snapshots
             test_image_path = os.path.join(base_folder, "data", "images", "test-snapshot-image.jpg")
             snapshot_directory = os.path.join(
-                temp_directory, "snapshots", "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
+                temp_directory, "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
             )
             if not os.path.exists(snapshot_directory):
-                os.makedirs(snapshot_directory)
+                try:
+                    os.makedirs(snapshot_directory)
+                except FileExistsError:
+                    pass
 
             for snapshot_number in range(10):
                 snapshot_file_name = utility.get_snapshot_filename(
@@ -816,10 +822,13 @@ class CameraControl(object):
             # create 10 snapshots
             test_image_path = os.path.join(base_folder, "data", "images", "test-snapshot-image.jpg")
             snapshot_directory = os.path.join(
-                temp_directory, "snapshots", "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
+                temp_directory, "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
             )
             if not os.path.exists(snapshot_directory):
-                os.makedirs(snapshot_directory)
+                try:
+                    os.makedirs(snapshot_directory)
+                except FileExistsError:
+                    pass
 
             for snapshot_number in range(10):
                 snapshot_file_name = utility.get_snapshot_filename(
@@ -842,11 +851,6 @@ class CameraControl(object):
             output_filename = utility.get_filename_from_full_path(rendering_path)
             output_directory = utility.get_directory_from_full_path(rendering_path)
             output_extension = utility.get_extension_from_full_path(rendering_path)
-            # Synchronization path info
-
-            synchronized_filepath = os.path.join(temp_directory, "timelapse_synchronized", "test_rendering.mp4")
-            synchronized_filename = utility.get_filename_from_full_path(synchronized_filepath)
-            synchronized_directory = utility.get_directory_from_full_path(synchronized_filepath)
 
             if script_path is None or len(script_path) == 0:
                 return False, "No script path was provided.  Please enter a script path and try again.", ""
@@ -854,7 +858,6 @@ class CameraControl(object):
             if not os.path.exists(script_path):
                 return False, "The script path '{0}' does not exist.  Please enter a valid script path and try again.".format(
                     script_path), ""
-
 
             cmd = script.CameraScriptAfterRender(
                 script_path,
@@ -866,8 +869,6 @@ class CameraControl(object):
                 output_filename,
                 output_extension,
                 rendering_path,
-                synchronized_directory,
-                synchronized_filename,
                 timeout_seconds=10
             )
             cmd.run()

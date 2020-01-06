@@ -958,16 +958,15 @@ $(function () {
             }
         }
     };
-    /*  Might need this.  Is an interesting extension
-        ko.subscribable.fn.subscribeChanged = function (callback) {
-            var savedValue = this.peek();
-            return this.subscribe(function (latestValue) {
-                var oldValue = savedValue;
-                savedValue = latestValue;
-                callback(latestValue, oldValue);
-            });
-        };
-    */
+
+    ko.subscribable.fn.octolapseSubscribeChanged = function (callback) {
+        var savedValue = this.peek();
+        return this.subscribe(function (latestValue) {
+            var oldValue = savedValue;
+            savedValue = latestValue;
+            callback(latestValue, oldValue);
+        });
+    };
 
     ko.extenders.confirmable = function(target, options) {
         var self = this;
@@ -1177,6 +1176,8 @@ $(function () {
 
     var byte = 1024;
     Octolapse.toFileSizeString = function (bytes, precision) {
+        precision = precision || 0;
+
         if(Math.abs(bytes) < byte) {
             return bytes + ' B';
         }
@@ -1199,6 +1200,16 @@ $(function () {
     {
         if (unix_timestamp) {
             return (new Date(unix_timestamp * 1000)).toLocaleDateString();
+        }
+        return "UNKNOWN";
+    };
+
+    Octolapse.toLocalDateTimeString = function(unix_timestamp)
+
+    {
+        if (unix_timestamp) {
+            var date = new Date(unix_timestamp * 1000);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         }
         return "UNKNOWN";
     };
@@ -1277,25 +1288,14 @@ $(function () {
 
         self.loginState = parameters[0];
         Octolapse.PrinterStatus = parameters[1];
-        self.OctoprintTimelapse = parameters[2]
-        // Global Values
-        self.show_printer_state_changes = ko.observable(false);
-        self.show_position_changes = ko.observable(false);
-        self.show_extruder_state_changes = ko.observable(false);
-        self.show_trigger_state_changes = ko.observable(false);
-        self.show_snapshot_plan_information = ko.observable(false);
-        self.preview_snapshot_plans = ko.observable(false);
-        self.preview_snapshot_plan_autoclose = ko.observable(false);
-        self.preview_snapshot_plan_seconds = ko.observable(30);
-        self.automatic_updates_enabled = ko.observable(true);
-        self.automatic_update_interval_days = ko.observable(7);
-        self.auto_reload_latest_snapshot = ko.observable(false);
-        self.auto_reload_frames = ko.observable(5);
+        self.OctoprintTimelapse = parameters[2];
+        // Main settings
+        self.main_settings = new Octolapse.MainSettingsViewModel();
         self.is_admin = ko.observable(false);
-        self.enabled = ko.observable(false);
-        self.navbar_enabled = ko.observable(false);
-        self.show_navbar_when_not_printing = ko.observable(false);
-        self.cancel_print_on_startup_error = ko.observable(true);
+        self.toggleAdmin = function()
+        {
+            self.is_admin(!self.is_admin());
+        };
         self.preprocessing_job_guid = "";
         self.version = ko.observable("unknown");
         // Create a guid to uniquely identify this client.
@@ -1322,22 +1322,23 @@ $(function () {
         self.onDataUpdaterReconnect = function () {
             //console.log("Reconnected Client")
             self.getInitialState();
-
         };
 
         self.getInitialState = function() {
             //console.log("Getting initial state");
-            if (!self.startup_complete && self.is_admin()) {
-                //console.log("octolapse.js - Loading settings for current user after startup.");
+            if (self.is_admin()) {
+                console.log("octolapse.js - Loading settings for admin current user after startup.");
                 Octolapse.Settings.loadSettings(function(){
                     // Settings are loaded, show the UI
                     self.has_loaded_state(true);
                     //  Check for updates
                     Octolapse.Settings.checkForProfileUpdates(true);
+                    Octolapse.Status.load_files();
                 });
             } else
             {
                 self.loadState(function(){
+                    console.log("octolapse.js - Loading state for non-admin user after startup.");
                     // Settings are loaded, show the UI
                     self.has_loaded_state(true);
                 });
@@ -1378,9 +1379,11 @@ $(function () {
         self.onUserLoggedIn = function (user) {
             self.is_admin(self.loginState.isAdmin());
             if(self.is_admin() && self.startup_complete) {
-                //console.log("octolapse.js - User Logged In after startup - Loading settings.  User: " + user.name);
+                console.log("octolapse.js - User Logged In after startup - Loading settings.  User: " + user.name);
                 Octolapse.Settings.loadSettings();
+                Octolapse.Status.load_files();
             }
+
         };
 
         self.onUserLoggedOut = function () {
@@ -1409,11 +1412,11 @@ $(function () {
             if (data.main_settings != null) {
                 //console.log('octolapse.js - Main settings changed');
                 // detect changes to auto_reload_latest_snapshot
-                var cur_auto_reload_latest_snapshot = Octolapse.Globals.auto_reload_latest_snapshot();
+                var cur_auto_reload_latest_snapshot = Octolapse.Globals.main_settings.auto_reload_latest_snapshot();
 
-                Octolapse.Globals.update(data.main_settings);
-                if (cur_auto_reload_latest_snapshot !== Octolapse.Globals.auto_reload_latest_snapshot()) {
-                    //console.log('octolapse.js - Octolapse.Globals.auto_reload_latest_snapshot changed, erasing previous snapshot images');
+                Octolapse.Globals.main_settings.update(data.main_settings);
+                if (cur_auto_reload_latest_snapshot !== Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
+                    //console.log('octolapse.js - Octolapse.Globals.main_settings.auto_reload_latest_snapshot changed, erasing previous snapshot images');
                     Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_image_container');
                     Octolapse.Status.erasePreviousSnapshotImages('octolapse_snapshot_thumbnail_container');
                 }
@@ -1434,98 +1437,6 @@ $(function () {
                 Octolapse.Status.updateLatestSnapshotThumbnail(true);
             }
             */
-        };
-
-        self.update = function (settings) {
-            //console.log("octolapse.js - Globals - Updating main_settings globals")
-            // enabled
-            if (ko.isObservable(settings.is_octolapse_enabled))
-                self.enabled(settings.is_octolapse_enabled());
-            else
-                self.enabled(settings.is_octolapse_enabled);
-
-            if (ko.isObservable(settings.version))
-                self.version(settings.version());
-            else
-                self.version(settings.version);
-
-            // self.auto_reload_latest_snapshot
-            if (ko.isObservable(settings.auto_reload_latest_snapshot))
-                self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot());
-            else
-                self.auto_reload_latest_snapshot(settings.auto_reload_latest_snapshot);
-            //auto_reload_frames
-            if (ko.isObservable(settings.auto_reload_frames))
-                self.auto_reload_frames(settings.auto_reload_frames());
-            else
-                self.auto_reload_frames(settings.auto_reload_frames);
-            // navbar_enabled
-            if (ko.isObservable(settings.show_navbar_icon))
-                self.navbar_enabled(settings.show_navbar_icon());
-            else
-                self.navbar_enabled(settings.show_navbar_icon);
-
-            if (ko.isObservable(settings.show_navbar_when_not_printing))
-                self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing());
-            else
-                self.show_navbar_when_not_printing(settings.show_navbar_when_not_printing);
-
-
-            if (ko.isObservable(settings.show_printer_state_changes))
-                self.show_printer_state_changes(settings.show_printer_state_changes());
-            else
-                self.show_printer_state_changes(settings.show_printer_state_changes);
-
-            if (ko.isObservable(settings.show_position_changes))
-                self.show_position_changes(settings.show_position_changes());
-            else
-                self.show_position_changes(settings.show_position_changes);
-
-            if (ko.isObservable(settings.show_extruder_state_changes))
-                self.show_extruder_state_changes(settings.show_extruder_state_changes());
-            else
-                self.show_extruder_state_changes(settings.show_extruder_state_changes);
-
-            if (ko.isObservable(settings.show_snapshot_plan_information))
-                self.show_snapshot_plan_information(settings.show_snapshot_plan_information());
-            else
-                self.show_snapshot_plan_information(settings.show_snapshot_plan_information);
-
-            if (ko.isObservable(settings.preview_snapshot_plans))
-                self.preview_snapshot_plans(settings.preview_snapshot_plans());
-            else
-                self.preview_snapshot_plans(settings.preview_snapshot_plans);
-
-            if (ko.isObservable(settings.preview_snapshot_plan_autoclose))
-                self.preview_snapshot_plan_autoclose(settings.preview_snapshot_plan_autoclose());
-            else
-                self.preview_snapshot_plan_autoclose(settings.preview_snapshot_plan_autoclose);
-
-            if (ko.isObservable(settings.preview_snapshot_plan_seconds))
-                self.preview_snapshot_plan_seconds(settings.preview_snapshot_plan_seconds());
-            else
-                self.preview_snapshot_plan_seconds(settings.preview_snapshot_plan_seconds);
-
-            if (ko.isObservable(settings.automatic_updates_enabled))
-                self.automatic_updates_enabled(settings.automatic_updates_enabled());
-            else
-                self.automatic_updates_enabled(settings.automatic_updates_enabled);
-
-            if (ko.isObservable(settings.automatic_update_interval_days ))
-                self.automatic_update_interval_days(settings.automatic_update_interval_days());
-            else
-                self.automatic_update_interval_days(settings.automatic_update_interval_days);
-
-            if (ko.isObservable(settings.show_trigger_state_changes))
-                self.show_trigger_state_changes(settings.show_trigger_state_changes());
-            else
-                self.show_trigger_state_changes(settings.show_trigger_state_changes);
-
-            if (ko.isObservable(settings.cancel_print_on_startup_error))
-                self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error());
-            else
-                self.cancel_print_on_startup_error(settings.cancel_print_on_startup_error);
-
         };
 
         self.acceptSnapshotPlanPreview = function(){
@@ -1917,6 +1828,27 @@ $(function () {
                         }
                     }
                     break;
+                case "directories-changed":
+                {
+                    console.log('octolapse.js - directories changed.');
+                    var directories = data.directories;
+                    if (directories.temporary_directory_changed)
+                    {
+                        // Load unfinished
+                        Octolapse.Status.rendering_dialog.load();
+                    }
+                    if (directories.snapshot_archive_directory_changed)
+                    {
+                        // Load snapshot archive
+                        Octolapse.Status.timelapse_files_dialog.archive_browser.load();
+                    }
+                    if (directories.timelapse_directory_changed)
+                    {
+                        // load timelapses
+                        Octolapse.Status.timelapse_files_dialog.timelapse_browser.load();
+                    }
+                }
+                break;
                 case "unfinished-renderings-loaded":
                     {
                         console.log('octolapse.js - unfinished-renderings-loaded');
@@ -1926,12 +1858,6 @@ $(function () {
                 case "unfinished-renderings-changed":
                     {
                         console.log('octolapse.js - unfinished-renderings-changed');
-                        self.updateState(data);
-                    }
-                    break;
-                case "in-process-renderings-changed":
-                    {
-                        console.log('octolapse.js - in-process-renderings-changed');
                         self.updateState(data);
                     }
                     break;
@@ -2009,7 +1935,6 @@ $(function () {
                     //console.log('octolapse.js - render-complete');
                     self.OctoprintTimelapse.requestData();
 
-                    // Make sure we aren't synchronized, else there's no reason to display a popup
                     var options = {
                         title: 'Octolapse Rendering Complete',
                         text: data.msg,
@@ -2026,22 +1951,6 @@ $(function () {
                     {
                         //console.log('octolapse.js - render-end');
                         self.updateState(data);
-                    }
-                    break;
-                case "synchronize-failed":
-                    {
-                        //console.log('octolapse.js - synchronize-failed');
-                        var options = {
-                            title: 'Octolapse Synchronization Failed',
-                            text: data.msg,
-                            type: 'error',
-                            hide: false,
-                            addclass: "octolapse",
-                            desktop: {
-                                desktop: true
-                            }
-                        };
-                        Octolapse.displayPopup(options);
                     }
                     break;
                 case "timelapse-stopping":
@@ -2132,6 +2041,14 @@ $(function () {
                             addclass: "octolapse"
                         };
                         Octolapse.displayPopupForKey(options, "position-error", ["position-error"]);
+                    }
+                    break;
+                case "file-changed":
+                    {
+                        if (data.client_id != self.client_id)
+                        {
+                            Octolapse.Status.files_changed(data.file, data.action);
+                        }
                     }
                     break;
                 case "warning":

@@ -24,14 +24,12 @@
 <div class="octolapse">
     <div id="octolapse_settings">
         <div class="row-fluid" id="octolapse_settings_title">
-            <div class="span2"></div>
-            <div class="span8">
-                <div class="text-center">
-                    <h3>Octolapse Settings</h3>
-                </div>
+
+            <div class="span9">
+                <h3>Octolapse Settings</h3>
             </div>
-            <div class="span2">
-                <span data-bind="visible: !Octolapse.SettingsMain.is_octolapse_enabled()">Disabled</span>
+            <div class="span3">
+                <span class="label label-important" data-bind="visible: !Octolapse.Globals.main_settings.is_octolapse_enabled()">Octolapse is Disabled</span>
             </div>
         </div>
         <div class="row">
@@ -77,7 +75,7 @@
                 <div class="tab-content">
 
                     <div id="octolapse_main_tab" class="panel panel-default tab-pane active">
-                        <div data-bind="template: 'octolapse-settings-main'"></div>
+                        <div data-bind="template: {name: 'octolapse-settings-main', data: Octolapse.MainSettingsDisplay, as: 'main_settings'}"></div>
                     </div>
                     <div id="octolapse_printer_tab" class="panel panel-default tab-pane">
                         <div data-bind="template: 'profiles-template'"></div>

@@ -50,7 +50,10 @@ class TestRender(unittest.TestCase):
         # Make the temp folder.
         dir = mkdtemp() + '/'
         # Make sure any nested folders specified by the capture template exist.
-        os.makedirs(os.path.dirname("{0}{1}".format(dir, capture_template) % 0))
+        try:
+            os.makedirs(os.path.dirname("{0}{1}".format(dir, capture_template) % 0))
+        except FileExistsError:
+            pass
         # Make images and save them with the correct names.
         random.seed(0)
 

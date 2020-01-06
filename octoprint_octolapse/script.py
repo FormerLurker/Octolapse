@@ -451,7 +451,7 @@ class CameraScriptBeforeRender(POpenWithTimeout):
 class CameraScriptAfterRender(POpenWithTimeout):
     def __init__(self, script_path, camera_name, snapshot_directory, snapshot_filename_format, snapshot_path_format,
                  timelapse_directory, timelapse_filename, timelapse_extension, timelapse_full_path,
-                 synchronization_directory, synchronization_full_path, timeout_seconds=None):
+                 timeout_seconds=None):
         super(CameraScriptAfterRender, self).__init__()
         self.name = "{0} - After Render Camera Script".format(camera_name)
         self.script_path = script_path
@@ -464,8 +464,6 @@ class CameraScriptAfterRender(POpenWithTimeout):
         self.timelapse_filename = timelapse_filename
         self.timelapse_extension = timelapse_extension
         self.timelapse_full_path = timelapse_full_path
-        self.synchronization_directory = synchronization_directory
-        self.synchronization_full_path = synchronization_full_path
 
     def get_args(self):
         return [
@@ -477,9 +475,7 @@ class CameraScriptAfterRender(POpenWithTimeout):
             self.timelapse_directory,
             self.timelapse_filename,
             self.timelapse_extension,
-            self.timelapse_full_path,
-            self.synchronization_directory,
-            self.synchronization_full_path,
+            self.timelapse_full_path
         ]
 
     def run(self):

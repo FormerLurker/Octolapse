@@ -43,23 +43,23 @@
                 <table class="table table-striped table-hover table-condensed table-hover octolapse-table-list">
                     <thead>
                     <tr>
-                        <th class="profile_name">Name</th>
-                        <th class="profile_description">Description</th>
-                        <th class="profile_action">Action</th>
+                        <th class="profile-name">Name</th>
+                        <th class="profile-description">Description</th>
+                        <th class="profile-action">Action</th>
                     </tr>
                     </thead>
                     <tbody data-bind="foreach: profiles">
                     <tr>
-                        <td class="profile_name" data-bind="attr: {title: name()}">
+                        <td class="profile-name" data-bind="attr: {title: name()}">
                 <span>
                   <span class="fa fa-star" data-bind="visible:  guid() == $parent.current_profile_guid()"></span>
                   <span data-bind="text: name(), style: { 'font-weight': guid() == $parent.current_profile_guid() ? 'bold' : 'normal' }"></span>
                 </span>
                         </td>
-                        <td class="profile_description" data-bind="attr: {title: description()}">
+                        <td class="profile-description" data-bind="attr: {title: description()}">
                             <span data-bind="text: description(), style: { 'font-weight': guid() == $parent.current_profile_guid() ? 'bold' : 'normal' }"></span>
                         </td>
-                        <td class="profile_action text-center" align="center">
+                        <td class="profile-action text-center" align="center">
                             <span data-bind="visible: $parent.profileTypeName() == 'Camera'">
                                 <!-- ko if: $data.hasOwnProperty("enabled") -->
                                     <a class="fa" title="Enable Camera" data-bind="click: function() { toggleCamera(); }, css: { 'fa-square': !enabled(), 'fa-check-square': enabled()} "></a>

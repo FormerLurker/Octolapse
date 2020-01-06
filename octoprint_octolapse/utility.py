@@ -121,12 +121,12 @@ def sanitize_filename(filename):
         result = result[1:]
     return result
 
+
 def get_directory_from_full_path(path):
     return os.path.dirname(path)
 
 
 def get_filename_from_full_path(path):
-
     basename = ntpath.basename(path)
     head, tail = ntpath.split(basename)
     file_name = tail or ntpath.basename(head)
@@ -135,10 +135,13 @@ def get_filename_from_full_path(path):
         return split_filename[0]
     return ""
 
-def get_extension_from_full_path(path):
 
-    basename = ntpath.basename(path)
-    head, tail = ntpath.split(basename)
+def get_extension_from_full_path(path):
+    return get_extension_from_filename(ntpath.basename(path))
+
+
+def get_extension_from_filename(filename):
+    head, tail = ntpath.split(filename)
     file_name = tail or ntpath.basename(head)
     split_filename = os.path.splitext(file_name)
     if len(split_filename) > 1:
@@ -146,6 +149,7 @@ def get_extension_from_full_path(path):
         if len(split_filename) > 1:
             return extension[1:]
     return ""
+
 
 def get_collision_free_filepath(path):
     filename = get_filename_from_full_path(path)
@@ -165,6 +169,7 @@ def get_collision_free_filepath(path):
         filename = "{0}_{1}".format(original_filename, file_number)
 
     return os.path.join(directory, "{0}.{1}".format(filename, extension))
+
 
 def greater_than_or_close(a, b, abs_tol):
     return a - b > abs_tol
@@ -189,6 +194,7 @@ def greater_than_or_equal(a, b):
 def is_equal(a,b):
     return a - b < FLOAT_MATH_EQUALITY_RANGE
 
+
 def less_than_or_close(a, b, abs_tol):
     return a - b < abs_tol
 
@@ -203,12 +209,6 @@ def is_close(a, b, abs_tol=0.01000):
 
 def round_to_float_equality_range(n):
     return (n * 10000000 + 0.00000005)//1 / 10000000.0
-    #return round(n / 0.0000001) * 0.0000001
-    #answer = math.floor(n*10000000)/10000000 if n > 0 else math.ceil(n*10000000)/10000000
-    return round(n,8)
-
-    #return answer
-    # slow - return round(n,6)
 
 
 def round_to(n, precision):
@@ -224,7 +224,6 @@ def round_up(value):
 
 
 def get_clean_filename(filename):
-
     if filename is None:
         return None
 
@@ -238,32 +237,42 @@ def get_clean_filename(filename):
     return result
 
 
-def get_temp_snapshot_driectory_template():
-    return os.path.join("{DATADIRECTORY}", "tempsnapshots")
+_temporary_snapshot_subdirectory = "octolapse_snapshots_tmp"
 
 
-def get_snapshot_directory(data_directory):
-    return os.path.join(data_directory, "snapshots")
+def get_temporary_snapshot_directory(temporary_directory):
+    return os.path.join(temporary_directory, _temporary_snapshot_subdirectory)
 
 
-def get_snapshot_filename_template():
-    return os.path.join("{FILENAME}")
+def get_temporary_snapshot_job_path(temporary_directory, job_guid):
+    return os.path.join(
+            get_temporary_snapshot_directory(temporary_directory),
+            job_guid)
 
 
-def get_rendering_directory_from_data_directory(data_directory):
-    return get_rendering_directory_template().replace("{DATADIRECTORY}", data_directory)
+def get_temporary_snapshot_job_camera_path(temporary_directory, job_guid, camera_guid):
+    return os.path.join(
+            get_temporary_snapshot_job_path(temporary_directory, job_guid),
+            camera_guid)
 
 
-def get_latest_snapshot_download_path(data_directory, camera_guid, base_folder=None):
-    if not camera_guid or camera_guid == "undefined" and base_folder:
+_temporary_rendering_subdirectory = "octolapse_rendering_tmp"
+
+
+def get_temporary_rendering_directory(temporary_directory):
+    return os.path.join(temporary_directory, _temporary_rendering_subdirectory)
+
+
+def get_latest_snapshot_download_path(temporary_directory, camera_guid, base_folder=None):
+    if (not camera_guid or camera_guid == "undefined") and base_folder:
         return get_images_download_path(base_folder, "no-camera-selected.png")
-    return "{0}{1}".format(get_snapshot_directory(data_directory), "latest_{0}.jpeg".format(camera_guid))
+    return os.path.join(get_temporary_snapshot_directory(temporary_directory), "latest_{0}.jpeg".format(camera_guid))
 
 
-def get_latest_snapshot_thumbnail_download_path(data_directory, camera_guid, base_folder=None):
-    if not camera_guid or camera_guid == "undefined" and base_folder :
+def get_latest_snapshot_thumbnail_download_path(temporary_directory, camera_guid, base_folder=None):
+    if (not camera_guid or camera_guid == "undefined") and base_folder:
         return get_images_download_path(base_folder, "no-camera-selected.png")
-    return "{0}{1}".format(get_snapshot_directory(data_directory), "latest_thumb_{0}.jpeg".format(camera_guid))
+    return os.path.join(get_temporary_snapshot_directory(temporary_directory), "latest_thumb_{0}.jpeg".format(camera_guid))
 
 
 def get_images_download_path(base_folder, file_name):
@@ -308,24 +317,15 @@ def get_rendering_base_filename(print_name, print_start_time, print_end_time=Non
 
 
 def get_snapshot_filename(print_name, snapshot_number):
-    file_template = get_snapshot_filename_template().format(
-        FILENAME=get_string(print_name, ""),
-        DATETIMESTAMP="{0:d}".format(math.trunc(round(time.time(), 2) * 100))
-    )
-    return "{0}{1}.{2}".format(file_template, format_snapshot_number(snapshot_number), "jpg")
+    return "{0}{1}.{2}".format(print_name, format_snapshot_number(snapshot_number), "jpg")
 
 
 def get_pre_roll_snapshot_filename(print_name, snapshot_number):
-    file_template = get_snapshot_filename_template().format(
-        FILENAME=get_string(print_name, ""),
-        DATETIMESTAMP="{0:d}".format(math.trunc(round(time.time(), 2) * 100))
-    )
     return "{0}{1}_{2}.{3}".format(
-        file_template,
+        print_name,
         format_snapshot_number(snapshot_number),
         format_snapshot_number(snapshot_number),
         "jpg")
-
 
 SnaphotNumberDigits = 6
 SnapshotNumberFormat = "%0{0}d".format(SnaphotNumberDigits)
@@ -348,31 +348,6 @@ def format_snapshot_number(number):
     return number
 
 
-def get_snapshot_temp_directory(data_directory):
-    directory_template = get_temp_snapshot_driectory_template()
-    directory_template = directory_template.replace(
-        "{DATADIRECTORY}", data_directory)
-
-    return directory_template
-
-
-def get_rendering_directory(data_directory, print_name, print_start_time, output_extension, print_end_time=None):
-    directory_template = get_rendering_directory_template()
-    directory_template = directory_template.replace(
-        "{FILENAME}", get_string(print_name, ""))
-    directory_template = directory_template.replace(
-        "{OUTPUTFILEEXTENSION}", get_string(output_extension, ""))
-    directory_template = directory_template.replace("{PRINTSTARTTIME}",
-                                                    "{0:d}".format(math.trunc(round(print_start_time, 2) * 100)))
-    if print_end_time is not None:
-        directory_template = directory_template.replace("{PRINTENDTIME}",
-                                                        "{0:d}".format(math.trunc(round(print_end_time, 2) * 100)))
-    directory_template = directory_template.replace(
-        "{DATADIRECTORY}", data_directory)
-
-    return directory_template
-
-
 def seconds_to_hhmmss(seconds):
     hours = seconds // (60 * 60)
     seconds %= (60 * 60)
@@ -380,9 +355,6 @@ def seconds_to_hhmmss(seconds):
     seconds %= 60
     return "%02i:%02i:%02i" % (hours, minutes, seconds)
 
-class SafeDict(dict):
-    def __missing__(self, key):
-        return '{' + key + '}'
 
 def get_currently_printing_file_path(octoprint_printer):
     if octoprint_printer is not None:
@@ -591,14 +563,6 @@ def get_intersections_rectangle(x1, y1, x2, y2, rect_x1, rect_y1, rect_x2, rect_
         return False
 
 
-def exception_to_string(e):
-    trace_back = sys.exc_info()[2]
-    if trace_back is None:
-        return "{}".format(e)
-    tb_lines = traceback.format_exception(e.__class__, e, trace_back)
-    return ''.join(tb_lines)
-
-
 def get_system_fonts(base_directory):
     """Retrieves a list of fonts for any operating system. Note that this may not be a complete list of fonts discoverable on the system.
     :returns A list of filepaths to fonts available on the system."""
@@ -639,6 +603,8 @@ def get_system_fonts(base_directory):
 def get_directory_size(root, recurse=False):
     total_size = 0
     try:
+        if not os.path.isdir(root):
+            return 0
         for name in os.listdir(root):
             file_path = os.path.join(root, name)
             if os.path.isfile(file_path):
@@ -648,6 +614,23 @@ def get_directory_size(root, recurse=False):
     except FileNotFoundError as e:
         logger.exception(e)
     return total_size
+
+
+def get_file_creation_date(path):
+    if sys.platform == "win32":
+        # getctime always returns the creation date of a file, exactly what we want.
+        # in Linux this could be the st_ctime, which is always later than or equal to the
+        # modification date, so only trust this for windows.
+        return os.path.getctime(path)
+    # get file statistics
+    stat = os.stat(path)
+    if hasattr(stat, 'st_birthtime'):
+        # Not all OSs support st_birthtime, which is an actual creation date
+        return stat.st_birthtime
+
+    # for any other OS get the last content modification date.
+    return stat.st_mtime
+
 
 # MUCH faster than the standard shutil.copy
 def fast_copy(src, dst, buffer_size=1024 * 1024 * 1):
@@ -661,7 +644,49 @@ def fast_copy(src, dst, buffer_size=1024 * 1024 * 1):
             shutil.copyfileobj(fin, fout, buffer_size)
 
 
+# function to walk a directory and return all contained subdirectories
+def walk_directories(root):
+    for name in os.listdir(root):
+        if os.path.isdir(os.path.join(root, name)):
+            yield name
+
+
+# an iterable function to walk all files in a given directory and return a list of files with metadata
+def walk_files(root, filter_function=None):
+    '''Iterable function, returns a list of dicts, each including name, extension, size, and date (creation date if
+    possible, else modified date)).  Can be filtered to only include files with extensions in the provided set. '''
+    for name in os.listdir(root):
+        file_path = os.path.join(root, name)
+        if os.path.isfile(file_path):
+            extension = get_extension_from_filename(name)
+
+            if filter_function and not filter_function(root, name, extension):
+                continue
+            yield {
+                'name': name,
+                'extension': extension,
+                'size': os.path.getsize(file_path),
+                'date': get_file_creation_date(file_path)
+            }
+
+FILE_TYPE_SNAPSHOT_ARCHIVE = "snapshot_archive"
+FILE_TYPE_TIMELAPSE_OCTOLAPSE = "timelapse_octolapse"
+FILE_TYPE_TIMELAPSE_OCTOPRINT = "timelapse_octoprint"
+
+def get_file_info(file_path):
+    name = os.path.basename(file_path)
+    extension = get_extension_from_filename(name)
+    return {
+        'name': name,
+        'extension': extension,
+        'size': os.path.getsize(file_path),
+        'date': get_file_creation_date(file_path)
+    }
+
+
 class TimelapseJobInfo(object):
+    timelapse_info_file_name = "timelapse_info.json"
+
     def __init__(
         self, job_info=None, job_guid=None, print_start_time=None, print_end_time=None,
         print_end_state="INCOMPLETE", print_file_name="UNKNOWN", print_file_extension=None
@@ -683,8 +708,8 @@ class TimelapseJobInfo(object):
 
     @staticmethod
     def load(data_folder, print_job_guid, camera_guid=None):
-        file_directory = os.path.join(data_folder, "snapshots", print_job_guid)
-        file_path = os.path.join(file_directory, "timelapse_info.json")
+        file_directory = get_temporary_snapshot_job_path(data_folder, print_job_guid)
+        file_path = os.path.join(file_directory, TimelapseJobInfo.timelapse_info_file_name)
         try:
             with open(file_path, 'r') as timelapse_info:
                 data = json.load(timelapse_info)
@@ -704,11 +729,11 @@ class TimelapseJobInfo(object):
                             info.PrintFileName = name[0:len(name)-10]
             return info
 
-    def save(self, data_folder):
-        file_directory = os.path.join(data_folder, "snapshots", self.JobGuid)
-        file_path = os.path.join(file_directory, "timelapse_info.json")
+    def save(self, temporary_directory):
+        file_directory = get_temporary_snapshot_job_path(temporary_directory, self.JobGuid)
+        file_path = os.path.join(file_directory, TimelapseJobInfo.timelapse_info_file_name)
         if not os.path.exists(file_directory):
-            os.mkdir(file_directory)
+            os.makedirs(file_directory)
         with open(file_path, 'w') as timelapse_info:
             json.dump(self.to_dict(), timelapse_info)
 

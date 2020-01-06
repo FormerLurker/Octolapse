@@ -21,6 +21,11 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 */
+
+.octolapse.pagination {
+    margin: 0px;
+}
+
 .octolapse-pnotify-help .alert {
     text-shadow: none;
 }
@@ -310,7 +315,7 @@ div#octolapse-current-camera{
 #octolapse_add_edit_profile_dialog .input-xlg{
     width: 345px;
 }
-#octolapse_add_edit_profile_dialog .input-xxl{
+.octolapse .input-xxl, #octolapse_add_edit_profile_dialog .input-xxl{
     width: 430px;
 }
 #octolapse_add_edit_profile_dialog .control-group{
@@ -361,40 +366,71 @@ table.octolapse-table-list td{
 }
 
 /* Octolapse Profile Table Column Sizes */
-table.octolapse-table-list td.profile_name, table.octolapse-table-list th.profile_name{
-    width:35%;
+table.octolapse-table-list td.profile-name, table.octolapse-table-list th.profile-name{
+    width:30%;
 }
-table.octolapse-table-list td.profile_description, table.octolapse-table-list th.profile_description {
+table.octolapse-table-list td.profile-description, table.octolapse-table-list th.profile-description {
     width:50%;
 }
-table.octolapse-table-list td.profile_action, table.octolapse-table-list th.profile_action {
+table.octolapse-table-list td.profile-action, table.octolapse-table-list th.profile-action {
     width:20%;
 }
 
 /* Octolapse Unfinished Renderings Table Column Sizes */
-table.octolapse-table-list td.rendering_print_name, table.octolapse-table-list th.rendering_print_name{
+table.octolapse-table-list td.rendering-print-name, table.octolapse-table-list th.rendering-print-name{
     width:21%;
 }
-table.octolapse-table-list td.rendering_print_end_state, table.octolapse-table-list th.rendering_print_end_state{
+table.octolapse-table-list td.rendering-print-end-state, table.octolapse-table-list th.rendering-print-end-state{
     width:9%;
 }
-table.octolapse-table-list td.rendering_size, table.octolapse-table-list th.rendering_size{
+table.octolapse-table-list td.rendering-size, table.octolapse-table-list th.rendering-size{
     width:7%;
 }
-table.octolapse-table-list td.rendering_date, table.octolapse-table-list th.rendering_date{
+table.octolapse-table-list td.rendering-date, table.octolapse-table-list th.rendering-date{
     width:9%;
 }
-table.octolapse-table-list td.rendering_camera_name, table.octolapse-table-list th.rendering_camera_name{
+table.octolapse-table-list td.rendering-camera-name, table.octolapse-table-list th.rendering-camera-name{
     width:21%;
 }
-table.octolapse-table-list td.rendering_name, table.octolapse-table-list th.rendering_name{
+table.octolapse-table-list td.rendering-name, table.octolapse-table-list th.rendering-name{
     width:22%;
 }
-table.octolapse-table-list td.rendering_action, table.octolapse-table-list th.rendering_action{
+table.octolapse-table-list td.rendering-action, table.octolapse-table-list th.rendering-action{
     width:11%;
 }
-table.octolapse-table-list td.rendering_progress, table.octolapse-table-list th.rendering_progress{
+table.octolapse-table-list td.rendering-progress, table.octolapse-table-list th.rendering-progress{
     width:11%;
+}
+
+.octolapse-list .list-item-selection {
+    width:12px;
+}
+.octolapse-list .list-item-selection-dropdown {
+    width:36px;
+    text-align: center;
+}
+.octolapse-list .list-item-selection input {
+    margin-top: -2px;
+}
+.octolapse-list .list-item-selection-header-dropdown {
+    width:36px;
+    overflow: visible;
+}
+.octolapse-list .file-browser-name {
+    width:69%;
+}
+
+.octolapse-list .file-browser-date {
+    width:16%;
+}
+
+.octolapse-list .file-browser-size {
+    width:8%;
+}
+
+.octolapse-list .file-browser-action {
+    width:7%;
+    text-align: center;
 }
 
 .row-fluid.octolapse-table-list-row .span1,
@@ -708,7 +744,7 @@ div#octolapse_snapshot_image_container .snapshot-container {
     width:100%;
     height:100%;
 }
-.latest-snapshot
+.latest-snapshot img
 {
     z-index:256;
 }
@@ -780,7 +816,6 @@ input.error {
 
 #octolapse_tab i.fa, #octolapse_tab span.fa,
 #octolapse_tab i.fa, #octolapse_tab span.fa-slider i{
-	text-shadow: 1px 0px black, -1px 0px black, 0px 1px black, 0px -1px black;
     border: none;
 }
 a.ol-button i {
@@ -817,6 +852,54 @@ fieldset.octolapse legend
 .full-width {
     width:100%;
 }
+.octolapse-secondary-gray {
+    opacity: 0.2;
+}
+.octolapse-secondary-gray-background {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.select_with_edit {
+    display:flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.select_with_edit select{
+    flex:1;
+    margin-bottom: 0;
+}
+.select_with_edit a{
+    padding: 0 0 0 6px;
+
+}
+.octolapse-snapshot-button-overlay
+{
+    width:100%;
+    height:100%;
+    position: relative;;
+}
+
+.octolapse-snapshot-button-overlay a
+{
+    position: absolute;
+    z-index:257
+}
+
+.octolapse-snapshot-button-overlay a.play{
+    opacity:0;
+    transition: 0.3s;
+    left:50%;
+    top:50%;
+    margin: -21px 0 0 -18px;
+}
+.snapshot-container:hover .octolapse-snapshot-button-overlay a.play{
+    opacity:1;
+}
+.octolapse-snapshot-button-overlay a.fullscreen{
+    right:0;
+    bottom:0;
+}
+
 /* The slider itself */
 .slider {
   width: 100%; /* Full-width */

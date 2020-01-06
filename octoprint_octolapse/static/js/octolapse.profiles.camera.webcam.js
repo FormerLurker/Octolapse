@@ -22,7 +22,7 @@
 ##################################################################################
 */
 $(function() {
-    ko.subscribable.fn.subscribeWithTarget = function (handler, target) {
+    ko.subscribable.fn.octolapseSubscriptWithTarget = function (handler, target) {
         var self = this;
         var _oldValue;
         self.before_change_subscription = this.subscribe(function (oldValue) {
@@ -536,7 +536,7 @@ $(function() {
             for(var index = 0; index < self.mjpg_streamer.controls().length; index++)
             {
                 var control = self.mjpg_streamer.controls()[index];
-                self.subscriptions.push(control.value.subscribeWithTarget(function (target, oldValue, newValue) {
+                self.subscriptions.push(control.value.octolapseSubscriptWithTarget(function (target, oldValue, newValue) {
                     if (oldValue !== newValue)
                     {
                         self.applyWebcamSetting(ko.toJS(target));

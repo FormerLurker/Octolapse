@@ -35,7 +35,7 @@ import octoprint_octolapse.log as log
 import math
 import collections
 import octoprint_octolapse.settings_preprocessor as settings_preprocessor
-import octoprint_octolapse.settings_migration as settings_migration
+import octoprint_octolapse.migration as migration
 from octoprint_octolapse.gcode_processor import GcodeProcessor, ParsedCommand
 import six
 from octoprint_octolapse.error_messages import OctolapseException
@@ -1191,6 +1191,11 @@ class RenderingProfile(AutomaticConfigurationProfile):
         return super(RenderingProfile, cls).try_convert_value(destination, value, key)
 
     @staticmethod
+    def get_archive_formats():
+        return {
+            'zip'
+        }
+    @staticmethod
     def get_options():
         return {
             'rendering_file_templates': [
@@ -1610,7 +1615,6 @@ class DebugProfile(AutomaticConfigurationProfile):
                 dict(value=log.CRITICAL, name='Critical'),
             ],
             'all_logger_names': logging_configurator.get_logger_names()
-
         }
 
 
@@ -1635,6 +1639,100 @@ class MainSettings(Settings):
         self.preview_snapshot_plan_seconds = 30
         self.automatic_updates_enabled = True
         self.automatic_update_interval_days = 7
+        self.snapshot_archive_directory = ""
+        self.timelapse_directory = ""
+        self.temporary_directory = ""
+
+    def get_snapshot_archive_directory(self, data_folder):
+        directory = self.snapshot_archive_directory.strip()
+        if len(directory) > 0:
+            return self.snapshot_archive_directory
+        return os.path.join(data_folder, 'snapshots')
+
+    def get_timelapse_directory(self, octoprint_timelapse_directory):
+        directory = self.timelapse_directory.strip()
+        if len(directory) > 0:
+            return self.timelapse_directory
+        return octoprint_timelapse_directory
+
+    def get_temporary_directory(self, data_folder):
+        directory = self.temporary_directory.strip()
+        if len(directory) > 0:
+            return self.temporary_directory
+        return os.path.join(data_folder, 'tmp')
+
+    def test_directories(self, data_folder, octoprint_timelapse_directory):
+        errors = []
+        snapshot_archive_directory = self.get_snapshot_archive_directory(data_folder)
+        timelapse_directory = self.get_timelapse_directory(octoprint_timelapse_directory)
+        temporary_directory = self.get_temporary_directory(data_folder)
+        try:
+            results = MainSettings.test_directory(snapshot_archive_directory)
+            if not results[0]:
+                errors.append({
+                    "name": "Snapshot Archive Directory",
+                    'error': results[1]
+                })
+            results = MainSettings.test_directory(timelapse_directory)
+            if not results[0]:
+                errors.append({
+                    "name": "Timelapse Directory",
+                    'error': results[1]
+                })
+            results = MainSettings.test_directory(temporary_directory)
+            if not results[0]:
+                errors.append({
+                    "name": "Temporary Directory",
+                    'error': results[1]
+                })
+        except Exception as e:
+            logger.exception("An unexpected exception occurred while testing directories.")
+            raise e
+
+        return len(errors) == 0, errors
+
+    @staticmethod
+    def test_directory(path):
+        # ensure the path is absolute
+        if not os.path.isabs(path):
+            return False, 'path-not-absolute'
+
+        # ensure the directory exists
+        if not os.path.isdir(path):
+            try:
+                os.makedirs(path)
+            except (PermissionError, OSError) as e:
+                return False, 'cannot-create'
+
+        subdirectory = os.path.join(path, "octolapse_test_temp")
+        if not os.path.isdir(subdirectory):
+            try:
+                os.mkdir(subdirectory)
+            except (PermissionError, OSError) as e:
+                return False, 'cannot-create-subdirectory'
+        else:
+            return False, 'subdirectory-test-path-exists'
+
+        try:
+            os.rmdir(subdirectory)
+        except (PermissionError, OSError) as e:
+            return False, 'cannot-delete-subdirectory'
+
+        # test create and read
+        test_create_path = os.path.join(path, "test_create.octolapse.tmp")
+        try:
+            with open(test_create_path, 'w+'):
+                os.utime(path, None)
+        except (PermissionError, OSError):
+            False, 'cannot-write-file'
+
+        # test delete
+        try:
+            os.remove(test_create_path)
+        except (PermissionError, OSError):
+            False, 'cannot-delete-file'
+
+        return True, None
 
 
 class ProfileOptions(StaticSettings):
@@ -1659,20 +1757,21 @@ class ProfileOptions(StaticSettings):
 
 
 class ProfileDefaults(StaticSettings):
-    def __init__(self):
+    def __init__(self, plugin_version):
         self.printer = PrinterProfile("Default Printer")
         self.stabilization = StabilizationProfile("Default Stabilization")
         self.trigger = TriggerProfile("Default Trigger")
         self.rendering = RenderingProfile("Default Rendering")
         self.camera = CameraProfile("Default Camera")
         self.debug = DebugProfile("Default Debug")
+        self.main_settings = MainSettings(plugin_version)
 
 
 class Profiles(Settings):
-    def __init__(self):
+    def __init__(self, plugin_version):
         self.options = ProfileOptions()
         # create default profiles
-        self.defaults = ProfileDefaults()
+        self.defaults = ProfileDefaults(plugin_version)
 
         # printers is initially empty - user must select a printer
         self.printers = {}
@@ -2117,11 +2216,16 @@ class GlobalOptions(StaticSettings):
 
 
 class OctolapseSettings(Settings):
+
+    camera_settings_file_name = "camera_settings.json"
+
+    rendering_settings_file_name = "rendering_settings.json"
+
     DefaultDebugProfile = None
 
     def __init__(self, plugin_version="unknown"):
         self.main_settings = MainSettings(plugin_version)
-        self.profiles = Profiles()
+        self.profiles = Profiles(plugin_version)
         self.global_options = GlobalOptions()
         self.upgrade_info = {
             "was_upgraded": False,
@@ -2135,12 +2239,15 @@ class OctolapseSettings(Settings):
 
     def save_rendering_settings(self, data_folder, job_guid):
         for camera in self.profiles.active_cameras():
-            snapshot_directory = os.path.join(
-                data_folder, "snapshots", job_guid, camera.guid
+            snapshot_directory = utility.get_temporary_snapshot_job_camera_path(
+                data_folder, job_guid, camera.guid
             )
             # make sure the snapshot path exists
             if not os.path.exists(snapshot_directory):
-                os.makedirs(snapshot_directory)
+                try:
+                    os.makedirs(snapshot_directory)
+                except FileExistsError:
+                    pass
 
             # get the rendering profile json
             rendering_profile_json = self.get_profile_export_json(
@@ -2152,10 +2259,10 @@ class OctolapseSettings(Settings):
             )
 
             # save the rendering json
-            with open(os.path.join(snapshot_directory, "rendering_settings.json"), "w") as settings_file:
+            with open(os.path.join(snapshot_directory, OctolapseSettings.rendering_settings_file_name), "w") as settings_file:
                 settings_file.write(rendering_profile_json)
             # save the camera json
-            with open(os.path.join(snapshot_directory, "camera_settings.json"), "w") as settings_file:
+            with open(os.path.join(snapshot_directory, OctolapseSettings.camera_settings_file_name), "w") as settings_file:
                 settings_file.write(camera_profile_json)
 
     # Todo: raise reasonable exceptions
@@ -2165,10 +2272,12 @@ class OctolapseSettings(Settings):
 
         # attempt to load the rendering settings
         # get the settings path
-        snapshot_directory = os.path.join(data_directory, "snapshots", job_guid, camera_guid)
+        snapshot_directory = snapshot_directory = utility.get_temporary_snapshot_job_camera_path(
+            data_directory, job_guid, camera_guid
+        )
 
         # load the rendering profile
-        rendering_settings_path = os.path.join(snapshot_directory, "rendering_settings.json")
+        rendering_settings_path = os.path.join(snapshot_directory, OctolapseSettings.rendering_settings_file_name)
         rendering_profile = None
         if os.path.exists(rendering_settings_path):
             try:
@@ -2189,7 +2298,7 @@ class OctolapseSettings(Settings):
             )
 
         # load the camera profile
-        camera_settings_path = os.path.join(snapshot_directory, "camera_settings.json")
+        camera_settings_path = os.path.join(snapshot_directory, OctolapseSettings.camera_settings_file_name)
         camera_profile = None
         if os.path.exists(camera_settings_path):
             try:
@@ -2246,8 +2355,8 @@ class OctolapseSettings(Settings):
                 try:
 
                     data = json.load(settings_file)
-                    original_version = settings_migration.get_version(data)
-                    data = settings_migration.migrate_settings(
+                    original_version = migration.get_version(data)
+                    data = migration.migrate_settings(
                         plugin_version, data, default_settings_folder, data_directory
                     )
 
@@ -2276,7 +2385,7 @@ class OctolapseSettings(Settings):
             with open(os.path.join(default_settings_folder, default_settings_filename), 'r') as settings_file:
                 try:
                     data = json.load(settings_file)
-                    data = settings_migration.migrate_settings(
+                    data = migration.migrate_settings(
                         plugin_version, data, default_settings_folder, data_directory
                     )
                     # if a settings file does not exist, create one ??
@@ -2332,7 +2441,7 @@ class OctolapseSettings(Settings):
                 settings = self
         else:
             # this is a regular settings file.  Try to migrate
-            migrated_settings = settings_migration.migrate_settings(
+            migrated_settings = migration.migrate_settings(
                 plugin_version, settings, default_settings_folder, data_directory
             )
             new_settings = OctolapseSettings(plugin_version)
@@ -2365,7 +2474,7 @@ class OctolapseSettings(Settings):
                 settings = self
         else:
             # this is a regular settings file.  Try to migrate
-            migrated_settings = settings_migration.migrate_settings(
+            migrated_settings = migration.migrate_settings(
                 plugin_version, settings, default_settings_folder, data_directory
             )
             new_settings = OctolapseSettings(plugin_version)

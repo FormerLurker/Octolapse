@@ -66,6 +66,7 @@ class Timelapse(object):
         # config variables - These don't change even after a reset
         self.state_update_period_seconds = 1
         self._data_folder = data_folder
+        self._temporary_folder = get_current_octolapse_settings().main_settings.get_temporary_directory(self._data_folder)
         self.get_current_octolapse_settings = get_current_octolapse_settings
         self._settings = self.get_current_octolapse_settings() # type: OctolapseSettings
         self._octoprint_settings = octoprint_settings
@@ -132,7 +133,7 @@ class Timelapse(object):
         self.current_snapshot_plan_index = 0
         self.current_snapshot_plan = None  # type: preprocessing.SnapshotPlan
         self.is_realtime = True
-        self._was_started = False
+        self.was_started = False
         # snapshot thread queue
         self._snapshot_task_queue = queue.Queue(maxsize=1)
 
@@ -165,7 +166,7 @@ class Timelapse(object):
         # ToDo:  all cloning should be removed after this point.  We already have a settings object copy.
         #  Also, we no longer need the original settings since we can use the global OctolapseSettings.Logger now
         self._printer = self._settings.profiles.current_printer()
-
+        self._temporary_folder = self._settings.main_settings.get_temporary_directory(self._data_folder)
         self._stabilization = self._settings.profiles.current_stabilization()
         self._trigger_profile = self._settings.profiles.current_trigger()
         self.snapshot_plans = snapshot_plans
@@ -188,9 +189,9 @@ class Timelapse(object):
             print_file_extension=utility.get_extension_from_full_path(gcode_file_path),
         )
         # save the timelapse job info
-        self._current_job_info.save(self._data_folder)
+        self._current_job_info.save(self._temporary_folder)
         # save the rendering settings for use by the RenderingProcessor for this timelapse
-        self._settings.save_rendering_settings(self._data_folder, self._current_job_info.JobGuid)
+        self._settings.save_rendering_settings(self._temporary_folder, self._current_job_info.JobGuid)
         self._gcode = SnapshotGcodeGenerator(self._settings, self.overridable_printer_profile_settings)
 
         self._capture_snapshot = CaptureSnapshot(
@@ -224,7 +225,7 @@ class Timelapse(object):
                 'm114_not_supported'
             )
 
-        self._was_started = True
+        self.was_started = True
 
     _stabilization_gcode_tags = {
         'snapshot-init',
@@ -234,7 +235,8 @@ class Timelapse(object):
         'snapshot-end'
     }
 
-
+    def get_current_temporary_folder(self):
+        return self._temporary_folder
 
     class StabilizationGcodeStateException(Exception):
         pass
@@ -346,7 +348,7 @@ class Timelapse(object):
                 else:
                     error_message = "{0}"
 
-                error_message = error_message.format(value)
+                error_message = error_message.format(error)
 
         elif error_count > 1:
             before_snapshot_error_count = False
@@ -1261,7 +1263,7 @@ class Timelapse(object):
             snapshot_complete_callback_thread.start()
 
     def _render_timelapse(self, print_end_state):
-        if self._settings.profiles.current_rendering().enabled and self._was_started:
+        if self._settings.profiles.current_rendering().enabled and self.was_started:
             # If we are still taking snapshots, wait for them all to finish
             if self.get_is_taking_snapshot():
                 logger.info("Snapshot jobs are running, waiting for them to finish before rendering.")
@@ -1270,9 +1272,9 @@ class Timelapse(object):
             # todo:  update print job info
             self._current_job_info.PrintEndTime = time.time()
             self._current_job_info.PrintEndState = print_end_state
-            self._current_job_info.save(self._data_folder)
+            self._current_job_info.save(self._temporary_folder)
             for camera in self._settings.profiles.active_cameras():
-                self._on_rendering_start_callback(self._current_job_info.JobGuid, camera.guid)
+                self._on_rendering_start_callback(self._current_job_info.JobGuid, camera.guid, self._temporary_folder)
 
     def _reset(self):
         self._state = TimelapseState.Idle
@@ -1306,7 +1308,7 @@ class Timelapse(object):
         self._position_payload = None
         self._position_signal.set()
         self._current_job_info = None
-        self._was_started = False
+        self.was_started = False
 
     def _reset_snapshot(self):
         self._state = TimelapseState.WaitingForTrigger

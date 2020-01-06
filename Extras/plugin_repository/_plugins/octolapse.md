@@ -84,7 +84,7 @@ If you are upgrading from [v0.3.1](https://github.com/FormerLurker/Octolapse/rel
 * **Synchronize your timelapses** with OctoPrint's built in plugin, keeping all of your videos in one place.
 * Choose between **fixed frame rate** or **fixed length rendering.**  Octolapse will automatically adjust the frame rate to match any desired length.  You can even set a minimum or maximum acceptable frame rate.
 * Add **pre or post roll frames** (not videos yet, sorry) to your snapshot preventing an abrupt start or finish.
-* Choose from several output formats including **MP4 (libxvid and H.264), AVI, FLV, VOB, GIF, and MPEG.**  *More coming soon, suggestions welcome.*  _Note: *OctoPrint 1.3.10 is required to synchronize some formats with the built-in timelapse plugin.*_
+* Choose from several output formats including **MP4 (libxvid and H.264), AVI, FLV, VOB, GIF, and MPEG.**  *More coming soon, suggestions welcome.*
 * **Control the bitrate** of your video.
 * Add a **Custom Watermark** to your video.
 * Add **Text Overlays** to your video using replacement tokens.  Control the position, color, font and more!

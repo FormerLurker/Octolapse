@@ -9,6 +9,7 @@ from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 
+
 def get_version(settings_dict):
     version = 'unknown'
     if 'version' in settings_dict:
@@ -16,6 +17,18 @@ def get_version(settings_dict):
     elif 'main_settings' in settings_dict and 'version' in settings_dict["main_settings"]:
         version = settings_dict["main_settings"]["version"]
     return version
+
+
+def migrate_files(current_version, data_directory):
+    if LooseVersion(current_version) < LooseVersion("0.4.0rc1.dev3"):
+        has_updated = True
+        migrate_files_pre_0_4_0_rc1_dev3(current_version, data_directory)
+
+
+def migrate_files_pre_0_4_0_rc1_dev3(current_version, data_directory):
+    # rename the snapshots folder to tmp
+    os.rename(os.path.join(data_directory, "snapshots"), os.path.join(data_directory, "tmp"))
+
 
 def migrate_settings(current_version, settings_dict, default_settings_directory, data_directory):
     # extract the settings version
@@ -57,6 +70,7 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
 
 def get_settings_backup_name(version, default_settings_directory):
     return os.path.join(default_settings_directory, "settings_backup_{0}.json".format(version))
+
 
 def migrate_post_0_3_5(current_version, settings_dict, log_file_path, default_settings_path):
     # This  is a reminder that the 'version' setting moved to Settings.main_settings.version
@@ -131,6 +145,7 @@ def migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, default_settings_p
     settings_dict["version"] = "0.3.3rc3.dev0"
     # return the dict
     return settings_dict
+
 
 def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_path):
 
@@ -420,6 +435,7 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
         'profiles': profiles
     }
 
+
 def migrate_pre_0_4_0_rc1_dev2(current_version, settings_dict, default_settings_path):
     default_settings = get_default_settings(default_settings_path)
     # remove all triggers
@@ -435,6 +451,7 @@ def migrate_pre_0_4_0_rc1_dev2(current_version, settings_dict, default_settings_
 
     settings_dict["main_settings"]["version"] = "0.4.0rc1.dev2"
     return settings_dict
+
 
 def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_path):
     # adjust each slicer profile to account for the new multiple extruder settings
@@ -585,9 +602,12 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
                     enabled_logger["name"] = "octolapse.settings_preprocessor"
                 elif enabled_logger["name"] == "octolapse.gcode":
                     enabled_logger["name"] = "octolapse.stabilization_gcode"
+                elif enabled_logger["name"] == "octolapse.settings_migration":
+                    enabled_logger["name"] = "octolapse.migration"
 
     settings_dict["main_settings"]["version"] = "0.4.0rc1.dev3"
     return settings_dict
+
 
 def get_default_settings(default_settings_path):
     with open(default_settings_path) as defaultSettingsJson:

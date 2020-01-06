@@ -81,6 +81,7 @@ $(function () {
             self.is_test_mode_active = ko.observable(false);
             self.current_camera_guid = ko.observable(null);
             self.rendering_dialog = new Octolapse.OctolapseRenderingDialog();
+            self.timelapse_files_dialog = new Octolapse.OctolapseTimelapseFilesDialog();
             self.PrinterState = new Octolapse.printerStateViewModel();
             self.Position = new Octolapse.positionViewModel();
             self.ExtruderState = new Octolapse.extruderStateViewModel();
@@ -92,7 +93,6 @@ $(function () {
                     self.SnapshotPlanState.is_preview = false;
                 }
             });
-            self.IsTabShowing = false;
             self.IsLatestSnapshotDialogShowing = false;
             self.current_print_volume = null;
             self.current_camera_enabled = ko.observable(false);
@@ -109,12 +109,41 @@ $(function () {
                 self.webcam_settings_popup.showWebcamSettingsForGuid(self.current_camera_guid());
             };
 
-            self.showRenderingProgress = function() {
-                self.rendering_dialog.open('in-process');
+            self.openTimelapseFilesDialog = function() {
+                self.timelapse_files_dialog.open('timelapse');
             };
-            self.showUnfinishedRenderings = function() {
+
+            self.openRenderingDialog = function() {
+                if (!self.rendering_dialog.in_process.is_empty())
+                {
+                    self.rendering_dialog.open('in-process');
+                }
                 self.rendering_dialog.open('failed');
             };
+
+            self.open_rendering_text = ko.pureComputed(function(){
+                if(!self.rendering_dialog.failed.is_empty())
+                    return "Failed Renderings";
+                return "Renderings";
+            });
+
+            self.open_rendering_text_class = ko.pureComputed(function(){
+                if(!self.rendering_dialog.failed.is_empty())
+                    return "text-error";
+                return "";
+            });
+
+            self.unfinished_renderings_changed = function(data){
+                if (data.failed)
+                {
+                    self.rendering_dialog.failed.update(data.failed)
+                }
+                if (data.in_process)
+                {
+                    self.rendering_dialog.in_process.update(data.in_process)
+                }
+            };
+
             self.showLatestSnapshotDialog = function () {
 
                 var $SnapshotDialog = $("#octolapse_latest_snapshot_dialog");
@@ -143,9 +172,9 @@ $(function () {
                     closeSnapshotDialog($SnapshotDialog);
                 });
 
-                $SnapshotDialog.find('.snapshot-container').one('click', function() {
+                /*$SnapshotDialog.find('#octolapse_snapshot_image_container').one('click', function() {
                     closeSnapshotDialog($SnapshotDialog);
-                } );
+                } );*/
 
                 function closeSnapshotDialog($dialog) {
                     //console.log("Hiding snapshot dialog.");
@@ -183,6 +212,7 @@ $(function () {
                     Octolapse.setLocalStorage(self.SETTINGS_VISIBLE_KEY, newData)
                 });
                 self.rendering_dialog.on_after_binding();
+                self.timelapse_files_dialog.on_after_binding();
             };
 
             // Update the current tab state
@@ -222,14 +252,33 @@ $(function () {
                 return profiles;
             };
 
+            self.load_files = function()
+            {
+                console.log("ocotlapse.status.js - loading dialog files.");
+                self.timelapse_files_dialog.load();
+                self.rendering_dialog.load();
+            };
+
+            self.files_changed = function(file_info, action)
+            {
+                self.timelapse_files_dialog.files_changed(file_info, action);
+            };
+
             self.update = function (settings) {
                 //console.log("octolapse.status.js - Updating main settings.");
-                self.is_timelapse_active(settings.is_timelapse_active);
-                self.snapshot_count(settings.snapshot_count);
-                self.is_taking_snapshot(settings.is_taking_snapshot);
-                self.is_rendering(settings.is_rendering);
-                self.waiting_to_render(settings.waiting_to_render);
-                self.is_test_mode_active(settings.is_test_mode_active);
+                if (settings.is_timelapse_active !== undefined)
+                    self.is_timelapse_active(settings.is_timelapse_active);
+                if (settings.snapshot_count !== undefined)
+                    self.snapshot_count(settings.snapshot_count);
+                if (settings.is_taking_snapshot !== undefined)
+                    self.is_taking_snapshot(settings.is_taking_snapshot);
+                if (settings.is_rendering !== undefined)
+                    self.is_rendering(settings.is_rendering);
+                if (settings.waiting_to_render !== undefined)
+                    self.waiting_to_render(settings.waiting_to_render);
+                if (settings.is_test_mode_active !== undefined)
+                    self.is_test_mode_active(settings.is_test_mode_active);
+
                 //console.log("Updating Profiles");
                 if (settings.profiles) {
                     self.profiles().printers(self.create_current_settings_profile("printer", settings.profiles.printers));
@@ -351,14 +400,11 @@ $(function () {
 
             self.onTabChange = function (current, previous) {
                 if (current != null && current === "#tab_plugin_octolapse") {
-                    //console.log("Octolapse Tab is showing");
-                    self.IsTabShowing = true;
-                    self.updateLatestSnapshotThumbnail(true, true);
-
+                    //self.updateLatestSnapshotThumbnail(true, true);
                 }
                 else if (previous != null && previous === "#tab_plugin_octolapse") {
                     //console.log("Octolapse Tab is not showing");
-                    self.IsTabShowing = false;
+                    //self.IsTabShowing = false;
                 }
             };
             /*
@@ -379,8 +425,8 @@ $(function () {
                 }
                 //console.log("Starting Snapshot Animation for" + targetId);
                 // Hide and show the play/refresh button
-                if (Octolapse.Globals.auto_reload_latest_snapshot()) {
-                    var $startAnimationButton = $('#' + targetId + ' .snapshot_refresh_container a.start-animation');
+                if (Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
+                    var $startAnimationButton = $('#' + targetId + ' .octolapse-snapshot-button-overlay a.play');
                     self.IsAnimating[targetId] = true;
                     $startAnimationButton.fadeOut({
                         start: function () {
@@ -392,7 +438,6 @@ $(function () {
                                 {
                                     $current.css("opacity","0");
                                     animate_snapshots($images, $current, $images.length-1, -1, 0, 25)
-
                                 }
                                 else
                                 {
@@ -401,8 +446,6 @@ $(function () {
                                     self.IsAnimating[targetId] = false;
                                     return;
                                 }
-
-
                                 function animate_snapshots($images, $current, index, step, opacity, delay) {
                                     if (
                                         (step > 0 && index < $images.length) ||
@@ -442,11 +485,7 @@ $(function () {
                 force = force || false;
                 //console.log("Trying to update the latest snapshot thumbnail.");
                 if (!force) {
-                    if (!self.IsTabShowing) {
-                        //console.log("The tab is not showing, not updating the thumbnail.  Clearing the image history.");
-                        return
-                    }
-                    else if (!Octolapse.Globals.auto_reload_latest_snapshot()) {
+                    if (!Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
                         //console.log("Not updating the thumbnail, auto-reload is disabled.");
                         return
                     }
@@ -486,7 +525,7 @@ $(function () {
                 // Get the latest image
                 var $latestSnapshotContainer = $target.find('.latest-snapshot');
                 var $latestSnapshot = $latestSnapshotContainer.find('img');
-                if (Octolapse.Globals.auto_reload_latest_snapshot()) {
+                if (Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
                     // Get the previous snapshot container
                     var $previousSnapshotContainer = $target.find('.previous-snapshots');
 
@@ -507,7 +546,7 @@ $(function () {
 
                     var numSnapshots = $previousSnapshots.length;
 
-                    while (numSnapshots > parseInt(Octolapse.Globals.auto_reload_frames())) {
+                    while (numSnapshots > parseInt(Octolapse.Globals.main_settings.auto_reload_frames())) {
                         //console.log("Removing overflow previous images according to Auto Reload Frames setting.");
                         var $element = $previousSnapshots.first();
                         $element.remove();
@@ -535,7 +574,7 @@ $(function () {
 
                 //console.log("Adding the new snapshot image to the latest snapshot container.");
                 // create on load event for the newest image
-                if (Octolapse.Globals.auto_reload_latest_snapshot()) {
+                if (Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
                     // Add the new snapshot to the container
                     $newSnapshot.appendTo($latestSnapshotContainer);
                     $newSnapshot.one('load', function () {
@@ -588,7 +627,7 @@ $(function () {
                 force = force || false;
                 //console.log("Trying to update the latest snapshot image.");
                 if (!force) {
-                    if (!Octolapse.Globals.auto_reload_latest_snapshot()) {
+                    if (!Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
                         //console.log("Auto-Update latest snapshot image is disabled.");
                         return
                     }
@@ -659,11 +698,11 @@ $(function () {
                         return "Octolapse is waiting for print to complete.";
                     if( self.is_rendering())
                         return "Octolapse is rendering a timelapse.";
-                    if(!Octolapse.Globals.enabled())
+                    if(!Octolapse.Globals.main_settings.is_octolapse_enabled())
                         return 'Octolapse is disabled.';
                     return 'Octolapse is enabled and idle.';
                 }
-                if(!Octolapse.Globals.enabled())
+                if(!Octolapse.Globals.main_settings.is_octolapse_enabled())
                     return 'Octolapse is disabled.';
                 if(Octolapse.Status.is_real_time())
                 {
@@ -699,16 +738,13 @@ $(function () {
 
             self.getStatusText = ko.pureComputed(function () {
                 if (self.is_timelapse_active() || self.is_rendering())
-                    return 'Octolapse';
+                    return '';
                 if (self.waiting_to_render())
-                    return 'Octolapse - Stopped';
-                if (Octolapse.Globals.enabled())
-                    return 'Octolapse';
-                return 'Octolapse - Disabled';
+                    return 'Timelapse Canceled';
+                return '';
             }, self);
 
-            self.previewSnapshotPlans = function(data)
-            {
+            self.previewSnapshotPlans = function(data){
                 //console.log("Updating snapshot plan state with a preview of the snapshot plans");
                 self.SnapshotPlanState.is_preview = true;
                 self.SnapshotPlanState.update(data);
@@ -842,7 +878,6 @@ $(function () {
                 }
             };
 
-
             // Rendering Profile Settings
             self.renderings_sorted = ko.computed(function() { return self.nameSort(self.profiles().renderings) });
             self.openCurrentRenderingProfile = function () {
@@ -863,17 +898,14 @@ $(function () {
 
             // Camera Profile Settings
             self.cameras_sorted = ko.computed(function() { return self.nameSort(self.profiles().cameras) });
-
             self.openCameraProfile = function (guid) {
                 //console.log("Opening current camera profile from tab.")
                 Octolapse.Cameras.showAddEditDialog(guid, false);
             };
-
             self.addNewCameraProfile = function () {
                 //console.log("Opening current camera profile from tab.")
                 Octolapse.Cameras.showAddEditDialog(null, false);
             };
-
             self.toggleCamera = function (guid) {
                 //console.log("Opening current camera profile from tab.")
                 Octolapse.Cameras.getProfileByGuid(guid).toggleCamera(function(value){
@@ -894,7 +926,6 @@ $(function () {
                 else
                     self.current_camera_enabled(true);
             };
-
             self.snapshotCameraChanged = function() {
                 if (self.current_camera_guid()) {
                     // Set the local storage guid here.

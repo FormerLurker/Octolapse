@@ -88,9 +88,6 @@
                                            value: output_format"></select>
                         <a class="octolapse_help" data-help-url="profiles.rendering.output_format.md" data-help-title="Output Format (Codec)" />
                         <div class="error_label_container text-error" data-error-for="octolapse_rendering_output_format"></div>
-                        <span class="help-inline" data-bind="visible: !data.can_synchronize_format()">
-                            <span class="label label-important">Attention</span>&nbsp;Your video may not appear within the Timelapse plugin when using the selected video format unless you are using Octoprint v1.3.11 or later.
-                        </span>
                     </div>
                 </div>
 
@@ -222,21 +219,6 @@
             </div>
             <div>
                 <div><h4>Files and Performance</h4></div>
-                <div class="control-group">
-                    <label class="control-label">Sync Output With Timelapse Tab</label>
-                    <div class="controls">
-                        <label class="checkbox">
-                            <input id="octolapse_rendering_sync_with_timelapse" name="octolapse_rendering_sync_with_timelapse"
-                                   data-bind="checked: sync_with_timelapse"
-                                   title="Automatically move the finished timelapse into the standard octoprint timelapse directory"
-                                   type="checkbox" />Enabled
-                            <a class="octolapse_help" data-help-url="profiles.rendering.sync_with_timelapse.md" data-help-title="Sync Output With Timelapse Tab" />
-                        </label>
-                        <span class="help-inline">
-                            When selected Octolapse will attempt to move the most recently completed timelapses into the default Timelapse plugin folder.  Currently this only works with MP4 format.  After synchronization is complete you can access your timelapses in the default Timelapse tab.
-                        </span>
-                    </div>
-                </div>
                 <div class="control-group">
                     <label class="control-label">Archive Snapshots After Rendering</label>
                     <div class="controls">

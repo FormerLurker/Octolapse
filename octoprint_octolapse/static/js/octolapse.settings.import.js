@@ -66,7 +66,7 @@ $(function () {
                         var settings = JSON.parse(data.settings);
                         var message = data.msg;
                         Octolapse.Settings.updateSettings(settings);
-                        Octolapse.Globals.update(settings.main_settings);
+                        Octolapse.Globals.main_settings.update(settings.main_settings);
                         // maybe add a success popup?
                         var options = {
                             title: 'Settings Imported',
@@ -154,7 +154,7 @@ $(function () {
                     var settings = JSON.parse(data.result.settings);
                     var message = data.result.msg;
                     Octolapse.Settings.updateSettings(settings);
-                    Octolapse.Globals.update(settings.main_settings);
+                    Octolapse.Globals.main_settings.update(settings.main_settings);
                     self.$progressBar.text("");
                     self.$progressBar.animate({'width': '0%'}, {'queue':false});
                     self.closeSettingsImportPopup();

@@ -1,0 +1,120 @@
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2020  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
+<script type="text/html" id="octolapse-rendering-failed-action">
+    <a data-bind="click: function(){item.data.parent.render(item);}"
+       title="Render with selected settings"
+    >
+        <i class="fa fa-lg icon-film"></i>
+    </a>
+    &nbsp;|&nbsp;
+    <a data-bind="attr: {href: item.value.get_download_url(item)}" download title="Zip and download snapshot files">
+        <i class="fa fa-lg fa-download"></i>
+    </a>
+    &nbsp;|&nbsp;
+    <span>
+        <a data-bind="click: function(){item.data.parent.delete(item);}" title="Delete all files.">
+            <i class="fa fa-lg fa-trash-o"></i>
+        </a>
+    </span>
+</script>
+<script type="text/html" id="octolapse-rendering-failed-camera-profile">
+    <select
+        class="input-block-level"
+        data-bind="
+            options: Octolapse.Status.cameras_sorted,
+            optionsText: 'name',
+            optionsValue: 'guid',
+            value: item.value.camera_profile_override_guid,
+            optionsCaption: item.value.get_camera_option_caption()">
+    </select>
+</script>
+<script type="text/html" id="octolapse-rendering-failed-render-profile">
+    <select
+        class="input-block-level"
+        data-bind="
+            options: Octolapse.Status.renderings_sorted,
+            optionsText: 'name',
+            optionsValue: 'guid',
+            value: item.value.render_profile_override_guid,
+            optionsCaption: item.value.get_rendering_option_caption(),
+            optionsAfterRender: item.value.set_rendering_profile_option_description_as_title">
+    </select>
+</script>
+<script type="text/html" id="octolapse-rendering-failed-no-items">
+    <p>
+        No there are no failed renderings.
+    </p>
+</script>
+<script type="text/html" id="octolapse-rendering-failed-template">
+    <div data-bind="visible: !is_empty()">
+        <div class="row-fluid">
+            <div class="span12 text-right">
+                Total File Size:&nbsp;<span data-bind="text: failed_renderings_size_formatted"></span>
+            </div>
+        </div>
+        <fieldset class="octolapse">
+            <legend>Render or Delete All</legend>
+            <div class="row-fluid">
+                <div class="span4">
+                    <strong>Rendering Profile</strong>
+                </div>
+                <div class="span4">
+                    <strong>Camera Profile</strong>
+                </div>
+            </div>
+            <div class="row-fluid">
+                <div class="span4">
+                    <select class="input-block-level"
+                            data-bind="
+                                options: Octolapse.Status.renderings_sorted,
+                                optionsText: 'name',
+                                optionsValue: 'guid',
+                                value: render_profile_override_guid,
+                                optionsCaption: 'Use Original Rendering Profile'">
+                    </select>
+                </div>
+                <div class="span4">
+                    <select class="input-block-level"
+                            data-bind="
+                                options: Octolapse.Status.cameras_sorted,
+                                optionsText: 'name',
+                                optionsValue: 'guid',
+                                value: camera_profile_override_guid,
+                                optionsCaption: 'Use Original Camera Profile'">
+                    </select>
+                </div>
+                <div class="span4">
+                    <button type="button"
+                            data-bind="click: render_all"
+                            class="span6 btn btn-default ok input-block-level">Render All</button>
+                    <button type="button"
+                            data-bind="click: delete_all"
+                            class="span6 btn btn-default ok input-block-level">Delete All</button>
+                </div>
+            </div>
+        </fieldset>
+        <hr/>
+    </div>
+    <!-- ko template: {name: 'octolapse-list', data: failed_renderings} --><!-- /ko -->
+</script>

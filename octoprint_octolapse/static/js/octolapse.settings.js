@@ -37,6 +37,7 @@ $(function () {
             "templateName": "empty-template",
             "profileObservable": ko.observable()
         });
+        Octolapse.MainSettingsDisplay = new Octolapse.MainSettingsEditViewModel();
         // Assign the Octoprint settings to our namespace
         Octolapse.Settings.global_settings = parameters[0];
         Octolapse.Settings.is_loaded = ko.observable(false);
@@ -45,11 +46,6 @@ $(function () {
         Octolapse.SettingsImport = new Octolapse.SettingsImportViewModel();
         // Called before octoprint binds the viewmodel to the plugin
         self.onBeforeBinding = function () {
-            /*
-                Create our global settings
-            */
-            self.settings = self.global_settings.settings.plugins.octolapse;
-
             /**
              * Profiles - These are bound by octolapse.profiles.js
              */
@@ -186,7 +182,7 @@ $(function () {
             // GlobalOptions
             Octolapse.SettingsImport.update(settings);
             // SettingsMain
-            Octolapse.SettingsMain.update(settings.main_settings);
+            Octolapse.MainSettingsDisplay.defaults = settings.profiles.defaults.main_settings;
 
             // Printers
             var printers = [];
@@ -285,7 +281,7 @@ $(function () {
                         success: function (newSettings) {
 
                             self.updateSettings(newSettings);
-                            Octolapse.Globals.update(newSettings.main_settings);
+                            Octolapse.Globals.main_settings.update(newSettings.main_settings);
                             var message = "The default settings have been restored. Octolapse is checking for profile updates now.";
                             var options = {
                                 title: 'Default Settings Restored',

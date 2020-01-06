@@ -40,6 +40,7 @@ $(function () {
         self.cancel_button_visible = ko.observable(true);
         self.cancel_button_title = ko.observable("Cancel and close the dialog.");
         self.cancel_button_text = ko.observable("Cancel");
+
         self.on_cancel_button_clicked = function() {
             self.close();
         };
@@ -163,7 +164,7 @@ $(function () {
                 self.option_button_text(
                     options.option_button_text ? options.option_button_text : self.option_button_text()
                 );
-                self.on_option_button_clicked = self.on_option_button_clicked;
+                self.on_option_button_clicked = self.option_button_clicked;
                 // OK
                 self.ok_button_visible(
                     options.ok_button_visible ? options.ok_button_visible : self.ok_button_visible()
@@ -304,17 +305,24 @@ $(function () {
         self.show = function () {
             // Only open the dialog if it is not already open.
             if (!self.is_open) {
+                if (self.$editDialog.length !== 1)
+                {
+                    console.error("No dialog has been found to open.  Is the dialog id correct?");
+                }
                 self.$editDialog.modal({
                         backdrop: 'static',
                         resize: true,
                         maxHeight: function() {
                             return Math.max(
-                              window.outerHeight - self.$modalHeader.outerHeight()-self.$modalFooter.outerHeight()-66,
+                              window.innerHeight - self.$modalHeader.outerHeight()-self.$modalFooter.outerHeight()-66,
                               200
                             );
                         }
                     }
                 );
+            }
+            else{
+                console.error("Cannot open a dialog that is already open.");
             }
         };
 

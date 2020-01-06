@@ -290,6 +290,11 @@ _octolapse_errors = {
             "description": "Unable to accept the snapshot plan.  Either it has already been accepted/cancellled, or an unexpected error occurred.",
             'help_link': "error_help_init_unable_to_accept_snapshot_plan.md"
         },
+        'directory_test_failed': {
+            "name": "Directory Tests Failed",
+            "description": "The following Octolapse directories failed testing:  {failed_directories}.",
+            'help_link': "error_help_init_directory_test_failed.md"
+        }
 
 
     },

@@ -13,7 +13,7 @@ Octolapse has many modules, and each has a different function.  Every module sta
 * **render** - This module is responsible for rendering snapshots into a video.
 * **settings** - Contains all Octolapse configuration data definitions.  Is responsible for loading, saving and updating all settings, including default and client data.
 * **settings_external** - Provides access to the octolapse profile repository, including import and update capability.  This module is used to import profiles from the profile settings pages and to perform updates when newer profiles are available.
-* **settings_migration** - Updates the settings for older versions of Octolapse right after installation, or when importing older settings into Octolapse.
+* **migration** - Updates the settings for older versions of Octolapse right after installation, or when importing older settings into Octolapse.
 * **settings_preprocessor** - Extracts slicer settings from gcode files to support the **Automatic Slicer Settings** option in your Octolapse printer profile.
 * **snapshot** - Responsible for taking snapshots for webcams, external script cameras (DSLR), and gcode cameras (built into printer).  It also executes any before/after snapshot scripts in your camera profiles.
 * **snapshot_plan** - Part of the GcodePositionProcessor (c++ library) responsible for creating snapshot plans for the **Smart** triggers.

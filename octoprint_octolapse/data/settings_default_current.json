@@ -1103,7 +1103,7 @@
             "log_level": 10
           },
           {
-            "name": "octolapse.settings_migration",
+            "name": "octolapse.migration",
             "log_level": 10
           },
           {
@@ -1210,7 +1210,7 @@
             "log_level": 10
           },
           {
-            "name": "octolapse.settings_migration",
+            "name": "octolapse.migration",
             "log_level": 10
           },
           {

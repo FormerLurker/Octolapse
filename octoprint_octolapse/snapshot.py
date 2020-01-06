@@ -75,7 +75,7 @@ def take_in_memory_snapshot(settings, current_camera):
         snapshot_job.start()
         snapshot_job.join()
         # Copy the image into memory so that we can delete the original file.
-        with Image.open(snapshot_job_info.full_path) as image_file:
+        with Image.open(snapshot_job_info.snapshot_full_path) as image_file:
             return image_file.copy()
     finally:
         # Cleanup.
@@ -95,7 +95,7 @@ class CaptureSnapshot(object):
             self.CameraInfos.update(
                 {"{}".format(current_camera.guid): CameraInfo()}
             )
-        self.DataDirectory = data_directory
+        self.temporary_directory = settings.main_settings.get_temporary_directory(data_directory)
         self.TimelapseJobInfo = utility.TimelapseJobInfo(timelapse_job_info)
         self.SnapshotsTotal = 0
         self.ErrorsTotal = 0
@@ -118,7 +118,11 @@ class CaptureSnapshot(object):
             # pre_snapshot threads
             if current_camera.on_before_snapshot_script:
                 before_snapshot_job_info = SnapshotJobInfo(
-                    self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_attempt, current_camera, 'before-snapshot'
+                    self.TimelapseJobInfo,
+                    self.temporary_directory,
+                    camera_info.snapshot_attempt,
+                    current_camera,
+                    'before-snapshot'
                 )
                 thread = ExternalScriptSnapshotJob(before_snapshot_job_info, 'before-snapshot')
                 thread.daemon = True
@@ -127,7 +131,7 @@ class CaptureSnapshot(object):
                 )
 
             snapshot_job_info = SnapshotJobInfo(
-                self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_attempt, current_camera, 'snapshot'
+                self.TimelapseJobInfo, self.temporary_directory, camera_info.snapshot_attempt, current_camera, 'snapshot'
             )
             if current_camera.camera_type == "script":
                 thread = ExternalScriptSnapshotJob(
@@ -150,7 +154,7 @@ class CaptureSnapshot(object):
                 snapshot_threads.append((thread, snapshot_job_info, download_started_event))
 
             after_snapshot_job_info = SnapshotJobInfo(
-                self.TimelapseJobInfo, self.DataDirectory, camera_info.snapshot_attempt, current_camera, 'after-snapshot'
+                self.TimelapseJobInfo, self.temporary_directory, camera_info.snapshot_attempt, current_camera, 'after-snapshot'
             )
             # post_snapshot threads
             if current_camera.on_after_snapshot_script:
@@ -221,7 +225,7 @@ class CaptureSnapshot(object):
                 self.ErrorsTotal += 1
             # todo:  remove unnecessary logging
             logger.info("Saving Camera Info")
-            info.save(self.DataDirectory, self.TimelapseJobInfo.JobGuid, snapshot_job_info.camera_guid)
+            info.save(self.temporary_directory, self.TimelapseJobInfo.JobGuid, snapshot_job_info.camera_guid)
             # todo:  remove unnecessary logging
             logger.info("Camera Info Saved")
             results.append(snapshot_job_info)
@@ -259,6 +263,7 @@ class CaptureSnapshot(object):
 class ImagePostProcessing(object):
     def __init__(self, snapshot_job_info, on_new_thumbnail_available_callback=None,
                  on_post_processing_error_callback=None, request=None):
+        assert(isinstance(snapshot_job_info, SnapshotJobInfo))
         self.snapshot_job_info = snapshot_job_info
         self.on_new_thumbnail_available_callback = on_new_thumbnail_available_callback
         self.on_post_processing_error_callback = on_post_processing_error_callback
@@ -274,7 +279,7 @@ class ImagePostProcessing(object):
             # Always write metadata
             self.write_metadata()
             # only process image manipulation if the image exists
-            if os.path.isfile(self.snapshot_job_info.full_path):
+            if os.path.isfile(self.snapshot_job_info.snapshot_full_path):
                 self.transpose_image()
                 self.create_thumbnail()
                 if self.on_new_thumbnail_available_callback is not None:
@@ -293,15 +298,18 @@ class ImagePostProcessing(object):
 
     def save_image_from_request(self):
         try:
-            if not os.path.exists(self.snapshot_job_info.directory):
-                os.makedirs(self.snapshot_job_info.directory)
-            with open(self.snapshot_job_info.full_path, 'wb+') as snapshot_file:
+            if not os.path.exists(self.snapshot_job_info.snapshot_directory):
+                try:
+                    os.makedirs(self.snapshot_job_info.snapshot_directory)
+                except FileExistsError:
+                    pass
+            with open(self.snapshot_job_info.snapshot_full_path, 'wb+') as snapshot_file:
                 for chunk in self.request.iter_content(chunk_size=512 * 1024):
                     if chunk:
                         snapshot_file.write(chunk)
 
                 logger.debug("Snapshot - Snapshot saved to disk for the %s camera at %s",
-                             self.snapshot_job_info.camera.name, self.snapshot_job_info.full_path)
+                             self.snapshot_job_info.camera.name, self.snapshot_job_info.snapshot_full_path)
         except Exception as e:
             logger.exception("An unexpected exception occurred while saving a snapshot from a request for "
                              "the %s camera.", self.snapshot_job_info.camera.name)
@@ -312,17 +320,20 @@ class ImagePostProcessing(object):
             )
 
     def write_metadata(self):
-        metadata_path = os.path.join(self.snapshot_job_info.directory, SnapshotMetadata.METADATA_FILE_NAME)
+        metadata_path = os.path.join(self.snapshot_job_info.snapshot_directory, SnapshotMetadata.METADATA_FILE_NAME)
 
         try:
-            if not os.path.exists(self.snapshot_job_info.directory):
-                os.makedirs(self.snapshot_job_info.directory)
+            if not os.path.exists(self.snapshot_job_info.snapshot_directory):
+                try:
+                    os.makedirs(self.snapshot_job_info.snapshot_directory)
+                except FileExistsError:
+                    pass
 
             with open(metadata_path, 'a') as metadata_file:
                 dictwriter = DictWriter(metadata_file, SnapshotMetadata.METADATA_FIELDS)
                 dictwriter.writerow({
                     'snapshot_number': "{}".format(self.snapshot_job_info.snapshot_number),
-                    'file_name': self.snapshot_job_info.file_name,
+                    'file_name': self.snapshot_job_info.snapshot_file_name,
                     'time_taken': "{}".format(time()),
                 })
         except Exception as e:
@@ -340,7 +351,7 @@ class ImagePostProcessing(object):
         try:
             transpose_setting = self.snapshot_job_info.camera.snapshot_transpose
             transpose_method = None
-            snapshot_full_path = self.snapshot_job_info.full_path
+            snapshot_full_path = self.snapshot_job_info.snapshot_full_path
 
             if transpose_setting is not None and transpose_setting != "":
                 if transpose_setting == 'flip_left_right':
@@ -379,9 +390,10 @@ class ImagePostProcessing(object):
 
             # create a copy to be used for the full sized latest snapshot image.
             latest_snapshot_path = utility.get_latest_snapshot_download_path(
-                self.snapshot_job_info.DataDirectory, self.snapshot_job_info.camera.guid
+                self.snapshot_job_info.temporary_directory, self.snapshot_job_info.camera.guid
             )
-            utility.fast_copy(self.snapshot_job_info.full_path, latest_snapshot_path)
+
+            utility.fast_copy(self.snapshot_job_info.snapshot_full_path, latest_snapshot_path)
 
             # create a thumbnail of the image
             basewidth = 500
@@ -391,7 +403,7 @@ class ImagePostProcessing(object):
                 img.thumbnail([basewidth, hsize], Image.ANTIALIAS)
                 img.save(
                     utility.get_latest_snapshot_thumbnail_download_path(
-                        self.snapshot_job_info.DataDirectory, self.snapshot_job_info.camera.guid
+                        self.snapshot_job_info.temporary_directory, self.snapshot_job_info.camera.guid
                     ),
                     "JPEG"
                 )
@@ -427,21 +439,21 @@ class SnapshotThread(Thread):
     def apply_camera_delay(self):
         # Some users had issues just using sleep.In one examined instance the time.sleep
         # function was being called to sleep 0.250 S, but waited 0.005 S.  To deal with this a sleep loop was
-        # implemented that makes sure we've waited at least self.DelaySeconds seconds before continuing.
+        # implemented that makes sure we've waited at least self.delay_seconds seconds before continuing.
         t0 = time()
         # record the number of sleep attempts for debug purposes
         sleep_tries = 0
-        delay_seconds = self.snapshot_job_info.DelaySeconds - (time() - t0)
+        delay_seconds = self.snapshot_job_info.delay_seconds - (time() - t0)
 
         logger.info(
             "Snapshot Delay - Waiting %s second(s) after executing the snapshot script for the %s camera.",
-            self.snapshot_job_info.DelaySeconds, self.snapshot_job_info.camera.name
+            self.snapshot_job_info.delay_seconds, self.snapshot_job_info.camera.name
         )
 
         while delay_seconds >= 0.001:
             sleep_tries += 1  # increment the sleep try counter
             sleep(delay_seconds)  # sleep the calculated amount
-            delay_seconds = self.snapshot_job_info.DelaySeconds - (time() - t0)
+            delay_seconds = self.snapshot_job_info.delay_seconds - (time() - t0)
 
     def post_process(self, request=None, block=False):
         # make sure the snapshot exists before attempting post-processing
@@ -499,7 +511,7 @@ class ExternalScriptSnapshotJob(SnapshotThread):
                     self.script_type, self.snapshot_job_info.camera.name)
         # execute the script and send the parameters
         if self.script_type == 'snapshot':
-            if self.snapshot_job_info.DelaySeconds < 0.001:
+            if self.snapshot_job_info.delay_seconds < 0.001:
                 logger.debug(
                     "Snapshot Delay - No pre snapshot delay configured for the %s camera.",
                     self.snapshot_job_info.camera.name)
@@ -541,34 +553,34 @@ class ExternalScriptSnapshotJob(SnapshotThread):
             cmd = script.CameraScriptBeforeSnapshot(
                 self.ScriptPath,
                 self.snapshot_job_info.camera.name,
-                "{}".format(self.snapshot_job_info.SnapshotNumber),
-                "{}".format(self.snapshot_job_info.DelaySeconds),
-                self.snapshot_job_info.DataDirectory,
-                self.snapshot_job_info.directory,
-                self.snapshot_job_info.file_name,
-                self.snapshot_job_info.full_path
+                "{}".format(self.snapshot_job_info.snapshot_number),
+                "{}".format(self.snapshot_job_info.delay_seconds),
+                self.snapshot_job_info.temporary_directory,
+                self.snapshot_job_info.snapshot_directory,
+                self.snapshot_job_info.snapshot_file_name,
+                self.snapshot_job_info.snapshot_full_path
             )
         elif self.script_type == "after-snapshot":
             cmd = script.CameraScriptAfterSnapshot(
                 self.ScriptPath,
                 self.snapshot_job_info.camera.name,
-                "{}".format(self.snapshot_job_info.SnapshotNumber),
-                "{}".format(self.snapshot_job_info.DelaySeconds),
-                self.snapshot_job_info.DataDirectory,
-                self.snapshot_job_info.directory,
-                self.snapshot_job_info.file_name,
-                self.snapshot_job_info.full_path
+                "{}".format(self.snapshot_job_info.snapshot_number),
+                "{}".format(self.snapshot_job_info.delay_seconds),
+                self.snapshot_job_info.temporary_directory,
+                self.snapshot_job_info.snapshot_directory,
+                self.snapshot_job_info.snapshot_file_name,
+                self.snapshot_job_info.snapshot_full_path
             )
         else:
             cmd = script.CameraScriptSnapshot(
                 self.ScriptPath,
                 self.snapshot_job_info.camera.name,
-                "{}".format(self.snapshot_job_info.SnapshotNumber),
-                "{}".format(self.snapshot_job_info.DelaySeconds),
-                self.snapshot_job_info.DataDirectory,
-                self.snapshot_job_info.directory,
-                self.snapshot_job_info.file_name,
-                self.snapshot_job_info.full_path
+                "{}".format(self.snapshot_job_info.snapshot_number),
+                "{}".format(self.snapshot_job_info.delay_seconds),
+                self.snapshot_job_info.temporary_directory,
+                self.snapshot_job_info.snapshot_directory,
+                self.snapshot_job_info.snapshot_file_name,
+                self.snapshot_job_info.snapshot_full_path
             )
         cmd.run()
         if not cmd.success():
@@ -592,12 +604,12 @@ class WebcamSnapshotJob(SnapshotThread):
             on_new_thumbnail_available_callback=on_new_thumbnail_available_callback,
             on_post_processing_error_callback=on_post_processing_error_callback
         )
-        self.Address = self.snapshot_job_info.camera.webcam_settings.address
-        if isinstance(self.Address, six.string_types):
-            self.Address = self.Address.strip()
-        self.Username = self.snapshot_job_info.camera.webcam_settings.username
-        self.Password = self.snapshot_job_info.camera.webcam_settings.password
-        self.IgnoreSslError = self.snapshot_job_info.camera.webcam_settings.ignore_ssl_error
+        self.address = self.snapshot_job_info.camera.webcam_settings.address
+        if isinstance(self.address, six.string_types):
+            self.address = self.address.strip()
+        self.username = self.snapshot_job_info.camera.webcam_settings.username
+        self.password = self.snapshot_job_info.camera.webcam_settings.password
+        self.ignore_ssl_error = self.snapshot_job_info.camera.webcam_settings.ignore_ssl_error
         url = camera.format_request_template(
             self.snapshot_job_info.camera.webcam_settings.address,
             self.snapshot_job_info.camera.webcam_settings.snapshot_request_template,
@@ -606,12 +618,12 @@ class WebcamSnapshotJob(SnapshotThread):
         self.download_started_event = download_started_event
         if self.download_started_event:
             self.download_started_event.clear()
-        self.Url = url
+        self.url = url
         self.stream_download = self.snapshot_job_info.camera.webcam_settings.stream_download
 
     def run(self):
 
-        if self.snapshot_job_info.DelaySeconds < 0.001:
+        if self.snapshot_job_info.delay_seconds < 0.001:
             logger.debug(
                 "Snapshot Delay - No pre snapshot delay configured for the %s camera.",
                 self.snapshot_job_info.camera.name)
@@ -622,29 +634,29 @@ class WebcamSnapshotJob(SnapshotThread):
         start_time = time()
         try:
             download_start_time = time()
-            if len(self.Username) > 0:
+            if len(self.username) > 0:
                 logger.debug(
                     "Snapshot Download - Authenticating and downloading for the %s camera from %s.",
                     self.snapshot_job_info.camera.name,
-                    self.Url)
+                    self.url)
 
                 r = requests.get(
-                    self.Url,
-                    auth=HTTPBasicAuth(self.Username, self.Password),
-                    verify=not self.IgnoreSslError,
-                    timeout=float(self.snapshot_job_info.TimeoutSeconds),
+                    self.url,
+                    auth=HTTPBasicAuth(self.username, self.password),
+                    verify=not self.ignore_ssl_error,
+                    timeout=float(self.snapshot_job_info.timeout_seconds),
                     stream=self.stream_download
                 )
             else:
                 logger.debug(
                     "Snapshot - downloading for the %s camera from %s.",
                     self.snapshot_job_info.camera.name,
-                    self.Url)
+                    self.url)
 
                 r = requests.get(
-                    self.Url,
-                    verify=not self.IgnoreSslError,
-                    timeout=float(self.snapshot_job_info.TimeoutSeconds),
+                    self.url,
+                    verify=not self.ignore_ssl_error,
+                    timeout=float(self.snapshot_job_info.timeout_seconds),
                     stream=self.stream_download
                 )
             r.raise_for_status()
@@ -661,7 +673,7 @@ class WebcamSnapshotJob(SnapshotThread):
         except requests.ConnectionError as e:
             message = (
                 "A connection error occurred while downloading a snapshot for the {0} camera."
-                .format(self.snapshot_job_info.camera.name, self.snapshot_job_info.TimeoutSeconds)
+                .format(self.snapshot_job_info.camera.name, self.snapshot_job_info.timeout_seconds)
             )
             logger.error(message)
             self.snapshot_thread_error = SnapshotError(
@@ -671,7 +683,7 @@ class WebcamSnapshotJob(SnapshotThread):
             )
         except (requests.ConnectTimeout, requests.ReadTimeout) as e:
             message = "An timeout occurred downloading a snapshot for the {0} camera in {1:.3f} seconds.".format(
-                self.snapshot_job_info.camera.name, self.snapshot_job_info.TimeoutSeconds
+                self.snapshot_job_info.camera.name, self.snapshot_job_info.timeout_seconds
             )
             logger.error(message)
             self.snapshot_thread_error = SnapshotError(
@@ -735,29 +747,28 @@ class SnapshotError(Exception):
 
 
 class SnapshotJobInfo(object):
-    def __init__(self, timelapse_job_info, data_directory, snapshot_number, current_camera, job_type):
+    def __init__(self, timelapse_job_info, temporary_directory, snapshot_number, current_camera, job_type):
         self.camera = current_camera
-        self.directory = os.path.join(data_directory, "snapshots", timelapse_job_info.JobGuid, current_camera.guid)
-        self.file_name = utility.get_snapshot_filename(
+        self.temporary_directory = temporary_directory
+        self.snapshot_directory = utility.get_temporary_snapshot_job_camera_path(
+            temporary_directory, timelapse_job_info.JobGuid, current_camera.guid
+        )
+        self.snapshot_file_name = utility.get_snapshot_filename(
             timelapse_job_info.PrintFileName, snapshot_number
         )
+        self.snapshot_full_path = os.path.join(self.snapshot_directory, self.snapshot_file_name)
         self.snapshot_number = snapshot_number
         self.camera_guid = current_camera.guid
         self.success = False
         self.error = ""
-        self.DelaySeconds = current_camera.delay / 1000.0
-        self.TimeoutSeconds = current_camera.timeout_ms / 1000.0
-        self.SnapshotNumber = snapshot_number
-        self.DataDirectory = data_directory
-        self.SnapshotTranspose = current_camera.snapshot_transpose
+        self.delay_seconds = current_camera.delay / 1000.0
+        self.timeout_seconds = current_camera.timeout_ms / 1000.0
+        self.snapshot_number = snapshot_number
         self.job_type = job_type
-
-    @property
-    def full_path(self):
-        return os.path.join(self.directory, self.file_name)
 
 
 class CameraInfo(object):
+    snapshot_info_filename = "camera_info.json"
     def __init__(self):
         self.snapshot_attempt = 0
         self.snapshot_count = 0
@@ -766,7 +777,10 @@ class CameraInfo(object):
 
     @staticmethod
     def load(data_folder, print_job_guid, camera_guid):
-        file_path = os.path.join(data_folder, "snapshots", print_job_guid, camera_guid, "camera_info.json")
+        file_path = os.path.join(
+            utility.get_temporary_snapshot_job_camera_path(data_folder, print_job_guid, camera_guid),
+            CameraInfo.snapshot_info_filename
+        )
         try:
             with open(file_path, 'r') as camera_info:
                 data = json.load(camera_info)
@@ -778,10 +792,16 @@ class CameraInfo(object):
             return ret_val
 
     def save(self, data_folder, print_job_guid, camera_guid):
-        file_directory = os.path.join(data_folder, "snapshots",  print_job_guid, camera_guid)
-        file_path = os.path.join(file_directory, "camera_info.json")
+        file_directory = utility.get_temporary_snapshot_job_camera_path(data_folder, print_job_guid, camera_guid)
+        file_path = os.path.join(
+            file_directory,
+            CameraInfo.snapshot_info_filename
+        )
         if not os.path.exists(file_directory):
-            os.mkdir(file_directory)
+            try:
+                os.makedirs(file_directory)
+            except FileExistsError:
+                pass
         with open(file_path, 'w') as camera_info:
             json.dump(self.to_dict(), camera_info)
 

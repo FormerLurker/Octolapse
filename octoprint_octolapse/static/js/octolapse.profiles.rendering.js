@@ -60,7 +60,6 @@ $(function() {
         self.max_fps = ko.observable(values.max_fps);
         self.min_fps = ko.observable(values.min_fps);
         self.output_format = ko.observable(values.output_format);
-        self.sync_with_timelapse = ko.observable(values.sync_with_timelapse);
         self.bitrate = ko.observable(values.bitrate);
         self.post_roll_seconds = ko.observable(values.post_roll_seconds);
         self.pre_roll_seconds = ko.observable(values.pre_roll_seconds);
@@ -170,10 +169,6 @@ $(function() {
                 return 'A preview of the overlay text.'
             }
             return 'Image could not be retrieved from server. The error returned was: ' + self.data.overlay_preview_image_error() + '.';
-        });
-
-        self.data.can_synchronize_format = ko.pureComputed(function() {
-            return ['mp4','h264'].indexOf(self.output_format()) > -1;
         });
 
         // This function is called when the Edit Profile dialog shows.
@@ -353,7 +348,6 @@ $(function() {
             self.max_fps(values.max_fps);
             self.min_fps(values.min_fps);
             self.output_format(values.output_format);
-            self.sync_with_timelapse(values.sync_with_timelapse);
             self.bitrate(values.bitrate);
             self.post_roll_seconds(values.post_roll_seconds);
             self.pre_roll_seconds(values.pre_roll_seconds);
