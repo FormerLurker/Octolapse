@@ -164,24 +164,6 @@ def _is_valid_uuid(value):
         return False
 
 
-def delete_snapshots_for_job(temporary_path, job_guid, camera_guid):
-    job_path = utility.get_temporary_snapshot_job_path(temporary_path, job_guid)
-    camera_path = utility.get_temporary_snapshot_job_camera_path(temporary_path, job_path, camera_guid)
-    if os.path.exists(camera_path):
-        shutil.rmtree(camera_path)
-
-    #see if the job path is empty, if it is delete that too
-    has_files_or_folders = False
-    for name in os.listdir(job_path):
-        path = os.path.join(job_path, name)
-        if os.path.isdir(path) or (os.path.isfile(path) and name != utility.TimelapseJobInfo.timelapse_info_file_name):
-            has_files_or_folders = True
-            break
-
-    if not has_files_or_folders:
-        shutil.rmtree(job_path)
-
-
 class RenderJobInfo(object):
     def __init__(
         self,
@@ -313,7 +295,6 @@ class RenderJobInfo(object):
         return EXTENSIONS.get(output_format.lower(), "mp4")
 
 
-
 class RenderingProcessor(threading.Thread):
     """Watch for rendering jobs via a rendering queue.  Extract jobs from the queue, and spawn a rendering thread,
        one at a time for each rendering job.  Notify the calling thread of the number of jobs in the queue on demand."""
@@ -333,6 +314,7 @@ class RenderingProcessor(threading.Thread):
         self._timelapse_directory = None
         self._ffmpeg_directory = None
         self.r_lock = threading.RLock()
+        self.temp_files_lock = threading.RLock()
         self.rendering_task_queue = rendering_task_queue
         # make a local copy of everything.
         self.data_directory = data_directory
@@ -433,6 +415,36 @@ class RenderingProcessor(threading.Thread):
             "ffmpeg_directory_changed": ffmpeg_directory_changed
         }
 
+    def archive_unfinished_job(self, temporary_directory, job_guid, camera_guid, target_path):
+        with self.temp_files_lock:
+            job_directory = utility.get_temporary_snapshot_job_path(temporary_directory, job_guid)
+            camera_directory = utility.get_temporary_snapshot_job_camera_path(temporary_directory, job_guid, camera_guid)
+            target_directory = utility.get_directory_from_full_path(target_path)
+
+            if not os.path.exists(target_directory):
+                try:
+                    os.makedirs(target_directory)
+                except FileExistsError:
+                    pass
+
+            with ZipFile(target_path, 'x') as snapshot_archive:
+                # add the job info
+                timelapse_info_path = os.path.join(job_directory,
+                                                   utility.TimelapseJobInfo.timelapse_info_file_name)
+                if os.path.exists(timelapse_info_path):
+                    snapshot_archive.write(
+                        os.path.join(job_directory,
+                                     utility.TimelapseJobInfo.timelapse_info_file_name),
+                        os.path.join(job_guid, utility.TimelapseJobInfo.timelapse_info_file_name)
+                    )
+                for name in os.listdir(camera_directory):
+                    file_path = os.path.join(camera_directory, name)
+                    if os.path.isfile(file_path):
+                        snapshot_archive.write(
+                            file_path,
+                            os.path.join(job_guid, camera_guid, name)
+                        )
+
     def _get_renderings_in_process(self):
         pending_jobs = {}
         current_rendering_job_guid = self._current_rendering_job.get("job_guid", None)
@@ -516,65 +528,85 @@ class RenderingProcessor(threading.Thread):
 
         logger.info("Snapshot folder cleaned.")
 
+    def _delete_snapshots_for_job(self, temporary_path, job_guid, camera_guid):
+        with self.temp_files_lock:
+            job_path = utility.get_temporary_snapshot_job_path(temporary_path, job_guid)
+            camera_path = utility.get_temporary_snapshot_job_camera_path(temporary_path, job_path, camera_guid)
+            if os.path.exists(camera_path):
+                shutil.rmtree(camera_path)
+
+            # see if the job path is empty, if it is delete that too
+            has_files_or_folders = False
+            for name in os.listdir(job_path):
+                path = os.path.join(job_path, name)
+                if os.path.isdir(path) or (
+                    os.path.isfile(path) and name != utility.TimelapseJobInfo.timelapse_info_file_name):
+                    has_files_or_folders = True
+                    break
+
+            if not has_files_or_folders:
+                shutil.rmtree(job_path)
+
     def _clean_temporary_folder(self, temporary_folder=None):
         if not temporary_folder:
             with self.r_lock:
                 temporary_folder = self._temporary_directory
-        snapshot_folder = utility.get_temporary_snapshot_directory(temporary_folder)
+        with self.temp_files_lock:
+            snapshot_folder = utility.get_temporary_snapshot_directory(temporary_folder)
 
-        # if the folder doesn't exist, it doesn't need to be cleaned.
-        if not os.path.isdir(snapshot_folder):
-            return
-        logger.info("Cleaning temporary snapshot folders at %s.", temporary_folder)
-        # function that returns true if a directory has at least two jpegs
-        paths_to_delete = []
-        paths_to_examine = []
+            # if the folder doesn't exist, it doesn't need to be cleaned.
+            if not os.path.isdir(snapshot_folder):
+                return
+            logger.info("Cleaning temporary snapshot folders at %s.", temporary_folder)
+            # function that returns true if a directory has at least two jpegs
+            paths_to_delete = []
+            paths_to_examine = []
 
-        # test each root level path in the temporary_folder to see if it could contain snapshots and append to the proper list
-        for basename in utility.walk_directories(snapshot_folder):
-            path = os.path.join(snapshot_folder, basename)
-            if _is_valid_uuid(basename):
-                paths_to_examine.append({'path': path, 'id': basename, 'paths': []})
+            # test each root level path in the temporary_folder to see if it could contain snapshots and append to the proper list
+            for basename in utility.walk_directories(snapshot_folder):
+                path = os.path.join(snapshot_folder, basename)
+                if _is_valid_uuid(basename):
+                    paths_to_examine.append({'path': path, 'id': basename, 'paths': []})
 
 
-        # test each valid subdirectory to see if it is a camera directory
-        # containing all necessary settings and at least two jpgs
-        for job in paths_to_examine:
-            is_empty = True
-            job_guid = job["id"]
-            job_path = job['path']
-            # for every job, keep track of paths we want to delete
-            delete_paths = []
-            for camera_guid in utility.walk_directories(job_path):
-                path = os.path.join(job_path, camera_guid)
-                if (
-                    RenderingProcessor._has_enough_images(path) and
-                    _is_valid_uuid(camera_guid)
-                ):
-                    job['paths'].append({'path': path, 'id': camera_guid})
-                    # commenting this out.  Used to check for in_process tasks and prevent them from being viewed
-                    # as unfinished
-                    #if not (job_guid in in_process and camera_guid in in_process[job_guid]):
-                    #    job['paths'].append({'path': path, 'id': camera_guid})
-                    is_empty = False
+            # test each valid subdirectory to see if it is a camera directory
+            # containing all necessary settings and at least two jpgs
+            for job in paths_to_examine:
+                is_empty = True
+                job_guid = job["id"]
+                job_path = job['path']
+                # for every job, keep track of paths we want to delete
+                delete_paths = []
+                for camera_guid in utility.walk_directories(job_path):
+                    path = os.path.join(job_path, camera_guid)
+                    if (
+                        RenderingProcessor._has_enough_images(path) and
+                        _is_valid_uuid(camera_guid)
+                    ):
+                        job['paths'].append({'path': path, 'id': camera_guid})
+                        # commenting this out.  Used to check for in_process tasks and prevent them from being viewed
+                        # as unfinished
+                        #if not (job_guid in in_process and camera_guid in in_process[job_guid]):
+                        #    job['paths'].append({'path': path, 'id': camera_guid})
+                        is_empty = False
 
-                else:
-                    delete_paths.append(path)
-            # if we didn't add any paths for this job, just delete the whole job
-            if is_empty:
-                delete_paths = [job_path]
+                    else:
+                        delete_paths.append(path)
+                # if we didn't add any paths for this job, just delete the whole job
+                if is_empty:
+                    delete_paths = [job_path]
 
-            paths_to_delete.extend(delete_paths)
+                paths_to_delete.extend(delete_paths)
 
-            # delete all paths that cannot be rendered
-            for path in paths_to_delete:
-                if os.path.exists(path):
-                    try:
-                        shutil.rmtree(path)
-                    except (PermissionError, FileNotFoundError):
-                        logger.exception("Could not remove empty snapshot directories at %s.", path)
-                        # ignore these errors.
-                        pass
+                # delete all paths that cannot be rendered
+                for path in paths_to_delete:
+                    if os.path.exists(path):
+                        try:
+                            shutil.rmtree(path)
+                        except (PermissionError, FileNotFoundError):
+                            logger.exception("Could not remove empty snapshot directories at %s.", path)
+                            # ignore these errors.
+                            pass
 
     def _get_in_process_rendering_job(self, job_guid, camera_guid):
         for rendering in self._renderings_in_process:
@@ -600,66 +632,66 @@ class RenderingProcessor(threading.Thread):
         return self._create_job_metadata(job_guid, camera_guid, metadata_files, temporary_directory)
 
     def _get_metadata_files_for_job(self, job_guid, camera_guid, temporary_directory):
-        # fetch the job from the pending job list if it exists
+        with self.temp_files_lock:
+            # fetch the job from the pending job list if it exists
+            job_path = utility.get_temporary_snapshot_job_path(temporary_directory, job_guid)
+            camera_path = utility.get_temporary_snapshot_job_camera_path(temporary_directory, job_path, camera_guid)
 
-        job_path = utility.get_temporary_snapshot_job_path(temporary_directory, job_guid)
-        camera_path = utility.get_temporary_snapshot_job_camera_path(temporary_directory, job_path, camera_guid)
+            print_job_metadata = utility.TimelapseJobInfo.load(
+                temporary_directory, job_guid, camera_guid=camera_guid
+            ).to_dict()
 
-        print_job_metadata = utility.TimelapseJobInfo.load(
-            temporary_directory, job_guid, camera_guid=camera_guid
-        ).to_dict()
+            rendering_profile = None
+            camera_profile = None
+            pending_job = self._get_pending_rendering_job(job_guid, camera_guid)
+            if pending_job:
+                rendering_profile = pending_job["rendering_profile"]
+                camera_profile = pending_job["camera_profile"]
 
-        rendering_profile = None
-        camera_profile = None
-        pending_job = self._get_pending_rendering_job(job_guid, camera_guid)
-        if pending_job:
-            rendering_profile = pending_job["rendering_profile"]
-            camera_profile = pending_job["camera_profile"]
+            if camera_profile:
+                camera_profile = camera_profile.to_dict()
+            else:
+                camera_settings_path = os.path.join(camera_path, OctolapseSettings.camera_settings_file_name)
+                if os.path.exists(camera_settings_path):
+                    try:
+                        with open(camera_settings_path, 'r') as settings_file:
+                            settings = json.load(settings_file)
+                            camera_profile = settings.get("profile", {})
+                            camera_profile["guid"] = camera_guid
+                    except (OSError, IOError, json.JSONDecodeError) as e:
+                        logger.exception("Unable to read camera settings from %s.", camera_settings_path)
+            if not camera_profile:
+                camera_profile = {
+                    "name": "UNKNOWN",
+                    "guid": None,
+                }
 
-        if camera_profile:
-            camera_profile = camera_profile.to_dict()
-        else:
-            camera_settings_path = os.path.join(camera_path, OctolapseSettings.camera_settings_file_name)
-            if os.path.exists(camera_settings_path):
-                try:
-                    with open(camera_settings_path, 'r') as settings_file:
-                        settings = json.load(settings_file)
-                        camera_profile = settings.get("profile", {})
-                        camera_profile["guid"] = camera_guid
-                except (OSError, IOError, json.JSONDecodeError) as e:
-                    logger.exception("Unable to read camera settings from %s.", camera_settings_path)
-        if not camera_profile:
-            camera_profile = {
-                "name": "UNKNOWN",
-                "guid": None,
+            if rendering_profile:
+                rendering_profile = rendering_profile.to_dict()
+            else:
+                # get the rendering metadata if it exists
+                rendering_settings_path = os.path.join(camera_path, OctolapseSettings.rendering_settings_file_name)
+                if os.path.exists(rendering_settings_path):
+                    try:
+                        with open(rendering_settings_path, 'r') as settings_file:
+                            settings = json.load(settings_file)
+                            rendering_profile = settings.get("profile", {})
+                    except (OSError, IOError, json.JSONDecodeError) as e:
+                        logger.exception("Unable to read rendering settings from %s.", rendering_settings_path)
+            if not rendering_profile:
+                rendering_profile = {
+                    "guid": None,
+                    "name": "UNKNOWN",
+                }
+            # get the camera info metadata if it exists
+            camera_info = CameraInfo.load(self._temporary_directory, job_guid, camera_guid)
+
+            return {
+                "print_job": print_job_metadata,
+                "camera_profile": camera_profile,
+                "rendering_profile": rendering_profile,
+                "camera_info": camera_info
             }
-
-        if rendering_profile:
-            rendering_profile = rendering_profile.to_dict()
-        else:
-            # get the rendering metadata if it exists
-            rendering_settings_path = os.path.join(camera_path, OctolapseSettings.rendering_settings_file_name)
-            if os.path.exists(rendering_settings_path):
-                try:
-                    with open(rendering_settings_path, 'r') as settings_file:
-                        settings = json.load(settings_file)
-                        rendering_profile = settings.get("profile", {})
-                except (OSError, IOError, json.JSONDecodeError) as e:
-                    logger.exception("Unable to read rendering settings from %s.", rendering_settings_path)
-        if not rendering_profile:
-            rendering_profile = {
-                "guid": None,
-                "name": "UNKNOWN",
-            }
-        # get the camera info metadata if it exists
-        camera_info = CameraInfo.load(self._temporary_directory, job_guid, camera_guid)
-
-        return {
-            "print_job": print_job_metadata,
-            "camera_profile": camera_profile,
-            "rendering_profile": rendering_profile,
-            "camera_info": camera_info
-        }
 
     def _create_job_metadata(self, job_guid, camera_guid, metadata_files, temporary_directory):
         print_job_metadata = metadata_files["print_job"]
@@ -971,7 +1003,9 @@ class RenderingProcessor(threading.Thread):
                 self._on_prerender_start,
                 self._on_render_start,
                 self._on_render_error,
-                self._on_render_success
+                self._on_render_success,
+                self._delete_snapshots_for_job,
+                self.archive_unfinished_job
             )
             self._rendering_job_thread.daemon = True
             self._current_rendering_job = self._get_in_process_rendering_job(print_guid, camera_guid)
@@ -1033,7 +1067,9 @@ class TimelapseRenderJob(threading.Thread):
         on_prerender_start,
         on_render_start,
         on_render_error,
-        on_render_success
+        on_render_success,
+        delete_snapshots_callback,
+        archive_snapshots_callback
     ):
         super(TimelapseRenderJob, self).__init__()
         assert(isinstance(render_job_info, RenderJobInfo))
@@ -1070,6 +1106,8 @@ class TimelapseRenderJob(threading.Thread):
         self.on_render_start = on_render_start
         self.on_render_error = on_render_error
         self.on_render_success = on_render_success
+        self._delete_snapshots_for_job_callback = delete_snapshots_callback
+        self._archive_snapshots_callback = archive_snapshots_callback
         # Temporary directory to store intermediate results of rendering.
 
     def join(self):
@@ -1432,21 +1470,27 @@ class TimelapseRenderJob(threading.Thread):
                         os.makedirs(self._render_job_info.snapshot_archive_directory)
                     except FileExistsError:
                         pass
-                with ZipFile(self._snapshot_archive_path, 'x') as myzip:
-                    # add the job info
-                    timelapse_info_path = os.path.join(self._render_job_info.job_directory, utility.TimelapseJobInfo.timelapse_info_file_name)
-                    if os.path.exists(timelapse_info_path):
-                        myzip.write(
-                            os.path.join(self._render_job_info.job_directory, utility.TimelapseJobInfo.timelapse_info_file_name),
-                            os.path.join(self._render_job_info.job_id, utility.TimelapseJobInfo.timelapse_info_file_name)
-                        )
-                    for name in os.listdir(camera_path):
-                        file_path = os.path.join(camera_path, name)
-                        if (os.path.isfile(file_path)):
-                            myzip.write(
-                                file_path,
-                                os.path.join(self._render_job_info.job_id, self._render_job_info.camera_guid, name)
-                            )
+                self._archive_snapshots_callback(
+                    self._render_job_info.temporary_directory,
+                    self._render_job_info.job_id,
+                    self._render_job_info.camera_guid,
+                    self._snapshot_archive_path
+                )
+                # with ZipFile(self._snapshot_archive_path, 'x') as myzip:
+                #     # add the job info
+                #     timelapse_info_path = os.path.join(self._render_job_info.job_directory, utility.TimelapseJobInfo.timelapse_info_file_name)
+                #     if os.path.exists(timelapse_info_path):
+                #         myzip.write(
+                #             os.path.join(self._render_job_info.job_directory, utility.TimelapseJobInfo.timelapse_info_file_name),
+                #             os.path.join(self._render_job_info.job_id, utility.TimelapseJobInfo.timelapse_info_file_name)
+                #         )
+                #     for name in os.listdir(camera_path):
+                #         file_path = os.path.join(camera_path, name)
+                #         if (os.path.isfile(file_path)):
+                #             myzip.write(
+                #                 file_path,
+                #                 os.path.join(self._render_job_info.job_id, self._render_job_info.camera_guid, name)
+                #             )
             delete_snapshots = True
 
         except Exception as e:
@@ -1470,7 +1514,7 @@ class TimelapseRenderJob(threading.Thread):
 
             if delete_snapshots:
                 try:
-                    delete_snapshots_for_job(
+                    self._delete_snapshots_for_job_callback(
                         self._render_job_info.temporary_directory, self._render_job_info.job_id,
                         self._render_job_info.camera_guid
                     )
@@ -1487,8 +1531,6 @@ class TimelapseRenderJob(threading.Thread):
                 # It's not a huge deal if we can't clean the temporary files at the moment.  Log the error and move on.
                 logger.exception("Could not clean temporary rendering files.")
                 pass
-
-
 
         if r_error is None:
             self.on_render_success(self.create_callback_payload(0, "Timelapse rendering is complete."))
