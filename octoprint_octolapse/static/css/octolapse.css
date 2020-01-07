@@ -381,7 +381,7 @@ table.octolapse-table-list td.rendering-print-name, table.octolapse-table-list t
     width:21%;
 }
 table.octolapse-table-list td.rendering-print-end-state, table.octolapse-table-list th.rendering-print-end-state{
-    width:9%;
+    width:10%;
 }
 table.octolapse-table-list td.rendering-size, table.octolapse-table-list th.rendering-size{
     width:7%;
@@ -430,6 +430,11 @@ table.octolapse-table-list td.rendering-progress, table.octolapse-table-list th.
 
 .octolapse-list .file-browser-action {
     width:7%;
+    text-align: center;
+}
+
+.octolapse-list .file-browser-snapshot-archive-action {
+    width:11%;
     text-align: center;
 }
 

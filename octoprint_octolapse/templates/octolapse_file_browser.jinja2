@@ -29,7 +29,6 @@
 </script>
 
 <script type="text/html" id="octolapse-file-browser-action">
-
     <a data-bind="attr: {href: item.value.get_download_url(item)}" download>
         <i class="fa fa-lg fa-download"></i>
     </a>
@@ -40,19 +39,61 @@
     </span>
 </script>
 
+<script type="text/html" id="octolapse-file-browser-action-custom">
+    <a data-bind="attr: {href: item.value.get_download_url(item)}" download>
+        <i class="fa fa-lg fa-download"></i>
+    </a>
+    <span data-bind="visible: item.data.parent.allow_delete">&nbsp;|&nbsp;
+        <a data-bind="click: function(){item.data.parent.delete_file(item);}">
+            <i class="fa fa-lg fa-trash-o"></i>
+        </a>
+    </span>
+    &nbsp;|&nbsp;
+    <!-- ko template: {name: item.data.parent.custom_actions_template_id} --><!-- /ko -->
+</script>
+
 <script type="text/html" id="octolapse-file-browser-delete-selected">
     <button type="button" data-bind="visible: data.parent.is_admin() && list_items().length > 0 && selected_count() > 0, click: data.parent.delete_selected">
         Delete <span data-bind="text:selected_count()"></span> Files
     </button>
 </script>
-
+<!-- alternate slower binding - ko template: {name: 'octolapse-list', data: files} --><!-- /ko -->
 <script type="text/html" id="octolapse-file-browser">
     <div class="row-fluid">
         <div class="span12 text-right">
             Total File Size:&nbsp;<span data-bind="text: total_file_size_text"></span>
         </div>
     </div>
-    <!-- ko template: {name: 'octolapse-list', data: files} --><!-- /ko -->
+    <!-- ko template: {name: 'octolapse-list-custom-row', data: files} --><!-- /ko -->
 </script>
 
+<script type="text/html" id="octolapse-file-browser-custom-row">
+    <tr>
+        <td class="list-item-selection-dropdown">
+            <input type="checkbox" data-bind="checked: $data.selected"/>
+        </td>
+        <td class="file-browser-name">
+            <span data-bind="text: $data.name, attr: {title: $data.name}"></span>
+        </td>
+        <td class="file-browser-size">
+            <span data-bind="text: $data.value.size_formatted, attr: {title: $data.value.size_formatted}"></span>
+        </td>
+        <td class="file-browser-date">
+            <span data-bind="text: $data.value.date_formatted, attr: {title: $data.value.date_formatted}"></span>
+        </td>
+        <td data-bind="css: $data.data.parent.actions_class">
+            <a data-bind="attr: {href: $data.value.get_download_url($data)}" download="" >
+                <i class="fa fa-lg fa-download"></i>
+            </a>
+            &nbsp;|&nbsp;
+            <a data-bind="click: function(){$data.data.parent.delete_file($data.value);}">
+                <i class="fa fa-lg fa-trash-o"></i>
+            </a>
+            <!-- ko if: $data.data.parent.custom_actions_template_id -->
+                &nbsp;|&nbsp;
+                <!-- ko template: {name: $data.data.parent.custom_actions_template_id} --><!-- /ko -->
+            <!-- /ko -->
+        </td>
+    </tr>
+</script>
 

@@ -26,7 +26,8 @@ $(function () {
         var self = this;
         self.id = values.job_guid + values.camera_guid;
         self.job_guid = values.job_guid;
-        self.print_start_time = Octolapse.toLocalDateString(values.print_start_time);
+        self.print_start_time = values.print_start_time;
+        self.print_start_time_text = Octolapse.toLocalDateString(values.print_start_time);
         self.print_end_time = values.print_end_time;
         self.print_end_time_text = Octolapse.toLocalDateString(values.print_end_time);
         self.print_end_state = values.print_end_state;
@@ -75,7 +76,7 @@ $(function () {
                 new Octolapse.ListViewColumn('Print', 'print_file_name', {class: 'rendering-print-name', sortable:true}),
                 new Octolapse.ListViewColumn('Status', 'print_end_state', {class: 'rendering-print-end-state', sortable:true}),
                 new Octolapse.ListViewColumn('Size', 'file_size_text', {class: 'rendering-size', sortable:true, sort_column_name: "file_size"}),
-                new Octolapse.ListViewColumn('Date', 'print_start_time_text', {class: 'rendering-date', sortable:true, sort_column_name: "print_end_time"}),
+                new Octolapse.ListViewColumn('Date', 'print_start_time_text', {class: 'rendering-date', sortable:true, sort_column_name: "print_start_time"}),
                 new Octolapse.ListViewColumn('Camera', 'camera_name', {class: 'rendering-camera-name', sortable:true}),
                 new Octolapse.ListViewColumn('Rendering', 'rendering_name', {class: 'rendering-name', sortable:true}),
                 new Octolapse.ListViewColumn('Progress', 'progress', {class: 'rendering-progress text-center'})
@@ -103,7 +104,7 @@ $(function () {
                 self.in_process_renderings.set(values.renderings);
                 self.in_process_renderings_size(values.size ? values.size : 0);
             }
-            else if (values.change_type && values.change_type) {
+            else if (values.change_type && values.rendering) {
                 var in_process_rendering_change = values.rendering;
                 var in_process_rendering_change_type = values.change_type;
                 if (in_process_rendering_change_type === "added") {

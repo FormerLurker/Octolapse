@@ -2219,7 +2219,15 @@ class OctolapseSettings(Settings):
 
     camera_settings_file_name = "camera_settings.json"
 
+    @staticmethod
+    def is_camera_settings_file(file_name):
+        return file_name.lower() == OctolapseSettings.camera_settings_file_name
+
     rendering_settings_file_name = "rendering_settings.json"
+
+    @staticmethod
+    def is_rendering_settings_file(file_name):
+        return file_name.lower() == OctolapseSettings.rendering_settings_file_name
 
     DefaultDebugProfile = None
 

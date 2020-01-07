@@ -307,28 +307,62 @@ class OctolapsePlugin(
         with OctolapsePlugin.admin_permission.require(http_exception=403):
             # get the parameters
             file_type = request.args["type"]
-            file_name = request.args["name"]
-            # Don't allow any subdirectory access
-            if not OctolapsePlugin.file_name_allowed(file_name):
-                return jsonify({
-                    'success': False,
-                    'error': 'The requested file type is not allowed.'
-                }), 403
 
-            directory = self.get_file_directory(file_type, file_name)
-            if not directory:
-                return jsonify({
-                    'success': False,
-                    'error': 'The requested file type is not allowed.'
-                }), 403
+            if file_type == 'failed_rendering':
+                job_guid = request.args["job_guid"]
+                camera_guid = request.args["camera_guid"]
 
-            # make sure the file exists
-            full_path = os.path.join(directory, file_name)
-            if not os.path.isfile(full_path):
-                return jsonify({
-                    'success': False,
-                    'error': 'The requested file does not exist.'
-                }), 404
+                temp_directory = self._octolapse_settings.main_settings.get_temporary_directory(
+                    self.get_plugin_data_folder()
+                )
+
+                temp_archive_directory = utility.get_temporary_archive_directory(temp_directory)
+                temp_archive_path = utility.get_temporary_archive_path(temp_directory)
+
+                self._rendering_processor.archive_unfinished_job(
+                    temp_directory,
+                    job_guid,
+                    camera_guid,
+                    temp_archive_path
+                )
+
+                def clean_temp_folder(temp_file_path, temp_file_directory):
+                    # delete the temp file and directory
+                    os.unlink(temp_file_path)
+                    if os.path.exists(temp_file_directory) and os.path.isdir(temp_file_directory):
+                        if not os.listdir(temp_file_directory):
+                            shutil.rmtree(temp_file_directory)
+
+                download_file_response = self.get_download_file_response(
+                    temp_archive_path,
+                    "snapshot_archive.zip",
+                    on_complete_callback=clean_temp_folder,
+                    on_complete_additional_args=temp_archive_directory
+                )
+                return download_file_response
+            else:
+                file_name = request.args["name"]
+                # Don't allow any subdirectory access
+                if not OctolapsePlugin.file_name_allowed(file_name):
+                    return jsonify({
+                        'success': False,
+                        'error': 'The requested file type is not allowed.'
+                    }), 403
+
+                directory = self.get_file_directory(file_type, file_name)
+                if not directory:
+                    return jsonify({
+                        'success': False,
+                        'error': 'The requested file type is not allowed.'
+                    }), 403
+
+                # make sure the file exists
+                full_path = os.path.join(directory, file_name)
+                if not os.path.isfile(full_path):
+                    return jsonify({
+                        'success': False,
+                        'error': 'The requested file does not exist.'
+                    }), 404
             return self.get_download_file_response(full_path, file_name)
 
     @octoprint.plugin.BlueprintPlugin.route("/deleteFile", methods=["POST"])
@@ -1247,7 +1281,6 @@ class OctolapsePlugin(
                 'error': errors
             })
 
-
     @octoprint.plugin.BlueprintPlugin.route("/applyWebcamSetting", methods=["POST"])
     @restricted_access
     def apply_webcam_setting_request(self):
@@ -1754,6 +1787,66 @@ class OctolapsePlugin(
                 "success": True
             })
 
+    @octoprint.plugin.BlueprintPlugin.route("/addArchiveToUnfinishedRenderings", methods=["POST"])
+    @restricted_access
+    def add_archive_to_unfinished_renderings(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            snapshot_archive_name = request_values["archive_name"]
+
+            # make sure the extension is correct
+            if not snapshot_archive_name.lower().endswith(".{0}".format(utility.snapshot_archive_extension)):
+                return jsonify({
+                    "success": False,
+                    "error": "The selected archive is not a valid snapshot archive file."
+                })
+
+            # get the zip file path
+            snapshot_archive_directory = self._octolapse_settings.main_settings.get_snapshot_archive_directory(
+                self.get_plugin_data_folder()
+            )
+            snapshot_archive_path = os.path.join(snapshot_archive_directory, snapshot_archive_name)
+            # attempt to import the zip file
+            results = self._rendering_processor.import_snapshot_archive(snapshot_archive_path)
+            if not results["success"]:
+                return jsonify({
+                    "success": False,
+                    "error": results["error"]
+                }), 500
+
+            return jsonify({
+                "success": True
+            })
+
+    @octoprint.plugin.BlueprintPlugin.route("/importSnapshots", methods=["POST"])
+    @restricted_access
+    def import_snapshots_request(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            # get the zip file path
+            # example of getting the path.  Use the button name + path
+            # settings_path = request.values['octolapse_settings_import_path_upload.path']
+            snapshot_archive_path = request.values['octolapse_snapshot_upload.path']
+            snapshot_archive_name = request.values['octolapse_snapshot_upload.name']
+            # get the extension
+            extension = utility.get_extension_from_filename(snapshot_archive_name)
+            if extension not in RenderingProfile.get_archive_formats():
+                return jsonify({
+                    "success": False,
+                    "error": "The file type is not allowed for upload."
+                }), 403
+
+            # attempt to import the zip file
+            results = self._rendering_processor.import_snapshot_archive(snapshot_archive_path)
+            if not results["success"]:
+                return jsonify({
+                    "success": False,
+                    "error": results["error"]
+                }), 500
+
+            return jsonify({
+                "success": True
+            })
+
     @octoprint.plugin.BlueprintPlugin.route("/getFiles", methods=["POST"])
     @restricted_access
     def get_files_request(self):
@@ -1804,6 +1897,7 @@ class OctolapsePlugin(
     def get_download_file_response(file_path, download_filename, on_complete_callback=None, on_complete_additional_args=None):
         if os.path.isfile(file_path):
             def single_chunk_generator(download_filepath):
+                # todo:  What exceptions do we need to catch here to ensure that the complete callback runs?
                 with open(download_filepath, 'rb') as file_to_download:
                     while True:
                         chunk = file_to_download.read(1024)
@@ -3475,8 +3569,14 @@ class OctolapsePlugin(
         return allowed_extensions
 
     def bodysize_hook(self, current_max_body_sizes, *args, **kwargs):
-        max_upload_size_mb = 5  # 5mb bytes
-        return [("POST", "/importSettings", 1024*1024*max_upload_size_mb)]
+        max_settings_upload_mb = 5
+        # TODO - Add max_snapshot_upload_mb setting to config.yaml
+        max_snapshot_upload_mb = 1024  # 1GB
+        return [
+            ("POST", "/importSettings", 1024*1024*max_settings_upload_mb),
+            ("POST", "/importSnapshots", 1024*1024*max_snapshot_upload_mb)
+
+        ]
 
     def register_custom_events(*args, **kwargs):
         return ["movie_done"]

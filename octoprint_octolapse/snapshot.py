@@ -53,6 +53,9 @@ class SnapshotMetadata(object):
     METADATA_FILE_NAME = 'metadata.csv'
     METADATA_FIELDS = ['snapshot_number', 'file_name', 'time_taken']
 
+    @staticmethod
+    def is_metadata_file(file_name):
+        return file_name.lower() == SnapshotMetadata.METADATA_FILE_NAME
 
 def take_in_memory_snapshot(settings, current_camera):
     """Takes a snapshot from the given camera in a temporary directory, loads the image into memory, and then deletes the file."""
@@ -768,7 +771,12 @@ class SnapshotJobInfo(object):
 
 
 class CameraInfo(object):
-    snapshot_info_filename = "camera_info.json"
+    camera_info_filename = "camera_info.json"
+
+    @staticmethod
+    def is_camera_info_file(file_name):
+        return file_name.lower() == CameraInfo.camera_info_filename
+
     def __init__(self):
         self.snapshot_attempt = 0
         self.snapshot_count = 0
@@ -779,7 +787,7 @@ class CameraInfo(object):
     def load(data_folder, print_job_guid, camera_guid):
         file_path = os.path.join(
             utility.get_temporary_snapshot_job_camera_path(data_folder, print_job_guid, camera_guid),
-            CameraInfo.snapshot_info_filename
+            CameraInfo.camera_info_filename
         )
         try:
             with open(file_path, 'r') as camera_info:
@@ -795,7 +803,7 @@ class CameraInfo(object):
         file_directory = utility.get_temporary_snapshot_job_camera_path(data_folder, print_job_guid, camera_guid)
         file_path = os.path.join(
             file_directory,
-            CameraInfo.snapshot_info_filename
+            CameraInfo.camera_info_filename
         )
         if not os.path.exists(file_directory):
             try:

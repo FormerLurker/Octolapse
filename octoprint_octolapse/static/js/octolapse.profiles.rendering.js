@@ -241,6 +241,10 @@ $(function() {
                 // TODO: Monitor issue with chunking and re-add when it is fixed.
                 //maxChunkSize: 1000000,
                  maxFilesize: 10,
+                 start: function(e) {
+                    $progressBar.text("Starting...");
+                    $progressBar.animate({'width': '0'}, {'queue': false}).removeClass('failed');
+                },
                 progressall: function (e, data) {
                     // TODO: Get a better progress bar implementation.
                     var progress = parseInt(data.loaded / data.total * 100, 10);

@@ -22,6 +22,7 @@
 ##################################################################################
 from __future__ import unicode_literals
 import math
+import uuid
 import ntpath
 import os
 import re
@@ -109,6 +110,7 @@ def is_sequence(arg):
 _SLUGIFY = Slugify()
 _SLUGIFY.safe_chars = "-_.()[] "
 
+
 def sanitize_filename(filename):
     if filename is None:
         return None
@@ -120,6 +122,22 @@ def sanitize_filename(filename):
         # hidden files under *nix
         result = result[1:]
     return result
+
+
+def split_all(path):
+    allparts = []
+    while 1:
+        parts = os.path.split(path)
+        if parts[0] == path:  # sentinel for absolute paths
+            allparts.insert(0, parts[0])
+            break
+        elif parts[1] == path:  # sentinel for relative paths
+            allparts.insert(0, parts[1])
+            break
+        else:
+            path = parts[0]
+            allparts.insert(0, parts[1])
+    return allparts
 
 
 def get_directory_from_full_path(path):
@@ -263,6 +281,23 @@ def get_temporary_rendering_directory(temporary_directory):
     return os.path.join(temporary_directory, _temporary_rendering_subdirectory)
 
 
+_temporary_archive_subdirectory = "octolapse_archive_tmp"
+def get_temporary_archive_directory(temporary_directory):
+    return os.path.join(temporary_directory, _temporary_archive_subdirectory)
+
+
+def get_temporary_archive_path(temporary_directory):
+    file_name = "{0}.zip".format(uuid.uuid4())
+    return os.path.join(get_temporary_archive_directory(temporary_directory), file_name)
+
+
+snapshot_archive_extension = "zip"
+
+
+def get_snapshot_archive_filename(rendering_filename):
+    return "{0}.{1}".format(rendering_filename, snapshot_archive_extension)
+
+
 def get_latest_snapshot_download_path(temporary_directory, camera_guid, base_folder=None):
     if (not camera_guid or camera_guid == "undefined") and base_folder:
         return get_images_download_path(base_folder, "no-camera-selected.png")
@@ -316,8 +351,18 @@ def get_rendering_base_filename(print_name, print_start_time, print_end_time=Non
     return file_template
 
 
+snapshot_file_extensions = ["jpg"]
+
+
+default_snapshot_extension = snapshot_file_extensions[0]
+
+
+def is_valid_snapshot_extension(extension):
+    return extension.lower() in snapshot_file_extensions
+
+
 def get_snapshot_filename(print_name, snapshot_number):
-    return "{0}{1}.{2}".format(print_name, format_snapshot_number(snapshot_number), "jpg")
+    return "{0}{1}.{2}".format(print_name, format_snapshot_number(snapshot_number), default_snapshot_extension)
 
 
 def get_pre_roll_snapshot_filename(print_name, snapshot_number):
@@ -686,6 +731,10 @@ def get_file_info(file_path):
 
 class TimelapseJobInfo(object):
     timelapse_info_file_name = "timelapse_info.json"
+
+    @staticmethod
+    def is_timelapse_info_file(file_name):
+        return file_name.lower() == TimelapseJobInfo.timelapse_info_file_name
 
     def __init__(
         self, job_info=None, job_guid=None, print_start_time=None, print_end_time=None,

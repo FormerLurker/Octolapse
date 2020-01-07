@@ -28,8 +28,8 @@ $(function () {
         self.job_guid = values.job_guid;
         self.print_start_time = values.print_start_time;
         self.print_start_time_text = Octolapse.toLocalDateString(values.print_start_time);
-        /*self.print_end_time = values.print_end_time;
-        self.print_end_time_text = Octolapse.toLocalDateString(values.print_end_time);*/
+        self.print_end_time = values.print_end_time;
+        self.print_end_time_text = Octolapse.toLocalDateString(values.print_end_time);
         self.print_end_state = values.print_end_state;
         self.print_file_name = values.print_file_name;
         self.print_file_extension = values.print_file_extension;
@@ -73,7 +73,8 @@ $(function () {
         };
 
         self.get_download_url = function(list_item){
-            return '/plugin/octolapse/downloadFile?type=failed_rendering&name=' + list_item.id;
+            return '/plugin/octolapse/downloadFile?type=failed_rendering&job_guid=' + list_item.value.job_guid
+                + '&camera_guid=' + list_item.value.camera_guid;
         }
     };
 
@@ -123,8 +124,39 @@ $(function () {
 
         self.initialize = function(){
             self.is_admin(Octolapse.Globals.is_admin());
+            self.initialize_snapshot_upload_button();
             Octolapse.Globals.is_admin.subscribe(function(newValue){
                 self.is_admin(newValue);
+            });
+        };
+
+        self.initialize_snapshot_upload_button = function() {
+            // Set up the file upload button.
+            var $snapshotUploadElement = $('#octolapse_snapshot_upload');
+            var $progressBarContainer = $('#octolapse_snapshot_upload_progress');
+            var $progressBar = $progressBarContainer.find('.progress-bar');
+
+            $snapshotUploadElement.fileupload({
+                dataType: "json",
+                maxNumberOfFiles: 1,
+                headers: OctoPrint.getRequestHeaders(),
+                start: function(e) {
+                    $progressBar.text("Starting...");
+                    $progressBar.animate({'width': '0'}, {'queue': false}).removeClass('failed');
+                },
+                progressall: function (e, data) {
+                    var progress = parseInt(data.loaded / data.total * 100, 10);
+                    $progressBar.text(progress + "%");
+                    $progressBar.animate({'width': progress + '%'}, {'queue': false});
+                },
+                done: function (e, data) {
+                    $progressBar.text("Done!");
+                    $progressBar.animate({'width': '100%'}, {'queue': false});
+                },
+                fail: function (e, data) {
+                    $progressBar.text("Failed...").addClass('failed');
+                    $progressBar.animate({'width': '100%'}, {'queue': false});
+                }
             });
         };
 
@@ -141,7 +173,7 @@ $(function () {
                 self.failed_renderings.set(values.renderings);
                 self.failed_renderings_size(values.size ? values.size : 0);
             }
-            else if (values.change_type && values.change_type)
+            else if (values.change_type && values.rendering)
             {
                 // see if there is a change type
                 var failed_rendering_change = values.rendering;

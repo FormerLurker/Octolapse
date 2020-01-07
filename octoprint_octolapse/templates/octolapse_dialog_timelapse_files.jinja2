@@ -43,6 +43,10 @@
         <div id="octolapse_snapshot_archive_tab" class="tab-pane" data-bind="template: {name: 'octolapse-file-browser', data: archive_browser}"></div>
     </div>
 </script>
-
+<script type="text/html" id="octolapse-snapshot-archive-custom-actions">
+    <a data-bind="click: function(){ $data.data.parent.data.parent.add_archive_to_unfinished_rendering($data); }" title="Extract the archive and add to the unfinished renderings list.">
+        <i class="fa fa-lg fa-film"></i>
+    </a>
+</script>
 {% include "octolapse_file_browser.jinja2" %}
 

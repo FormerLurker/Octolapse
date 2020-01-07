@@ -100,6 +100,7 @@ $(function () {
         self.bottom_left_pagination_template_id = self.options.bottom_left_pagination_template_id || "octolapse-list-empty-template";
         self.bottom_right_pagination_template_id = self.options.bottom_right_pagination_template_id || "octolapse-list-empty-template";
         self.select_header_template_id = self.options.select_header_template_id || "octolapse-list-select-header-checkbox-page-template";
+        self.custom_row_template_id = self.options.custom_row_template_id || null;
         self.sort_column = ko.observable(self.options.sort_column || "name");
         self.sort_direction_ascending = ko.observable(self.options.sort_order === "ascending" || true);
         self.default_sort_direction_ascending = self.sort_direction_ascending();
@@ -107,6 +108,8 @@ $(function () {
         self.pagination_top = self.pagination === 'top' || self.pagination === "top-and-bottom";
         self.pagination_bottom = self.pagination === 'bottom' || self.pagination === "top-and-bottom";
         self.pagination_row_auto_hide = self.options.pagination_row_auto_hide === undefined? true : self.options.pagination_row_auto_hide;
+
+
         self.show_pagination_row_top = ko.pureComputed(function(){
             return self.pagination_top && (self.num_pages() > 1 || !self.pagination_row_auto_hide);
         });
@@ -230,19 +233,6 @@ $(function () {
             self.current_page_index(0);
         };
 
-        self.sort_list_items = function (observable) {
-            //console.log("Sorting profiles on primary tab.")
-            var left_direction = self.sort_direction_ascending() ? -1 : 1;
-            var right_direction = left_direction * -1;
-            var sort_column = self.sort_column();
-            return observable().sort(
-                function (left, right) {
-                    var leftItem = (left.value || {})[sort_column] || left[sort_column];
-                    var rightItem = (right.value || {})[sort_column] || right[sort_column];
-                    return leftItem === rightItem ? 0 : (leftItem < rightItem ? left_direction : right_direction);
-                });
-        };
-
         self.get_current_page_indexes = function(){
             if (self.page_size() === 0 || self.list_items().length === 0)
                 return null;
@@ -251,7 +241,17 @@ $(function () {
             return [page_start_index, page_end_index];
         };
 
-        self.list_items_sorted = ko.pureComputed(function() { return self.sort_list_items(self.list_items) });
+        self.list_items_sorted = ko.pureComputed(function() {
+            var left_direction = self.sort_direction_ascending() ? -1 : 1;
+            var right_direction = left_direction * -1;
+            var sort_column = self.sort_column();
+            return self.list_items().sort(
+                function (left, right) {
+                    var leftItem = (left.value || {})[sort_column] || left[sort_column];
+                    var rightItem = (right.value || {})[sort_column] || right[sort_column];
+                    return leftItem === rightItem ? 0 : (leftItem < rightItem ? left_direction : right_direction);
+                });
+        });
 
         self.current_page = ko.pureComputed(function(){
             var page_indexes = self.get_current_page_indexes();
@@ -261,7 +261,7 @@ $(function () {
             return self.list_items_sorted().slice(page_indexes[0], page_indexes[1]);
         });
 
-        self.max_page = ko.pureComputed(function(){return Math.floor(self.list_items().length/self.page_size());});
+        //self.max_page = ko.pureComputed(function(){return Math.floor(self.list_items().length/self.page_size());});
 
         self._fix_page_numbers = function() {
             // Ensure we are not off of any existing pages.  This can happen during a reload, after a delete, or
@@ -304,8 +304,7 @@ $(function () {
             self.list_items.push(self.to_list_item(item));
         };
 
-        self.get = function(id)
-        {
+        self.get = function(id){
             for (var index = 0; index < self.list_items().length; index++)
             {
                 if (self.list_items()[index].id === id)
@@ -316,8 +315,7 @@ $(function () {
             return null;
         };
 
-        self.get_index = function(id)
-        {
+        self.get_index = function(id){
             for (var index = 0; index < self.list_items().length; index++)
             {
                 if (self.list_items()[index].id === id)
@@ -339,8 +337,7 @@ $(function () {
             return null;
         };
 
-        self.replace = function(item)
-        {
+        self.replace = function(item){
             var list_item = self.to_list_item(item);
             var index = self.get_index(list_item.id);
             if (index > -1)
@@ -382,9 +379,9 @@ $(function () {
         };
 
         self.goto_page = function(page_index){
-            var max_page =self.max_page();
-            if (page_index > max_page)
-                page_index = max_page;
+            var num_pages =self.num_pages();
+            if (page_index > num_pages - 1)
+                page_index = num_pages - 1;
 
             if (page_index < 0)
                 page_index = 0;

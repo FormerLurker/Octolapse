@@ -27,7 +27,7 @@ import shutil
 import sys
 import threading
 from six.moves import queue
-from six import string_types
+from six import string_types, iteritems
 import time
 import json
 import copy
@@ -217,7 +217,7 @@ class RenderJobInfo(object):
         )
         # snapshot archive path
         self.snapshot_archive_directory = snapshot_archive_directory
-        self.snapshot_archive_filename = "{0}.octolapse.zip".format(self.rendering_filename)
+        self.snapshot_archive_filename = utility.get_snapshot_archive_filename(self.rendering_filename)
         self.snapshot_archive_path = os.path.join(self.snapshot_archive_directory, self.snapshot_archive_filename)
         self.rendering = rendering_profile
         self.archive_snapshots = self.rendering.archive_snapshots
@@ -445,6 +445,137 @@ class RenderingProcessor(threading.Thread):
                             os.path.join(job_guid, camera_guid, name)
                         )
 
+    def import_snapshot_archive(self, snapshot_archive_path):
+        """Attempt to import one or more snapshot archives in the following form:
+           1.  The archive contains images (currently jpg only) in the root.
+           2.  The archive is contained within a folder named with a GUID that contains another folder
+               named with a GUID.
+           Each archive will be imported into its own guid job folder into the temporary directory
+        """
+        # create our dict of archive files
+        archive_files_dict = {}
+        with self.temp_files_lock:
+            if not os.path.isfile(snapshot_archive_path):
+                return {
+                    'success': False,
+                    'error': 'The uploaded archive does not exist'
+                }
+            root_job_guid = "{0}".format(uuid.uuid4())
+            root_camera_guid = "{0}".format(uuid.uuid4())
+
+            with ZipFile(snapshot_archive_path) as zip_file:
+                archive_files_temp_dict = {}  # a temporary dict to hold values while we construct the jobs
+                for fileinfo in zip_file.infolist():
+                    # see if the current item is a directory
+                    if not fileinfo.is_dir():
+                        parts = utility.split_all(fileinfo.filename)
+                        name = os.path.basename(fileinfo.filename).lower()
+                        name_without_extension = utility.get_filename_from_full_path(name)
+                        extension = utility.get_extension_from_filename(name).lower()
+                        item = {
+                            "name": name,
+                            "fileinfo": fileinfo
+                        }
+                        location_type = None
+                        job_guid = None
+                        camera_guid = None
+                        file_type = None
+                        if len(parts) == 1:
+                            job_guid = root_job_guid
+                            camera_guid = root_camera_guid
+                        elif len(parts) == 2 and _is_valid_uuid(parts[0]):
+                            job_guid = parts[0].lower()
+                        elif len(parts) == 3 and _is_valid_uuid(parts[0]) and _is_valid_uuid(parts[1]):
+                            job_guid = parts[0].lower()
+                            camera_guid = parts[1].lower()
+                        else:
+                            continue
+
+                        if job_guid not in archive_files_temp_dict:
+                            archive_files_temp_dict[job_guid] = {
+                                'cameras': {},
+                                'file': None
+                            }
+                        if camera_guid and camera_guid not in archive_files_temp_dict[job_guid]["cameras"]:
+                            archive_files_temp_dict[job_guid]['cameras'][camera_guid] = []
+
+                        # this file is in the root.  See what kind of file this is
+                        if utility.TimelapseJobInfo.is_timelapse_info_file(name):
+                            item["name"] = utility.TimelapseJobInfo.timelapse_info_file_name
+                            # preserve case of the name, but keep the extension lower case
+                            archive_files_temp_dict[job_guid]["file"] = item
+                        else:
+                            if utility.is_valid_snapshot_extension(extension):
+                                # preserve case of the name, but keep the extension lower case
+                                file_name = "{0}.{1}".format(name_without_extension, extension)
+                            elif CameraInfo.is_camera_info_file(name):
+                                file_name = CameraInfo.camera_info_filename
+                            elif SnapshotMetadata.is_metadata_file(name):
+                                file_name = SnapshotMetadata.METADATA_FILE_NAME
+                            elif OctolapseSettings.is_camera_settings_file(name):
+                                file_name = OctolapseSettings.camera_settings_file_name
+                            elif OctolapseSettings.is_rendering_settings_file(name):
+                                file_name = OctolapseSettings.rendering_settings_file_name
+                            else:
+                                continue
+                            item["name"] = file_name
+                            archive_files_temp_dict[job_guid]['cameras'][camera_guid].append(item)
+
+                # now replace all of the job guids with  new ones to prevent conflicts with existing unfinished
+                # rendering jobs.
+                for key in archive_files_temp_dict.keys():
+                    archive_files_dict["{0}".format(uuid.uuid4())] = archive_files_temp_dict[key]
+                archive_files_temp_dict = {}
+
+                # now create the directories and files and place them in the temp snapshot directory
+                for job_guid, job in iteritems(archive_files_dict):
+                    job_path = utility.get_temporary_snapshot_job_path(self._temporary_directory, job_guid)
+                    if not os.path.isdir(job_path):
+                        os.makedirs(job_path)
+                    job_info_file = job["file"]
+                    if job_info_file:
+                        file_path = os.path.join(job_path, job_info_file["name"])
+                        with zip_file.open(job_info_file["fileinfo"]) as info_file:
+                            with open(file_path, 'wb') as target_file:
+                                target_file.write(info_file.read())
+                    for camera_guid, camera in iteritems(job["cameras"]):
+                        camera_path = utility.get_temporary_snapshot_job_camera_path(
+                            self._temporary_directory, job_guid, camera_guid
+                        )
+                        if not os.path.isdir(camera_path):
+                            os.makedirs(camera_path)
+                        for camera_fileinfo in camera:
+                            file_path = os.path.join(camera_path, camera_fileinfo["name"])
+                            with zip_file.open(camera_fileinfo["fileinfo"]) as camera_file:
+                                with open(file_path, 'wb') as target_file:
+                                    target_file.write(camera_file.read())
+
+        # now we should have extracted all of the items, add the job to the queue for these cameras
+        has_created_jobs = False
+        for job_guid, job in iteritems(archive_files_dict):
+            has_created_jobs = True
+            for camera_guid, camera in iteritems(job["cameras"]):
+                # add this job to the queue as an imported item
+                parameters = {
+                    "job_guid": job_guid,
+                    "camera_guid": camera_guid,
+                    "action": "import",
+                    "rendering_profile": None,
+                    "camera_profile": None,
+                    "temporary_directory": self._temporary_directory
+                }
+                self.rendering_task_queue.put(parameters)
+
+        if has_created_jobs:
+            return {
+                'success': True
+            }
+
+        return {
+            'success': False,
+            'error': 'No files new jobs were found within the uploaded file.'
+        }
+
     def _get_renderings_in_process(self):
         pending_jobs = {}
         current_rendering_job_guid = self._current_rendering_job.get("job_guid", None)
@@ -468,7 +599,7 @@ class RenderingProcessor(threading.Thread):
         for name in os.listdir(path):
             if (
                 os.path.isfile(os.path.join(path, name)) and
-                utility.get_extension_from_full_path(name).upper() == "JPG"
+                utility.is_valid_snapshot_extension(utility.get_extension_from_full_path(name).upper())
             ):
                 image_count += 1
                 if image_count > 1:
@@ -479,8 +610,6 @@ class RenderingProcessor(threading.Thread):
         """ Removes any snapshot folders that cannot be rendered, returns the ones that can
             Returns: [{'id':guid_val, 'path':path, paths: [{id:guid_val, 'path':path}]}]
         """
-
-
         with self.r_lock:
             temporary_directory = self._temporary_directory
 
@@ -544,7 +673,7 @@ class RenderingProcessor(threading.Thread):
             for name in os.listdir(job_path):
                 path = os.path.join(job_path, name)
                 if os.path.isdir(path) or (
-                    os.path.isfile(path) and name != utility.TimelapseJobInfo.timelapse_info_file_name):
+                    os.path.isfile(path) and not utility.TimelapseJobInfo.is_timelapse_info_file(name)):
                     has_files_or_folders = True
                     break
 
@@ -569,6 +698,7 @@ class RenderingProcessor(threading.Thread):
                 if _is_valid_uuid(basename):
                     paths_to_examine.append({'path': path, 'id': basename, 'paths': []})
 
+            # see if the temp archive directory exists
 
             # test each valid subdirectory to see if it is a camera directory
             # containing all necessary settings and at least two jpgs
@@ -739,12 +869,11 @@ class RenderingProcessor(threading.Thread):
         self._on_unfinished_renderings_loaded_callback()
         # loop forever, always watching for new tasks to appear in the queue
         while True:
-            # see if there are any rendering tasks.
-            has_received_task = False
             try:
+                # see if there are any rendering tasks.
                 rendering_task_info = self.rendering_task_queue.get(True, self._idle_sleep_seconds)
                 if rendering_task_info:
-                    has_received_task = True
+
                     action = rendering_task_info["action"]
                     if action == "add":
                         # add the job to the queue if it is not already
@@ -762,11 +891,20 @@ class RenderingProcessor(threading.Thread):
                             rendering_task_info["camera_guid"],
                             delete=rendering_task_info.get("delete", False),
                         )
+                    elif action == "import":
+                        self._add_unfinished_job(
+                            rendering_task_info["job_guid"],
+                            rendering_task_info["camera_guid"],
+                            rendering_task_info["rendering_profile"],
+                            rendering_task_info["camera_profile"],
+                            rendering_task_info["temporary_directory"]
+                        )
                     # go ahead and signal that the task queue is finished.  We are using another method
                     # to determine if all rendering jobs are completed.
                 self.rendering_task_queue.task_done()
             except queue.Empty:
                 pass
+
             # see if we've finished a task, if so, handle it.
             if not self._is_thread_running() and self._is_processing:
                 with self.r_lock:
@@ -795,6 +933,7 @@ class RenderingProcessor(threading.Thread):
                 if not self._has_pending_jobs():
                     # no more jobs, signal rendering completion
                     self._on_all_renderings_ended()
+
             with self.r_lock:
                 if not self._has_pending_jobs() or self._is_processing:
                     continue
@@ -841,7 +980,8 @@ class RenderingProcessor(threading.Thread):
                 "temporary_directory": temporary_directory
             }
             # add job to the pending job list
-            metadata = self._get_metadata_for_rendering_files(job_guid, camera_guid, temporary_directory)
+            with self.temp_files_lock:
+                metadata = self._get_metadata_for_rendering_files(job_guid, camera_guid, temporary_directory)
             metadata["progress"] = "Pending"
             self._renderings_in_process.append(metadata)
             self._renderings_in_process_size += metadata["file_size"]
@@ -861,6 +1001,13 @@ class RenderingProcessor(threading.Thread):
         self._on_in_process_renderings_changed(metadata, "added")
         return True
 
+    def _add_unfinished_job(self, job_guid, camera_guid, rendering_profile, camera_profile, temporary_directory):
+        with self.r_lock:
+            metadata = self._get_metadata_for_rendering_files(job_guid, camera_guid, temporary_directory)
+            self._unfinished_renderings_size += metadata["file_size"]
+            self._unfinished_renderings.append(metadata)
+        self._on_unfinished_renderings_changed(metadata, "added")
+
     def _remove_unfinished_job(self, job_guid, camera_guid, delete=False):
         """Remove a job from the _pending_rendering_jobs dict if it exists"""
         with self.r_lock:
@@ -868,7 +1015,7 @@ class RenderingProcessor(threading.Thread):
             if job:
                 self._unfinished_renderings.remove(job)
                 if delete:
-                    delete_snapshots_for_job(self._temporary_directory, job_guid, camera_guid)
+                    self._delete_snapshots_for_job(self._temporary_directory, job_guid, camera_guid)
 
         self._on_unfinished_renderings_changed(job, "removed")
 
@@ -1141,7 +1288,8 @@ class TimelapseRenderJob(threading.Thread):
         for name in os.listdir(self._render_job_info.snapshot_directory):
             path = os.path.join(self._render_job_info.snapshot_directory, name)
             # skip non-files and non jpgs
-            if not os.path.isfile(path) or not path.upper().endswith("JPG"):
+            extension = utility.get_extension_from_full_path(path)
+            if not os.path.isfile(path) or not utility.is_valid_snapshot_extension(extension):
                 continue
 
             self._image_count += 1
@@ -1477,21 +1625,7 @@ class TimelapseRenderJob(threading.Thread):
                     self._render_job_info.camera_guid,
                     self._snapshot_archive_path
                 )
-                # with ZipFile(self._snapshot_archive_path, 'x') as myzip:
-                #     # add the job info
-                #     timelapse_info_path = os.path.join(self._render_job_info.job_directory, utility.TimelapseJobInfo.timelapse_info_file_name)
-                #     if os.path.exists(timelapse_info_path):
-                #         myzip.write(
-                #             os.path.join(self._render_job_info.job_directory, utility.TimelapseJobInfo.timelapse_info_file_name),
-                #             os.path.join(self._render_job_info.job_guid, utility.TimelapseJobInfo.timelapse_info_file_name)
-                #         )
-                #     for name in os.listdir(camera_path):
-                #         file_path = os.path.join(camera_path, name)
-                #         if (os.path.isfile(file_path)):
-                #             myzip.write(
-                #                 file_path,
-                #                 os.path.join(self._render_job_info.job_guid, self._render_job_info.camera_guid, name)
-                #             )
+
             delete_snapshots = True
 
         except Exception as e:

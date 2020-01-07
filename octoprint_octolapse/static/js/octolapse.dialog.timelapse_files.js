@@ -38,16 +38,20 @@ $(function () {
 
         self.archive_browser = new Octolapse.OctolapseFileBrowser(
             'octolapse-archive-browser',
+            self,
             {
-            file_type: 'snapshot_archive',
-            resize: self.dialog.resize,
-            allow_delete: true,
-            allow_delete_all: true
+                file_type: 'snapshot_archive',
+                resize: self.dialog.resize,
+                allow_delete: true,
+                allow_delete_all: true,
+                custom_actions_template_id: 'octolapse-snapshot-archive-custom-actions',
+                actions_class: 'file-browser-snapshot-archive-action'
             }
         );
 
         self.timelapse_browser = new Octolapse.OctolapseFileBrowser(
             'octolapse-timelapse-browser',
+            self,
             {
                 file_type: 'timelapse_octolapse',
                 resize: self.dialog.resize,
@@ -56,8 +60,7 @@ $(function () {
             }
         );
 
-        self.load = function()
-        {
+        self.load = function(){
             self.timelapse_browser.load();
             self.archive_browser.load();
         };
@@ -100,6 +103,51 @@ $(function () {
                 $("#"+self.dialog_id).find("#"+button_id).click();
             }
 
+        };
+
+        self.add_archive_to_unfinished_rendering = function(item) {
+            var data = {
+                'archive_name': item.id
+            };
+            $.ajax({
+                url: "./plugin/octolapse/addArchiveToUnfinishedRenderings",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    if (results.success) {
+                        var options = {
+                            title: 'Archive Added',
+                            text: "The archive was added to the unfinished rendering list.  You can render the archive by clicking the unfinished renderings button.",
+                            type: 'success',
+                            hide: true,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(options, "add-archive-to-unfinished-renderings", ["add-archive-to-unfinished-renderings"]);
+                    }
+                    else {
+                        var options = {
+                            title: 'Error Adding Archive',
+                            text: results.error,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(options, "add-archive-to-unfinished-renderings",["add-archive-to-unfinished-renderings"]);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    var options = {
+                        title: 'Error Adding Archive',
+                        text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options, "add-archive-to-unfinished-renderings",["add-archive-to-unfinished-renderings"]);
+                }
+            });
         };
 
     };

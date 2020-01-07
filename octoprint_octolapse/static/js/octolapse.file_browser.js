@@ -35,8 +35,10 @@ $(function () {
         }
     };
 
-    Octolapse.OctolapseFileBrowser = function (id, options) {
+    Octolapse.OctolapseFileBrowser = function (id, parent, options) {
         var self = this;
+        self.data = ko.observable();
+        self.data.parent = parent;
         self.file_browser_id = id;
         self.options = options;
         self.dialog_id = "octolapse_file_browsing_dialog";
@@ -44,6 +46,8 @@ $(function () {
         self.no_files_text = options.no_files_text || "There are no files available.";
         self.allow_delete = options.allow_delete || false;
         self.allow_delete_all = options.allow_delete_all || false;
+        self.custom_actions_template_id = options.custom_actions_template_id || null;
+        self.actions_class = options.actions_class || "file-browser-action";
         self.pagination_row_auto_hide = !(self.allow_delete_all);
         self.total_file_size = ko.observable(0);
         self.total_file_size_text = ko.pureComputed(function(){
@@ -69,11 +73,12 @@ $(function () {
             selection_class: 'list-item-selection-dropdown',
             selection_header_class: 'list-item-selection-header-dropdown',
             no_items_template_id: 'octolapse-file-browser-no-items',
+            custom_row_template_id: 'octolapse-file-browser-custom-row',
             columns: [
                 new Octolapse.ListViewColumn('Name', 'name', {class: 'file-browser-name', sortable:true}),
                 new Octolapse.ListViewColumn('Size', 'size_formatted', {class: 'file-browser-size', sortable:true, sort_column_name: "size"}),
                 new Octolapse.ListViewColumn('Date', 'date_formatted', {class: 'file-browser-date', sortable:true, sort_column_name: "date"}),
-                new Octolapse.ListViewColumn('Action', null, {class: 'file-browser-action', template_id:'octolapse-file-browser-action', visible_observable: self.is_admin})
+                new Octolapse.ListViewColumn('Action', null, {class: self.actions_class, template_id:'octolapse-file-browser-action', visible_observable: self.is_admin})
             ]
         };
 
