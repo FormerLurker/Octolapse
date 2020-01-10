@@ -46,7 +46,7 @@
     <div class="tab-content">
         <div id="octolapse_timelapse_videos_tab" class="tab-pane active" data-bind="template: {name: 'octolapse-file-browser', data: timelapse_browser}"></div>
         <div id="octolapse_snapshot_archive_tab" class="tab-pane">
-            <fieldset class="octolapse">
+            <fieldset class="octolapse" data-bind="visible: Octolapse.Globals.is_admin">
                 <legend>Import Snapshot Archive (.zip)</legend>
                 <div class="row-fluid">
                     <div class="span3">
@@ -62,9 +62,30 @@
     </div>
 </script>
 <script type="text/html" id="octolapse-snapshot-archive-custom-actions">
+        <a data-bind="attr: {href: $data.value.get_download_url($data)}" download>
+        <i class="fa fa-lg fa-download"></i>
+    </a>
+    <span data-bind="visible: $data.data.parent.allow_delete">&nbsp;|&nbsp;
+        <a data-bind="click: function(){$data.data.parent.delete_file($data);}">
+            <i class="fa fa-lg fa-trash-o"></i>
+        </a>
+    </span>
+    &nbsp;|&nbsp;
     <a data-bind="click: function(){ $data.data.parent.data.parent.add_archive_to_unfinished_rendering($data); }" title="Extract the archive and add to the unfinished renderings list.">
         <i class="fa fa-lg fa-film"></i>
     </a>
 </script>
+
+<script type="text/html" id="octolapse-timelapse-files-custom-actions">
+        <a data-bind="attr: {href: $data.value.get_download_url($data)}" download>
+        <i class="fa fa-lg fa-download"></i>
+    </a>
+    <span data-bind="visible: $data.data.parent.allow_delete">&nbsp;|&nbsp;
+        <a data-bind="click: function(){$data.data.parent.delete_file($data);}">
+            <i class="fa fa-lg fa-trash-o"></i>
+        </a>
+    </span>
+</script>
+
 {% include "octolapse_file_browser.jinja2" %}
 

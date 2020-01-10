@@ -44,12 +44,9 @@ $(function () {
         self.dialog_id = "octolapse_file_browsing_dialog";
         self.file_type = options.file_type;
         self.no_files_text = options.no_files_text || "There are no files available.";
-        self.allow_delete = options.allow_delete || false;
-        self.allow_delete_all = options.allow_delete_all || false;
         self.custom_actions_template_id = options.custom_actions_template_id || null;
         self.files_not_loaded_template_id = options.files_not_loaded_template_id || "octolapse-file-browser-not-loaded";
         self.actions_class = options.actions_class || "file-browser-action";
-        self.pagination_row_auto_hide = !(self.allow_delete_all);
         self.has_loaded = ko.observable(false);
         self.total_file_size = ko.observable(0);
         self.total_file_size_text = ko.pureComputed(function(){
@@ -62,11 +59,12 @@ $(function () {
         };
         // load the file browser files
         self.is_admin = ko.observable(false);
+        self.pagination_row_auto_hide = ko.observable(false);
 
         var list_view_options = {
             to_list_item: self.to_list_item,
-            selection_enabled: self.allow_delete || self.allow_delete_all,
-            select_all_enabled: self.allow_delete_all,
+            selection_enabled: self.is_admin,
+            select_all_enabled: self.is_admin,
             sort_column: 'date_formatted',
             sort_direction: 'descending',
             pagination_row_auto_hide: self.pagination_row_auto_hide,
@@ -91,6 +89,7 @@ $(function () {
             self.is_admin(Octolapse.Globals.is_admin);
             Octolapse.Globals.is_admin.subscribe(function(newValue){
                 self.is_admin(newValue);
+                self.pagination_row_auto_hide(!newValue);
             });
         };
 

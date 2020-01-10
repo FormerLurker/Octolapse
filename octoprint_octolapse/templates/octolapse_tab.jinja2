@@ -51,7 +51,7 @@
                         <span data-bind="visible: Octolapse.Globals.is_admin, click: function() {return Octolapse.Globals.main_settings.toggleOctolapse();}" title="Enable or Disable Octolapse">
                             <i class="fa fa-lg" data-bind="css: {'fa-toggle-on': Octolapse.Globals.main_settings.is_octolapse_enabled, 'fa-toggle-off': !Octolapse.Globals.main_settings.is_octolapse_enabled()}"></i>
                         </span>
-                        <span data-bind="text: getEnabledButtonText"></span>
+                        <span data-bind="text: getEnabledButtonText, attr: {title: getStateSummaryText}"></span>
                     </div>
                     <div class="span6 text-right">
                         <span class="text-center" data-bind="visible: (is_timelapse_active() && Octolapse.Globals.is_admin())">
@@ -119,7 +119,7 @@
                                            value: Octolapse.Status.current_camera_guid">
                         </select>
                         <a title="Edit image preferences"
-                           data-bind="visible: canEditSettings, click: showWebcamSettings">
+                           data-bind="visible: canEditSettings() && Octolapse.Globals.is_admin, click: showWebcamSettings">
                            <i class="fa fa-pencil fa-lg"></i>
                         </a>
                     </div>
@@ -196,7 +196,7 @@
         <div data-bind="template:'latest-snapshot-template'"></div>
         <div class="text-right">
             <h6>
-                Octolapse <i data-bind="text:Octolapse.Globals.version"></i>
+                Octolapse <i data-bind="text:Octolapse.Globals.main_settings.octolapse_version"></i>
             </h6>
         </div>
         <div data-bind="template:  { name: 'webcam-settings-popup-template', data: webcam_settings_popup}"></div>

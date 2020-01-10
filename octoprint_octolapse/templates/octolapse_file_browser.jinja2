@@ -42,15 +42,6 @@
 </script>
 
 <script type="text/html" id="octolapse-file-browser-action-custom">
-    <a data-bind="attr: {href: item.value.get_download_url(item)}" download>
-        <i class="fa fa-lg fa-download"></i>
-    </a>
-    <span data-bind="visible: item.data.parent.allow_delete">&nbsp;|&nbsp;
-        <a data-bind="click: function(){item.data.parent.delete_file(item);}">
-            <i class="fa fa-lg fa-trash-o"></i>
-        </a>
-    </span>
-    &nbsp;|&nbsp;
     <!-- ko template: {name: item.data.parent.custom_actions_template_id} --><!-- /ko -->
 </script>
 
@@ -64,7 +55,7 @@
 
 <script type="text/html" id="octolapse-file-browser-file-size">
     <div class="text-right">
-        Total File Size:&nbsp;<span data-bind="text: data.parent.total_file_size_text"></span>
+        File Size:&nbsp;<span data-bind="text: data.parent.total_file_size_text"></span>
     </div>
 </script>
 
@@ -75,12 +66,11 @@
     <div data-bind="visible: has_loaded">
         <!-- ko template: {name: 'octolapse-list-custom-row', data: files} --><!-- /ko -->
     </div>
-
 </script>
 
 <script type="text/html" id="octolapse-file-browser-custom-row">
     <tr>
-        <td class="list-item-selection-dropdown">
+        <td data-bind="visible: $data.data.parent.is_admin" class="list-item-selection-dropdown">
             <input type="checkbox" data-bind="checked: $data.selected"/>
         </td>
         <td class="file-browser-name">
@@ -92,17 +82,18 @@
         <td class="file-browser-date">
             <span data-bind="text: $data.value.date_formatted, attr: {title: $data.value.date_formatted}"></span>
         </td>
-        <td data-bind="css: $data.data.parent.actions_class">
-            <a data-bind="attr: {href: $data.value.get_download_url($data)}" download="" >
+        <td data-bind="css: $data.data.parent.actions_class, visible: $data.data.parent.is_admin">
+            <!-- ko if: $data.data.parent.custom_actions_template_id -->
+                <!-- ko template: {name: $data.data.parent.custom_actions_template_id} --><!-- /ko -->
+            <!-- /ko -->
+            <!-- ko ifnot: $data.data.parent.custom_actions_template_id -->
+                <a data-bind="attr: {href: $data.value.get_download_url($data)}" download="" >
                 <i class="fa fa-lg fa-download"></i>
             </a>
-            &nbsp;|&nbsp;
-            <a data-bind="click: function(){$data.data.parent.delete_file($data.value);}">
+                &nbsp;|&nbsp;
+                <a data-bind="click: function(){$data.data.parent.delete_file($data.value);}">
                 <i class="fa fa-lg fa-trash-o"></i>
             </a>
-            <!-- ko if: $data.data.parent.custom_actions_template_id -->
-                &nbsp;|&nbsp;
-                <!-- ko template: {name: $data.data.parent.custom_actions_template_id} --><!-- /ko -->
             <!-- /ko -->
         </td>
     </tr>

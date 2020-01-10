@@ -27,13 +27,12 @@
     </p>
 </script>
 
-<script type="text/html" id="octolapse-rendering-in-process-template">
-    <div data-bind="visible: !is_empty()" class="text-right">
-        <div class="row-fluid">
-            <div class="span12 text-right">
-                Total File Size:&nbsp;<span data-bind="text: in_process_renderings_size_formatted"></span>
-            </div>
-        </div>
+<script type="text/html" id="octolapse-rendering-in-process-file-size">
+    <div class="text-right">
+        File Size:&nbsp;<span data-bind="text: data.parent.in_process_renderings_size_formatted"></span>
     </div>
+</script>
+
+<script type="text/html" id="octolapse-rendering-in-process-template">
     <!-- ko template: {name: 'octolapse-list', data: in_process_renderings} --><!-- /ko -->
 </script>

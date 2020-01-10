@@ -82,8 +82,17 @@ $(function () {
         ];
         self.pager_values = ko.observableArray([]);
         self.max_pager_pages = self.options.pager_pages || 11;
-        self.selection_enabled = !!self.options.selection_enabled;
-        self.select_all_enabled = !!self.options.select_all_enabled;
+        self.selection_enabled = false;
+        if (self.options.selection_enabled !== undefined)
+        {
+            self.selection_enabled = self.options.selection_enabled;
+        }
+
+        self.select_all_enabled = false;
+        if (self.options.select_all_enabled !== undefined)
+        {
+            self.select_all_enabled = self.options.select_all_enabled;
+        }
         self.action_text = self.options.action_text || "Action";
         self.on_resize = self.options.on_resize;
         self.columns = self.options.columns || [new Octolapse.ListViewColumn('Name', 'name')];

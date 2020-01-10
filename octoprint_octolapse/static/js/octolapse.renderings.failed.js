@@ -103,11 +103,12 @@ $(function () {
 
         var list_view_options = {
             to_list_item: self.to_list_item,
-            selection_enabled: true,
-            select_all_enabled: true,
+            selection_enabled: self.is_admin,
+            select_all_enabled: self.is_admin,
             sort_column: 'date',
             sort_direction: 'descending',
             top_left_pagination_template_id: 'octolapse-rendering-failed-selected-actions',
+            top_right_pagination_template_id: 'octolapse-rendering-failed-file-size',
             pagination_row_auto_hide: false,
             no_items_template_id: 'octolapse-rendering-failed-no-items',
             select_header_template_id: 'octolapse-list-select-header-dropdown-template',

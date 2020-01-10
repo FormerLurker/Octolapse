@@ -1297,7 +1297,6 @@ $(function () {
             self.is_admin(!self.is_admin());
         };
         self.preprocessing_job_guid = "";
-        self.version = ko.observable("unknown");
         // Create a guid to uniquely identify this client.
         self.client_id = Octolapse.guid();
         // Have we loaded the state yet?

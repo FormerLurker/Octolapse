@@ -74,7 +74,9 @@ $(function () {
             sort_column: 'print_end_time',
             sort_direction: 'descending',
             no_items_template_id: 'octolapse-rendering-in-process-no-items',
+            top_right_pagination_template_id: 'octolapse-rendering-in-process-file-size',
             sort_column: 'progress',
+            pagination_row_auto_hide: false,
             columns: [
                 new Octolapse.ListViewColumn('Print', 'print_file_name', {class: 'rendering-print-name', sortable:false}),
                 new Octolapse.ListViewColumn('Status', 'print_end_state', {class: 'rendering-print-end-state', sortable:false}),

@@ -435,6 +435,11 @@ table.octolapse-table-list td.rendering-progress, table.octolapse-table-list th.
     text-align: center;
 }
 
+.octolapse-camera-list-item
+{
+    margin-bottom:20px;
+}
+
 .row-fluid.octolapse-table-list-row .span1,
 .row-fluid.octolapse-table-list-row .span2,
 .row-fluid.octolapse-table-list-row .span3,

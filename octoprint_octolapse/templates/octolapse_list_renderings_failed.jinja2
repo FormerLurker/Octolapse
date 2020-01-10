@@ -46,8 +46,10 @@
             optionsText: 'name',
             optionsValue: 'guid',
             value: item.value.camera_profile_override_guid,
-            optionsCaption: item.value.get_camera_option_caption()">
+            optionsCaption: item.value.get_camera_option_caption(),
+            visible: item.data.parent.is_admin">
     </select>
+    <span data-bind="visible: !item.data.parent.is_admin(), text: item.value.get_camera_option_caption()"></span>
 </script>
 <script type="text/html" id="octolapse-rendering-failed-render-profile">
     <select
@@ -58,8 +60,10 @@
             optionsValue: 'guid',
             value: item.value.render_profile_override_guid,
             optionsCaption: item.value.get_rendering_option_caption(),
-            optionsAfterRender: item.value.set_rendering_profile_option_description_as_title">
+            optionsAfterRender: item.value.set_rendering_profile_option_description_as_title,
+            visible: item.data.parent.is_admin">
     </select>
+    <span data-bind="visible: !item.data.parent.is_admin(), text: item.value.get_rendering_option_caption()"></span>
 </script>
 <script type="text/html" id="octolapse-rendering-failed-no-items">
     <p>
@@ -67,22 +71,22 @@
     </p>
 </script>
 <script type="text/html" id="octolapse-rendering-failed-selected-actions">
-    <div class="text-center" data-bind="visible: data.parent.is_admin() && list_items().length > 0 && selected_count() > 0">
-        <button type="button" data-bind="click: data.parent.render_selected" class="btn btn-default ok">
-            Render <span data-bind="text: selected_count"></span>
-        </button>
-        <button type="button" data-bind="click: data.parent.delete_selected" class="btn btn-default ok">
+    <div data-bind="visible: data.parent.is_admin() && list_items().length > 0 && selected_count() > 0">
+        <div>
+            <button type="button" data-bind="click: data.parent.render_selected" class="btn btn-default ok">Render <span data-bind="text: selected_count"></span></button>
+        </div>
+        <div>
+            <button type="button" data-bind="click: data.parent.delete_selected" class="btn btn-default ok">
             Delete <span data-bind="text: selected_count"></span>
         </button>
+        </div>
+    </div>
+</script>
+<script type="text/html" id="octolapse-rendering-failed-file-size">
+    <div class="text-right">
+        File Size:&nbsp;<span data-bind="text: data.parent.failed_renderings_size_formatted"></span>
     </div>
 </script>
 <script type="text/html" id="octolapse-rendering-failed-template">
-    <div data-bind="visible: !is_empty()">
-        <div class="row-fluid">
-            <div class="span12 text-right">
-                Total File Size:&nbsp;<span data-bind="text: failed_renderings_size_formatted"></span>
-            </div>
-        </div>
-    </div>
     <!-- ko template: {name: 'octolapse-list', data: failed_renderings} --><!-- /ko -->
 </script>

@@ -29,10 +29,9 @@
             </a>
         </div>
         <div class="span9 text-right">
-            <span data-bind="text: getStateSummaryText"></span>
+
         </div>
     </div>
-
     <div id="octolapse_status_settings_current_panel">
         <div class="row-fluid">
             <div class="span2 text-right">
@@ -67,7 +66,7 @@
                     <p>The selected printer profile has not been configured. Please edit the profile and copy in your slicer settings.</p>
                 </div>
             </div>
-            <div class="span1 text-right">
+            <div class="span1">
                 <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_printer_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentPrinterProfile" title="Edit this printer profile">
                     <i class="fa fa-pencil fa-2x"></i>
                 </a>
@@ -98,7 +97,7 @@
                 </select>
 
             </div>
-            <div class="span1 text-right">
+            <div class="span1">
                 <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_stabilization_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentStabilizationProfile"  title="Edit this stabilization profile">
                     <i class="fa fa-pencil fa-2x"></i>
                 </a>
@@ -127,7 +126,7 @@
                 </select>
 
             </div>
-            <div class="span1 text-right">
+            <div class="span1">
                 <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_trigger_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentTriggerProfile" title="Edit this trigger profile.">
                     <i class="fa fa-pencil fa-2x"></i>
                 </a>
@@ -156,22 +155,14 @@
                 </select>
 
             </div>
-            <div class="span1 text-right">
+            <div class="span1">
                 <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_rendering_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentRenderingProfile" title="Edit this rendering profile.">
                     <i class="fa fa-pencil fa-2x"></i>
                 </a>
             </div>
         </div>
         <div class="row-fluid">
-            <div class="span2 text-right">
-                <a data-bind="click: function() {openOctolapseSettings('camera');}"
-                   title="Open all camera settings.">
-                    Cameras
-                </a>
-            </div>
-            <div class="span10 text-right0">
-                <div data-bind="template:'octolapse-tab-settings-current-cameras'"></div>
-            </div>
+            <div data-bind="template:'octolapse-tab-settings-current-cameras'"></div>
         </div>
 
         <div class="row-fluid">
@@ -206,7 +197,7 @@
                     </p>
                 </div>
             </div>
-            <div class="span1 text-right">
+            <div class="span1">
                 <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_debug_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentDebugProfile" title="Edit this debug profile.">
                     <i class="fa fa-pencil fa-2x"></i>
                 </a>

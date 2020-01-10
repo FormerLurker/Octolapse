@@ -44,6 +44,8 @@ $(function () {
         self.snapshot_archive_directory = ko.observable();
         self.timelapse_directory = ko.observable();
         self.temporary_directory = ko.observable();
+        // rename this so that it never gets updated when saved
+        self.octolapse_version = ko.observable("unknown");
         // Computed Observables
         self.preview_snapshot_plan_seconds_text = ko.pureComputed(function(){
             if (!self.preview_snapshot_plan_seconds())
@@ -71,6 +73,7 @@ $(function () {
             self.snapshot_archive_directory(settings.snapshot_archive_directory);
             self.timelapse_directory(settings.timelapse_directory);
             self.temporary_directory(settings.temporary_directory);
+            self.octolapse_version(settings.version)
             if (defaults)
                 self.defaults = settings.defaults
         };

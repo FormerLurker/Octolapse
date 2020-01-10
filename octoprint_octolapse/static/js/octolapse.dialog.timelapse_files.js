@@ -43,8 +43,6 @@ $(function () {
             {
                 file_type: 'snapshot_archive',
                 resize: self.dialog.resize,
-                allow_delete: true,
-                allow_delete_all: true,
                 custom_actions_template_id: 'octolapse-snapshot-archive-custom-actions',
                 actions_class: 'file-browser-snapshot-archive-action',
                 top_left_template_id: 'octolapse-file-browser-snapshot-archive-import'
@@ -56,9 +54,9 @@ $(function () {
             self,
             {
                 file_type: 'timelapse_octolapse',
+                custom_actions_template_id: 'octolapse-timelapse-files-custom-actions',
+                actions_class: 'file-browser-snapshot-archive-action',
                 resize: self.dialog.resize,
-                allow_delete: true,
-                allow_delete_all: true
             }
         );
 
@@ -128,7 +126,6 @@ $(function () {
             }
             else
             {
-                console.error("An unknown timelapse_files tab was requested for opening.");
                 return;
             }
             if (button_id)
