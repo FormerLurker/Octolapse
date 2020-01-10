@@ -224,9 +224,6 @@ a.ol-button .fa-square{
     color: black;
 }
 
-.ol-hover-button a:not(.disable):hover .fa-square, .snapshot_refresh_container a:not(.disable):active .fa-square {
-    /*color: lightgray;*/
-}
 .ol-hover-button a:not(.disable):hover .fa-stack:nth-child(1){
     color: green;
 }
@@ -396,7 +393,7 @@ table.octolapse-table-list td.rendering-name, table.octolapse-table-list th.rend
     width:22%;
 }
 table.octolapse-table-list td.rendering-action, table.octolapse-table-list th.rendering-action{
-    width:11%;
+    width:12%;
 }
 table.octolapse-table-list td.rendering-progress, table.octolapse-table-list th.rendering-progress{
     width:11%;
@@ -434,7 +431,7 @@ table.octolapse-table-list td.rendering-progress, table.octolapse-table-list th.
 }
 
 .octolapse-list .file-browser-snapshot-archive-action {
-    width:11%;
+    width:12%;
     text-align: center;
 }
 
@@ -585,6 +582,10 @@ form.octolapse_form .modal-body {
     margin: 10px;
 }
 
+.margin-bottom-small {
+    margin-bottom:10px;
+}
+
 .ol-text-status-title {
     font-size: medium;
 }
@@ -692,12 +693,6 @@ form.octolapse_form .modal-body {
     left: 50%;
     margin-left: -50px;
 }
-.snapshot_refresh_container {
-    z-index: 999;
-    position: absolute;
-    top: 5px;
-    right: 5px;
-}
 
 .latest-snapshot-modal .button-container {
     z-index: 1000;
@@ -714,6 +709,7 @@ form.octolapse_form .modal-body {
     color: white;
     text-shadow: 0px 0px 2px #000000;
     font-size:28px;
+    z-index:256;
 }
 .snapshot-container
 {
@@ -877,6 +873,12 @@ fieldset.octolapse legend
     padding: 0 0 0 6px;
 
 }
+
+.fa.outline
+{
+    text-shadow: -1px 0, 0 1px, 1px 0, 0 -1px;
+}
+
 .octolapse-snapshot-button-overlay
 {
     width:100%;
@@ -884,18 +886,33 @@ fieldset.octolapse legend
     position: relative;;
 }
 
-.octolapse-snapshot-button-overlay a
+.octolapse-snapshot-button-overlay a, .octolapse-snapshot-button-overlay span
 {
+    opacity: 1;
     position: absolute;
-    z-index:257
+    z-index:257;
+    -webkit-transition: opacity 0.25s;
+    -moz-transition: opacity 0.25s;
+    -o-transition: opacity 0.25s;
+    transition: opacity 0.25s;
+}
+.octolapse-snapshot-button-overlay .fade-out
+{
+    opacity: 0;
 }
 
-.octolapse-snapshot-button-overlay a.play{
-    opacity:0;
-    transition: 0.3s;
+.octolapse-snapshot-button-overlay .snapshot-indicator
+{
     left:50%;
     top:50%;
-    margin: -21px 0 0 -18px;
+}
+.octolapse-snapshot-button-overlay a.play > i, .octolapse-snapshot-button-overlay .snapshot-indicator > i {
+    margin: -42px 0 0 -42px;
+}
+.octolapse-snapshot-button-overlay a.play{
+    opacity:0;
+    left:50%;
+    top:50%;
 }
 .snapshot-container:hover .octolapse-snapshot-button-overlay a.play{
     opacity:1;
@@ -903,6 +920,9 @@ fieldset.octolapse legend
 .octolapse-snapshot-button-overlay a.fullscreen{
     right:0;
     bottom:0;
+}
+.octolapse-snapshot-button-overlay a.refresh{
+    right:0;
 }
 
 /* The slider itself */

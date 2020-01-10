@@ -27,7 +27,7 @@ $(function () {
         self.text = text;
         self.id = id;
         self.sortable = (options || {}).sortable || false;
-        self.sort_column_name = (options || {}).sort_column_name || id;
+        self.sort_column_id = (options || {}).sort_column_id || id;
         self.classes = (options || {}).class || "";
         self.template_id = (options || {}).template_id || "octolapse-list-item";
         self.visible_observable = (options || {}).visible_observable || true;
@@ -41,10 +41,10 @@ $(function () {
         self.value = value;
         self.data = ko.observable();
         self.data.parent = parent;
+        //self.selected = ko.observable(!!selected);
         self.selected = ko.observable(!!selected);
 
-        self.get_list_item_value = function(column)
-        {
+        self.get_list_item_value = function(column){
             var value = null;
             if (self.value !== null && self.value[column.id] !== undefined)
                 value = self.value[column.id];
@@ -69,6 +69,7 @@ $(function () {
         self.all_selected = ko.observable(false);
         self.page_selected = ko.observable(false);
         self.page_size = ko.observable(10);
+        self.has_loaded = ko.observable(false);
         // Must be at least 6 pages, can be more.
         self.list_items = ko.observableArray([]);
         self.page_sizes = [
@@ -96,14 +97,15 @@ $(function () {
         self.header_template_id = self.options.header_template_id || "octolapse-list-item-header";
         self.list_item_template_id = self.options.list_item_template_id || "octolapse-list-item";
         self.top_left_pagination_template_id = self.options.top_left_pagination_template_id || "octolapse-list-empty-template";
-        self.top_right_pagination_template_id = self.options.top_right_pagination_template_id || "octolapse-pagination-page-size";
+        self.top_right_pagination_template_id = self.options.top_right_pagination_template_id || "octolapse-list-empty-template";
         self.bottom_left_pagination_template_id = self.options.bottom_left_pagination_template_id || "octolapse-list-empty-template";
-        self.bottom_right_pagination_template_id = self.options.bottom_right_pagination_template_id || "octolapse-list-empty-template";
+        self.bottom_right_pagination_template_id = self.options.bottom_right_pagination_template_id || "octolapse-pagination-page-size";
         self.select_header_template_id = self.options.select_header_template_id || "octolapse-list-select-header-checkbox-page-template";
         self.custom_row_template_id = self.options.custom_row_template_id || null;
         self.sort_column = ko.observable(self.options.sort_column || "name");
         self.sort_direction_ascending = ko.observable(self.options.sort_order === "ascending" || true);
         self.default_sort_direction_ascending = self.sort_direction_ascending();
+        self.not_loaded_template_id = options.not_loaded_template_id || "octolapse-list-not-loaded";
         self.pagination = self.options.pagination || "top-and-bottom";
         self.pagination_top = self.pagination === 'top' || self.pagination === "top-and-bottom";
         self.pagination_bottom = self.pagination === 'bottom' || self.pagination === "top-and-bottom";
@@ -119,6 +121,7 @@ $(function () {
         });
 
         self.resize = function(){
+            console.log("octolapse.helpers.js - resize");
             if (self.on_resize)
                 self.on_resize();
         };
@@ -127,26 +130,31 @@ $(function () {
         });
 
         self.all_selected.subscribe(function(value){
+            console.log("octolapse.helpers.js - all selected");
             self.select('all', value);
         });
 
         self.page_selected.subscribe(function(value){
+            console.log("octolapse.helpers.js - page selected");
             self.select('page', value);
         });
 
         self.page_size.octolapseSubscribeChanged(function (newValue, oldValue) {
+            console.log("octolapse.helpers.js - page size changed");
             var new_page = Math.floor(self.current_page_index()*oldValue/newValue);
             self.current_page_index(new_page);
             self.resize();
         });
 
         self.num_pages = ko.pureComputed(function(){
+            console.log("octolapse.helpers.js - num pages changed");
             if (self.list_items().length === 0)
                 return 0;
             return Math.ceil(self.list_items().length / self.page_size())
         });
 
         self.pager = ko.pureComputed(function(){
+            console.log("octolapse.helpers.js - pager changed");
             if (self.max_pager_pages < 6) {
                 console.error("The file browser pager must have at least 6 pages.");
                 return [];
@@ -215,12 +223,22 @@ $(function () {
             return pager_pages;
         });
 
+        self.get_column = function(column_name){
+            for (var index=0; index < self.columns.length; index++)
+            {
+                var column = self.columns[index];
+                if (column.id === column_name)
+                    return column;
+            }
+        };
+
         self.sort_by_column = function(column){
             if (!column.sortable)
                 return;
 
+            console.log("octolapse.helpers.js - sorting by column:" + column.id);
             var ascending = true;
-            if (column.sort_column_name !== self.sort_column())
+            if (column.id !== self.sort_column())
             {
                 ascending = self.default_sort_direction_ascending;
             }
@@ -229,11 +247,12 @@ $(function () {
                 ascending = !self.sort_direction_ascending();
             }
             self.sort_direction_ascending(ascending);
-            self.sort_column(column.sort_column_name);
+            self.sort_column(column.id);
             self.current_page_index(0);
         };
 
         self.get_current_page_indexes = function(){
+            console.log("octolapse.helpers.js - current page indexes changed");
             if (self.page_size() === 0 || self.list_items().length === 0)
                 return null;
             var page_start_index = Math.max(self.current_page_index() * self.page_size(), 0);
@@ -242,18 +261,23 @@ $(function () {
         };
 
         self.list_items_sorted = ko.pureComputed(function() {
+            console.log("octolapse.helpers.js - list items sorting");
+            var current_sort_column = self.get_column(self.sort_column());
+            if (!current_sort_column)
+                return self.list_items();
             var left_direction = self.sort_direction_ascending() ? -1 : 1;
             var right_direction = left_direction * -1;
-            var sort_column = self.sort_column();
+            var sort_column_id = current_sort_column.sort_column_id;
             return self.list_items().sort(
                 function (left, right) {
-                    var leftItem = (left.value || {})[sort_column] || left[sort_column];
-                    var rightItem = (right.value || {})[sort_column] || right[sort_column];
+                    var leftItem = (left.value || {})[sort_column_id] || left[sort_column_id];
+                    var rightItem = (right.value || {})[sort_column_id] || right[sort_column_id];
                     return leftItem === rightItem ? 0 : (leftItem < rightItem ? left_direction : right_direction);
                 });
         });
 
         self.current_page = ko.pureComputed(function(){
+            console.log("octolapse.helpers.js - current page changing");
             var page_indexes = self.get_current_page_indexes();
             if (!page_indexes) {
                 return[];
@@ -264,6 +288,7 @@ $(function () {
         //self.max_page = ko.pureComputed(function(){return Math.floor(self.list_items().length/self.page_size());});
 
         self._fix_page_numbers = function() {
+            console.log("octolapse.helpers.js - repairing page numbers");
             // Ensure we are not off of any existing pages.  This can happen during a reload, after a delete, or
             // maybe some other scenarios.
             // Make sure we haven't deleted ourselves off the the current page!
@@ -285,6 +310,7 @@ $(function () {
         };
 
         self.set = function(items, on_added){
+            self.has_loaded(true);
             var list_items  = [];
             for (var index = 0; index < items.length; index++)
             {
@@ -300,7 +326,12 @@ $(function () {
             self.resize();
         };
 
+        self.clear = function(){
+            self.list_items([]);
+        };
+
         self.add = function(item){
+            self.has_loaded(true);
             self.list_items.push(self.to_list_item(item));
         };
 
@@ -349,6 +380,7 @@ $(function () {
         };
 
         self.select = function(type, selection){
+            console.log("octolapse.helpers.js - selecting " + type);
             // force selection to true or false
             selection = !!selection;
             var page_indexes = null;
@@ -400,6 +432,7 @@ $(function () {
         });
 
         self.selected = function(fields_to_return){
+            console.log("octolapse.helpers.js - returning selected items.");
             var selected_items = [];
             for (var index=0; index < self.list_items().length; index++)
             {

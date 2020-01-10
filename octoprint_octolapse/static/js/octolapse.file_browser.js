@@ -47,8 +47,10 @@ $(function () {
         self.allow_delete = options.allow_delete || false;
         self.allow_delete_all = options.allow_delete_all || false;
         self.custom_actions_template_id = options.custom_actions_template_id || null;
+        self.files_not_loaded_template_id = options.files_not_loaded_template_id || "octolapse-file-browser-not-loaded";
         self.actions_class = options.actions_class || "file-browser-action";
         self.pagination_row_auto_hide = !(self.allow_delete_all);
+        self.has_loaded = ko.observable(false);
         self.total_file_size = ko.observable(0);
         self.total_file_size_text = ko.pureComputed(function(){
             return Octolapse.toFileSizeString(self.total_file_size(),1);
@@ -65,10 +67,11 @@ $(function () {
             to_list_item: self.to_list_item,
             selection_enabled: self.allow_delete || self.allow_delete_all,
             select_all_enabled: self.allow_delete_all,
-            sort_column: 'date',
+            sort_column: 'date_formatted',
             sort_direction: 'descending',
             pagination_row_auto_hide: self.pagination_row_auto_hide,
             top_left_pagination_template_id: 'octolapse-file-browser-delete-selected',
+            top_right_pagination_template_id: 'octolapse-file-browser-file-size',
             select_header_template_id: 'octolapse-list-select-header-dropdown-template',
             selection_class: 'list-item-selection-dropdown',
             selection_header_class: 'list-item-selection-header-dropdown',
@@ -76,8 +79,8 @@ $(function () {
             custom_row_template_id: 'octolapse-file-browser-custom-row',
             columns: [
                 new Octolapse.ListViewColumn('Name', 'name', {class: 'file-browser-name', sortable:true}),
-                new Octolapse.ListViewColumn('Size', 'size_formatted', {class: 'file-browser-size', sortable:true, sort_column_name: "size"}),
-                new Octolapse.ListViewColumn('Date', 'date_formatted', {class: 'file-browser-date', sortable:true, sort_column_name: "date"}),
+                new Octolapse.ListViewColumn('Size', 'size_formatted', {class: 'file-browser-size', sortable:true, sort_column_id: "size"}),
+                new Octolapse.ListViewColumn('Date', 'date_formatted', {class: 'file-browser-date', sortable:true, sort_column_id: "date"}),
                 new Octolapse.ListViewColumn('Action', null, {class: self.actions_class, template_id:'octolapse-file-browser-action', visible_observable: self.is_admin})
             ]
         };
@@ -106,6 +109,7 @@ $(function () {
                 dataType: "json",
                 success: function (results) {
                     // Build the list items
+                    self.has_loaded(true);
                     var total_size = 0;
                     self.files.set(results.files, function(added_item){
                         total_size += added_item.value.size;
@@ -188,13 +192,21 @@ $(function () {
                                 addclass: "octolapse"
                             };
                             Octolapse.displayPopupForKey(options, "file-error",["file-error"]);
-                        }
-                    );
-                }
-            );
+                        },
+                        function() {
+                            var options = {
+                                title: 'Error Deleting File',
+                                text: "Octolapse could not delete the file.",
+                                type: 'error',
+                                hide: false,
+                                addclass: "octolapse"
+                            };
+                            Octolapse.displayPopupForKey(options, "file-delete", ["file-delete"]);
+                        });
+                });
         };
 
-        self._delete_selected_files = function(){
+        self._delete_selected = function(){
             var selected_files = self.files.selected(['id', 'size']);
             if (selected_files.length == 0)
                 return;
@@ -278,7 +290,7 @@ $(function () {
                 "Delete Selected Files",
                 message,
                 function(){
-                    self._delete_selected_files();
+                    self._delete_selected();
                 }
             );
         };

@@ -133,7 +133,7 @@ $(function () {
                 self.title(options.title);
 
                 // Configure Validation
-                self.validation_enabled = options.validation_enabled ? options.validation_enabled : self.validation_enabled;
+                self.validation_enabled = options.validation_enabled !== undefined ? options.validation_enabled : self.validation_enabled;
                 self.validation_options.rules = options.rules ? options.rules : self.rules;
                 self.validation_options.messages = options.messages ? options.messages : self.messages;
 
@@ -145,7 +145,7 @@ $(function () {
                 // Configure Buttons
                 // Cancel
                 self.cancel_button_visible(
-                    options.cancel_button_visible ? options.cancel_button_visible : self.cancel_button_visible()
+                    options.cancel_button_visible !== undefined ? options.cancel_button_visible : self.cancel_button_visible()
                 );
                 self.cancel_button_title(
                     options.cancel_button_title ? options.cancel_button_title : self.cancel_button_title()
@@ -156,7 +156,7 @@ $(function () {
                 self.on_cancel_button_clicked = options.on_cancel_button_clicked ? options.on_cancel_button_clicked : self.on_cancel_button_clicked;
                 // Option
                 self.option_button_visible(
-                    options.option_button_visible ? options.option_button_visible : self.option_button_visible()
+                    options.option_button_visible !== undefined ? options.option_button_visible : self.option_button_visible()
                 );
                 self.option_button_title(
                     options.option_button_title ? options.option_button_title : self.option_button_title()
@@ -167,7 +167,7 @@ $(function () {
                 self.on_option_button_clicked = self.option_button_clicked;
                 // OK
                 self.ok_button_visible(
-                    options.ok_button_visible ? options.ok_button_visible : self.ok_button_visible()
+                    options.ok_button_visible !== undefined ? options.ok_button_visible : self.ok_button_visible()
                 );
                 self.ok_button_title(
                     options.ok_button_title ? options.ok_button_title : self.ok_button_title()
@@ -223,10 +223,11 @@ $(function () {
             onclick: function (element, event) {
                 setTimeout(function () {
                     self.validator.form();
-                    self.resize();
+                    //self.resize();
                 }, 250);
             }
         };
+
         self.resize = function () {
             // create as callback
             if (self.on_resize) {

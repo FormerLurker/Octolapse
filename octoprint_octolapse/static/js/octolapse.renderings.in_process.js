@@ -44,6 +44,7 @@ $(function () {
         self.file_size = values.file_size;
         self.file_size_text = Octolapse.toFileSizeString(values.file_size,1);
         self.progress = ko.observable(values.progress);
+        self.sort_order = self.progress === "Pending" ? 0 : 1;
     };
 
     Octolapse.InProcessRenderingViewModel = function () {
@@ -69,21 +70,27 @@ $(function () {
 
         var list_view_options = {
             to_list_item: self.to_list_item,
+            sortable: false,
             sort_column: 'print_end_time',
             sort_direction: 'descending',
             no_items_template_id: 'octolapse-rendering-in-process-no-items',
+            sort_column: 'progress',
             columns: [
-                new Octolapse.ListViewColumn('Print', 'print_file_name', {class: 'rendering-print-name', sortable:true}),
-                new Octolapse.ListViewColumn('Status', 'print_end_state', {class: 'rendering-print-end-state', sortable:true}),
-                new Octolapse.ListViewColumn('Size', 'file_size_text', {class: 'rendering-size', sortable:true, sort_column_name: "file_size"}),
-                new Octolapse.ListViewColumn('Date', 'print_start_time_text', {class: 'rendering-date', sortable:true, sort_column_name: "print_start_time"}),
-                new Octolapse.ListViewColumn('Camera', 'camera_name', {class: 'rendering-camera-name', sortable:true}),
-                new Octolapse.ListViewColumn('Rendering', 'rendering_name', {class: 'rendering-name', sortable:true}),
-                new Octolapse.ListViewColumn('Progress', 'progress', {class: 'rendering-progress text-center'})
+                new Octolapse.ListViewColumn('Print', 'print_file_name', {class: 'rendering-print-name', sortable:false}),
+                new Octolapse.ListViewColumn('Status', 'print_end_state', {class: 'rendering-print-end-state', sortable:false}),
+                new Octolapse.ListViewColumn('Size', 'file_size_text', {class: 'rendering-size', sortable:false, sort_column_id: "file_size"}),
+                new Octolapse.ListViewColumn('Date', 'print_start_time_text', {class: 'rendering-date', sortable:false, sort_column_id: "print_start_time"}),
+                new Octolapse.ListViewColumn('Camera', 'camera_name', {class: 'rendering-camera-name', sortable:false}),
+                new Octolapse.ListViewColumn('Rendering', 'rendering_name', {class: 'rendering-name', sortable:false}),
+                new Octolapse.ListViewColumn('Progress', 'progress', {class: 'rendering-progress text-center', sortable: false, sort_column_id: 'sort_order'})
             ]
         };
 
         self.in_process_renderings = new Octolapse.ListViewModel(self, self.in_process_renderings_id, list_view_options);
+
+        self.count = ko.pureComputed(function(){
+            return self.in_process_renderings.list_items().length;
+        });
 
         self.initialize = function(){
             self.is_admin(Octolapse.Globals.is_admin());

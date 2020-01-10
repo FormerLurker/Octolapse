@@ -22,6 +22,10 @@
 ##################################################################################
 -->
 
+<script type="text/html" id="octolapse-list-not-loaded">
+<p>The list is initializing.  Please wait...</p>
+</script>
+
 <script type="text/html" id="octolapse-list-no-items">
     <p>
         There are no items available.
@@ -69,14 +73,14 @@
         </div>
         <div data-bind="visible: !is_empty()">
             <div class="row-fluid" data-bind="visible: show_pagination_row_top">
-                <div class="span2">
+                <div class="span3">
                     <!-- ko template: top_left_pagination_template_id -->
                     <!-- /ko -->
                 </div>
-                <div class="span8">
+                <div class="span6">
                     <div class="text-center" data-bind="template: { name: 'octolapse-pagination' }"></div>
                 </div>
-                <div class="span2">
+                <div class="span3">
                     <!-- ko template: top_right_pagination_template_id -->
                     <!-- /ko -->
                 </div>
@@ -95,7 +99,7 @@
                                 <!-- ko template: $parent.header_template_id -->
                                 <!-- /ko -->
                                 <i class="fa"
-                                   data-bind="visible: $parent.sort_column() == sort_column_name,
+                                   data-bind="visible: $parent.sort_column() == id,
                                               css: {'fa-caret-up' : $parent.sort_direction_ascending,
                                                     'fa-caret-down' : !$parent.sort_direction_ascending()}"></i>
                             </a>
@@ -109,7 +113,7 @@
                     </thead>
                     <tbody data-bind="foreach: {data: current_page}">
                         <tr>
-                            <td data-bind="css: $parent.selection_class, visible: $parent.selection_enabled && $parent.select_all_enabled">
+                            <td data-bind="css: $parent.selection_class, visible: $parent.selection_enabled">
                                 <input type="checkbox" data-bind="checked: selected">
                             </td>
                             <!-- ko foreach: $parent.columns -->
@@ -136,22 +140,24 @@
         </div>
     </div>
 </script>
+
 <!-- Todo:  See if this is viable at all to speed up list generation.  Removes the inner foreach for columns on each row. -->
 <script type="text/html" id="octolapse-list-custom-row">
-    <div class="octolapse-list" data-bin="attr: {id: list_id}">
+    <div data-bind="visible: !has_loaded(), template: not_loaded_template_id"></div>
+    <div class="octolapse-list" data-bin="attr: {id: list_id}, visible: has_loaded">
         <div data-bind="visible: is_empty()">
             <p data-bind="template: {name: no_items_template_id}"></p>
         </div>
         <div data-bind="visible: !is_empty()">
             <div class="row-fluid" data-bind="visible: show_pagination_row_top">
-                <div class="span2">
+                <div class="span3">
                     <!-- ko template: top_left_pagination_template_id -->
                     <!-- /ko -->
                 </div>
-                <div class="span8">
+                <div class="span6">
                     <div class="text-center" data-bind="template: { name: 'octolapse-pagination' }"></div>
                 </div>
-                <div class="span2">
+                <div class="span3">
                     <!-- ko template: top_right_pagination_template_id -->
                     <!-- /ko -->
                 </div>
@@ -170,7 +176,7 @@
                                 <!-- ko template: $parent.header_template_id -->
                                 <!-- /ko -->
                                 <i class="fa"
-                                   data-bind="visible: $parent.sort_column() == sort_column_name,
+                                   data-bind="visible: $parent.sort_column() == id,
                                               css: {'fa-caret-up' : $parent.sort_direction_ascending,
                                                     'fa-caret-down' : !$parent.sort_direction_ascending()}"></i>
                             </a>

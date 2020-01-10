@@ -298,6 +298,27 @@ def get_snapshot_archive_filename(rendering_filename):
     return "{0}.{1}".format(rendering_filename, snapshot_archive_extension)
 
 
+no_archive_filename = "no-archive.octolapse"
+
+
+def create_no_archive_file(temporary_directory, job_guid, camera_guid):
+    camera_job_directory = get_temporary_snapshot_job_camera_path(temporary_directory, job_guid, camera_guid)
+    # create the directory if it does not exist
+    if not os.path.isdir(camera_job_directory):
+        os.makedirs(camera_job_directory)
+
+    # create the no archive file path
+    no_archive_file_path = os.path.join(camera_job_directory, no_archive_filename)
+    # create the file
+    with open(no_archive_file_path, mode='w'):
+        pass  # nothing to do, just create the file
+
+
+def has_no_archive_file(temporary_directory, job_guid, camera_guid):
+    camera_job_directory = get_temporary_snapshot_job_camera_path(temporary_directory, job_guid, camera_guid)
+    no_archive_file_path = os.path.join(camera_job_directory, no_archive_filename)
+    return os.path.isfile(no_archive_file_path)
+
 def get_latest_snapshot_download_path(temporary_directory, camera_guid, base_folder=None):
     if (not camera_guid or camera_guid == "undefined") and base_folder:
         return get_images_download_path(base_folder, "no-camera-selected.png")
@@ -724,7 +745,7 @@ def get_file_info(file_path):
     return {
         'name': name,
         'extension': extension,
-        'size': os.path.getsize(file_path),
+        'size': os.path.getsize(file_path) if os.path.isfile(file_path) else 0,
         'date': get_file_creation_date(file_path)
     }
 

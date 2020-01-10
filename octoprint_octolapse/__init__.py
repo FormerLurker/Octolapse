@@ -1807,7 +1807,7 @@ class OctolapsePlugin(
             )
             snapshot_archive_path = os.path.join(snapshot_archive_directory, snapshot_archive_name)
             # attempt to import the zip file
-            results = self._rendering_processor.import_snapshot_archive(snapshot_archive_path)
+            results = self._rendering_processor.import_snapshot_archive(snapshot_archive_path, prevent_archive=True)
             if not results["success"]:
                 return jsonify({
                     "success": False,
@@ -1835,13 +1835,20 @@ class OctolapsePlugin(
                     "error": "The file type is not allowed for upload."
                 }), 403
 
-            # attempt to import the zip file
-            results = self._rendering_processor.import_snapshot_archive(snapshot_archive_path)
-            if not results["success"]:
-                return jsonify({
-                    "success": False,
-                    "error": results["error"]
-                }), 500
+            # get the archive folder
+            target_folder = self._octolapse_settings.main_settings.get_snapshot_archive_directory(
+                self.get_plugin_data_folder()
+            )
+            target_path = utility.get_collision_free_filepath(os.path.join(target_folder, snapshot_archive_name))
+            shutil.move(snapshot_archive_path, target_path)
+
+            file_info = utility.get_file_info(target_path)
+            file_info["type"] = utility.FILE_TYPE_SNAPSHOT_ARCHIVE
+            self.send_files_changed_message(
+                file_info,
+                'added',
+                None
+            )
 
             return jsonify({
                 "success": True
@@ -2050,6 +2057,7 @@ class OctolapsePlugin(
         try:
             is_timelapse_active = False
             snapshot_count = 0
+            snapshot_failed_count = 0
             is_taking_snapshot = False
             is_rendering = False
             current_timelapse_state = TimelapseState.Idle
@@ -2059,7 +2067,7 @@ class OctolapsePlugin(
             unfinished_renderings = None
             in_process_renderings = None
             if self._timelapse is not None:
-                snapshot_count = self._timelapse.get_snapshot_count()
+                snapshot_count, snapshot_failed_count = self._timelapse.get_snapshot_count()
                 is_timelapse_active = self._timelapse.is_timelapse_active()
                 if is_timelapse_active:
                     is_test_mode_active = self._timelapse.get_is_test_mode_active()
@@ -2087,6 +2095,7 @@ class OctolapsePlugin(
                 is_waiting_to_render = (not is_rendering) and current_timelapse_state == TimelapseState.WaitingToRender
             return {
                 'snapshot_count': snapshot_count,
+                'snapshot_failed_count': snapshot_failed_count,
                 'is_timelapse_active': is_timelapse_active,
                 'is_taking_snapshot': is_taking_snapshot,
                 'is_rendering': is_rendering,
@@ -3419,7 +3428,7 @@ class OctolapsePlugin(
             None
         )
         archive_path = payload.ArchivePath
-        if archive_path:
+        if archive_path and os.path.isfile(archive_path):
             # Notify the plugin that an archive was created
             file_info = utility.get_file_info(archive_path)
             file_info["type"] = utility.FILE_TYPE_SNAPSHOT_ARCHIVE

@@ -416,6 +416,10 @@ class RenderingProcessor(threading.Thread):
         }
 
     def archive_unfinished_job(self, temporary_directory, job_guid, camera_guid, target_path):
+        # do not archive if there is a no archive file.  This means the rendering was created from
+        # an archive that already existed.
+        if utility.has_no_archive_file(temporary_directory, job_guid, camera_guid):
+            return
         with self.temp_files_lock:
             job_directory = utility.get_temporary_snapshot_job_path(temporary_directory, job_guid)
             camera_directory = utility.get_temporary_snapshot_job_camera_path(temporary_directory, job_guid, camera_guid)
@@ -445,7 +449,7 @@ class RenderingProcessor(threading.Thread):
                             os.path.join(job_guid, camera_guid, name)
                         )
 
-    def import_snapshot_archive(self, snapshot_archive_path):
+    def import_snapshot_archive(self, snapshot_archive_path, prevent_archive=False):
         """Attempt to import one or more snapshot archives in the following form:
            1.  The archive contains images (currently jpg only) in the root.
            2.  The archive is contained within a folder named with a GUID that contains another folder
@@ -454,6 +458,7 @@ class RenderingProcessor(threading.Thread):
         """
         # create our dict of archive files
         archive_files_dict = {}
+        temporary_directory = self._temporary_directory
         with self.temp_files_lock:
             if not os.path.isfile(snapshot_archive_path):
                 return {
@@ -529,7 +534,7 @@ class RenderingProcessor(threading.Thread):
 
                 # now create the directories and files and place them in the temp snapshot directory
                 for job_guid, job in iteritems(archive_files_dict):
-                    job_path = utility.get_temporary_snapshot_job_path(self._temporary_directory, job_guid)
+                    job_path = utility.get_temporary_snapshot_job_path(temporary_directory, job_guid)
                     if not os.path.isdir(job_path):
                         os.makedirs(job_path)
                     job_info_file = job["file"]
@@ -540,7 +545,7 @@ class RenderingProcessor(threading.Thread):
                                 target_file.write(info_file.read())
                     for camera_guid, camera in iteritems(job["cameras"]):
                         camera_path = utility.get_temporary_snapshot_job_camera_path(
-                            self._temporary_directory, job_guid, camera_guid
+                            temporary_directory, job_guid, camera_guid
                         )
                         if not os.path.isdir(camera_path):
                             os.makedirs(camera_path)
@@ -556,13 +561,16 @@ class RenderingProcessor(threading.Thread):
             has_created_jobs = True
             for camera_guid, camera in iteritems(job["cameras"]):
                 # add this job to the queue as an imported item
+                if prevent_archive:
+                    # add a file that will signify to the rendering engine that no archive should be created
+                    utility.create_no_archive_file(temporary_directory, job_guid, camera_guid)
                 parameters = {
                     "job_guid": job_guid,
                     "camera_guid": camera_guid,
                     "action": "import",
                     "rendering_profile": None,
                     "camera_profile": None,
-                    "temporary_directory": self._temporary_directory
+                    "temporary_directory": temporary_directory
                 }
                 self.rendering_task_queue.put(parameters)
 

@@ -21,6 +21,11 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 -->
+<script type="text/html" id="octolapse-file-browser-snapshot-archive-import">
+
+
+</script>
+
 <script type="text/html" id="octolapse-timelapse-files-dialog-template">
     <ul class="nav nav-pills">
         <li class="dropdown pull-right tabdrop hide">
@@ -40,7 +45,20 @@
     </ul>
     <div class="tab-content">
         <div id="octolapse_timelapse_videos_tab" class="tab-pane active" data-bind="template: {name: 'octolapse-file-browser', data: timelapse_browser}"></div>
-        <div id="octolapse_snapshot_archive_tab" class="tab-pane" data-bind="template: {name: 'octolapse-file-browser', data: archive_browser}"></div>
+        <div id="octolapse_snapshot_archive_tab" class="tab-pane">
+            <fieldset class="octolapse">
+                <legend>Import Snapshot Archive (.zip)</legend>
+                <div class="row-fluid">
+                    <div class="span3">
+                        <input id="octolapse_snapshot_upload" type="file" name="octolapse_snapshot_upload" accept=".zip" data-url="{{ url_for('plugin.octolapse.import_snapshots_request') }}">
+                    </div>
+                    <div class="span9"><span id="octolapse_snapshot_upload_progress" class="progress-bar-container">
+                <span class="progress-bar" style="width: 0;"></span>
+                </span></div>
+                </div>
+            </fieldset>
+            <div data-bind="template: {name: 'octolapse-file-browser', data: archive_browser}"></div>
+        </div>
     </div>
 </script>
 <script type="text/html" id="octolapse-snapshot-archive-custom-actions">

@@ -21,7 +21,9 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 -->
-
+<script type="text/html" id="octolapse-file-browser-not-loaded">
+    <p>Initializing, please wait.</p>
+</script>
 <script type="text/html" id="octolapse-file-browser-no-items">
     <p>
         There are no files available.
@@ -57,14 +59,23 @@
         Delete <span data-bind="text:selected_count()"></span> Files
     </button>
 </script>
+
+<script type="text/html" id="octolapse-file-browser-empty-template"></script>
+
+<script type="text/html" id="octolapse-file-browser-file-size">
+    <div class="text-right">
+        Total File Size:&nbsp;<span data-bind="text: data.parent.total_file_size_text"></span>
+    </div>
+</script>
+
 <!-- alternate slower binding - ko template: {name: 'octolapse-list', data: files} --><!-- /ko -->
 <script type="text/html" id="octolapse-file-browser">
-    <div class="row-fluid">
-        <div class="span12 text-right">
-            Total File Size:&nbsp;<span data-bind="text: total_file_size_text"></span>
-        </div>
+    <div data-bind="visible: !has_loaded(), template: files_not_loaded_template_id">
     </div>
-    <!-- ko template: {name: 'octolapse-list-custom-row', data: files} --><!-- /ko -->
+    <div data-bind="visible: has_loaded">
+        <!-- ko template: {name: 'octolapse-list-custom-row', data: files} --><!-- /ko -->
+    </div>
+
 </script>
 
 <script type="text/html" id="octolapse-file-browser-custom-row">

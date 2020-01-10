@@ -146,8 +146,8 @@ class Timelapse(object):
 
     def get_snapshot_count(self):
         if self._capture_snapshot is None:
-            return 0
-        return self._capture_snapshot.SnapshotsTotal
+            return 0, 0
+        return self._capture_snapshot.SnapshotsTotal, self._capture_snapshot.ErrorsTotal
 
     def get_current_profiles(self):
         return self._current_profiles
@@ -1253,6 +1253,7 @@ class Timelapse(object):
                 "success": snapshot_payload["success"],
                 "error": snapshot_payload["error"],
                 "snapshot_count":  self._capture_snapshot.SnapshotsTotal,
+                "snapshot_failed_count": self._capture_snapshot.ErrorsTotal,
                 "snapshot_payload": snapshot_payload["snapshot_payload"],
             }
 

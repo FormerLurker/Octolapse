@@ -59,6 +59,7 @@ $(function () {
             self.is_taking_snapshot = ko.observable(false);
             self.is_rendering = ko.observable(false);
             self.snapshot_count = ko.observable(0);
+            self.snapshot_failed_count = ko.observable(0);
             self.snapshot_error = ko.observable(false);
             self.waiting_to_render = ko.observable();
             self.current_printer_profile_guid = ko.observable();
@@ -110,7 +111,7 @@ $(function () {
             };
 
             self.openTimelapseFilesDialog = function() {
-                self.timelapse_files_dialog.open('timelapse');
+                self.timelapse_files_dialog.open();
             };
 
             self.openRenderingDialog = function() {
@@ -120,6 +121,19 @@ $(function () {
                 }
                 self.rendering_dialog.open('failed');
             };
+
+            self.getEnabledButtonText = ko.pureComputed(function(){
+                if (Octolapse.Globals.main_settings.is_octolapse_enabled())
+                {
+                    if (self.is_timelapse_active())
+                        return "Plugin Enabled and Running";
+                    else
+                        return "Plugin Enabled";
+                }
+                else{
+                    return "Plugin Disabled";
+                }
+            });
 
             self.open_rendering_text = ko.pureComputed(function(){
                 if(!self.rendering_dialog.failed.is_empty())
@@ -270,6 +284,8 @@ $(function () {
                     self.is_timelapse_active(settings.is_timelapse_active);
                 if (settings.snapshot_count !== undefined)
                     self.snapshot_count(settings.snapshot_count);
+                if (settings.snapshot_failed_count !== undefined)
+                    self.snapshot_failed_count(settings.snapshot_failed_count);
                 if (settings.is_taking_snapshot !== undefined)
                     self.is_taking_snapshot(settings.is_taking_snapshot);
                 if (settings.is_rendering !== undefined)
@@ -922,7 +938,7 @@ $(function () {
                     }
                 }
                 if (current_camera)
-                    self.current_camera_enabled(current_camera.enabled);
+                    self.current_camera_enabled(current_camera.enabled());
                 else
                     self.current_camera_enabled(true);
             };

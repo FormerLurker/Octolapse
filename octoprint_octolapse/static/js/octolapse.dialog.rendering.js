@@ -33,6 +33,7 @@ $(function () {
 
         self.dialog_options = {
             title: "Rendering Information",
+            validation_enabled: false
         };
         self.template_id= "octolapse-rendering-dialog-template";
 

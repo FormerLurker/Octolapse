@@ -107,15 +107,19 @@ $(function () {
             select_all_enabled: true,
             sort_column: 'date',
             sort_direction: 'descending',
-            top_left_pagination_template_id: 'octolapse-file-browser-delete-selected',
+            top_left_pagination_template_id: 'octolapse-rendering-failed-selected-actions',
+            pagination_row_auto_hide: false,
             no_items_template_id: 'octolapse-rendering-failed-no-items',
+            select_header_template_id: 'octolapse-list-select-header-dropdown-template',
+            selection_class: 'list-item-selection-dropdown',
+            selection_header_class: 'list-item-selection-header-dropdown',
             columns: [
                 new Octolapse.ListViewColumn('Print', 'print_file_name', {class: 'rendering-print-name', sortable:true}),
                 new Octolapse.ListViewColumn('Status', 'print_end_state', {class: 'rendering-print-end-state', sortable:true}),
-                new Octolapse.ListViewColumn('Size', 'file_size_text', {class: 'rendering-size', sortable:true, sort_column_name: "file_size"}),
-                new Octolapse.ListViewColumn('Date', 'print_start_time_text', {class: 'rendering-date', sortable:true, sort_column_name: "print_start_time"}),
-                new Octolapse.ListViewColumn('Camera', 'date_formatted', {class: 'rendering-camera-name', sortable:true, template_id: 'octolapse-rendering-failed-camera-profile'}),
-                new Octolapse.ListViewColumn('Rendering', 'date_formatted', {class: 'rendering-name', sortable:true, template_id: 'octolapse-rendering-failed-render-profile'}),
+                new Octolapse.ListViewColumn('Size', 'file_size_text', {class: 'rendering-size', sortable:true, sort_column_id: "file_size"}),
+                new Octolapse.ListViewColumn('Date', 'print_start_time_text', {class: 'rendering-date', sortable:true, sort_column_id: "print_start_time"}),
+                new Octolapse.ListViewColumn('Camera', 'camera_name', {class: 'rendering-camera-name', sortable:true, template_id: 'octolapse-rendering-failed-camera-profile'}),
+                new Octolapse.ListViewColumn('Rendering', 'rendering_name', {class: 'rendering-name', sortable:true, template_id: 'octolapse-rendering-failed-render-profile'}),
                 new Octolapse.ListViewColumn('Action', null, {class: 'rendering-action text-center', template_id:'octolapse-rendering-failed-action', visible_observable: self.is_admin})
             ]
         };
@@ -124,45 +128,18 @@ $(function () {
 
         self.initialize = function(){
             self.is_admin(Octolapse.Globals.is_admin());
-            self.initialize_snapshot_upload_button();
             Octolapse.Globals.is_admin.subscribe(function(newValue){
                 self.is_admin(newValue);
-            });
-        };
-
-        self.initialize_snapshot_upload_button = function() {
-            // Set up the file upload button.
-            var $snapshotUploadElement = $('#octolapse_snapshot_upload');
-            var $progressBarContainer = $('#octolapse_snapshot_upload_progress');
-            var $progressBar = $progressBarContainer.find('.progress-bar');
-
-            $snapshotUploadElement.fileupload({
-                dataType: "json",
-                maxNumberOfFiles: 1,
-                headers: OctoPrint.getRequestHeaders(),
-                start: function(e) {
-                    $progressBar.text("Starting...");
-                    $progressBar.animate({'width': '0'}, {'queue': false}).removeClass('failed');
-                },
-                progressall: function (e, data) {
-                    var progress = parseInt(data.loaded / data.total * 100, 10);
-                    $progressBar.text(progress + "%");
-                    $progressBar.animate({'width': progress + '%'}, {'queue': false});
-                },
-                done: function (e, data) {
-                    $progressBar.text("Done!");
-                    $progressBar.animate({'width': '100%'}, {'queue': false});
-                },
-                fail: function (e, data) {
-                    $progressBar.text("Failed...").addClass('failed');
-                    $progressBar.animate({'width': '100%'}, {'queue': false});
-                }
             });
         };
 
         self.get_key = function(job_guid, camera_guid){
             return job_guid + camera_guid;
         };
+
+        self.count = ko.pureComputed(function(){
+            return self.failed_renderings.list_items().length;
+        });
 
         self.update = function(values) {
 
@@ -214,167 +191,291 @@ $(function () {
 
         };
 
-        self.delete = function(item){
+        self._delete = function(item, on_success, on_error){
             var data = {
                 'job_guid': item.value.job_guid,
                 'camera_guid': item.value.camera_guid,
             };
+            $.ajax({
+                url: "./plugin/octolapse/deleteFailedRendering",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    var removed = self.failed_renderings.remove(item);
+                    if (removed) {
+                        self.failed_renderings_size(self.failed_renderings_size() - removed.file_size);
+                    }
+                    if (on_success){
+                        on_success(item.id);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    if (on_error) {
+                        on_error(XMLHttpRequest, textStatus, errorThrown);
+                    }
+                }
+            });
+        };
 
+        self.delete = function(item){
             Octolapse.showConfirmDialog(
             "failed_rendering",
             "Delete Failed Rendering",
             "The selected rendering will be deleted.  Are you sure?",
             function(){
-               $.ajax({
-                    url: "./plugin/octolapse/deleteFailedRendering",
-                    type: "POST",
-                    data: JSON.stringify(data),
-                    contentType: "application/json",
-                    dataType: "json",
-                    success: function (results) {
+                self._delete(
+                    item,
+                    function(XMLHttpRequest, textStatus, errorThrown) {
                         var options = {
-                            title: 'Failed Rendering Deleted',
-                            text: "The failed rendering was deleted.",
+                            title: 'Unfinished Rendering Deleted',
+                            text: "The unfinished rendering was deleted successfully.",
                             type: 'success',
                             hide: true,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
-                        var removed = self.failed_renderings.remove(item);
-                        if (removed) {
-                            self.failed_renderings_size(self.failed_renderings_size() - rendering.file_size);
-                        }
-                    },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        var options = {
-                            title: 'Error Deleting Failed Rendering',
-                            text: "Status: " + textStatus + ".  Error: " + errorThrown,
-                            type: 'error',
-                            hide: false,
-                            addclass: "octolapse"
-                        };
-                        Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
+                        Octolapse.displayPopupForKey(options, "file-delete",["file-delete"]);
                     }
-                });
+                );
             });
         };
 
-        self.delete_all = function(){
-            Octolapse.showConfirmDialog(
-            "failed_rendering",
-            "Delete All Failed Renderings",
-            "All failed renderings will be deleted.  Are you sure?",
-            function(){
-               $.ajax({
-                    url: "./plugin/octolapse/deleteAllFailedRenderings",
-                    type: "POST",
-                    contentType: "application/json",
-                    success: function (results) {
-                        var options = {
-                            title: 'Failed Renderings Deleted',
-                            text: "All failed renderings were deleted.",
-                            type: 'success',
-                            hide: true,
-                            addclass: "octolapse"
-                        };
-                        Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
-                        self.failed_renderings.clear([]);
-                        self.failed_renderings_size(0);
-                    },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        var options = {
-                            title: 'Error Deleting Failed Renderings',
-                            text: "Status: " + textStatus + ".  Error: " + errorThrown,
-                            type: 'error',
-                            hide: false,
-                            addclass: "octolapse"
-                        };
-                        Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
-                    }
-                });
-            });
-        };
+        self._delete_selected = function(){
+            var selected_files = self.failed_renderings.selected(['id', 'job_guid', 'camera_guid', 'size']);
 
-        self.render_all = function(){
-            var data = {
-                'render_profile_override_guid': self.render_profile_override_guid() || null,
-                'camera_profile_override_guid': self.camera_profile_override_guid() || null
+            if (selected_files.length == 0)
+                return;
+            var num_errors = 0;
+            var num_deleted = 0;
+            var current_index = 0;
+            var delete_success = function(id){
+                num_deleted += 1;
+                delete_end();
             };
-            Octolapse.showConfirmDialog(
-            "failed_rendering",
-            "Render All Failed Renderings",
-            "All failed renderings will be rendered, which could take a long time.  Are you sure?",
-            function(){
-               $.ajax({
-                    url: "./plugin/octolapse/renderAllFailedRenderings",
-                    type: "POST",
-                    data: JSON.stringify(data),
-                    contentType: "application/json",
-                    dataType: "json",
-                    success: function (results) {
+            var delete_failed = function(XMLHttpRequest, textStatus, errorThrown){
+                num_errors += 1;
+                delete_end();
+            };
+
+            var delete_end = function(){
+                current_index += 1;
+                if (current_index < selected_files.length)
+                {
+                    delete_item();
+                }
+                else
+                {
+                    var options = null;
+                    if (num_deleted > 0 && num_errors == 0)
+                    {
                         var options = {
-                            title: 'Failed Renderings Deleted',
-                            text: "All failed renderings were deleted.",
+                            title: 'Unfinished Renderings Deleted',
+                            text: "All selected unfinished renderings were deleted.",
                             type: 'success',
                             hide: true,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
-                        self.failed_renderings([]);
-                        self.failed_renderings_size(0);
-                    },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    }
+                    else if (num_deleted == 0)
+                    {
                         var options = {
-                            title: 'Error Deleting Failed Renderings',
-                            text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                            title: 'Error Deleting Unfinished Renderings',
+                            text: "Octolapse could not delete the selected unfinished renderings.",
                             type: 'error',
                             hide: false,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
                     }
-                });
+                    else
+                    {
+                        var options = {
+                            title: 'Some Unfinished Renderings Not Deleted',
+                            text: "Octolapse could not delete all of the selected unfinished renderings. " +
+                                num_deleted.toString() + " of " + num_errors.toString() + " files were deleted.",
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                    }
+
+                    Octolapse.displayPopupForKey(options, "file-delete",["file-delete"]);
+                }
+            };
+
+            var delete_item = function() {
+                var item = selected_files[current_index];
+                self._delete(item, delete_success, delete_failed)
+            };
+
+            delete_item();
+        };
+
+        self.delete_selected = function(){
+            Octolapse.showConfirmDialog(
+            "failed_rendering",
+            "Delete Selected Unfinished Renderings",
+            "All selected unfinished renderings will be deleted.  Are you sure?",
+            function(){
+               self._delete_selected();
             });
         };
 
-        self.render = function(rendering){
+        self._render = function(item_data, on_success, on_error){
             var data = {
-                'job_guid': rendering.value.job_guid,
-                'camera_guid': rendering.value.camera_guid,
-                'render_profile_override_guid': rendering.value.render_profile_override_guid() || null,
-                'camera_profile_override_guid': rendering.value.camera_profile_override_guid() || null
+                'id': item_data.id,
+                'job_guid': item_data.job_guid,
+                'camera_guid': item_data.camera_guid,
+                'render_profile_override_guid': item_data.render_profile_override_guid || null,
+                'camera_profile_override_guid': item_data.camera_profile_override_guid || null
             };
             $.ajax({
-                    url: "./plugin/octolapse/renderFailedRendering",
-                    type: "POST",
-                    data: JSON.stringify(data),
-                    contentType: "application/json",
-                    dataType: "json",
-                    success: function (results) {
+                url: "./plugin/octolapse/renderFailedRendering",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    var removed = self.failed_renderings.remove(item_data.id);
+                    if (removed) {
+                        self.failed_renderings_size(self.failed_renderings_size() - item_data.file_size);
+                    }
+                    if (on_success){
+                        on_success(item_data.id);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    if (on_error) {
+                        on_error(XMLHttpRequest, textStatus, errorThrown);
+                    }
+                }
+            });
+
+        };
+
+        self.render = function(item){
+            var data = {
+                'id': item.id,
+                'job_guid': item.value.job_guid,
+                'camera_guid': item.value.camera_guid,
+                'render_profile_override_guid': item.value.render_profile_override_guid() || null,
+                'camera_profile_override_guid': item.value.camera_profile_override_guid() || null,
+                'file_size': item.value.file_size
+            };
+
+            self._render(
+                data,
+                function(){
+                    var options = {
+                        title: 'Failed Rendering Queued',
+                        text: "The failed rendering was added to the rendering queue.",
+                        type: 'success',
+                        hide: true,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
+                },
+                function(){
+                    var options = {
+                        title: 'Error Deleting Failed Rendering',
+                        text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
+                });
+
+        };
+
+        self._render_selected = function(){
+            var selected_unfinished_renderings = self.failed_renderings.selected(
+                ['id', 'job_guid', 'camera_guid', 'render_profile_override_guid', 'camera_profile_override_guid', 'file_size']
+            );
+
+            if (selected_unfinished_renderings.length == 0)
+                return;
+            var num_errors = 0;
+            var num_rendered = 0;
+            var current_index = 0;
+            var render_success = function(id){
+                num_rendered += 1;
+                render_end();
+            };
+            var render_failed = function(XMLHttpRequest, textStatus, errorThrown){
+                num_errors += 1;
+                render_end();
+            };
+
+            var render_end = function(){
+                current_index += 1;
+                if (current_index < selected_unfinished_renderings.length)
+                {
+                    render_item();
+                }
+                else
+                {
+                    var options = null;
+                    if (num_rendered > 0 && num_errors == 0)
+                    {
                         var options = {
-                            title: 'Failed Rendering Queued',
-                            text: "The failed rendering was added to the rendering queue.",
+                            title: 'Unfinished Renderings Queued',
+                            text: "All selected items were queued for rendering.",
                             type: 'success',
                             hide: true,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
-                        var removed = self.failed_renderings.remove(rendering);
-                        if (removed) {
-                            self.failed_renderings_size(self.failed_renderings_size() - rendering.file_size);
-                        }
-                    },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    }
+                    else if (num_rendered == 0)
+                    {
                         var options = {
-                            title: 'Error Deleting Failed Rendering',
-                            text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                            title: 'Error Queueing Unfinished Renderings',
+                            text: "Octolapse could not queue the selected unfinished renderings.",
                             type: 'error',
                             hide: false,
                             addclass: "octolapse"
                         };
-                        Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
                     }
-                });
+                    else
+                    {
+                        var options = {
+                            title: 'Some Unfinished Renderings Not Queued',
+                            text: "Octolapse could not queue all of the selected items for renderings. " +
+                                num_rendered.toString() + " of " + num_errors.toString() + " files were queued.",
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                    }
+
+                    Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
+                }
+            };
+
+            var render_item = function() {
+                var item = selected_unfinished_renderings[current_index];
+                var data = {
+                    'id': item.id,
+                    'job_guid': item.value.job_guid,
+                    'camera_guid': item.value.camera_guid,
+                    'render_profile_override_guid': item.value.render_profile_override_guid || null,
+                    'camera_profile_override_guid': item.value.camera_profile_override_guid || null,
+                    'file_size': item.value.file_size
+                };
+                self._render(data, render_success, render_failed);
+            };
+
+            render_item();
+        };
+
+        self.render_selected = function(){
+            Octolapse.showConfirmDialog(
+            "failed_rendering",
+            "Render All Selected",
+            "All selected items will be rendered, which could take a long time.  Are you sure?",
+            function(){
+                self._render_selected();
+            });
         };
     };
 });

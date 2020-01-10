@@ -32,6 +32,7 @@ $(function () {
         self.snapshot_archive_tab_button_id = "octolapse_snapshot_archive_tab_button";
         self.dialog_options = {
             title: "Timelapse Files",
+            validation_enabled: false
         };
         self.template_id= "octolapse-timelapse-files-dialog-template";
         self.dialog = new Octolapse.OctolapseDialog(self.dialog_id, self.template_id, self.dialog_options);
@@ -45,7 +46,8 @@ $(function () {
                 allow_delete: true,
                 allow_delete_all: true,
                 custom_actions_template_id: 'octolapse-snapshot-archive-custom-actions',
-                actions_class: 'file-browser-snapshot-archive-action'
+                actions_class: 'file-browser-snapshot-archive-action',
+                top_left_template_id: 'octolapse-file-browser-snapshot-archive-import'
             }
         );
 
@@ -76,10 +78,41 @@ $(function () {
             }
         };
 
+        self.initialize_snapshot_upload_button = function() {
+            // Set up the file upload button.
+            var $snapshotUploadElement = $('#octolapse_snapshot_upload');
+            var $progressBarContainer = $('#octolapse_snapshot_upload_progress');
+            var $progressBar = $progressBarContainer.find('.progress-bar');
+
+            $snapshotUploadElement.fileupload({
+                dataType: "json",
+                maxNumberOfFiles: 1,
+                headers: OctoPrint.getRequestHeaders(),
+                start: function(e) {
+                    $progressBar.text("Starting...");
+                    $progressBar.animate({'width': '0'}, {'queue': false}).removeClass('failed');
+                },
+                progressall: function (e, data) {
+                    var progress = parseInt(data.loaded / data.total * 100, 10);
+                    $progressBar.text(progress + "%");
+                    $progressBar.animate({'width': progress + '%'}, {'queue': false});
+                },
+                done: function (e, data) {
+                    $progressBar.text("Done!");
+                    $progressBar.animate({'width': '100%'}, {'queue': false});
+                },
+                fail: function (e, data) {
+                    $progressBar.text("Failed...").addClass('failed');
+                    $progressBar.animate({'width': '100%'}, {'queue': false});
+                }
+            });
+        };
+
         self.on_after_binding = function(){
             self.dialog.on_after_binding();
             self.archive_browser.initialize();
             self.timelapse_browser.initialize();
+            self.initialize_snapshot_upload_button();
         };
 
         self.open = function(open_to_tab){
