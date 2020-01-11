@@ -337,12 +337,12 @@ a.disabled {
 }
 span.octolapse-icon-text {
     font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
-    position: relative;
-    top: -3px;
-    font-size: 16px;
+    font-size: 26px;
     font-weight: 600;
-    color: greenyellow;
+    color: rgba(173,255,47,1);
     text-shadow: 1px 0px black, -1px 0px black, 0px 1px black, 0px -1px black;
+    vertical-align: middle;
+    position: relative;
 }
 
 table.octolapse-table-list {
@@ -589,6 +589,10 @@ form.octolapse_form .modal-body {
 
 .margin-bottom-small {
     margin-bottom:10px;
+}
+
+.padded-small {
+    padding: 10px;
 }
 
 .ol-text-status-title {

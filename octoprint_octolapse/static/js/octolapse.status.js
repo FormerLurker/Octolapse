@@ -1040,24 +1040,24 @@ $(function () {
             self.is_printer_primed = ko.observable(false);
 
             self.update = function (state) {
-                this.gcode(state.gcode);
-                this.x_homed(state.x_homed);
-                this.y_homed(state.y_homed);
-                this.z_homed(state.z_homed);
-                this.has_definite_position(state.has_definite_position);
-                this.is_layer_change(state.is_layer_change);
-                this.is_height_change(state.is_height_change);
-                this.is_in_position(state.is_in_position);
-                this.in_path_position(state.in_path_position);
-                this.is_zhop(state.is_zhop);
-                this.is_relative(state.is_relative);
-                this.is_extruder_relative(state.is_extruder_relative);
-                this.layer(state.layer);
-                this.height(state.height);
-                this.last_extruder_height(state.last_extruder_height);
-                this.is_metric(state.is_metric);
-                this.is_printer_primed(state.is_printer_primed);
-                this.is_initialized(true);
+                self.gcode(state.gcode);
+                self.x_homed(state.x_homed);
+                self.y_homed(state.y_homed);
+                self.z_homed(state.z_homed);
+                self.has_definite_position(state.has_definite_position);
+                self.is_layer_change(state.is_layer_change);
+                self.is_height_change(state.is_height_change);
+                self.is_in_position(state.is_in_position);
+                self.in_path_position(state.in_path_position);
+                self.is_zhop(state.is_zhop);
+                self.is_relative(state.is_relative);
+                self.is_extruder_relative(state.is_extruder_relative);
+                self.layer(state.layer);
+                self.height(state.height);
+                self.last_extruder_height(state.last_extruder_height);
+                self.is_metric(state.is_metric);
+                self.is_printer_primed(state.is_printer_primed);
+                self.is_initialized(true);
             };
 
             self.getCheckedIconClass = function (value, trueClass, falseClass, nullClass) {
@@ -1189,6 +1189,7 @@ $(function () {
                     return "Not Primed";
             }, self);
         };
+
         Octolapse.positionViewModel = function () {
             var self = this;
             self.f = ko.observable(0).extend({numeric: 2});
@@ -1225,6 +1226,7 @@ $(function () {
 
             }*/
         };
+
         Octolapse.extruderStateViewModel = function () {
             var self = this;
             // State variables
@@ -1269,7 +1271,7 @@ $(function () {
                     else if (self.is_retracted() && !self.is_partially_retracted())
                         return "fa-angle-double-up";
                 }
-                return "fa-times-circle";
+                return "fa-times";
             }, self);
             self.getRetractionStateText = ko.pureComputed(function () {
 
@@ -1295,12 +1297,12 @@ $(function () {
             self.getDeretractionIconClass = ko.pureComputed(function () {
 
                 if (self.is_retracting() && self.is_deretracting())
-                    return "fa-exclamation-circle";
+                    return "fa-exclamation";
                 if (self.is_deretracting() && self.is_deretracting_start)
                     return "fa-level-down";
                 if (self.is_deretracting())
-                    return "fa-long-arrow-down";
-                return "fa-times-circle";
+                    return "fa-arrow-down";
+                return "fa-times";
             }, self);
             self.getDeretractionStateText = ko.pureComputed(function () {
 
@@ -1327,12 +1329,12 @@ $(function () {
                     return "exclamation-circle";
 
                 if (self.is_primed())
-                    return "fa-arrows-h";
+                    return "fa-minus";
                 if (self.is_extruding_start())
-                    return "fa-play-circle-o";
+                    return "fa-play-o";
                 if (self.is_extruding())
                     return "fa-play";
-                return "fa-times-circle";
+                return "fa-times";
             }, self);
             self.getExtrudingStateText = ko.pureComputed(function () {
                 if (self.is_extruding_start() && !self.is_extruding())
@@ -1346,6 +1348,7 @@ $(function () {
                 return "None";
             }, self);
         };
+
         Octolapse.TriggersStateViewModel = function () {
             var self = this;
 
@@ -1485,6 +1488,7 @@ $(function () {
                 return "";
             }, self);
         };
+
         Octolapse.gcodeTriggerStateViewModel = function (state) {
             //console.log("creating gcode trigger state view model");
             var self = this;
@@ -1516,77 +1520,55 @@ $(function () {
             };
 
             self.getSnapshotCommands =  ko.pureComputed(function () {
-                commands = ["@OCTOLAPSE TAKE-SNAPSHOT"];
+                commands = ["@OCTOLAPSE TAKE-SNAPSHOT", "SNAP"];
                 if (self.snapshot_command().length > 0)
                 {
-                    commands.push(self.snapshot_command)
+                    commands.push(self.snapshot_command())
                 }
                 return commands;
-            }, self);
-
-            self.triggerBackgroundIconClass = ko.pureComputed(function () {
-                if (!self.has_definite_position())
-                    return "bg-unknown-position";
-                else if (!self.is_triggered() && Octolapse.PrinterStatus.isPaused())
-                    return " bg-paused";
-                else
-                    return "";
             }, self);
 
             /* style related computed functions */
             self.triggerStateText = ko.pureComputed(function () {
                 if (!self.has_definite_position())
-                    return "Idle until a definite position is found";
+                    return "Idle until the printer's position is known.";
                 else if (self.is_triggered())
-                    return "Triggering a snapshot";
+                    return "Triggering a snapshot.";
                 else if (Octolapse.PrinterStatus.isPaused())
-                    return "Paused";
+                    return "The trigger is paused.";
                 else if (self.is_waiting()) {
-                    // Create a list of things we are waiting on
-                    var waitText = "Waiting";
+                    var waitText = "Waiting for";
                     var waitList = [];
                     if (self.is_waiting_on_zhop())
                         waitList.push("zhop");
                     if (self.is_waiting_on_extruder())
                         waitList.push("extruder");
                     if (!self.is_in_position() && !self.in_path_position())
+                    {
                         waitList.push("position");
-                    if (waitList.length > 1) {
-                        waitText += " for " + waitList.join(" and ");
-                        waitText += " to trigger";
+                        //console.log("Waiting on position.");
                     }
-                    else if (waitList.length === 1)
-                        waitText += " for " + waitList[0] + " to trigger";
+                    if (waitList.length > 0) {
+                        if (waitList.length === 1) {
+                            waitText += waitList[0];
+                        }
+                        else if (waitList.length > 1) {
+                            var commaSeparated = waitList.slice(0, waitList.length - 2);
+                            waitText += commaSeparated.join(", ");
+                            if (waitList.length > 2)
+                                waitText += ", ";
+                            waitText += waitList[waitList.length-1];
+                        }
+                        waitText += " to trigger.";
+                    }
                     return waitText;
                 }
-
-                else
-                    return "Looking for snapshot gcode";
-
+                else{
+                    return "Waiting for a snapshot command.";
+                }
             }, self);
-            self.triggerIconClass = ko.pureComputed(function () {
-                if (!self.has_definite_position())
-                    return "not-homed";
-                if (self.is_triggered())
-                    return "trigger";
-                if (Octolapse.PrinterStatus.isPaused())
-                    return "paused";
-                if (self.is_waiting())
-                    return "wait";
-                else
-                    return "fa-inverse";
-            }, self);
-
-            self.getInfoText = ko.pureComputed(function () {
-                return "Triggering on gcode command: " + self.snapshot_command();
-
-
-            }, self);
-            self.getInfoIconText = ko.pureComputed(function () {
-                return self.snapshot_command()
-            }, self);
-
         };
+
         Octolapse.layerTriggerStateViewModel = function (state) {
             //console.log("creating layer trigger state view model");
             var self = this;
@@ -1602,51 +1584,49 @@ $(function () {
             self.is_height_change = ko.observable(state.is_height_change);
             self.is_height_change_wait = ko.observable(state.is_height_change_wait);
             self.height_increment = ko.observable(state.height_increment).extend({numeric: 2});
-            self.require_zhop = ko.observable(state.require_zhop);
-            self.trigger_count = ko.observable(state.trigger_count).extend({compactint: 1});
             self.has_definite_position = ko.observable(state.has_definite_position);
-            self.layer = ko.observable(state.layer);
             self.is_in_position = ko.observable(state.is_in_position);
             self.in_path_position = ko.observable(state.in_path_position);
+
+            self.require_zhop = ko.observable(state.require_zhop);
+            self.trigger_count = ko.observable(state.trigger_count).extend({compactint: 1});
+            self.layer = ko.observable(state.layer);
+
             self.update = function (state) {
                 self.type(state.type);
                 self.name(state.name);
+                // Config Info
+                self.require_zhop(state.require_zhop);
+                self.height_increment(state.height_increment);
+                // Layer and current increment
+                self.layer(state.layer);
+                self.current_increment(state.current_increment);
+                self.trigger_count(state.trigger_count);
+                // Triggering/Waiting Status
                 self.is_triggered(state.is_triggered);
                 self.is_waiting(state.is_waiting);
-                self.is_waiting_on_zhop(state.is_waiting_on_zhop);
-                self.is_waiting_on_extruder(state.is_waiting_on_extruder);
-                self.current_increment(state.current_increment);
                 self.is_layer_change(state.is_layer_change);
                 self.is_layer_change_wait(state.is_layer_change_wait);
                 self.is_height_change(state.is_height_change);
                 self.is_height_change_wait(state.is_height_change_wait);
-                self.height_increment(state.height_increment);
-                self.require_zhop(state.require_zhop);
-                self.trigger_count(state.trigger_count);
+                self.is_waiting_on_zhop(state.is_waiting_on_zhop);
+                self.is_waiting_on_extruder(state.is_waiting_on_extruder);
                 self.has_definite_position(state.has_definite_position);
-                self.layer(state.layer);
                 self.is_in_position(state.is_in_position);
                 self.in_path_position(state.in_path_position);
+                // Layer/Height change Info
             };
-            self.triggerBackgroundIconClass = ko.pureComputed(function () {
-                if (!self.has_definite_position())
-                    return "bg-unknown-position";
-                else if (!self.is_triggered() && Octolapse.PrinterStatus.isPaused())
-                    return " bg-paused";
-            }, self);
 
             /* style related computed functions */
             self.triggerStateText = ko.pureComputed(function () {
                 if (!self.has_definite_position())
-                    return "Idle until a definite position is found";
+                    return "Idle until the printer's position is known.";
                 else if (self.is_triggered())
-                    return "Triggering a snapshot";
+                    return "Triggering a snapshot.";
                 else if (Octolapse.PrinterStatus.isPaused())
-                    return "Paused";
+                    return "The trigger is paused.";
                 else if (self.is_waiting()) {
-                    // Create a list of things we are waiting on
-                    //console.log("Generating wait state text for LayerTrigger");
-                    var waitText = "Waiting";
+                    var waitText = "Waiting for";
                     var waitList = [];
                     if (self.is_waiting_on_zhop())
                         waitList.push("zhop");
@@ -1657,59 +1637,55 @@ $(function () {
                         waitList.push("position");
                         //console.log("Waiting on position.");
                     }
-                    if (waitList.length > 1) {
-                        waitText += " for " + waitList.join(" and ");
-                        waitText += " to trigger";
+                    if (waitList.length > 0) {
+                        if (waitList.length === 1) {
+                            waitText += waitList[0];
+                        }
+                        else if (waitList.length > 1) {
+                            var commaSeparated = waitList.slice(0, waitList.length - 2);
+                            waitText += commaSeparated.join(", ");
+                            if (waitList.length > 2)
+                                waitText += ", ";
+                            waitText += waitList[waitList.length-1];
+                        }
+                        waitText += " to trigger.";
                     }
-
-                    else if (waitList.length === 1)
-                        waitText += " for " + waitList[0] + " to trigger";
                     return waitText;
                 }
                 else if (self.height_increment() > 0) {
-                    var heightToTrigger = self.height_increment() * self.current_increment();
-                    return "Triggering when height reaches " + heightToTrigger.toFixed(1) + " mm";
+                    var heightToTrigger = self.height_increment() * (self.current_increment() + 1);
+                    return "Triggering when height reaches " + Octolapse.roundToIncrement(heightToTrigger,0.01).toString() + "mm.";
                 }
                 else
-                    return "Triggering on next layer change";
+                    return "Triggering on next layer change.";
 
             }, self);
 
-            self.triggerIconClass = ko.pureComputed(function () {
-                if (!self.has_definite_position())
-                    return "not-homed";
-                if (self.is_triggered())
-                    return "trigger";
-                if (Octolapse.PrinterStatus.isPaused())
-                    return "paused";
-                if (self.is_waiting())
-                    return " wait";
-                else
-                    return " fa-inverse";
-            }, self);
+            self.triggerTypeText = ko.pureComputed(function(){
+                if (self.height_increment === 0) {
+                    return "Layer";
+                }
+                return "Height";
+            });
 
-            self.getInfoText = ko.pureComputed(function () {
-                var val = 0;
-                if (self.height_increment() > 0)
+            self.currentTriggerIncrement = ko.pureComputed(function(){
+                if (self.height_increment === 0) {
+                    return self.layer;
+                }
+                return Octolapse.roundToIncrement(self.current_increment(),0.01).toString()  + "mm";
+            });
 
-                    val = self.height_increment() + " mm";
+            self.triggerOnText = ko.pureComputed(function () {
+                if (self.height_increment === 0)
+                {
+                    return "Every Layer";
+                }
 
-                else
-                    val = "layer";
-                return "Triggering every " + Octolapse.ToCompactInt(val);
-
-
-            }, self);
-            self.getInfoIconText = ko.pureComputed(function () {
-                var val = 0;
-                if (self.height_increment() > 0)
-                    val = self.current_increment();
-                else
-                    val = self.layer();
-                return Octolapse.ToCompactInt(val);
+                return "Every " + Octolapse.roundToIncrement(self.height_increment(),0.01).toString()  + "mm";
             }, self);
 
         };
+
         Octolapse.timerTriggerStateViewModel = function (state) {
             //console.log("creating timer trigger state view model");
             var self = this;
@@ -1746,62 +1722,54 @@ $(function () {
                 self.in_path_position(state.in_path_position);
             };
 
-
             /* style related computed functions */
             self.triggerStateText = ko.pureComputed(function () {
                 if (!self.has_definite_position())
-                    return "Idle until a definite position is found";
+                    return "Idle until the printer's position is known.";
                 else if (self.is_triggered())
-                    return "Triggering a snapshot";
+                    return "Triggering a snapshot.";
                 else if (Octolapse.PrinterStatus.isPaused())
-                    return "Paused";
+                    return "The trigger is paused.";
                 else if (self.is_waiting()) {
-                    // Create a list of things we are waiting on
-                    var waitText = "Waiting";
+                    var waitText = "Waiting for";
                     var waitList = [];
                     if (self.is_waiting_on_zhop())
                         waitList.push("zhop");
                     if (self.is_waiting_on_extruder())
                         waitList.push("extruder");
                     if (!self.is_in_position() && !self.in_path_position())
+                    {
                         waitList.push("position");
-                    if (waitList.length > 1) {
-                        waitText += " for " + waitList.join(" and ");
-                        waitText += " to trigger";
+                        //console.log("Waiting on position.");
                     }
-                    else if (waitList.length === 1)
-                        waitText += " for " + waitList[0] + " to trigger";
+                    if (waitList.length > 0) {
+                        if (waitList.length === 1) {
+                            waitText += waitList[0];
+                        }
+                        else if (waitList.length > 1) {
+                            var commaSeparated = waitList.slice(0, waitList.length - 2);
+                            waitText += commaSeparated.join(", ");
+                            if (waitList.length > 2)
+                                waitText += ", ";
+                            waitText += waitList[waitList.length-1];
+                        }
+                        waitText += " to trigger.";
+                    }
                     return waitText;
                 }
-
                 else
-                    return "Triggering in " + self.seconds_to_trigger() + " seconds";
+                    return "Triggering in " + self.secondsToTrigger() + ".";
 
             }, self);
-            self.triggerBackgroundIconClass = ko.pureComputed(function () {
-                if (!self.has_definite_position())
-                    return "bg-unknown-position";
-                else if (!self.is_triggered() && Octolapse.PrinterStatus.isPaused())
-                    return " bg-paused";
+
+            self.secondsInterval = ko.pureComputed(function () {
+                return Octolapse.ToTimer(self.interval_seconds());
             }, self);
-            self.triggerIconClass = ko.pureComputed(function () {
-                if (!self.has_definite_position())
-                    return "not-homed";
-                if (self.is_triggered())
-                    return "trigger";
-                if (Octolapse.PrinterStatus.isPaused())
-                    return "paused";
-                if (self.is_waiting())
-                    return " wait";
-                else
-                    return " fa-inverse";
+
+            self.secondsToTrigger = ko.pureComputed(function () {
+                return Octolapse.ToTimer(self.seconds_to_trigger());
             }, self);
-            self.getInfoText = ko.pureComputed(function () {
-                return "Triggering every " + Octolapse.ToTimer(self.interval_seconds());
-            }, self);
-            self.getInfoIconText = ko.pureComputed(function () {
-                return "Triggering every " + Octolapse.ToTimer(self.interval_seconds());
-            }, self);
+
         };
 
         OCTOPRINT_VIEWMODELS.push([

@@ -1205,7 +1205,6 @@ $(function () {
     };
 
     Octolapse.toLocalDateTimeString = function(unix_timestamp)
-
     {
         if (unix_timestamp) {
             var date = new Date(unix_timestamp * 1000);
@@ -1213,6 +1212,7 @@ $(function () {
         }
         return "UNKNOWN";
     };
+
     /**
      * @return {string}
      */
