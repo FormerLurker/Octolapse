@@ -431,7 +431,7 @@ class RenderingProcessor(threading.Thread):
                 except FileExistsError:
                     pass
 
-            with ZipFile(target_path, 'x') as snapshot_archive:
+            with ZipFile(target_path, 'w') as snapshot_archive:
                 # add the job info
                 timelapse_info_path = os.path.join(job_directory,
                                                    utility.TimelapseJobInfo.timelapse_info_file_name)
