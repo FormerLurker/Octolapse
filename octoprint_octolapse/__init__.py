@@ -59,6 +59,7 @@ import octoprint_octolapse.render as render
 import octoprint_octolapse.snapshot as snapshot
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.error_messages as error_messages
+from octoprint_octolapse.migration import migrate_files, get_version_from_settings_index
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.stabilization_gcode import SnapshotGcodeGenerator
 from octoprint_octolapse.gcode_commands import Commands
@@ -2048,10 +2049,25 @@ class OctolapsePlugin(
     # EVENTS
     #########
     def get_settings_defaults(self):
-        return dict(load=None, restore_default_settings=None)
+        return dict(version=self._plugin_version, load=None, restore_default_settings=None)
 
-    def on_settings_load(self):
-        return dict(load=None, restore_default_settings=None)
+    def get_settings_version(self):
+        return 1
+
+    def on_settings_migrate(self, target, current):
+        # If we don't have a current version, look at the current settings file for the most recent version.
+        if current is None:
+            current_version = OctolapseSettings.get_settings_version(
+                self.get_settings_file_path()
+            )
+            if current_version == 'unknown':
+                current_version = None
+        else:
+            current_version = get_version_from_settings_index(current)
+
+        has_migrated = migrate_files(current_version, self._plugin_version, self.get_plugin_data_folder())
+        if has_migrated:
+            logger.info("Octolapse has migrated files from version index %d to %s", current, self._plugin_version)
 
     def get_status_dict(self, include_profiles=False):
         try:

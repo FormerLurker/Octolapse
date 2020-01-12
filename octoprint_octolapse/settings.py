@@ -1619,6 +1619,7 @@ class DebugProfile(AutomaticConfigurationProfile):
 
 
 class MainSettings(Settings):
+
     def __init__(self, plugin_version):
         # Main Settings
         self.show_navbar_icon = True
@@ -1647,7 +1648,7 @@ class MainSettings(Settings):
         directory = self.snapshot_archive_directory.strip()
         if len(directory) > 0:
             return self.snapshot_archive_directory
-        return os.path.join(data_folder, 'snapshots')
+        return os.path.join(data_folder, utility.get_default_snapshot_archive_directory_name())
 
     def get_timelapse_directory(self, octoprint_timelapse_directory):
         directory = self.timelapse_directory.strip()
@@ -2336,6 +2337,16 @@ class OctolapseSettings(Settings):
             rendering_profile,
             camera_profile
         )
+
+    @classmethod
+    def get_settings_version(cls, file_path):
+        with open(file_path, 'r') as settings_file:
+            try:
+                data = json.load(settings_file)
+                original_version = migration.get_version(data)
+                return original_version
+            except Exception:
+                return None
 
     @classmethod
     def load(

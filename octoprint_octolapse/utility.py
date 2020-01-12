@@ -255,6 +255,13 @@ def get_clean_filename(filename):
     return result
 
 
+_snapshot_archive_default_directory = "snapshot_archive"
+
+
+def get_default_snapshot_archive_directory_name():
+    return _snapshot_archive_default_directory
+
+
 _temporary_snapshot_subdirectory = "octolapse_snapshots_tmp"
 
 

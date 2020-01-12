@@ -4,6 +4,7 @@ import sys
 import os
 import six
 import copy
+import shutil
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
@@ -19,16 +20,47 @@ def get_version(settings_dict):
     return version
 
 
-def migrate_files(current_version, data_directory):
+settings_version_translation = [
+    '0.4.0rc1.dev2',  # the version here is ambigious, but this is only used for file migrations
+    '0.4.0rc1.dev3'
+]
+
+
+def get_version_from_settings_index(index):
+    if index > len(settings_version_translation) - 1 or index < 0:
+        return None
+    return settings_version_translation[index]
+
+
+def migrate_files(current_version, target_version, data_directory):
+    # look up the version names
+    has_updated = False
+    if current_version is None:
+        return False
     if LooseVersion(current_version) < LooseVersion("0.4.0rc1.dev3"):
-        has_updated = True
-        migrate_files_pre_0_4_0_rc1_dev3(current_version, data_directory)
+        if migrate_files_pre_0_4_0_rc1_dev3(current_version, data_directory):
+            has_updated = True
+    return has_updated
 
 
 def migrate_files_pre_0_4_0_rc1_dev3(current_version, data_directory):
-    # rename the snapshots folder to tmp
-    os.rename(os.path.join(data_directory, "snapshots"), os.path.join(data_directory, "tmp"))
 
+    src = os.path.join(data_directory, "snapshots")
+    if not os.path.isdir(src):
+        return False
+    # create a new directory called tmp
+    tmp = os.path.join(data_directory, "tmp")
+    if not os.path.isdir(tmp):
+        os.mkdir(tmp)
+    # make sure a directory called octolapse_snapshots_tmp does not exist in the tmp folder
+    dst = os.path.join(tmp, "octolapse_snapshots_tmp")
+    if os.path.isdir(dst):
+        return False
+    # copy all of the files from the snapshots folder to the new directory
+    shutil.copytree(src, dst)
+    # delete the files within the old directory and remove the folder.
+    shutil.rmtree(src)
+    return True
 
 def migrate_settings(current_version, settings_dict, default_settings_directory, data_directory):
     # extract the settings version
