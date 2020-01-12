@@ -152,11 +152,11 @@ $(function () {
         }
 
         self.show_pagination_row_top = ko.pureComputed(function(){
-            return self.pagination_top && (self.num_pages() > 1 || !self.pagination_row_auto_hide);
+            return self.pagination_top && (self.list_items().length > 10 || !self.pagination_row_auto_hide);
         });
 
         self.show_pagination_row_bottom = ko.pureComputed(function(){
-            return self.pagination_bottom && (self.num_pages() > 1 || !self.pagination_row_auto_hide);
+            return self.pagination_bottom && (self.list_items().length > 10 || !self.pagination_row_auto_hide);
         });
 
         self.resize = function(){

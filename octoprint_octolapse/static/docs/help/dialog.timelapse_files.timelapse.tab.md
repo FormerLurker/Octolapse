@@ -1,4 +1,4 @@
-Download and delete any timelapses that are in your current timelapse folder (see **Main Settings** for information about the timelapse folder location.).
+Download and delete any timelapses that are in your current timelapse folder (see **Main Settings** for information about the timelapse folder location).
 
 ### Download
 To download a timelapse, simply click on the <i class="fa fa-download" title="Download Icon"></i>.  The timelapse will be downloaded by your browser.
