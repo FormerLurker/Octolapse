@@ -1,10 +1,21 @@
 
 <script type="text/html" id="octolapse-tab-settings-current-cameras">
+    <div data-bind="visible:Octolapse.Globals.is_admin()">
+        <div data-bind="visible: Octolapse.Status.cameras_sorted().length == 0">
+            <span class="text-error">You must add at least one camera profile.  </span>
+            <a style="float:right;" data-bind="click: function() { Octolapse.Status.addNewCameraProfile(); } " title="Add a new camera profile.">
+                <i class="fa fa-plus fa-2x"></i>
+            </a>
+        </div>
+        <div data-bind="visible: Octolapse.Status.cameras_sorted().length > 0 && !Octolapse.Status.hasOneCameraEnabled()" class="text-error">
+            <p>You must enable at least one camera profile.</p>
+        </div>
+    </div>
     <div data-bind="foreach: Octolapse.Status.cameras_sorted">
         <div class="row-fluid">
             <div class="span2 text-right">
                 <!-- ko if: $index() == 0 -->
-                <a data-bind="click: function() {openOctolapseSettings('camera');}"
+                <a data-bind="click: function() {$parent.openOctolapseSettings('camera');}"
                    title="Open all camera settings.">
                     Cameras
                 </a>
@@ -24,21 +35,10 @@
             </div>
             <div class="span1">
                 <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Settings.is_loaded(), click: function() { $parent.openCameraProfile(guid); } " title="Edit this camera profile.">
-                            <i class="fa fa-pencil fa-2x"></i>
-                        </a>
+                    <i class="fa fa-pencil fa-2x"></i>
+                </a>
             </div>
         </div>
-    <div data-bind="visible:Octolapse.Globals.is_admin()">
-        <div data-bind="visible: Octolapse.Status.cameras_sorted().length == 0">
-            <span class="text-error">You must add at least one camera profile.  </span>
-            <a style="float:right;" data-bind="click: function() { Octolapse.Status.addNewCameraProfile(); } " title="Add a new camera profile.">
-                <i class="fa fa-plus fa-2x"></i>
-            </a>
-        </div>
-        <div data-bind="visible: Octolapse.Status.cameras_sorted().length > 0 && !Octolapse.Status.hasOneCameraEnabled()" class="text-error">
-            <p>You must enable at least one camera profile.</p>
-        </div>
     </div>
-
 </script>
 

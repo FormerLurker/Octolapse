@@ -353,10 +353,9 @@ $(function () {
             };
 
             self.hasOneCameraEnabled = ko.pureComputed(function(){
-                var hasConfigIssue = true;
                 for (var i = 0; i < self.profiles().cameras().length; i++)
                 {
-                    if(self.profiles().cameras()[i].enabled)
+                    if(self.profiles().cameras()[i].enabled())
                     {
                         return true
                     }
