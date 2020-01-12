@@ -72,13 +72,17 @@
 </script>
 <script type="text/html" id="octolapse-rendering-failed-selected-actions">
     <div data-bind="visible: data.parent.is_admin() && list_items().length > 0 && selected_count() > 0">
-        <div>
-            <button type="button" data-bind="click: data.parent.render_selected" class="btn btn-default ok">Render <span data-bind="text: selected_count"></span></button>
-        </div>
-        <div>
-            <button type="button" data-bind="click: data.parent.delete_selected" class="btn btn-default ok">
-            Delete <span data-bind="text: selected_count"></span>
-        </button>
+        <div class="dropdown-select">
+            <div>
+                <div class="btn-group">
+                    <button class="btn input-block-level dropdown-toggle" data-toggle="dropdown">Render/Delete <span data-bind="text: selected_count"></span> Selected</button>
+                    <ul class="dropdown-menu">
+                        <li><a href="javascript:void(0)" data-bind="click: data.parent.render_selected">Render All Selected Items</a></li>
+                        <li class="divider"></li>
+                        <li><a href="javascript:void(0)" data-bind="click: data.parent.delete_selected">Delete All Selected Items</a></li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </script>

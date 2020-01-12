@@ -190,8 +190,8 @@ $(function () {
 
             //console.log("octolapse.help.js - Binding help links to " + selector);
             $(selector).each(function(){
-               if (!$(this).attr('title'))
-                   $(this).attr('title',"Click for help with this");
+               if (!$(this).attr('data-help-title'))
+                   $(this).attr('data-help-title',"Click for help with this");
                if($(this).children().length == 0) {
                    var icon = $('<span class="fa fa-question-circle fa-lg"></span>');
                    $(this).append(icon);
@@ -201,9 +201,9 @@ $(function () {
             $(selector).click( function(e) {
                 //console.log("octolapse.help.js - Help link clicked");
                // get the data group data
-                var url = $(this).data('help-url');
-                var title = $(this).data('help-title');
-                var custom_not_found_error = $(this).data('help-not-found');
+                var url = $(this).attr('data-help-url');
+                var title = $(this).attr('data-help-title');
+                var custom_not_found_error = $(this).attr('data-help-not-found');
                 if (!title)
                     title = "Help";
                 self.showHelpForLink(url, title, custom_not_found_error);

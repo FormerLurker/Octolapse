@@ -78,9 +78,110 @@ $(function () {
         }
     };
 
-    Octolapse.FailedRenderingViewModel = function () {
+   Octolapse.OctolapseDialogRenderingUnfinished = function () {
         var self = this;
-        self.failed_renderings_id = "octolapse-in-process-renderings";
+        self.dialog_id = "octolapse_dialog_rendering_unfinished";
+
+        self.dialog_options = {
+            title: "Unfinished Renderings",
+            validation_enabled: false,
+            help_enabled: true,
+            help_title: 'Unfinished Renderings',
+            help_link: 'dialog.renderings.unfinished.md'
+        };
+        self.template_id= "octolapse-rendering-failed-template";
+
+        self.dialog = new Octolapse.OctolapseDialog(self.dialog_id, self.template_id, self.dialog_options);
+
+        self.on_after_binding = function(){
+            self.dialog.on_after_binding();
+            self.initialize();
+        };
+
+        self.load = function() {
+            if (!Octolapse.Globals.is_admin()) {
+                self.failed_renderings.set([]);
+                return;
+            }
+            $.ajax({
+                url: "./plugin/octolapse/loadFailedRenderings",
+                type: "POST",
+                contentType: "application/json",
+                success: function (results) {
+                    self.update(results);
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    self.failed_renderings.set([]);
+                    var options = {
+                        title: 'Error Loading Failed Renderings',
+                        text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options, "file_load", ["file_load"]);
+                }
+            });
+        };
+
+        self.open = function(open_to_tab){
+
+            self.dialog.show();
+        };
+
+        self.update = function(values){
+            if (values.failed)
+            {
+                // Update the size if it has been provided
+                var failed_renderings = values.failed;
+                if (failed_renderings.renderings)
+                {
+                    // Perform a complete refresh if necessary
+                    self.failed_renderings.set(failed_renderings.renderings);
+                    self.failed_renderings_size(failed_renderings.size ? failed_renderings.size : 0);
+                }
+                else if (failed_renderings.change_type && failed_renderings.rendering)
+                {
+                    // see if there is a change type
+                    var failed_rendering_change = failed_renderings.rendering;
+                    var failed_rendering_change_type = failed_renderings.change_type;
+
+                    if (failed_rendering_change_type === "added")
+                    {
+                        self.failed_renderings.add(failed_rendering_change);
+                        self.failed_renderings_size(self.failed_renderings_size() + failed_rendering_change["file_size"])
+                    }
+                    else if (failed_rendering_change_type === "removed")
+                    {
+                        // Find the failed rendering and remove it
+                        var removed = self.failed_renderings.remove(
+                            self.get_key(failed_rendering_change.job_guid, failed_rendering_change.camera_guid)
+                        );
+                        if (removed) {
+                            self.failed_renderings_size(
+                                self.failed_renderings_size() - failed_rendering_change["file_size"]
+                            )
+                        }
+                    }
+                    else if (failed_rendering_change_type === "changed")
+                    {
+                        var replaced = self.failed_renderings.replace(failed_rendering_change);
+                        if (replaced) {
+                            self.failed_renderings_size(
+                                self.failed_renderings_size() -
+                                replaced.failed_renderings.file_size +
+                                failed_rendering_change["file_size"])
+                        }
+                    }
+                }
+                else
+                {
+                    console.error("A 'Failed Rendering' update was received, but there was no data to process.");
+                }
+            }
+        };
+
+        self.failed_renderings_id = "octolapse-unfinished-renderings";
         self.failed_renderings_size = ko.observable(0);
         self.failed_renderings_size_formatted = ko.pureComputed(function () {
             return Octolapse.toFileSizeString(self.failed_renderings_size())
@@ -88,7 +189,7 @@ $(function () {
         self.render_profile_override_guid = ko.observable(null);
         self.camera_profile_override_guid = ko.observable(null);
         self.is_empty = ko.pureComputed(function(){
-            return self.failed_renderings.list_items().length == 0
+            return self.failed_renderings.list_items().length === 0
         });
 
         // Configure list helper
@@ -114,6 +215,7 @@ $(function () {
             select_header_template_id: 'octolapse-list-select-header-dropdown-template',
             selection_class: 'list-item-selection-dropdown',
             selection_header_class: 'list-item-selection-header-dropdown',
+            pagination_style: 'narrow',
             columns: [
                 new Octolapse.ListViewColumn('Print', 'print_file_name', {class: 'rendering-print-name', sortable:true}),
                 new Octolapse.ListViewColumn('Status', 'print_end_state', {class: 'rendering-print-end-state', sortable:true}),
@@ -141,56 +243,6 @@ $(function () {
         self.count = ko.pureComputed(function(){
             return self.failed_renderings.list_items().length;
         });
-
-        self.update = function(values) {
-
-            // Update the size if it has been provided
-            if (values.renderings)
-            {
-                // Perform a complete refresh if necessary
-                self.failed_renderings.set(values.renderings);
-                self.failed_renderings_size(values.size ? values.size : 0);
-            }
-            else if (values.change_type && values.rendering)
-            {
-                // see if there is a change type
-                var failed_rendering_change = values.rendering;
-                var failed_rendering_change_type = values.change_type;
-
-                if (failed_rendering_change_type === "added")
-                {
-                    self.failed_renderings.add(failed_rendering_change);
-                    self.failed_renderings_size(self.failed_renderings_size() + failed_rendering_change["file_size"])
-                }
-                else if (failed_rendering_change_type === "removed")
-                {
-                    // Find the failed rendering and remove it
-                    var removed = self.failed_renderings.remove(
-                        self.get_key(failed_rendering_change.job_guid, failed_rendering_change.camera_guid)
-                    );
-                    if (removed) {
-                        self.failed_renderings_size(
-                            self.failed_renderings_size() - failed_rendering_change["file_size"]
-                        )
-                    }
-                }
-                else if (failed_rendering_change_type === "changed")
-                {
-                    var replaced = self.failed_renderings.replace(failed_rendering_change);
-                    if (replaced) {
-                        self.failed_renderings_size(
-                            self.failed_renderings_size() -
-                            replaced.values.file_size +
-                            failed_rendering_change["file_size"])
-                    }
-                }
-            }
-            else
-            {
-                console.error("A 'Failed Rendering' update was received, but there was no data to process.");
-            }
-
-        };
 
         self._delete = function(item, on_success, on_error){
             var data = {
@@ -479,5 +531,5 @@ $(function () {
             });
         };
     };
-});
 
+});

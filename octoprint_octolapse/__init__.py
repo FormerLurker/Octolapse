@@ -3505,12 +3505,11 @@ class OctolapsePlugin(
                 "js/octolapse.profiles.library.js",
                 "js/webcams/mjpg_streamer/raspi_cam_v2.js",
                 "js/octolapse.dialog.js",
-                "js/octolapse.dialog.rendering.js",
+                "js/octolapse.dialog.renderings.unfinished.js",
+                "js/octolapse.dialog.renderings.in_process.js",
                 "js/octolapse.file_browser.js",
                 "js/octolapse.helpers.js",
-                "js/octolapse.dialog.timelapse_files.js",
-                "js/octolapse.renderings.failed.js",
-                "js/octolapse.renderings.in_process.js"
+                "js/octolapse.dialog.timelapse_files.js"
             ],
             css=["css/jquery.minicolors.css", "css/octolapse.css"],
             less=["less/octolapse.less"]

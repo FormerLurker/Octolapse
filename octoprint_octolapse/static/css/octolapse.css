@@ -40,6 +40,12 @@
     min-height: 100px;
 }
 
+.octolapse_dialog_help {
+    float: right;
+    padding-right:5px;
+    line-height:20px;
+}
+
 .two-column .column{
     /*-webkit-column-gap: 20px;
        -moz-column-gap: 20px;

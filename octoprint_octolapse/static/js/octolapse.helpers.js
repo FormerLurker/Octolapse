@@ -81,7 +81,6 @@ $(function () {
             {name: "500", value: 500}
         ];
         self.pager_values = ko.observableArray([]);
-        self.max_pager_pages = self.options.pager_pages || 11;
         self.selection_enabled = false;
         if (self.options.selection_enabled !== undefined)
         {
@@ -115,11 +114,42 @@ $(function () {
         self.sort_direction_ascending = ko.observable(self.options.sort_order === "ascending" || true);
         self.default_sort_direction_ascending = self.sort_direction_ascending();
         self.not_loaded_template_id = options.not_loaded_template_id || "octolapse-list-not-loaded";
+        self.pagination_pages = self.options.pagination_pages || 11;
+        self.pagination_style = self.options.pagination_style || "normal";
         self.pagination = self.options.pagination || "top-and-bottom";
         self.pagination_top = self.pagination === 'top' || self.pagination === "top-and-bottom";
         self.pagination_bottom = self.pagination === 'bottom' || self.pagination === "top-and-bottom";
         self.pagination_row_auto_hide = self.options.pagination_row_auto_hide === undefined? true : self.options.pagination_row_auto_hide;
 
+        self.pagination_top_left_class = "span2";
+        self.pagination_top_center_class = "span8";
+        self.pagination_top_right_class = "span2";
+        self.pagination_bottom_left_class = "span2";
+        self.pagination_bottom_center_class = "span8";
+        self.pagination_bottom_right_class = "span2";
+
+        if (self.pagination_style === 'wide')
+        {
+            self.pagination_top_left_class = "span1";
+            self.pagination_top_center_class = "span10";
+            self.pagination_top_right_class = "span1";
+            self.pagination_bottom_left_class = "span1";
+            self.pagination_bottom_center_class = "span10";
+            self.pagination_bottom_right_class = "span1";
+            if (!self.options.pagination_pages)
+                self.pagination_pages = 13;
+        }
+        else if (self.pagination_style === "narrow")
+        {
+            self.pagination_top_left_class = "span3";
+            self.pagination_top_center_class = "span6";
+            self.pagination_top_right_class = "span3";
+            self.pagination_bottom_left_class = "span3";
+            self.pagination_bottom_center_class = "span6";
+            self.pagination_bottom_right_class = "span3";
+            if (!self.options.pagination_pages)
+                self.pagination_pages = 9;
+        }
 
         self.show_pagination_row_top = ko.pureComputed(function(){
             return self.pagination_top && (self.num_pages() > 1 || !self.pagination_row_auto_hide);
@@ -164,7 +194,7 @@ $(function () {
 
         self.pager = ko.pureComputed(function(){
             console.log("octolapse.helpers.js - pager changed");
-            if (self.max_pager_pages < 6) {
+            if (self.pagination_pages < 6) {
                 console.error("The file browser pager must have at least 6 pages.");
                 return [];
             }
@@ -172,8 +202,8 @@ $(function () {
             var num_pages = self.num_pages();
             if (num_pages < 1)
                 return [];
-            var pager_size = Math.min(self.max_pager_pages, num_pages);
-            var midpoint = Math.floor((self.max_pager_pages - 4)/2);
+            var pager_size = Math.min(self.pagination_pages, num_pages);
+            var midpoint = Math.floor((self.pagination_pages - 4)/2);
             // If we have only one page, there is no need for a pager!
 
             var pager_pages = new Array(pager_size);
@@ -183,16 +213,16 @@ $(function () {
             for (var index=1; index < pager_size-1; index++)
             {
                 // There are four scenarios to handle:
-                if (num_pages <= self.max_pager_pages)
+                if (num_pages <= self.pagination_pages)
                 {
-                    // 1. There are up to max_pager_pages pages.  In that case just add the available indexes.
+                    // 1. There are up to pagination_pages pages.  In that case just add the available indexes.
                     pager_pages[index] = new Octolapse.PagerPageViewModel('link', index);
                 }
-                else if (self.current_page_index() < self.max_pager_pages - 3)
+                else if (self.current_page_index() < self.pagination_pages - 3)
                 {
-                    // 2. We are in the first max_pager_pages - 2 page.  In that case we want only one
+                    // 2. We are in the first pagination_pages - 2 page.  In that case we want only one
                     //    ellipsis right before the final page.
-                    if (index < self.max_pager_pages - 2)
+                    if (index < self.pagination_pages - 2)
                     {
                         pager_pages[index] = new Octolapse.PagerPageViewModel('link', index);
                     }
@@ -201,11 +231,11 @@ $(function () {
                         pager_pages[index] = new Octolapse.PagerPageViewModel('ellipsis');
                     }
                 }
-                else if (self.current_page_index() < num_pages - self.max_pager_pages + 3)
+                else if (self.current_page_index() < num_pages - self.pagination_pages + 3)
                 {
-                    // 3. We are in the last num_pages - (max_pager_pages - 2) page.  In that case we want only one
+                    // 3. We are in the last num_pages - (pagination_pages - 2) page.  In that case we want only one
                     //    ellipsis right after the first page.
-                    if (index === 1 || index === self.max_pager_pages - 2)
+                    if (index === 1 || index === self.pagination_pages - 2)
                     {
                         pager_pages[index] = new Octolapse.PagerPageViewModel('ellipsis');
                     }
@@ -225,7 +255,7 @@ $(function () {
                     else
                     {
 
-                        pager_pages[index] = new Octolapse.PagerPageViewModel('link', num_pages - (self.max_pager_pages - index));
+                        pager_pages[index] = new Octolapse.PagerPageViewModel('link', num_pages - (self.pagination_pages - index));
                     }
                 }
             }

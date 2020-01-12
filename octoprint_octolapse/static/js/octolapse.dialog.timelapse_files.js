@@ -31,8 +31,11 @@ $(function () {
         self.timelapse_tab_button_id = "octolapse_timelapse_videos_tab_button";
         self.snapshot_archive_tab_button_id = "octolapse_snapshot_archive_tab_button";
         self.dialog_options = {
-            title: "Timelapse Files",
-            validation_enabled: false
+            title: "Videos and Images",
+            validation_enabled: false,
+            help_enabled: true,
+            help_title: 'Timelapse Files Dialog',
+            help_link: 'dialog.timelapse_files.timelapse.tab.md'
         };
         self.template_id= "octolapse-timelapse-files-dialog-template";
         self.dialog = new Octolapse.OctolapseDialog(self.dialog_id, self.template_id, self.dialog_options);
@@ -63,6 +66,19 @@ $(function () {
         self.load = function(){
             self.timelapse_browser.load();
             self.archive_browser.load();
+        };
+
+        self.timelapse_tab_selected = function(){
+            // Resize the tab
+            self.dialog.resize();
+            // Configure the help link
+            self.dialog.set_help(true, "dialog.timelapse_files.timelapse.tab.md", null,"Timelapse Files Dialog");
+        };
+        self.snapshot_archive_tab_selected = function(){
+            // Resize the tab
+            self.dialog.resize();
+            // Configure the help link
+            self.dialog.set_help(true, "dialog.timelapse_files.snapshot_archive.tab.md", null,"Saved Snapshot Files Dialog");
         };
 
         self.files_changed = function(file_info, action){

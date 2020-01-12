@@ -41,6 +41,27 @@ $(function () {
         self.cancel_button_title = ko.observable("Cancel and close the dialog.");
         self.cancel_button_text = ko.observable("Cancel");
 
+        // Configure Help
+        self.help_enabled = ko.observable();
+        self.help_link = ko.observable();
+        self.help_tooltip = ko.observable();
+        self.help_title = ko.observable();
+
+        self.set_help = function(enabled, link, tooltip, title)
+        {
+            self.help_enabled(enabled);
+            self.help_link(link || "");
+            self.help_tooltip(tooltip || "Click for help with this.");
+            self.help_title(title || "Help");
+        };
+
+        self.set_help(
+            !!options.help_enabled,
+            options.help_link,
+            options.help_tooltip,
+            options.help_title
+        );
+
         self.on_cancel_button_clicked = function() {
             self.close();
         };
@@ -237,6 +258,7 @@ $(function () {
                 $(window).trigger('resize');
             }
         };
+
         self.validator = null;
         self.unbind_validator = function () {
             // Destroy the validator if it exists, both to save on resources, and to clear out any leftover junk.
@@ -327,5 +349,8 @@ $(function () {
             }
         };
 
+        self.get_help_link_element = function(){
+            return $(self.dialog_selector + " a.octolapse_dialog_help");
+        }
     };
 });

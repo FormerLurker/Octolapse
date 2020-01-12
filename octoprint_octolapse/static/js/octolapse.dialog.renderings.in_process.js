@@ -47,8 +47,55 @@ $(function () {
         self.sort_order = self.progress === "Pending" ? 0 : 1;
     };
 
-    Octolapse.InProcessRenderingViewModel = function () {
+   Octolapse.OctolapseDialogRenderingInProcess = function () {
         var self = this;
+        self.dialog_id = "octolapse_dialog_rendering_in_process";
+        self.dialog_options = {
+            title: "Renderings - In Process",
+            validation_enabled: false,
+            help_enabled: true,
+            help_title: 'Renderings - In process',
+            help_link: 'dialog.renderings.in_process.md'
+        };
+        self.template_id= "octolapse-rendering-in-process-template";
+
+        self.dialog = new Octolapse.OctolapseDialog(self.dialog_id, self.template_id, self.dialog_options);
+
+        self.on_after_binding = function(){
+            self.dialog.on_after_binding();
+            self.initialize();
+        };
+
+        self.load = function() {
+            if (!Octolapse.Globals.is_admin()) {
+                self.set([]);
+                return;
+            }
+            $.ajax({
+                url: "./plugin/octolapse/loadInProcessRenderings",
+                type: "POST",
+                contentType: "application/json",
+                success: function (results) {
+                    self.update(results);
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    self.set([]);
+                    var options = {
+                        title: 'Error Loading In Process Renderings',
+                        text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options, "file_load", ["file_load"]);
+                }
+            });
+        };
+
+        self.open = function(open_to_tab){
+            self.dialog.show();
+        };
+        // List Items
         self.in_process_renderings_id = "octolapse-in-process-renderings";
         self.in_process_renderings_size = ko.observable(0);
         self.in_process_renderings_size_formatted = ko.pureComputed(function(){
@@ -101,45 +148,48 @@ $(function () {
             });
         };
 
-        self.get_key = function(job_guid, camera_guid)
-        {
+        self.get_key = function(job_guid, camera_guid){
             return job_guid + camera_guid;
         };
 
         self.update = function(values){
-
-            if (values.renderings) {
-                // Update all renderings if provided
-                self.in_process_renderings.set(values.renderings);
-                self.in_process_renderings_size(values.size ? values.size : 0);
-            }
-            else if (values.change_type && values.rendering) {
-                var in_process_rendering_change = values.rendering;
-                var in_process_rendering_change_type = values.change_type;
-                if (in_process_rendering_change_type === "added") {
-                    self.in_process_renderings.add(in_process_rendering_change);
-                    self.in_process_renderings_size(self.in_process_renderings_size() + in_process_rendering_change["file_size"]);
-                } else if (in_process_rendering_change_type === "removed") {
-                    // Find the in_process rendering and remove it
-                    var removed = self.in_process_renderings.remove(
-                        self.get_key(in_process_rendering_change.job_guid, in_process_rendering_change.camera_guid)
-                    );
-                    if (removed) {
-                        self.in_process_renderings_size(self.in_process_renderings_size() - in_process_rendering_change["file_size"]);
-                    }
-                } else if (in_process_rendering_change_type === "changed") {
-                    // Find the in_process rendering and remove it
-                    var replaced = self.in_process_renderings.replace(in_process_rendering_change);
-                    if (replaced) {
-                        self.in_process_renderings_size(
-                            self.in_process_renderings_size() - replaced.value.file_size + in_process_rendering_change["file_size"])
+            if (values.in_process){
+                var in_process =  values.in_process;
+                if (in_process.renderings) {
+                    // Update all renderings if provided
+                    self.in_process_renderings.set(in_process.renderings);
+                    self.in_process_renderings_size(in_process.size ? in_process.size : 0);
+                }
+                else if (in_process.change_type && in_process.rendering) {
+                    var in_process_rendering_change = in_process.rendering;
+                    var in_process_rendering_change_type = in_process.change_type;
+                    if (in_process_rendering_change_type === "added") {
+                        self.in_process_renderings.add(in_process_rendering_change);
+                        self.in_process_renderings_size(self.in_process_renderings_size() + in_process_rendering_change["file_size"]);
+                    } else if (in_process_rendering_change_type === "removed") {
+                        // Find the in_process rendering and remove it
+                        var removed = self.in_process_renderings.remove(
+                            self.get_key(in_process_rendering_change.job_guid, in_process_rendering_change.camera_guid)
+                        );
+                        if (removed) {
+                            self.in_process_renderings_size(self.in_process_renderings_size() - in_process_rendering_change["file_size"]);
+                        }
+                    } else if (in_process_rendering_change_type === "changed") {
+                        // Find the in_process rendering and remove it
+                        var replaced = self.in_process_renderings.replace(in_process_rendering_change);
+                        if (replaced) {
+                            self.in_process_renderings_size(
+                                self.in_process_renderings_size() - replaced.value.file_size + in_process_rendering_change["file_size"])
+                        }
                     }
                 }
+                else
+                {
+                    console.error("A 'Failed Rendering' update was received, but there was no data to process.");
+                }
             }
-            else
-            {
-                console.error("A 'Failed Rendering' update was received, but there was no data to process.");
-            }
-        }
+        };
+
     };
+
 });

@@ -34,7 +34,7 @@
     <a data-bind="attr: {href: item.value.get_download_url(item)}" download>
         <i class="fa fa-lg fa-download"></i>
     </a>
-    <span data-bind="visible: item.data.parent.allow_delete">&nbsp;|&nbsp;
+    <span data-bind="visible: item.data.parent.is_admin">&nbsp;|&nbsp;
         <a data-bind="click: function(){item.data.parent.delete_file(item);}">
             <i class="fa fa-lg fa-trash-o"></i>
         </a>

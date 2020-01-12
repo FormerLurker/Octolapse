@@ -81,7 +81,8 @@ $(function () {
             self.is_real_time = ko.observable(true);
             self.is_test_mode_active = ko.observable(false);
             self.current_camera_guid = ko.observable(null);
-            self.rendering_dialog = new Octolapse.OctolapseRenderingDialog();
+            self.dialog_rendering_unfinished = new Octolapse.OctolapseDialogRenderingUnfinished();
+            self.dialog_rendering_in_process = new Octolapse.OctolapseDialogRenderingInProcess();
             self.timelapse_files_dialog = new Octolapse.OctolapseTimelapseFilesDialog();
             self.PrinterState = new Octolapse.printerStateViewModel();
             self.Position = new Octolapse.positionViewModel();
@@ -114,14 +115,6 @@ $(function () {
                 self.timelapse_files_dialog.open();
             };
 
-            self.openRenderingDialog = function() {
-                if (!self.rendering_dialog.in_process.is_empty())
-                {
-                    self.rendering_dialog.open('in-process');
-                }
-                self.rendering_dialog.open('failed');
-            };
-
             self.getEnabledButtonText = ko.pureComputed(function(){
                 if (Octolapse.Globals.main_settings.is_octolapse_enabled())
                 {
@@ -136,13 +129,13 @@ $(function () {
             });
 
             self.open_rendering_text = ko.pureComputed(function(){
-                if(!self.rendering_dialog.failed.is_empty())
+                if(!self.dialog_rendering_unfinished.is_empty())
                     return "Failed Renderings";
                 return "Renderings";
             });
 
             self.open_rendering_text_class = ko.pureComputed(function(){
-                if(!self.rendering_dialog.failed.is_empty())
+                if(!self.dialog_rendering_unfinished.is_empty())
                     return "text-error";
                 return "";
             });
@@ -150,11 +143,11 @@ $(function () {
             self.unfinished_renderings_changed = function(data){
                 if (data.failed)
                 {
-                    self.rendering_dialog.failed.update(data.failed)
+                    self.dialog_rendering_unfinished.update(data.failed)
                 }
                 if (data.in_process)
                 {
-                    self.rendering_dialog.in_process.update(data.in_process)
+                    self.dialog_rendering_in_process.update(data.in_process)
                 }
             };
 
@@ -225,7 +218,8 @@ $(function () {
                     //console.log("Setting local storage (" + self.SETTINGS_VISIBLE_KEY + ") to " + newData);
                     Octolapse.setLocalStorage(self.SETTINGS_VISIBLE_KEY, newData)
                 });
-                self.rendering_dialog.on_after_binding();
+                self.dialog_rendering_in_process.on_after_binding();
+                self.dialog_rendering_unfinished.on_after_binding();
                 self.timelapse_files_dialog.on_after_binding();
             };
 
@@ -270,7 +264,8 @@ $(function () {
             {
                 console.log("ocotlapse.status.js - loading dialog files.");
                 self.timelapse_files_dialog.load();
-                self.rendering_dialog.load();
+                self.dialog_rendering_in_process.load();
+                self.dialog_rendering_unfinished.load();
             };
 
             self.files_changed = function(file_info, action)
@@ -310,8 +305,12 @@ $(function () {
                     self.current_rendering_profile_guid(settings.profiles.current_rendering_profile_guid);
                     self.current_debug_profile_guid(settings.profiles.current_debug_profile_guid);
                 }
+                if (settings.unfinished_renderings)
+                {
+                    self.dialog_rendering_in_process.update(settings.unfinished_renderings);
+                    self.dialog_rendering_unfinished.update(settings.unfinished_renderings);
+                }
 
-                self.rendering_dialog.update(settings);
                 self.is_real_time(self.getCurrentTriggerProfileIsRealTime());
                 self.current_camera_guid(self.getInitialCameraSelection());
                 self.set_current_camera_enabled();

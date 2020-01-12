@@ -206,15 +206,14 @@
         <div>
             <div class="row-fluid" data-bind="visible:Octolapse.Globals.is_admin">
                 <div data-bind="visible:!Octolapse.Status.is_real_time()" class="span12 text-right2 text-center">
-                    <div>Snapshot Plan Information</div>
-                    <span class="toggle-switch-fa" data-bind="attr: {title: (!Octolapse.Globals.main_settings.show_snapshot_plan_information() ? 'Enable the info panel' : (!is_timelapse_active() ? 'The info panel will display when a timelapse is active.' : 'Disable the info panel') )}">
-                        <input type="checkbox" id="octolapse-show_snapshot_plan_information" data-bind="checked: Octolapse.Globals.main_settings.show_snapshot_plan_information(), click: function() {toggleInfoPanel(Octolapse.Globals.main_settings.show_snapshot_plan_information,'show_snapshot_plan_information');}" style="display:none;">
-                        <label for="octolapse-show_snapshot_plan_information">
-                            <span class="fa-slider" data-bind="style: { 'background-color': (Octolapse.Globals.main_settings.is_octolapse_enabled() && is_timelapse_active()) ? '' : 'lightgray' }">
-                                <i class="fa icon-circle fa-inverse"></i>
-                            </span>
-                        </label>
-                    </span>
+                    <input type="checkbox" id="octolapse-show_snapshot_plan_information" data-bind="checked: Octolapse.Globals.main_settings.show_snapshot_plan_information(), click: function() {toggleInfoPanel(Octolapse.Globals.main_settings.show_snapshot_plan_information,'show_snapshot_plan_information');}" style="display:none;">
+                    <label for="octolapse-show_snapshot_plan_information" data-bind="attr: {title: (!Octolapse.Globals.main_settings.show_snapshot_plan_information() ? 'Enable the info panel' : (!is_timelapse_active() ? 'The info panel will display when a timelapse is active.' : 'Disable the info panel') )}">
+                        <div>Snapshot Plan Info</div>
+
+                        <i class="fa fa-lg fa-toggle-off" data-bind="css: {'fa-toggle-on': Octolapse.Globals.main_settings.show_snapshot_plan_information, 'fa-toggle-off': !Octolapse.Globals.main_settings.show_snapshot_plan_information()}"></i>
+                        <span data-bind="text: (Octolapse.Globals.main_settings.show_snapshot_plan_information() ? 'Enabled' : 'Disabled')"></span>
+
+                    </label>
                 </div>
                 <div data-bind="visible:Octolapse.Status.is_real_time()" class="text-center">
 

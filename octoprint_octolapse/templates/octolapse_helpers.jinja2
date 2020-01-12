@@ -73,14 +73,14 @@
         </div>
         <div data-bind="visible: !is_empty()">
             <div class="row-fluid" data-bind="visible: show_pagination_row_top">
-                <div class="span2">
+                <div data-bind="css: pagination_top_left_class">
                     <!-- ko template: top_left_pagination_template_id -->
                     <!-- /ko -->
                 </div>
-                <div class="span8">
+                <div data-bind="css: pagination_top_center_class">
                     <div class="text-center" data-bind="template: { name: 'octolapse-pagination' }"></div>
                 </div>
-                <div class="span2">
+                <div cdata-bind="css: pagination_top_right_class">
                     <!-- ko template: top_right_pagination_template_id -->
                     <!-- /ko -->
                 </div>
@@ -125,14 +125,14 @@
                 </table>
             </div>
             <div class="row-fluid" data-bind="visible: show_pagination_row_bottom">
-                <div class="span2">
+                <div data-bind="css: pagination_bottom_left_class">
                     <!-- ko template: bottom_left_pagination_template_id -->
                     <!-- /ko -->
                 </div>
-                <div class="span8">
+                <div data-bind="css: pagination_bottom_center_class">
                     <div class="text-center" data-bind="template: { name: 'octolapse-pagination' }"></div>
                 </div>
-                <div class="span2">
+                <div data-bind="css: pagination_bottom_right_class">
                     <!-- ko template: bottom_right_pagination_template_id -->
                     <!-- /ko -->
                 </div>
@@ -150,14 +150,14 @@
         </div>
         <div data-bind="visible: !is_empty()">
             <div class="row-fluid" data-bind="visible: show_pagination_row_top">
-                <div class="span2">
+                <div data-bind="css: pagination_top_left_class">
                     <!-- ko template: top_left_pagination_template_id -->
                     <!-- /ko -->
                 </div>
-                <div class="span8">
+                <div data-bind="css: pagination_top_center_class">
                     <div class="text-center" data-bind="template: { name: 'octolapse-pagination' }"></div>
                 </div>
-                <div class="span2">
+                <div data-bind="css: pagination_top_right_class">
                     <!-- ko template: top_right_pagination_template_id -->
                     <!-- /ko -->
                 </div>
@@ -195,14 +195,14 @@
                 </table>
             </div>
             <div class="row-fluid" data-bind="visible: show_pagination_row_bottom">
-                <div class="span2">
+                <div data-bind="css: pagination_bottom_left_class">
                     <!-- ko template: bottom_left_pagination_template_id -->
                     <!-- /ko -->
                 </div>
-                <div class="span8">
+                <div data-bind="css: pagination_bottom_center_class">
                     <div class="text-center" data-bind="template: { name: 'octolapse-pagination' }"></div>
                 </div>
-                <div class="span2">
+                <div data-bind="css: pagination_bottom_right_class">
                     <!-- ko template: bottom_right_pagination_template_id -->
                     <!-- /ko -->
                 </div>

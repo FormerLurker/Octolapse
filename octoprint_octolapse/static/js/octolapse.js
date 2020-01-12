@@ -1834,7 +1834,7 @@ $(function () {
                     if (directories.temporary_directory_changed)
                     {
                         // Load unfinished
-                        Octolapse.Status.rendering_dialog.load();
+                        Octolapse.Status.dialog_rendering_unfinished.load();
                     }
                     if (directories.snapshot_archive_directory_changed)
                     {

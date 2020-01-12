@@ -21,11 +21,6 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 -->
-<script type="text/html" id="octolapse-file-browser-snapshot-archive-import">
-
-
-</script>
-
 <script type="text/html" id="octolapse-timelapse-files-dialog-template">
     <ul class="nav nav-pills">
         <li class="dropdown pull-right tabdrop hide">
@@ -36,10 +31,10 @@
             <ul class="dropdown-menu"></ul>
         </li>
         <li class="active">
-            <a id="octolapse_timelapse_videos_tab_button" href="#octolapse_timelapse_videos_tab" data-toggle="tab" data-profile-type="main-settings"  data-bind="click: function(){dialog.resize(); return true;}">Timelapse</a>
+            <a id="octolapse_timelapse_videos_tab_button" href="#octolapse_timelapse_videos_tab" data-toggle="tab" data-profile-type="main-settings"  data-bind="click: timelapse_tab_selected">Timelapse</a>
         </li>
         <li>
-            <a id="octolapse_snapshot_archive_tab_button" href="#octolapse_snapshot_archive_tab" data-toggle="tab" data-profile-type="main-settings"  data-bind="click: function(){dialog.resize(); return true;}">Saved Snapshots</a>
+            <a id="octolapse_snapshot_archive_tab_button" href="#octolapse_snapshot_archive_tab" data-toggle="tab" data-profile-type="main-settings"  data-bind="click: snapshot_archive_tab_selected">Saved Snapshots</a>
         </li>
 
     </ul>
@@ -47,7 +42,7 @@
         <div id="octolapse_timelapse_videos_tab" class="tab-pane active" data-bind="template: {name: 'octolapse-file-browser', data: timelapse_browser}"></div>
         <div id="octolapse_snapshot_archive_tab" class="tab-pane">
             <fieldset class="octolapse" data-bind="visible: Octolapse.Globals.is_admin">
-                <legend>Import Snapshot Archive (.zip)</legend>
+                <legend>Import Snapshot Archive (.zip)&nbsp;<a class="octolapse_help" style="font-size:16px;" data-help-url="dialog.timelapse_files.snapshot_archive.import.md" data-help-title="Import Snapshot Archive" /></legend>
                 <div class="row-fluid">
                     <div class="span3">
                         <input id="octolapse_snapshot_upload" type="file" name="octolapse_snapshot_upload" accept=".zip" data-url="{{ url_for('plugin.octolapse.import_snapshots_request') }}">
@@ -61,11 +56,12 @@
         </div>
     </div>
 </script>
+
 <script type="text/html" id="octolapse-snapshot-archive-custom-actions">
         <a data-bind="attr: {href: $data.value.get_download_url($data)}" download>
         <i class="fa fa-lg fa-download"></i>
     </a>
-    <span data-bind="visible: $data.data.parent.allow_delete">&nbsp;|&nbsp;
+    <span data-bind="visible: $data.data.parent.is_admin">&nbsp;|&nbsp;
         <a data-bind="click: function(){$data.data.parent.delete_file($data);}">
             <i class="fa fa-lg fa-trash-o"></i>
         </a>
@@ -80,7 +76,7 @@
         <a data-bind="attr: {href: $data.value.get_download_url($data)}" download>
         <i class="fa fa-lg fa-download"></i>
     </a>
-    <span data-bind="visible: $data.data.parent.allow_delete">&nbsp;|&nbsp;
+    <span data-bind="visible: $data.data.parent.is_admin">&nbsp;|&nbsp;
         <a data-bind="click: function(){$data.data.parent.delete_file($data);}">
             <i class="fa fa-lg fa-trash-o"></i>
         </a>
