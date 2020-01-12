@@ -3425,10 +3425,19 @@ class OctolapsePlugin(
                 pre_post_render_message += "{0}After Render Script - {1}".format(os.linesep, payload.AfterRenderError.message)
             self.send_post_render_failed_message(pre_post_render_message)
 
-
-        # This timelapse won't be moved into the octoprint timelapse plugin folder.
-        message = "Octolapse has completed rendering a timelapse for camera '{0}'.  Your video is available both " \
-                  "within the timelapse tab and  Octolapse tab.".format(payload.CameraName)
+        if payload.RenderingEnabled:
+            # This timelapse won't be moved into the octoprint timelapse plugin folder.
+            message = "Octolapse has completed rendering a timelapse for camera '{0}'.  Your video can be found by  " \
+                      "clicking 'Videos and Images' within the Octolapse tab.".format(payload.CameraName)
+            if payload.ArchivePath and os.path.isfile(payload.ArchivePath):
+                message += "  An archive of your snapshots can be found within the 'Saved Snapshots' tab of the " \
+                           "'Videos and Images' dialog."
+        else:
+            message = (
+                "Octolapse has completed creating an archive of your snapshots for camera '{0}'.  Your archive "
+                "is available within the 'Saved Snapshots' tab of the 'Videos and Images' dialog."
+                .format(payload.CameraName)
+            )
         self.send_render_success_message(message, job)
 
         # fire custom event for movie done

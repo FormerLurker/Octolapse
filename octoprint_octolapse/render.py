@@ -1358,9 +1358,6 @@ class TimelapseRenderJob(threading.Thread):
                                                    "Please check the rendering settings for Min and Max FPS "
                                                    "as well as the number of snapshots captured.")
 
-        # set the outputs - output directory, output filename, output extension
-        self._set_outputs()
-
     def _pre_render_script(self):
         script_path = self._render_job_info.camera.on_before_render_script.strip()
         if not script_path:
@@ -1516,7 +1513,8 @@ class TimelapseRenderJob(threading.Thread):
             self._before_render_error,
             self._after_render_error,
             self._render_job_info.timelapse_job_info.PrintFileName,
-            self._render_job_info.timelapse_job_info.PrintFileExtension
+            self._render_job_info.timelapse_job_info.PrintFileExtension,
+            self._render_job_info.rendering.enabled,
         )
 
     def _run_prechecks(self):
@@ -1542,84 +1540,87 @@ class TimelapseRenderJob(threading.Thread):
             self._temp_rendering_dir, "{0}.{1}".format(str(uuid.uuid4()), "tmp")
         )
         try:
-            logger.info("Starting prerender for camera %s.", self._render_job_info.camera_guid)
-            self.on_prerender_start(self.create_callback_payload(0, "Pre-render is starting."))
+            # set the outputs - output directory, output filename, output extension
+            self._set_outputs()
+            if self._render_job_info.rendering.enabled:
+                logger.info("Starting prerender for camera %s.", self._render_job_info.camera_guid)
+                self.on_prerender_start(self.create_callback_payload(0, "Pre-render is starting."))
 
-            self._prepare_images()
+                self._prepare_images()
 
-            self._pre_render_script()
+                self._pre_render_script()
 
-            self._pre_render()
+                self._pre_render()
 
-            try:
-                logger.info("Creating the directory at %s", self._output_directory)
-
-                if not os.path.exists(self._output_directory):
-                    try:
-                        os.makedirs(self._output_directory)
-                    except FileExistsError:
-                        pass
-            except Exception as e:
-                raise RenderError('create-render-path',
-                                  "Render - An exception was thrown when trying to "
-                                  "create the rendering path at: {0}.  Please check "
-                                  "the logs (plugin_octolapse.log) for details.".format(self._output_directory),
-                                  cause=e)
-
-            watermark_path = None
-            if self._render_job_info.rendering.enable_watermark:
-                watermark_path = self._render_job_info.rendering.selected_watermark
-                if watermark_path == '':
-                    logger.error("Watermark was enabled but no watermark file was selected.")
-                    watermark_path = None
-                elif not os.path.exists(watermark_path):
-                    logger.error("Render - Watermark file does not exist.")
-                    watermark_path = None
-                elif sys.platform == "win32":
-                    # Because ffmpeg hiccups on windows' drive letters and backslashes we have to give the watermark
-                    # path a special treatment. Yeah, I couldn't believe it either...
-                    watermark_path = watermark_path.replace(
-                        "\\", "/").replace(":", "\\\\:")
-
-            # Do image preprocessing.  This relies on the original file name, so no renaming before running
-            # this function
-            self._preprocess_images()
-
-            # rename the images
-            self._rename_images()
-
-            # Add pre and post roll.
-            self._apply_pre_post_roll()
-
-            # prepare ffmpeg command
-            command_str = self._create_ffmpeg_command_string(
-                os.path.join(self._temp_rendering_dir, self._render_job_info.snapshot_filename_format),
-                temp_filepath,
-                watermark=watermark_path
-            )
-            # rename the output file
-
-            logger.info("Running ffmpeg with command string: %s", command_str)
-            self.on_render_start(self.create_callback_payload(0, "Starting to render timelapse."))
-            with self.render_job_lock:
                 try:
-                    p = sarge.run(
-                        command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
-                    os.rename(temp_filepath, self._output_filepath)
+                    logger.info("Creating the directory at %s", self._output_directory)
+
+                    if not os.path.exists(self._output_directory):
+                        try:
+                            os.makedirs(self._output_directory)
+                        except FileExistsError:
+                            pass
                 except Exception as e:
-                    raise RenderError('rendering-exception', "ffmpeg failed during rendering of movie. "
-                                                             "Please check plugin_octolapse.log for details.",
+                    raise RenderError('create-render-path',
+                                      "Render - An exception was thrown when trying to "
+                                      "create the rendering path at: {0}.  Please check "
+                                      "the logs (plugin_octolapse.log) for details.".format(self._output_directory),
                                       cause=e)
-                if p.returncode != 0:
-                    return_code = p.returncode
-                    stderr_text = p.stderr.text
-                    raise RenderError('return-code', "Could not render movie, got return code %r: %s" % (
-                        return_code, stderr_text))
 
-            # run any post rendering scripts
-            self._post_render_script()
+                watermark_path = None
+                if self._render_job_info.rendering.enable_watermark:
+                    watermark_path = self._render_job_info.rendering.selected_watermark
+                    if watermark_path == '':
+                        logger.error("Watermark was enabled but no watermark file was selected.")
+                        watermark_path = None
+                    elif not os.path.exists(watermark_path):
+                        logger.error("Render - Watermark file does not exist.")
+                        watermark_path = None
+                    elif sys.platform == "win32":
+                        # Because ffmpeg hiccups on windows' drive letters and backslashes we have to give the watermark
+                        # path a special treatment. Yeah, I couldn't believe it either...
+                        watermark_path = watermark_path.replace(
+                            "\\", "/").replace(":", "\\\\:")
 
-            if self._archive_snapshots:
+                # Do image preprocessing.  This relies on the original file name, so no renaming before running
+                # this function
+                self._preprocess_images()
+
+                # rename the images
+                self._rename_images()
+
+                # Add pre and post roll.
+                self._apply_pre_post_roll()
+
+                # prepare ffmpeg command
+                command_str = self._create_ffmpeg_command_string(
+                    os.path.join(self._temp_rendering_dir, self._render_job_info.snapshot_filename_format),
+                    temp_filepath,
+                    watermark=watermark_path
+                )
+                # rename the output file
+
+                logger.info("Running ffmpeg with command string: %s", command_str)
+                self.on_render_start(self.create_callback_payload(0, "Starting to render timelapse."))
+                with self.render_job_lock:
+                    try:
+                        p = sarge.run(
+                            command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
+                        os.rename(temp_filepath, self._output_filepath)
+                    except Exception as e:
+                        raise RenderError('rendering-exception', "ffmpeg failed during rendering of movie. "
+                                                                 "Please check plugin_octolapse.log for details.",
+                                          cause=e)
+                    if p.returncode != 0:
+                        return_code = p.returncode
+                        stderr_text = p.stderr.text
+                        raise RenderError('return-code', "Could not render movie, got return code %r: %s" % (
+                            return_code, stderr_text))
+
+                # run any post rendering scripts
+                self._post_render_script()
+
+            if self._archive_snapshots or not self._render_job_info.rendering.enabled:
                 # create the copy directory
                 camera_path = self._render_job_info.snapshot_directory
                 if not os.path.exists(self._render_job_info.snapshot_archive_directory):
@@ -1982,7 +1983,8 @@ class RenderingCallbackArgs(object):
         before_render_error,
         after_render_error,
         gcode_filename,
-        gcode_file_extension
+        gcode_file_extension,
+        rendering_enabled
     ):
         self.Reason = reason
         self.ReturnCode = return_code
@@ -2001,6 +2003,7 @@ class RenderingCallbackArgs(object):
         self.AfterRenderError = after_render_error
         self.GcodeFilename = gcode_filename
         self.GcodeFileExtension = gcode_file_extension
+        self.RenderingEnabled = rendering_enabled
 
     def get_rendering_filename(self):
         return "{0}.{1}".format(self.RenderingFilename, self.RenderingExtension)

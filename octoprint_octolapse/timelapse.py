@@ -1264,7 +1264,7 @@ class Timelapse(object):
             snapshot_complete_callback_thread.start()
 
     def _render_timelapse(self, print_end_state):
-        if self._settings.profiles.current_rendering().enabled and self.was_started:
+        if self.was_started:
             # If we are still taking snapshots, wait for them all to finish
             if self.get_is_taking_snapshot():
                 logger.info("Snapshot jobs are running, waiting for them to finish before rendering.")
