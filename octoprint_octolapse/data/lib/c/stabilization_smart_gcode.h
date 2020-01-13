@@ -28,7 +28,7 @@ public:
 	stabilization_smart_gcode(gcode_position_args position_args, stabilization_args stab_args, smart_gcode_args mt_args, pythonGetCoordinatesCallback get_coordinates, PyObject* py_get_coordinates_callback, pythonProgressCallback progress, PyObject* py_progress_callback);
 	virtual ~stabilization_smart_gcode();
 private:
-	const std::string default_snapshot_gcode_ = "@OCTOLAPSE TAKE-SNAPSHOT";
+	static std::string default_snapshot_gcode_;
 	stabilization_smart_gcode(const stabilization_smart_gcode &source); // don't copy me
 	void process_pos(position* p_current_pos, position* p_previous_pos, bool found_command) override;
 	void on_processing_complete() override;

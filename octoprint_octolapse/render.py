@@ -472,7 +472,7 @@ class RenderingProcessor(threading.Thread):
                 archive_files_temp_dict = {}  # a temporary dict to hold values while we construct the jobs
                 for fileinfo in zip_file.infolist():
                     # see if the current item is a directory
-                    if not fileinfo.is_dir():
+                    if not fileinfo.filename.endswith(os.sep):
                         parts = utility.split_all(fileinfo.filename)
                         name = os.path.basename(fileinfo.filename).lower()
                         name_without_extension = utility.get_filename_from_full_path(name)

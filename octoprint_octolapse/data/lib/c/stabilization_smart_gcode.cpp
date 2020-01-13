@@ -4,6 +4,7 @@
 
 stabilization_smart_gcode::stabilization_smart_gcode()
 {
+	
 	// Initialize travel args
 	smart_gcode_args_ = smart_gcode_args();
 	// initialize layer/height tracking variables
