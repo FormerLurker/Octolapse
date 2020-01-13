@@ -37,7 +37,7 @@ import base64
 import json
 import os
 import shutil
-from flask import request, send_file, jsonify, Response, stream_with_context
+from flask import request, send_file, jsonify, Response, stream_with_context, send_from_directory
 from flask_principal import Permission, RoleNeed
 import threading
 import uuid
@@ -364,7 +364,7 @@ class OctolapsePlugin(
                         'success': False,
                         'error': 'The requested file does not exist.'
                     }), 404
-            return self.get_download_file_response(full_path, file_name)
+            return send_from_directory(directory, file_name, as_attachment=True)
 
     @octoprint.plugin.BlueprintPlugin.route("/deleteFile", methods=["POST"])
     @restricted_access
@@ -1904,6 +1904,8 @@ class OctolapsePlugin(
     @staticmethod
     def get_download_file_response(file_path, download_filename, on_complete_callback=None, on_complete_additional_args=None):
         if os.path.isfile(file_path):
+
+            @stream_with_context
             def single_chunk_generator(download_filepath):
                 # todo:  What exceptions do we need to catch here to ensure that the complete callback runs?
                 with open(download_filepath, 'rb') as file_to_download:
@@ -1914,10 +1916,9 @@ class OctolapsePlugin(
                         yield chunk
                 if on_complete_callback is not None:
                     on_complete_callback(download_filepath, on_complete_additional_args)
-            response = Response(stream_with_context(
-                single_chunk_generator(file_path)))
-            response.headers.set('Content-Disposition',
-                                 'attachment', filename=download_filename)
+
+            response = Response(stream_with_context(single_chunk_generator(file_path)))
+            response.headers.set('Content-Disposition', 'attachment', filename=download_filename)
             response.headers.set('Content-Type', 'application/octet-stream')
             return response
         return jsonify({
