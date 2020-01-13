@@ -797,7 +797,7 @@ class RenderingProcessor(threading.Thread):
                             settings = json.load(settings_file)
                             camera_profile = settings.get("profile", {})
                             camera_profile["guid"] = camera_guid
-                    except (OSError, IOError, json.JSONDecodeError) as e:
+                    except (OSError, IOError, ValueError) as e:
                         logger.exception("Unable to read camera settings from %s.", camera_settings_path)
             if not camera_profile:
                 camera_profile = {
@@ -815,7 +815,7 @@ class RenderingProcessor(threading.Thread):
                         with open(rendering_settings_path, 'r') as settings_file:
                             settings = json.load(settings_file)
                             rendering_profile = settings.get("profile", {})
-                    except (OSError, IOError, json.JSONDecodeError) as e:
+                    except (OSError, IOError, ValueError) as e:
                         logger.exception("Unable to read rendering settings from %s.", rendering_settings_path)
             if not rendering_profile:
                 rendering_profile = {

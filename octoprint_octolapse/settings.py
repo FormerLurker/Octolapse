@@ -2297,7 +2297,7 @@ class OctolapseSettings(Settings):
                         pass
                     if settings["type"] == "rendering" and "profile" in settings:
                         rendering_profile = RenderingProfile.create_from(settings["profile"])
-            except (IOError, json.JSONDecodeError) as e:
+            except (OSError, IOError, ValueError) as e:
                 logger.exception(
                     "Could not load rendering settings for the given snapshot job at %s.", rendering_settings_path
                 )
@@ -2320,7 +2320,7 @@ class OctolapseSettings(Settings):
                         camera_profile = CameraProfile.create_from(settings["profile"])
                         # ensure the guid matches the supplied guid
                         camera_profile.guid = camera_guid
-            except (IOError, json.JSONDecodeError) as e:
+            except (OSError, IOError, ValueError) as e:
                 logger.exception(
                     "Could not load camera settings for the given snapshot job at %s.", camera_settings_path
                 )

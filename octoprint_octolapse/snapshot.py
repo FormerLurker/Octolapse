@@ -793,7 +793,7 @@ class CameraInfo(object):
             with open(file_path, 'r') as camera_info:
                 data = json.load(camera_info)
                 return CameraInfo.from_dict(data)
-        except (OSError, IOError, json.JSONDecodeError) as e:
+        except (OSError, IOError, ValueError) as e:
             logger.exception("Unable to load camera info from %s.", file_path)
             ret_val = CameraInfo()
             ret_val.is_empty = True

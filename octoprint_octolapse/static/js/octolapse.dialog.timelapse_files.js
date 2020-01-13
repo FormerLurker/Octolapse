@@ -74,6 +74,7 @@ $(function () {
             // Configure the help link
             self.dialog.set_help(true, "dialog.timelapse_files.timelapse.tab.md", null,"Timelapse Files Dialog");
         };
+
         self.snapshot_archive_tab_selected = function(){
             // Resize the tab
             self.dialog.resize();

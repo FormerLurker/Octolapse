@@ -791,7 +791,7 @@ class TimelapseJobInfo(object):
             with open(file_path, 'r') as timelapse_info:
                 data = json.load(timelapse_info)
                 return TimelapseJobInfo.from_dict(data)
-        except (OSError, IOError, json.JSONDecodeError) as e:
+        except (OSError, IOError, ValueError) as e:
             logger.exception("Unable to load TimelapseJobInfo from %s.", file_path)
             info = TimelapseJobInfo()
             info.PrintEndState = "UNKNOWN"
