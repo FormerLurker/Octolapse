@@ -3445,13 +3445,14 @@ class OctolapsePlugin(
         gcode_filename = "{0}.{1}".format(payload.GcodeFilename, payload.GcodeFileExtension)
         output_file_path = payload.get_rendering_path()
         # Notify the plugin that a timelapse has been added
-        file_info = utility.get_file_info(output_file_path)
-        file_info["type"] = utility.FILE_TYPE_TIMELAPSE_OCTOLAPSE
-        self.send_files_changed_message(
-            file_info,
-            'added',
-            None
-        )
+        if os.path.isfile(output_file_path):
+            file_info = utility.get_file_info(output_file_path)
+            file_info["type"] = utility.FILE_TYPE_TIMELAPSE_OCTOLAPSE
+            self.send_files_changed_message(
+                file_info,
+                'added',
+                None
+            )
         archive_path = payload.ArchivePath
         if archive_path and os.path.isfile(archive_path):
             # Notify the plugin that an archive was created

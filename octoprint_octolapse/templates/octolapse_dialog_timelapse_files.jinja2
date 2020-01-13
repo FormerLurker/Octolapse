@@ -39,8 +39,12 @@
 
     </ul>
     <div class="tab-content">
-        <div id="octolapse_timelapse_videos_tab" class="tab-pane active" data-bind="template: {name: 'octolapse-file-browser', data: timelapse_browser}"></div>
+        <div id="octolapse_timelapse_videos_tab" class="tab-pane active">
+            <h3>Timelapse Videos</h3>
+            <div data-bind="template: {name: 'octolapse-file-browser', data: timelapse_browser}"></div>
+        </div>
         <div id="octolapse_snapshot_archive_tab" class="tab-pane">
+            <h3>Saved Snapshots (zip archives)</h3>
             <fieldset class="octolapse" data-bind="visible: Octolapse.Globals.is_admin">
                 <legend>Import Snapshot Archive (.zip)&nbsp;<a class="octolapse_help" style="font-size:16px;" data-help-url="dialog.timelapse_files.snapshot_archive.import.md" data-help-title="Import Snapshot Archive" /></legend>
                 <div class="row-fluid">

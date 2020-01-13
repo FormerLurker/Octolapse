@@ -220,7 +220,7 @@ class RenderJobInfo(object):
         self.snapshot_archive_filename = utility.get_snapshot_archive_filename(self.rendering_filename)
         self.snapshot_archive_path = os.path.join(self.snapshot_archive_directory, self.snapshot_archive_filename)
         self.rendering = rendering_profile
-        self.archive_snapshots = self.rendering.archive_snapshots
+        self.archive_snapshots = self.rendering.archive_snapshots or not self.rendering.enabled
         # store any rendering errors
         self.rendering_error = None
 
@@ -1247,7 +1247,7 @@ class TimelapseRenderJob(threading.Thread):
         # callbacks
         ###########
         self._thread = None
-        self._archive_snapshots = render_job_info.archive_snapshots
+        self._archive_snapshots = render_job_info.archive_snapshots or not render_job_info.rendering.enabled
         # full path of the input
         self._temp_rendering_dir = utility.get_temporary_rendering_directory(render_job_info.temporary_directory)
         self._output_directory = ""
@@ -1485,12 +1485,20 @@ class TimelapseRenderJob(threading.Thread):
         # Rendering path info
         logger.info("Setting output paths.")
         self._output_filepath = utility.get_collision_free_filepath(self._render_job_info.rendering_path)
+        self._render_job_info.rendering_path = self._output_filepath
         self._output_filename = utility.get_filename_from_full_path(self._output_filepath)
+        self._render_job_info.rendering_filename = self._output_filename
         self._output_directory = utility.get_directory_from_full_path(self._output_filepath)
         self._output_extension = utility.get_extension_from_full_path(self._output_filepath)
         self._snapshot_archive_path = utility.get_collision_free_filepath(
             self._render_job_info.snapshot_archive_path
         )
+        self._render_job_info.snapshot_archive_path = self._snapshot_archive_path
+        self._render_job_info.snapshot_archive_filename =  utility.get_filename_from_full_path(
+            self._snapshot_archive_path
+        )
+
+
 
     #####################
     # Event Notification
