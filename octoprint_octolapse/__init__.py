@@ -32,12 +32,17 @@ root_logger = logging_configurator.get_root_logger()
 # so that we can
 logger = logging_configurator.get_logger("__init__")
 # be sure to configure the logger after we import all of our modules
+import tornado
+import octoprint.access.permissions as permissions
+from octoprint.server import util, app
+import urllib
+from octoprint.server.util.tornado import LargeResponseHandler, RequestlessExceptionLoggingMixin, CorsSupportMixin
 import sys
 import base64
 import json
 import os
 import shutil
-from flask import request, send_file, jsonify, Response, stream_with_context, send_from_directory
+from flask import request, send_file, jsonify, Response, stream_with_context, send_from_directory, current_app, Flask
 from flask_principal import Permission, RoleNeed
 import threading
 import uuid
@@ -48,7 +53,6 @@ from tempfile import mkdtemp
 from distutils.version import LooseVersion
 from io import BytesIO
 import octoprint.plugin
-import octoprint.server
 import octoprint.filemanager
 from octoprint.events import Events
 #from octoprint.server import admin_permission
@@ -116,7 +120,11 @@ class OctolapsePlugin(
     TIMEOUT_DELAY = 1000
     PREPROCESSING_CANCEL_TIMEOUT_SECONDS = 5
     PREPROCESSING_NOTIFICATION_PERIOD_SECONDS = 1
-    admin_permission = Permission(RoleNeed('admin'))
+
+    if LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4"):
+        admin_permission = permissions.Permissions.ADMIN
+    else:
+        admin_permission = Permission(RoleNeed('admin'))
 
     def __init__(self):
         super(OctolapsePlugin, self).__init__()
@@ -279,6 +287,7 @@ class OctolapsePlugin(
     def get_file_directory(self, file_type, name):
         extension = utility.get_extension_from_filename(name)
         directory = None
+        allowed = False
         if file_type == 'snapshot_archive':
             directory = self._octolapse_settings.main_settings.get_snapshot_archive_directory(
                 self.get_plugin_data_folder()
@@ -302,8 +311,8 @@ class OctolapsePlugin(
             return None
         return directory
 
-    @octoprint.plugin.BlueprintPlugin.route("/downloadFile", methods=["GET"])
-    @restricted_access
+    #@octoprint.plugin.BlueprintPlugin.route("/downloadFile", methods=["GET"])
+    #@restricted_access
     def download_file_request(self):
         with OctolapsePlugin.admin_permission.require(http_exception=403):
             # get the parameters
@@ -365,6 +374,7 @@ class OctolapsePlugin(
                         'error': 'The requested file does not exist.'
                     }), 404
             return send_from_directory(directory, file_name, as_attachment=True)
+
 
     @octoprint.plugin.BlueprintPlugin.route("/deleteFile", methods=["POST"])
     @restricted_access
@@ -1793,7 +1803,7 @@ class OctolapsePlugin(
     def add_archive_to_unfinished_renderings(self):
         with OctolapsePlugin.admin_permission.require(http_exception=403):
             request_values = request.get_json()
-            snapshot_archive_name = request_values["archive_name"]
+            snapshot_archive_name = urllib.unquote(request_values["archive_name"])
 
             # make sure the extension is correct
             if not snapshot_archive_name.lower().endswith(".{0}".format(utility.snapshot_archive_extension)):
@@ -1917,7 +1927,7 @@ class OctolapsePlugin(
                 if on_complete_callback is not None:
                     on_complete_callback(download_filepath, on_complete_additional_args)
 
-            response = Response(stream_with_context(single_chunk_generator(file_path)))
+            response = Response(single_chunk_generator(file_path))
             response.headers.set('Content-Disposition', 'attachment', filename=download_filename)
             response.headers.set('Content-Type', 'application/octet-stream')
             return response
@@ -3616,6 +3626,29 @@ class OctolapsePlugin(
     def register_custom_events(*args, **kwargs):
         return ["movie_done"]
 
+    def register_custom_routes(self, server_routes, *args, **kwargs):
+
+        admin_validation_chain = [
+            util.tornado.access_validation_factory(
+                app,
+                util.flask.permission_validator,
+                self.admin_permission
+            ),
+        ]
+        return [
+            (
+                r"/downloadFile",
+                OctolapseLargeResponseHandler,
+                dict(
+                    path='',
+                    as_attachment=True,
+                    caller=self,
+                    access_validation=util.tornado.validation_chain(*admin_validation_chain)
+                )
+
+            )
+        ]
+
 # If you want your plugin to be registered within OctoPrin#t under a different
 # name than what you defined in setup.py
 # ("OctoPrint-PluginSkeleton"), you may define that here.  Same goes for the
@@ -3640,5 +3673,96 @@ def __plugin_load__():
         "octoprint.comm.protocol.gcode.received": (__plugin_implementation__.on_gcode_received, -1),
         "octoprint.timelapse.extensions": __plugin_implementation__.get_timelapse_extensions,
         "octoprint.server.http.bodysize": __plugin_implementation__.bodysize_hook,
-        "octoprint.events.register_custom_events": __plugin_implementation__.register_custom_events
+        "octoprint.events.register_custom_events": __plugin_implementation__.register_custom_events,
+        "octoprint.server.http.routes": __plugin_implementation__.register_custom_routes
     }
+
+
+class OctolapseLargeResponseHandler(LargeResponseHandler):
+    def initialize(self, path, caller, required_roles=None, default_filename=None, as_attachment=False, allow_client_caching=True,
+                   access_validation=None, path_validation=None, etag_generator=None, name_generator=None,
+                   mime_type_guesser=None, on_before_request=None, on_after_request=None):
+        super(OctolapseLargeResponseHandler, self).initialize(
+            path, default_filename, as_attachment=as_attachment, allow_client_caching=allow_client_caching,
+            access_validation=access_validation, path_validation=path_validation, etag_generator=etag_generator,
+            name_generator=name_generator, mime_type_guesser=mime_type_guesser)
+        self._caller = caller
+        self._before_request_callback = on_before_request
+        self._after_request_callback = on_after_request
+        self._after_request_internal = None
+
+    def prepare(self):
+        if self._before_request_callback:
+            self._before_request_callback()
+
+    def get(self, include_body=True):
+        # get the args
+        file_type = self.get_query_arguments('type')[0]
+
+        if self._access_validation is not None:
+            self._access_validation(self.request)
+
+        if "cookie" in self.request.arguments:
+            self.set_cookie(self.request.arguments["cookie"][0], "true", path="/")
+
+        if file_type == 'failed_rendering':
+            job_guid = self.get_query_arguments("job_guid")[0]
+            camera_guid = self.get_query_arguments("camera_guid")[0]
+
+            temp_directory = self._caller._octolapse_settings.main_settings.get_temporary_directory(
+                self._caller.get_plugin_data_folder()
+            )
+
+            temp_archive_directory = utility.get_temporary_archive_directory(temp_directory)
+            temp_archive_path = utility.get_temporary_archive_path(temp_directory)
+
+            self._caller._rendering_processor.archive_unfinished_job(
+                temp_directory,
+                job_guid,
+                camera_guid,
+                temp_archive_path,
+                is_download=True
+            )
+
+            self._after_request_internal = self.clean_temp_folder
+            self._after_request_internal_args = {
+                'file_path': temp_archive_path,
+                'directory': temp_archive_directory
+            }
+            self.root = utility.get_directory_from_full_path(temp_archive_path)
+            self.default_filename = os.path.basename(temp_archive_path)
+            return tornado.web.StaticFileHandler.get(self, temp_archive_path, include_body=include_body)
+        else:
+            file_name = urllib.unquote(self.get_query_arguments('name')[0])
+            # Don't allow any subdirectory access
+            if not OctolapsePlugin.file_name_allowed(file_name):
+                raise tornado.web.HTTPError(500)
+
+            directory = self._caller.get_file_directory(file_type, file_name)
+            if not directory:
+                raise tornado.web.HTTPError(500)
+
+            # make sure the file exists
+            full_path = os.path.join(directory, file_name)
+            if not os.path.isfile(full_path):
+                raise tornado.web.HTTPError(404)
+        self.root = utility.get_directory_from_full_path(full_path)
+        self.default_filename = os.path.basename(full_path)
+        return tornado.web.StaticFileHandler.get(self, full_path, include_body=include_body)
+
+    def clean_temp_folder(self):
+        file_path = self._after_request_internal_args.get("file_path", None)
+        directory = self._after_request_internal_args.get("directory", None)
+        # delete the temp file and directory
+        if file_path:
+            os.unlink(file_path)
+        if directory and os.path.isdir(directory):
+            if not os.listdir(directory):
+                shutil.rmtree(directory)
+
+    def on_finish(self):
+        if self._after_request_internal:
+            self._after_request_internal()
+
+        if self._after_request_callback:
+            self._after_request_callback()

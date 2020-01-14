@@ -415,10 +415,10 @@ class RenderingProcessor(threading.Thread):
             "ffmpeg_directory_changed": ffmpeg_directory_changed
         }
 
-    def archive_unfinished_job(self, temporary_directory, job_guid, camera_guid, target_path):
+    def archive_unfinished_job(self, temporary_directory, job_guid, camera_guid, target_path, is_download=False):
         # do not archive if there is a no archive file.  This means the rendering was created from
-        # an archive that already existed.
-        if utility.has_no_archive_file(temporary_directory, job_guid, camera_guid):
+        # an archive that already existed.  If we are downloading, we don't care about this.
+        if not is_download and utility.has_no_archive_file(temporary_directory, job_guid, camera_guid):
             return
         with self.temp_files_lock:
             job_directory = utility.get_temporary_snapshot_job_path(temporary_directory, job_guid)
