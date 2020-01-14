@@ -3565,20 +3565,29 @@ class OctolapsePlugin(
         # version specific permission validator
         if LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4"):
             permission_validator = util.flask.permission_validator
+            admin_validation_chain = [
+                util.tornado.access_validation_factory(
+                    app,
+                    permission_validator,
+                    self.admin_permission
+                ),
+            ]
         else:
+            # the concept of granular permissions does not exist in this version of Octoprint.  Fallback to the
+            # admin role
             def admin_permission_validator(flask_request):
                 user = util.flask.get_flask_user_from_request(flask_request)
                 if user is None or not user.is_authenticated() or not user.is_admin():
                     raise tornado.web.HTTPError(403)
             permission_validator = admin_permission_validator
+            admin_validation_chain = [
+                util.tornado.access_validation_factory(
+                    app,
+                    permission_validator
+                ),
+            ]
 
-        admin_validation_chain = [
-            util.tornado.access_validation_factory(
-                app,
-                permission_validator,
-                self.admin_permission
-            ),
-        ]
+
         return [
             (
                 r"/downloadFile",
