@@ -3566,10 +3566,11 @@ class OctolapsePlugin(
         if LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4"):
             permission_validator = util.flask.permission_validator
         else:
-            def permission_validator(flask_request):
+            def admin_permission_validator(flask_request):
                 user = util.flask.get_flask_user_from_request(flask_request)
-                if not user.has_permission(OctolapsePlugin.admin_permission):
+                if user is None or not user.is_authenticated() or not user.is_admin():
                     raise tornado.web.HTTPError(403)
+            permission_validator = admin_permission_validator
 
         admin_validation_chain = [
             util.tornado.access_validation_factory(
