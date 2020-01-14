@@ -214,7 +214,7 @@
         <div style="display:none">{% include "octolapse_profile_dialog_add_edit.jinja2" %}</div>
         <div class="row-fluid">
             <a class="btn btn-default span3"
-               data-bind="attr: {href: '{{ url_for('plugin.octolapse.download_settings_request', apikey='') }}' + UI_API_KEY}"
+               data-bind="attr: {href: '/plugin/octolapse/downloadFile?type=settings&apikey=' + UI_API_KEY}"
                download="">
                 <i class="fa fa-download"></i> Export Settings
             </a>

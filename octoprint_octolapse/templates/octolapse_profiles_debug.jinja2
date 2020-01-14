@@ -49,7 +49,7 @@
                 <button type="button" class="btn btn-large" data-bind="click: function(){clearLog(false);}" title="Clear the most recent log."> <i class="icon-trash"></i>Clear Log</button>
                 <button type="button" class="btn btn-large" data-bind="click: function(){clearLog(true);}" title="Clear the most recent log and deletes any log file backups (up to 3)."><i class="icon-trash"></i>Clear All Logs</button>
                  <a class="btn btn-large" title="Download the most recent logfile."
-                   data-bind="attr: {href: '{{ url_for('plugin.octolapse.download_log_request') }}' + UI_API_KEY}" download="">
+                   data-bind="attr: {href: '/plugin/octolapse/downloadFile?type=log&apikey=' + UI_API_KEY}" download="">
                     <i class="fa fa-download"></i> Download Log
                 </a>
         </div>
