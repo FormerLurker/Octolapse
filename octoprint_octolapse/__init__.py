@@ -2273,6 +2273,7 @@ class OctolapsePlugin(
                 self.on_prerender_start,
                 self.on_render_start,
                 self.on_render_success,
+                self.on_render_progress,
                 self.on_render_error,
                 self.on_render_end,
                 self.send_failed_renderings_changed_message,
@@ -3447,6 +3448,9 @@ class OctolapsePlugin(
                 None
             )
         self.send_movie_done_event(gcode_filename, output_file_path, output_file_name)
+
+    def on_render_progress(self, payload, job):
+        pass
 
     def send_movie_done_event(self, gcode_filename, movie_path, movie_basename):
         event = Events.PLUGIN_OCTOLAPSE_MOVIE_DONE

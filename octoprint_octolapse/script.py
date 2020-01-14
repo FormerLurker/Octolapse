@@ -25,6 +25,8 @@ import subprocess
 import threading
 import psutil
 import os
+import sys
+import platform
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -135,12 +137,21 @@ class POpenWithTimeout(object):
             error_message,
             cause=causes)
 
+    encoding = sys.getfilesystemencoding()
+    errors = 'surrogateescape' if platform.system() != "Windows" else 'strict'
+    @staticmethod
+    def fsdecode(filename):
+        if isinstance(filename, bytes):
+            return filename.decode(POpenWithTimeout.encoding, POpenWithTimeout.errors)
+        else:
+            return filename
+
     def read_output_from_proc(self):
         if self.proc:
             # self.proc could be none!
             (exc_stdout, exc_stderr) = self.proc.communicate()
-            self.stdout = os.fsdecode(exc_stdout)
-            self.stderr = os.fsdecode(exc_stderr)
+            self.stdout = POpenWithTimeout.fsdecode(exc_stdout)
+            self.stderr = POpenWithTimeout.fsdecode(exc_stderr)
 
             # Clean stderr and stdout, removing duplicate and ending line breaks, which make the log hard to
             # read and the log file bigger.

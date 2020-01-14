@@ -21,6 +21,7 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from __future__ import unicode_literals
+import re
 import math
 import os
 import shutil
@@ -301,8 +302,8 @@ class RenderingProcessor(threading.Thread):
     def __init__(
         self, rendering_task_queue, data_directory, plugin_version, default_settings_folder,
         octoprint_settings, get_current_settings_callback, on_prerender_start,
-        on_start, on_success, on_error, on_end, on_unfinished_renderings_changed, on_in_process_renderings_changed,
-        on_unfinished_renderings_loaded
+        on_start, on_success, on_render_progress, on_error, on_end, on_unfinished_renderings_changed,
+        on_in_process_renderings_changed, on_unfinished_renderings_loaded
     ):
         super(RenderingProcessor, self).__init__()
         self._plugin_version = plugin_version
@@ -321,6 +322,7 @@ class RenderingProcessor(threading.Thread):
         self._on_prerender_start_callback = on_prerender_start
         self._on_start_callback = on_start
         self._on_success_callback = on_success
+        self._on_render_progress_callback = on_render_progress
         self._on_error_callback = on_error
         self._on_end_callback = on_end
         self._on_unfinished_renderings_changed_callback = on_unfinished_renderings_changed
@@ -1160,6 +1162,7 @@ class RenderingProcessor(threading.Thread):
                 self._on_render_start,
                 self._on_render_error,
                 self._on_render_success,
+                self._on_render_progress,
                 self._delete_snapshots_for_job,
                 self.archive_unfinished_job
             )
@@ -1199,6 +1202,10 @@ class RenderingProcessor(threading.Thread):
         logger.info("Sending render complete message")
         self._on_success_callback(payload, copy.copy(self._current_rendering_job))
 
+    def _on_render_progress(self, payload):
+        logger.info("Sending render progress message")
+        self._on_render_progress_callback(payload, copy.copy(self._current_rendering_job))
+
     def _on_render_end(self, temporary_directory):
         self._clean_temporary_directory(temporary_directory)
 
@@ -1214,7 +1221,12 @@ class RenderingProcessor(threading.Thread):
 
 
 class TimelapseRenderJob(threading.Thread):
+    # lock
     render_job_lock = threading.RLock()
+    # ffmpeg progress regexes
+    _ffmpeg_duration_regex = re.compile(r"Duration: (\d{2}):(\d{2}):(\d{2})\.\d{2}")
+    _ffmpeg_current_regex = re.compile(r"time=(\d{2}):(\d{2}):(\d{2})\.\d{2}")
+
 
     def __init__(
         self,
@@ -1224,6 +1236,7 @@ class TimelapseRenderJob(threading.Thread):
         on_render_start,
         on_render_error,
         on_render_success,
+        on_render_progress,
         delete_snapshots_callback,
         archive_snapshots_callback
     ):
@@ -1262,6 +1275,7 @@ class TimelapseRenderJob(threading.Thread):
         self.on_render_start = on_render_start
         self.on_render_error = on_render_error
         self.on_render_success = on_render_success
+        self.on_render_progress = on_render_progress
         self._delete_snapshots_for_job_callback = delete_snapshots_callback
         self._archive_snapshots_callback = archive_snapshots_callback
         # Temporary directory to store intermediate results of rendering.
@@ -1950,12 +1964,6 @@ class TimelapseRenderJob(threading.Thread):
         filter_string = "; ".join(filters)
 
         return filter_string
-
-    @staticmethod
-    def _notify_callback(callback, *args, **kwargs):
-        """Notifies registered callbacks of type `callback`."""
-        if callback is not None and callable(callback):
-            callback(*args, **kwargs)
 
 
 class RenderError(Exception):
