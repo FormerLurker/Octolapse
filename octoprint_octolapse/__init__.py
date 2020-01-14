@@ -311,71 +311,6 @@ class OctolapsePlugin(
             return None
         return directory
 
-    #@octoprint.plugin.BlueprintPlugin.route("/downloadFile", methods=["GET"])
-    #@restricted_access
-    def download_file_request(self):
-        with OctolapsePlugin.admin_permission.require(http_exception=403):
-            # get the parameters
-            file_type = request.args["type"]
-
-            if file_type == 'failed_rendering':
-                job_guid = request.args["job_guid"]
-                camera_guid = request.args["camera_guid"]
-
-                temp_directory = self._octolapse_settings.main_settings.get_temporary_directory(
-                    self.get_plugin_data_folder()
-                )
-
-                temp_archive_directory = utility.get_temporary_archive_directory(temp_directory)
-                temp_archive_path = utility.get_temporary_archive_path(temp_directory)
-
-                self._rendering_processor.archive_unfinished_job(
-                    temp_directory,
-                    job_guid,
-                    camera_guid,
-                    temp_archive_path
-                )
-
-                def clean_temp_folder(temp_file_path, temp_file_directory):
-                    # delete the temp file and directory
-                    os.unlink(temp_file_path)
-                    if os.path.exists(temp_file_directory) and os.path.isdir(temp_file_directory):
-                        if not os.listdir(temp_file_directory):
-                            shutil.rmtree(temp_file_directory)
-
-                download_file_response = self.get_download_file_response(
-                    temp_archive_path,
-                    "snapshot_archive.zip",
-                    on_complete_callback=clean_temp_folder,
-                    on_complete_additional_args=temp_archive_directory
-                )
-                return download_file_response
-            else:
-                file_name = request.args["name"]
-                # Don't allow any subdirectory access
-                if not OctolapsePlugin.file_name_allowed(file_name):
-                    return jsonify({
-                        'success': False,
-                        'error': 'The requested file type is not allowed.'
-                    }), 403
-
-                directory = self.get_file_directory(file_type, file_name)
-                if not directory:
-                    return jsonify({
-                        'success': False,
-                        'error': 'The requested file type is not allowed.'
-                    }), 403
-
-                # make sure the file exists
-                full_path = os.path.join(directory, file_name)
-                if not os.path.isfile(full_path):
-                    return jsonify({
-                        'success': False,
-                        'error': 'The requested file does not exist.'
-                    }), 404
-            return send_from_directory(directory, file_name, as_attachment=True)
-
-
     @octoprint.plugin.BlueprintPlugin.route("/deleteFile", methods=["POST"])
     @restricted_access
     def delete_file_request(self):
@@ -3627,11 +3562,19 @@ class OctolapsePlugin(
         return ["movie_done"]
 
     def register_custom_routes(self, server_routes, *args, **kwargs):
+        # version specific permission validator
+        if LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4"):
+            permission_validator = util.flask.permission_validator
+        else:
+            def permission_validator(flask_request, permission):
+                user = util.flask.get_flask_user_from_request(flask_request)
+                if not user.has_permission(permission):
+                    raise tornado.web.HTTPError(403)
 
         admin_validation_chain = [
             util.tornado.access_validation_factory(
                 app,
-                util.flask.permission_validator,
+                permission_validator,
                 self.admin_permission
             ),
         ]
@@ -3679,7 +3622,6 @@ def __plugin_load__():
 
 
 class OctolapseLargeResponseHandler(LargeResponseHandler):
-
     def initialize(self, path, caller, default_filename=None, as_attachment=False, allow_client_caching=True,
                    access_validation=None, path_validation=None, etag_generator=None, name_generator=None,
                    mime_type_guesser=None, on_before_request=None, on_after_request=None):
@@ -3697,14 +3639,14 @@ class OctolapseLargeResponseHandler(LargeResponseHandler):
             self._before_request_callback()
 
     def get(self, include_body=True):
-        # get the args
-        file_type = self.get_query_arguments('type')[0]
-
         if self._access_validation is not None:
             self._access_validation(self.request)
 
         if "cookie" in self.request.arguments:
             self.set_cookie(self.request.arguments["cookie"][0], "true", path="/")
+
+        # get the args
+        file_type = self.get_query_arguments('type')[0]
 
         if file_type == 'failed_rendering':
             job_guid = self.get_query_arguments("job_guid")[0]
