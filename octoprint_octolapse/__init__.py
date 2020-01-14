@@ -33,7 +33,6 @@ root_logger = logging_configurator.get_root_logger()
 logger = logging_configurator.get_logger("__init__")
 # be sure to configure the logger after we import all of our modules
 import tornado
-import octoprint.access.permissions as permissions
 from octoprint.server import util, app
 import urllib
 from octoprint.server.util.tornado import LargeResponseHandler, RequestlessExceptionLoggingMixin, CorsSupportMixin
@@ -122,6 +121,7 @@ class OctolapsePlugin(
     PREPROCESSING_NOTIFICATION_PERIOD_SECONDS = 1
 
     if LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4"):
+        import octoprint.access.permissions as permissions
         admin_permission = permissions.Permissions.ADMIN
     else:
         admin_permission = Permission(RoleNeed('admin'))
@@ -3679,7 +3679,8 @@ def __plugin_load__():
 
 
 class OctolapseLargeResponseHandler(LargeResponseHandler):
-    def initialize(self, path, caller, required_roles=None, default_filename=None, as_attachment=False, allow_client_caching=True,
+
+    def initialize(self, path, caller, default_filename=None, as_attachment=False, allow_client_caching=True,
                    access_validation=None, path_validation=None, etag_generator=None, name_generator=None,
                    mime_type_guesser=None, on_before_request=None, on_after_request=None):
         super(OctolapseLargeResponseHandler, self).initialize(
