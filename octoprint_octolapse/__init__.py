@@ -311,13 +311,15 @@ class OctolapsePlugin(
             temp_archive_directory = utility.get_temporary_archive_directory(temp_directory)
             temp_archive_path = utility.get_temporary_archive_path(temp_directory)
 
-            self._rendering_processor.archive_unfinished_job(
+            file_name = self._rendering_processor.archive_unfinished_job(
                 temp_directory,
                 job_guid,
                 camera_guid,
                 temp_archive_path,
                 is_download=True
             )
+            if file_name:
+                request_handler.download_file_name = file_name
 
             request_handler.after_request_internal = clean_temp_folder
             request_handler.after_request_internal_args = {
@@ -2239,7 +2241,6 @@ class OctolapsePlugin(
                 self.get_default_settings_folder(),
                 self._settings,
                 self.get_current_octolapse_settings,
-                self.on_prerender_start,
                 self.on_render_start,
                 self.on_render_success,
                 self.on_render_progress,
@@ -3044,22 +3045,6 @@ class OctolapsePlugin(
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
-    def send_prerender_start_message(self, msg, job):
-        status = self.get_status_dict()
-        status["unfinished_renderings"] = {
-            'in_process': {
-                "rendering": job,
-                "change_type": "changed"
-            }
-        }
-        data = {
-            "type": "prerender-start",
-            "msg": msg,
-            "status": status,
-            "main_settings": self._octolapse_settings.main_settings.to_dict()
-        }
-        self._plugin_manager.send_plugin_message(self._identifier, data)
-
     def send_render_start_message(self, msg, job):
         status = self.get_status_dict()
         status["unfinished_renderings"] = {
@@ -3357,14 +3342,6 @@ class OctolapsePlugin(
             "delete": True
         }
         self._rendering_task_queue.put(parameters)
-
-    def on_prerender_start(self, payload, job):
-        assert (isinstance(payload, RenderingCallbackArgs))
-        msg = "Octolapse has started the pre-rendering process for the '{0}' camera.".format(payload.CameraName)
-        if payload.JobsRemaining > 1:
-            msg += "  {0} jobs remaining. ".format(payload.JobsRemaining)
-
-        self.send_prerender_start_message(msg, job)
 
     def on_render_start(self, payload, job):
         """Called when a timelapse has started being rendered.  Calls any callbacks OnRenderStart callback set in the

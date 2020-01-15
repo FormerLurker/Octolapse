@@ -44,7 +44,7 @@ from PIL import Image, ImageDraw, ImageFont
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.script as script
 from octoprint_octolapse.snapshot import SnapshotMetadata, CameraInfo
-from octoprint_octolapse.settings import OctolapseSettings, CameraProfile
+from octoprint_octolapse.settings import OctolapseSettings, CameraProfile, RenderingProfile
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
@@ -210,7 +210,9 @@ class RenderJobInfo(object):
         self.output_tokens = self._get_output_tokens(self.temporary_directory)
         self.rendering_output_format = rendering_profile.output_format
         self.rendering_directory = timelapse_directory
-        self.rendering_filename = utility.sanitize_filename(rendering_profile.output_template.format(**self.output_tokens))
+        self.rendering_filename = RenderJobInfo.get_rendering_filename(
+            rendering_profile.output_template, self.output_tokens
+        )
         self.rendering_extension = RenderJobInfo.get_extension_from_output_format(rendering_profile.output_format)
         self.rendering_filename_with_extension = "{0}.{1}".format(self.rendering_filename, self.rendering_extension)
         self.rendering_path = os.path.join(
@@ -235,43 +237,19 @@ class RenderJobInfo(object):
 
     def _get_output_tokens(self, data_directory):
         job_info = self.timelapse_job_info
-        assert(isinstance(job_info, utility.TimelapseJobInfo))
-
-        tokens = {}
-        print_end_time_string = (
-            "UNKNOWN" if job_info.PrintEndTime is None
-            else time.strftime("%Y%m%d%H%M%S", time.localtime(job_info.PrintEndTime))
+        assert (isinstance(job_info, utility.TimelapseJobInfo))
+        print_end_time = job_info.PrintEndTime
+        print_start_time = job_info.PrintStartTime
+        print_end_state = job_info.PrintEndState
+        print_file_name = job_info.PrintFileName
+        camera_name = "UNKNOWN" if not self.camera else self.camera.name
+        return RenderJobInfo.get_output_tokens(
+            print_end_time,
+            print_start_time,
+            print_end_state,
+            print_file_name,
+            camera_name,
         )
-        tokens["PRINTENDTIME"] = print_end_time_string
-        print_end_timestamp = (
-            "UNKNOWN" if job_info.PrintEndTime is None
-            else "{0:d}".format(math.trunc(round(job_info.PrintEndTime, 2) * 100))
-        )
-        tokens["PRINTENDTIMESTAMP"] = print_end_timestamp
-        print_start_time_string = (
-            "UNKNOWN" if job_info.PrintStartTime is None
-            else time.strftime("%Y%m%d%H%M%S", time.localtime(job_info.PrintStartTime))
-        )
-        tokens["PRINTSTARTTIME"] = print_start_time_string
-        print_start_timestamp = {
-            "UNKNOWN" if job_info.PrintStartTime is None
-            else "{0:d}".format(math.trunc(round(job_info.PrintStartTime, 2) * 100))
-        }
-        tokens["PRINTSTARTTIMESTAMP"] = print_start_timestamp
-        tokens["DATETIMESTAMP"] = "{0:d}".format(math.trunc(round(time.time(), 2) * 100))
-        failed_flag = "FAILED" if job_info.PrintEndState != "COMPLETED" else ""
-        tokens["FAILEDFLAG"] = failed_flag
-        failed_separator = "_" if job_info.PrintEndState != "COMPLETED" else ""
-        tokens["FAILEDSEPARATOR"] = failed_separator
-        failed_state = "UNKNOWN" if not job_info.PrintEndState else "" if job_info.PrintEndState == "COMPLETED" else job_info.PrintEndState
-        tokens["FAILEDSTATE"] = failed_state
-        tokens["PRINTSTATE"] = "UNKNOWN" if not job_info.PrintEndState else job_info.PrintEndState
-        tokens["GCODEFILENAME"] = "" if not job_info.PrintFileName else job_info.PrintFileName
-        tokens["DATADIRECTORY"] = "" if not data_directory else data_directory
-        tokens["SNAPSHOTCOUNT"] = 0
-        tokens["CAMERANAME"] = "UNKNOWN" if not self.camera else self.camera.name
-        tokens["FPS"] = 0
-        return tokens
 
     @staticmethod
     def get_vcodec_from_output_format(output_format):
@@ -307,15 +285,82 @@ class RenderJobInfo(object):
                       "gif": "gif"}
         return EXTENSIONS.get(output_format.lower(), "mp4")
 
+    @staticmethod
+    def get_output_tokens(
+        print_end_time=None,
+        print_start_time=None,
+        print_end_state=None,
+        print_file_name=None,
+        camera_name=None
+    ):
+        tokens = {}
+        print_end_time_string = (
+            "UNKNOWN" if print_end_time is None
+            else time.strftime("%Y%m%d%H%M%S", time.localtime(print_end_time))
+        )
+        tokens["PRINTENDTIME"] = print_end_time_string
+        print_end_timestamp = (
+            "UNKNOWN" if print_end_time is None
+            else "{0:d}".format(math.trunc(round(print_end_time, 2) * 100))
+        )
+        tokens["PRINTENDTIMESTAMP"] = print_end_timestamp
+        print_start_time_string = (
+            "UNKNOWN" if print_start_time is None
+            else time.strftime("%Y%m%d%H%M%S", time.localtime(print_start_time))
+        )
+        tokens["PRINTSTARTTIME"] = print_start_time_string
+        print_start_timestamp = {
+            "UNKNOWN" if print_start_time is None
+            else "{0:d}".format(math.trunc(round(print_start_time, 2) * 100))
+        }
+        tokens["PRINTSTARTTIMESTAMP"] = print_start_timestamp
+        tokens["DATETIMESTAMP"] = "{0:d}".format(math.trunc(round(time.time(), 2) * 100))
+        failed_flag = "FAILED" if print_end_state != "COMPLETED" else ""
+        tokens["FAILEDFLAG"] = failed_flag
+        failed_separator = "_" if print_end_state != "COMPLETED" else ""
+        tokens["FAILEDSEPARATOR"] = failed_separator
+        failed_state = "UNKNOWN" if not print_end_state else "" if print_end_state == "COMPLETED" else print_end_state
+        tokens["FAILEDSTATE"] = failed_state
+        tokens["PRINTSTATE"] = "UNKNOWN" if not print_end_state else print_end_state
+        tokens["GCODEFILENAME"] = "" if not print_file_name else print_file_name
+        tokens["SNAPSHOTCOUNT"] = 0
+        tokens["CAMERANAME"] = "UNKNOWN" if not camera_name else camera_name
+        tokens["FPS"] = 0
+        return tokens
+
+    @staticmethod
+    def get_output_tokens_from_metadata(metadata):
+
+        print_end_time = metadata["print_end_time"]
+        print_start_time = metadata["print_start_time"]
+        print_end_state = metadata["print_end_state"]
+        print_file_name = metadata["print_file_name"]
+        camera_name = metadata["camera_name"]
+        return RenderJobInfo.get_output_tokens(
+            print_end_time,
+            print_start_time,
+            print_end_state,
+            print_file_name,
+            camera_name,
+        )
+
+    @staticmethod
+    def get_rendering_filename(output_template, output_tokens):
+        return utility.sanitize_filename(output_template.format(**output_tokens))
+
+    @staticmethod
+    def get_rendering_name_from_metadata(metadata):
+        output_tokens = RenderJobInfo.get_output_tokens_from_metadata(metadata)
+        return RenderJobInfo.get_rendering_filename(metadata["output_template"], output_tokens)
+
 
 class RenderingProcessor(threading.Thread):
     """Watch for rendering jobs via a rendering queue.  Extract jobs from the queue, and spawn a rendering thread,
        one at a time for each rendering job.  Notify the calling thread of the number of jobs in the queue on demand."""
     def __init__(
         self, rendering_task_queue, data_directory, plugin_version, default_settings_folder,
-        octoprint_settings, get_current_settings_callback, on_prerender_start,
-        on_start, on_success, on_render_progress, on_error, on_end, on_unfinished_renderings_changed,
-        on_in_process_renderings_changed, on_unfinished_renderings_loaded
+        octoprint_settings, get_current_settings_callback, on_start, on_success, on_render_progress, on_error, on_end,
+        on_unfinished_renderings_changed, on_in_process_renderings_changed, on_unfinished_renderings_loaded
     ):
         super(RenderingProcessor, self).__init__()
         self._plugin_version = plugin_version
@@ -433,12 +478,11 @@ class RenderingProcessor(threading.Thread):
         # do not archive if there is a no archive file.  This means the rendering was created from
         # an archive that already existed.  If we are downloading, we don't care about this.
         if not is_download and utility.has_no_archive_file(temporary_directory, job_guid, camera_guid):
-            return
+            return None
         with self.temp_files_lock:
             job_directory = utility.get_temporary_snapshot_job_path(temporary_directory, job_guid)
             camera_directory = utility.get_temporary_snapshot_job_camera_path(temporary_directory, job_guid, camera_guid)
             target_directory = utility.get_directory_from_full_path(target_path)
-
             if not os.path.exists(target_directory):
                 try:
                     os.makedirs(target_directory)
@@ -456,12 +500,29 @@ class RenderingProcessor(threading.Thread):
                         os.path.join(job_guid, utility.TimelapseJobInfo.timelapse_info_file_name)
                     )
                 for name in os.listdir(camera_directory):
+                    extension = utility.get_extension_from_filename(name)
+                    # ensure that all files we add to the archive were created by Octolapse, and are useful
+                    # for rendering.
+                    if not (
+                        utility.is_valid_snapshot_extension(extension) or
+                        CameraInfo.is_camera_info_file(name) or
+                        SnapshotMetadata.is_metadata_file(name) or
+                        OctolapseSettings.is_camera_settings_file(name) or
+                        OctolapseSettings.is_rendering_settings_file(name)
+                    ):
+                        continue
+
                     file_path = os.path.join(camera_directory, name)
+
                     if os.path.isfile(file_path):
                         snapshot_archive.write(
                             file_path,
                             os.path.join(job_guid, camera_guid, name)
                         )
+            if is_download:
+                metadata = self._get_metadata_for_rendering_files(job_guid, camera_guid, temporary_directory)
+                return RenderJobInfo.get_rendering_name_from_metadata(metadata)
+        return None
 
     def import_snapshot_archive(self, snapshot_archive_path, prevent_archive=False):
         """Attempt to import one or more snapshot archives in the following form:
@@ -872,6 +933,10 @@ class RenderingProcessor(threading.Thread):
         rendering_metadata["rendering_name"] = rendering_profile.get("name", "UNKNOWN")
         rendering_metadata["rendering_guid"] = rendering_profile.get("guid", None)
         rendering_metadata["rendering_description"] = rendering_profile.get("description", "")
+        rendering_metadata["output_template"] = rendering_profile.get(
+            "output_template", RenderingProfile.default_output_template
+        )
+
 
         rendering_metadata["snapshot_count"] = camera_info.snapshot_count
         rendering_metadata["snapshot_attempt"] = camera_info.snapshot_attempt

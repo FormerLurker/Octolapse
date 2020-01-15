@@ -1120,6 +1120,7 @@ class TriggerProfile(AutomaticConfigurationProfile):
 
 
 class RenderingProfile(AutomaticConfigurationProfile):
+    default_output_template = "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}"
     def __init__(self, name="New Rendering Profile"):
         super(RenderingProfile, self).__init__(name)
         self.enabled = True
@@ -1133,7 +1134,7 @@ class RenderingProfile(AutomaticConfigurationProfile):
         self.bitrate = "8000K"
         self.post_roll_seconds = 0
         self.pre_roll_seconds = 0
-        self.output_template = "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}"
+        self.output_template = RenderingProfile.default_output_template
         self.enable_watermark = False
         self.selected_watermark = ""
         self.overlay_text_template = ""

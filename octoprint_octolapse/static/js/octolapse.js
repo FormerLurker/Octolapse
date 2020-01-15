@@ -1860,25 +1860,6 @@ $(function () {
                         self.updateState(data);
                     }
                     break;
-                case "prerender-start":
-                    {
-                        //console.log('octolapse.js - prerender-start');
-                        self.updateState(data);
-                        Octolapse.Status.snapshot_error(false);
-
-                        var options = {
-                            title: 'Octolapse Pre-Rendering Started',
-                            text: data.msg,
-                            type: 'notice',
-                            hide: true,
-                            addclass: "octolapse",
-                            desktop: {
-                                desktop: true
-                            }
-                        };
-                        Octolapse.displayPopupForKey(options,"render_message", ["render_message", "unfinished_rendering"]);
-                    }
-                    break;
                 case "render-start":
                     {
                         //console.log('octolapse.js - render-start');
