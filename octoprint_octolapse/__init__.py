@@ -262,7 +262,7 @@ class OctolapsePlugin(
     # uses the OctolapseLargeResponseHandler
     def download_file_request(self, request_handler):
 
-        def clean_temp_folder(file_path, file_directory):
+        def clean_temp_folder(file_path=None, file_directory=None):
             # delete the temp file and directory
             if file_path:
                 os.unlink(file_path)
@@ -322,7 +322,7 @@ class OctolapsePlugin(
             request_handler.after_request_internal = clean_temp_folder
             request_handler.after_request_internal_args = {
                 'file_path': temp_archive_path,
-                'directory': temp_archive_directory
+                'file_directory': temp_archive_directory
             }
             full_path = temp_archive_path
         elif file_type in ['timelapse_octolapse', 'snapshot_archive', 'timelapse_octoprint']:
@@ -3680,7 +3680,7 @@ class OctolapseLargeResponseHandler(LargeResponseHandler):
 
     def on_finish(self):
             if self.after_request_internal:
-                self.after_request_internal(*self.after_request_internal_args)
+                self.after_request_internal(**self.after_request_internal_args)
 
             if self._after_request_callback:
                 self._after_request_callback()

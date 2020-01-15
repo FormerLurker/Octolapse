@@ -106,7 +106,7 @@ $(function () {
 
         self.load = function() {
             if (!Octolapse.Globals.is_admin()) {
-                self.set([]);
+                self.in_process_renderings.set([]);
                 return;
             }
             $.ajax({
@@ -117,7 +117,7 @@ $(function () {
                     self.update(results);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    self.set([]);
+                    self.in_process_renderings.set([]);
                     var options = {
                         title: 'Error Loading In Process Renderings',
                         text: "Status: " + textStatus + ".  Error: " + errorThrown,
