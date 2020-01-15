@@ -803,8 +803,23 @@ class TimelapseJobInfo(object):
                     # look for a jpg from which to extract the print name
                     for name in os.listdir(snapshot_path):
                         camera_file_path = os.path.join(snapshot_path, name)
-                        if os.path.isfile(camera_file_path) and name.upper().endswith(".JPG") and len(name) > 10:
-                            info.PrintFileName = name[0:len(name)-10]
+                        extension = get_extension_from_filename(name)
+
+                        if (
+                            os.path.isfile(camera_file_path) and
+                            is_valid_snapshot_extension(extension) and
+                            name.endswith(".{0}".format(extension))
+                        ):
+                            if len(name) > 10:
+                                test_image_number_string = name[len(name)-10:len(name)-4]
+                                try:
+                                    int(test_image_number_string)
+                                    info.PrintFileName = name[0:len(name)-10]
+                                    break
+                                except ValueError:
+                                    pass
+                            info.PrintFileName = name[0:len(name) - 4]
+                            break
             return info
 
     def save(self, temporary_directory):

@@ -315,11 +315,14 @@ class RenderJobInfo(object):
         }
         tokens["PRINTSTARTTIMESTAMP"] = print_start_timestamp
         tokens["DATETIMESTAMP"] = "{0:d}".format(math.trunc(round(time.time(), 2) * 100))
-        failed_flag = "FAILED" if print_end_state != "COMPLETED" else ""
+        print_failed = print_end_state not in ["COMPLETED", "UNKNOWN"]
+        failed_flag = "FAILED" if print_failed else ""
         tokens["FAILEDFLAG"] = failed_flag
-        failed_separator = "_" if print_end_state != "COMPLETED" else ""
+        failed_separator = "_" if print_failed else ""
         tokens["FAILEDSEPARATOR"] = failed_separator
-        failed_state = "UNKNOWN" if not print_end_state else "" if print_end_state == "COMPLETED" else print_end_state
+        failed_state = "UNKNOWN" if not print_end_state else (
+            "" if print_end_state == "COMPLETED" else print_end_state
+        )
         tokens["FAILEDSTATE"] = failed_state
         tokens["PRINTSTATE"] = "UNKNOWN" if not print_end_state else print_end_state
         tokens["GCODEFILENAME"] = "" if not print_file_name else print_file_name
@@ -936,8 +939,6 @@ class RenderingProcessor(threading.Thread):
         rendering_metadata["output_template"] = rendering_profile.get(
             "output_template", RenderingProfile.default_output_template
         )
-
-
         rendering_metadata["snapshot_count"] = camera_info.snapshot_count
         rendering_metadata["snapshot_attempt"] = camera_info.snapshot_attempt
         rendering_metadata["snapshot_errors_count"] = camera_info.errors_count
