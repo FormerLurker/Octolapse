@@ -29,6 +29,7 @@ import re
 import subprocess
 import sys
 import time
+import urllib
 import traceback
 import threading
 import json
@@ -835,6 +836,12 @@ class TimelapseJobInfo(object):
             print_file_extension=dict_obj["print_file_extension"],
         )
 
+if sys.version_info < (3, 0):
+    def unquote(value):
+        return urllib.unquote(value)
+else:
+    def unquote(value):
+        return urllib.parse.unquote(value)
 
 class RecurringTimerThread(threading.Thread):
     def __init__(self, interval_seconds, callback, cancel_event, first_run_delay_seconds=None):

@@ -406,6 +406,8 @@ table.octolapse-table-list td.rendering-progress, table.octolapse-table-list th.
 }
 td.rendering-progress .progress {
     position: relative;
+    background: #888888;
+    background-image: none;
 }
 td.rendering-progress .progress .progress-text{
     position: absolute;

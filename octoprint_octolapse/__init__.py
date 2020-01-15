@@ -332,7 +332,7 @@ class OctolapsePlugin(
             }
             full_path = temp_archive_path
         elif file_type in ['timelapse_octolapse', 'snapshot_archive', 'timelapse_octoprint']:
-            file_name = urllib.unquote(request_handler.get_query_arguments('name')[0])
+            file_name = utility.unquote(request_handler.get_query_arguments('name')[0])
             # Don't allow any subdirectory access
             if not OctolapsePlugin.file_name_allowed(file_name):
                 raise tornado.web.HTTPError(500)
@@ -1775,7 +1775,7 @@ class OctolapsePlugin(
     def add_archive_to_unfinished_renderings(self):
         with OctolapsePlugin.admin_permission.require(http_exception=403):
             request_values = request.get_json()
-            snapshot_archive_name = urllib.unquote(request_values["archive_name"])
+            snapshot_archive_name = utility.unquote(request_values["archive_name"])
 
             # make sure the extension is correct
             if not snapshot_archive_name.lower().endswith(".{0}".format(utility.snapshot_archive_extension)):
