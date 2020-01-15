@@ -210,12 +210,6 @@ class OctolapsePlugin(
         # not getting the latest image
         return send_file(filename, mimetype=mime_type, cache_timeout=-1)
 
-    @octoprint.plugin.BlueprintPlugin.route("/downloadSettings", methods=["GET"])
-    @restricted_access
-    def download_settings_request(self):
-        with OctolapsePlugin.admin_permission.require(http_exception=403):
-            return self.get_download_file_response(self.get_settings_file_path(), "Settings.json")
-
     @octoprint.plugin.BlueprintPlugin.route("/clearLog", methods=["POST"])
     @restricted_access
     def clear_log_request(self):
@@ -1881,31 +1875,6 @@ class OctolapsePlugin(
             return jsonify({
                 "files": files
             })
-
-    # blueprint helpers
-    @staticmethod
-    def get_download_file_response(file_path, download_filename, on_complete_callback=None, on_complete_additional_args=None):
-        if os.path.isfile(file_path):
-
-            @stream_with_context
-            def single_chunk_generator(download_filepath):
-                # todo:  What exceptions do we need to catch here to ensure that the complete callback runs?
-                with open(download_filepath, 'rb') as file_to_download:
-                    while True:
-                        chunk = file_to_download.read(1024)
-                        if not chunk:
-                            break
-                        yield chunk
-                if on_complete_callback is not None:
-                    on_complete_callback(download_filepath, on_complete_additional_args)
-
-            response = Response(single_chunk_generator(file_path))
-            response.headers.set('Content-Disposition', 'attachment', filename=download_filename)
-            response.headers.set('Content-Type', 'application/octet-stream')
-            return response
-        return jsonify({
-            'success': False
-        }), 404
 
     def apply_camera_settings(self, camera_profiles):
 
@@ -3709,10 +3678,9 @@ class OctolapseLargeResponseHandler(LargeResponseHandler):
         # return the file
         return tornado.web.StaticFileHandler.get(self, full_path, include_body=include_body)
 
+    def on_finish(self):
+            if self.after_request_internal:
+                self.after_request_internal(*self.after_request_internal_args)
 
-def on_finish(self):
-        if self.after_request_internal:
-            self.after_request_internal(*self.after_request_internal_args)
-
-        if self._after_request_callback:
-            self._after_request_callback()
+            if self._after_request_callback:
+                self._after_request_callback()
