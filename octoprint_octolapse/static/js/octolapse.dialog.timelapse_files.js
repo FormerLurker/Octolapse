@@ -153,9 +153,23 @@ $(function () {
         };
 
         self.add_archive_to_unfinished_rendering = function(item) {
+            if (item.disabled())
+                return;
             var data = {
                 'archive_name': item.id
             };
+
+            var options = {
+                title: 'Adding Archive',
+                text: "Octolapse is unzipping the archive and adding it to the unfinished renderings. Please wait.",
+                type: 'info',
+                hide: true,
+                addclass: "octolapse"
+            };
+            Octolapse.displayPopupForKey(options, "add-archive-to-unfinished-renderings", ["add-archive-to-unfinished-renderings"]);
+
+            // disable item
+            item.disabled(true);
             $.ajax({
                 url: "./plugin/octolapse/addArchiveToUnfinishedRenderings",
                 type: "POST",
@@ -163,6 +177,7 @@ $(function () {
                 contentType: "application/json",
                 dataType: "json",
                 success: function (results) {
+                    item.disabled(false);
                     if (results.success) {
                         var options = {
                             title: 'Archive Added',
@@ -185,6 +200,7 @@ $(function () {
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    item.disabled(false);
                     var options = {
                         title: 'Error Adding Archive',
                         text: "Status: " + textStatus + ".  Error: " + errorThrown,

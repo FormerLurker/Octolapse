@@ -387,23 +387,32 @@ table.octolapse-table-list td.rendering-print-end-state, table.octolapse-table-l
     width:10%;
 }
 table.octolapse-table-list td.rendering-size, table.octolapse-table-list th.rendering-size{
-    width:7%;
+    width:8%;
 }
 table.octolapse-table-list td.rendering-date, table.octolapse-table-list th.rendering-date{
     width:9%;
 }
 table.octolapse-table-list td.rendering-camera-name, table.octolapse-table-list th.rendering-camera-name{
-    width:21%;
+    width:12%;
 }
 table.octolapse-table-list td.rendering-name, table.octolapse-table-list th.rendering-name{
-    width:22%;
+    width:12%;
 }
 table.octolapse-table-list td.rendering-action, table.octolapse-table-list th.rendering-action{
     width:12%;
 }
 table.octolapse-table-list td.rendering-progress, table.octolapse-table-list th.rendering-progress{
-    width:11%;
+    width:16%;
 }
+td.rendering-progress .progress {
+    position: relative;
+}
+td.rendering-progress .progress .progress-text{
+    position: absolute;
+    width:100%;
+    left:0px;
+}
+
 
 .octolapse-list .list-item-selection {
     width:12px;
@@ -444,6 +453,9 @@ table.octolapse-table-list td.rendering-progress, table.octolapse-table-list th.
 .octolapse-camera-list-item
 {
     margin-bottom:20px;
+}
+.octolapse-table-list tr.disabled {
+    filter: brightness(75%);
 }
 
 .row-fluid.octolapse-table-list-row .span1,

@@ -510,10 +510,10 @@ $(function() {
         self.setStreamVisibility = function(value){
             if (self.camera_stream_visible() != value) {
                 if (value){
-                    console.log("Attempting to start the camera stream");
+                    //console.log("Attempting to start the camera stream");
                 }
                 else{
-                    console.log("Attempting to stop the camera stream");
+                    //console.log("Attempting to stop the camera stream");
                 }
                 self.camera_stream_visible(value);
                 //self.stream_url();

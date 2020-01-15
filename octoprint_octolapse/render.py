@@ -211,7 +211,7 @@ class RenderJobInfo(object):
         self.rendering_output_format = rendering_profile.output_format
         self.rendering_directory = timelapse_directory
         self.rendering_filename = utility.sanitize_filename(rendering_profile.output_template.format(**self.output_tokens))
-        self.rendering_extension = RenderJobInfo._get_extension_from_output_format(rendering_profile.output_format)
+        self.rendering_extension = RenderJobInfo.get_extension_from_output_format(rendering_profile.output_format)
         self.rendering_filename_with_extension = "{0}.{1}".format(self.rendering_filename, self.rendering_extension)
         self.rendering_path = os.path.join(
             self.rendering_directory, self.rendering_filename_with_extension
@@ -274,7 +274,19 @@ class RenderJobInfo(object):
         return tokens
 
     @staticmethod
-    def _get_extension_from_output_format(output_format):
+    def get_vcodec_from_output_format(output_format):
+        VCODECS = {"avi": "mpeg4",
+                   "flv": "flv1",
+                   "gif": "gif",
+                   # "h264": "h264",
+                   "h264": "libx264",
+                   "mp4": "mpeg4",
+                   "mpeg": "mpeg2video",
+                   "vob": "mpeg2video"}
+        return VCODECS.get(output_format.lower(), "mpeg2video")
+
+    @staticmethod
+    def get_extension_from_output_format(output_format):
         EXTENSIONS = {"avi": "avi",
                       "flv": "flv",
                       "h264": "mp4",
@@ -285,7 +297,7 @@ class RenderJobInfo(object):
         return EXTENSIONS.get(output_format.lower(), "mp4")
 
     @staticmethod
-    def _get_extension_from_output_format(output_format):
+    def get_ffmpeg_format_from_output_format(output_format):
         EXTENSIONS = {"avi": "avi",
                       "flv": "flv",
                       "h264": "mp4",
@@ -319,7 +331,6 @@ class RenderingProcessor(threading.Thread):
         self.rendering_task_queue = rendering_task_queue
         # make a local copy of everything.
         self.data_directory = data_directory
-        self._on_prerender_start_callback = on_prerender_start
         self._on_start_callback = on_start
         self._on_success_callback = on_success
         self._on_render_progress_callback = on_render_progress
@@ -342,6 +353,7 @@ class RenderingProcessor(threading.Thread):
         self._renderings_in_process_size = 0
         self._has_working_directories = False
         self.update_directories()
+        self._last_progress_time_update = 0
 
     def is_processing(self):
         with self.r_lock:
@@ -992,7 +1004,7 @@ class RenderingProcessor(threading.Thread):
             # add job to the pending job list
             with self.temp_files_lock:
                 metadata = self._get_metadata_for_rendering_files(job_guid, camera_guid, temporary_directory)
-            metadata["progress"] = "Pending"
+            metadata["progress"] = "pending"
             self._renderings_in_process.append(metadata)
             self._renderings_in_process_size += metadata["file_size"]
 
@@ -1158,7 +1170,6 @@ class RenderingProcessor(threading.Thread):
             self._rendering_job_thread = TimelapseRenderJob(
                 job_info,
                 has_started,
-                self._on_prerender_start,
                 self._on_render_start,
                 self._on_render_error,
                 self._on_render_success,
@@ -1168,19 +1179,13 @@ class RenderingProcessor(threading.Thread):
             )
             self._rendering_job_thread.daemon = True
             self._current_rendering_job = self._get_in_process_rendering_job(job_guid, camera_guid)
+            self._previous_render_progress = 0
             self._rendering_job_thread.start()
             has_started.wait()
-
             return True
-
-    def _on_prerender_start(self, payload):
-        logger.info("Sending prerender start message")
-        self._current_rendering_job["progress"] = "Pre-Rendering"
-        self._on_prerender_start_callback(payload, copy.copy(self._current_rendering_job))
 
     def _on_render_start(self, payload):
         logger.info("Sending render start message")
-        self._current_rendering_job["progress"] = "Rendering"
         self._on_start_callback(payload, copy.copy(self._current_rendering_job))
 
     def _on_render_error(self, payload, error):
@@ -1202,9 +1207,20 @@ class RenderingProcessor(threading.Thread):
         logger.info("Sending render complete message")
         self._on_success_callback(payload, copy.copy(self._current_rendering_job))
 
-    def _on_render_progress(self, payload):
-        logger.info("Sending render progress message")
-        self._on_render_progress_callback(payload, copy.copy(self._current_rendering_job))
+    def _on_render_progress(self, progress_type, progress):
+        current_progress_type = self._current_rendering_job["progress"]
+        cur_time = time.time()
+        progress = round(progress, 1)
+        if (
+            current_progress_type != progress_type or
+            (self._last_progress_time_update + 0.5 < cur_time and progress != self._previous_render_progress)
+        ):
+
+            self._current_rendering_job["progress"] = progress_type
+            logger.verbose("Sending render progress message: %s - %10.2f", progress_type, progress)
+            self._on_render_progress_callback(progress, copy.copy(self._current_rendering_job))
+            self._previous_render_progress = progress
+            self._last_progress_time_update = cur_time
 
     def _on_render_end(self, temporary_directory):
         self._clean_temporary_directory(temporary_directory)
@@ -1232,7 +1248,6 @@ class TimelapseRenderJob(threading.Thread):
         self,
         render_job_info,
         on_start_event,
-        on_prerender_start,
         on_render_start,
         on_render_error,
         on_render_success,
@@ -1254,8 +1269,8 @@ class TimelapseRenderJob(threading.Thread):
         self._ffmpeg = render_job_info.ffmpeg_directory
         if self._ffmpeg is not None:
             self._ffmpeg = self._ffmpeg.strip()
-            if sys.platform == "win32" and not (self._ffmpeg.startswith('"') and self._ffmpeg.endswith('"')):
-                self._ffmpeg = "\"{0}\"".format(self._ffmpeg)
+            #if sys.platform == "win32" and not (self._ffmpeg.startswith('"') and self._ffmpeg.endswith('"')):
+            #    self._ffmpeg = "\"{0}\"".format(self._ffmpeg)
         ###########
         # callbacks
         ###########
@@ -1271,14 +1286,15 @@ class TimelapseRenderJob(threading.Thread):
         self._before_render_error = None
         self._after_render_error = None
         # callbacks
-        self.on_prerender_start = on_prerender_start
         self.on_render_start = on_render_start
         self.on_render_error = on_render_error
         self.on_render_success = on_render_success
         self.on_render_progress = on_render_progress
         self._delete_snapshots_for_job_callback = delete_snapshots_callback
         self._archive_snapshots_callback = archive_snapshots_callback
-        # Temporary directory to store intermediate results of rendering.
+        # ffmpeg process vars
+        self._render_parsed_duration = 0
+
 
     def join(self):
         super(TimelapseRenderJob, self).join()
@@ -1288,14 +1304,18 @@ class TimelapseRenderJob(threading.Thread):
         self._on_start_event.set()
         self._render()
 
+    def update_progress(self, progress_type, progress):
+        self.on_render_progress(progress_type, progress)
+
     def _prepare_images(self):
         """Creates a temporary rendering directory and copies all images to it, verifies all image files,
            counts images, and finds the maximum snapshot number
         """
+        self.on_render_progress('preparing', 0)
         self._image_count = 0
-
         # clean any existing temporary files
         self._clear_temporary_files()
+
         # crete the temp directory
         if not os.path.exists(self._temp_rendering_dir):
             try:
@@ -1307,19 +1327,26 @@ class TimelapseRenderJob(threading.Thread):
             # No snapshots were created.  Return
             return
         # loop through each file in the snapshot directory
+
+        snapshot_files = []
         for name in os.listdir(self._render_job_info.snapshot_directory):
             path = os.path.join(self._render_job_info.snapshot_directory, name)
             # skip non-files and non jpgs
             extension = utility.get_extension_from_full_path(path)
             if not os.path.isfile(path) or not utility.is_valid_snapshot_extension(extension):
                 continue
+            snapshot_files.append(path)
 
+        num_images = len(snapshot_files)
+        for path in snapshot_files:
             self._image_count += 1
+            progress = float(self._image_count)/ num_images * 100
             img_num = utility.get_snapshot_number_from_path(path)
             if img_num > self._max_image_number:
                 self._max_image_number = img_num
             # verify the image and convert if necessary
             TimelapseRenderJob._convert_and_copy_image(path, self._temp_rendering_dir)
+            self.update_progress('preparing', progress)
 
         # if we have no camera infos, let's create it now
         if self._render_job_info.camera_info.is_empty:
@@ -1376,6 +1403,7 @@ class TimelapseRenderJob(threading.Thread):
         script_path = self._render_job_info.camera.on_before_render_script.strip()
         if not script_path:
             return
+        self.update_progress('pre_render_script', 0)
         # Todo:  add the original snapshot directory and template path
         cmd = script.CameraScriptBeforeRender(
             script_path,
@@ -1399,6 +1427,7 @@ class TimelapseRenderJob(threading.Thread):
         script_path = self._render_job_info.camera.on_after_render_script.strip()
         if not script_path:
             return
+        self.update_progress('post_render_script', 0)
         # Todo:  add the original snapshot directory and template path
         cmd = script.CameraScriptAfterRender(
             script_path,
@@ -1512,8 +1541,6 @@ class TimelapseRenderJob(threading.Thread):
             self._snapshot_archive_path
         )
 
-
-
     #####################
     # Event Notification
     #####################
@@ -1553,6 +1580,7 @@ class TimelapseRenderJob(threading.Thread):
         """Rendering runnable."""
 
         self._run_prechecks()
+        self.on_render_start(self.create_callback_payload(0, "Starting to render timelapse."))
         # set an error variable to None, we will return None if there are no problems
         r_error = None
         delete_snapshots = False
@@ -1566,7 +1594,6 @@ class TimelapseRenderJob(threading.Thread):
             self._set_outputs()
             if self._render_job_info.rendering.enabled:
                 logger.info("Starting prerender for camera %s.", self._render_job_info.camera_guid)
-                self.on_prerender_start(self.create_callback_payload(0, "Pre-render is starting."))
 
                 self._prepare_images()
 
@@ -1606,7 +1633,7 @@ class TimelapseRenderJob(threading.Thread):
 
                 # Do image preprocessing.  This relies on the original file name, so no renaming before running
                 # this function
-                self._preprocess_images()
+                self._add_text_overlays()
 
                 # rename the images
                 self._rename_images()
@@ -1615,27 +1642,30 @@ class TimelapseRenderJob(threading.Thread):
                 self._apply_pre_post_roll()
 
                 # prepare ffmpeg command
-                command_str = self._create_ffmpeg_command_string(
+                command_args = self._create_ffmpeg_command_args(
                     os.path.join(self._temp_rendering_dir, self._render_job_info.snapshot_filename_format),
                     temp_filepath,
                     watermark=watermark_path
                 )
                 # rename the output file
 
-                logger.info("Running ffmpeg with command string: %s", command_str)
-                self.on_render_start(self.create_callback_payload(0, "Starting to render timelapse."))
+                logger.info("Running ffmpeg.")
                 with self.render_job_lock:
                     try:
-                        p = sarge.run(
-                            command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
+
+                        #p = script.POpenWithTimeoutAsync. sarge.run(
+                        #    command_str, stdout=sarge.Capture(), stderr=sarge.Capture())
+                        p = script.POpenWithTimeoutAsync(on_stderr_line_received=self._process_ffmpeg_output)
+                        p.run(command_args)
                         os.rename(temp_filepath, self._output_filepath)
                     except Exception as e:
+                        logger.exception("An exception occurred while running the ffmpeg process.")
                         raise RenderError('rendering-exception', "ffmpeg failed during rendering of movie. "
                                                                  "Please check plugin_octolapse.log for details.",
                                           cause=e)
-                    if p.returncode != 0:
-                        return_code = p.returncode
-                        stderr_text = p.stderr.text
+                    if p.return_code != 0:
+                        return_code = p.return_code
+                        stderr_text = "\n".join(p.stderr_lines)
                         raise RenderError('return-code', "Could not render movie, got return code %r: %s" % (
                             return_code, stderr_text))
 
@@ -1650,6 +1680,7 @@ class TimelapseRenderJob(threading.Thread):
                         os.makedirs(self._render_job_info.snapshot_archive_directory)
                     except FileExistsError:
                         pass
+                self.update_progress('archiving',0)
                 self._archive_snapshots_callback(
                     self._render_job_info.temporary_directory,
                     self._render_job_info.job_guid,
@@ -1658,7 +1689,6 @@ class TimelapseRenderJob(threading.Thread):
                 )
 
             delete_snapshots = True
-
         except Exception as e:
             logger.exception("Rendering Error")
             if isinstance(e, RenderError):
@@ -1680,6 +1710,7 @@ class TimelapseRenderJob(threading.Thread):
 
             if delete_snapshots:
                 try:
+                    self.update_progress('deleting_snapshots', 0)
                     self._delete_snapshots_for_job_callback(
                         self._render_job_info.temporary_directory, self._render_job_info.job_guid,
                         self._render_job_info.camera_guid
@@ -1692,6 +1723,7 @@ class TimelapseRenderJob(threading.Thread):
                         raise e
 
             try:
+                self.update_progress('deleting_temp_files', 0)
                 self._clear_temporary_files()
             except (OSError, FileNotFoundError, PermissionError):
                 # It's not a huge deal if we can't clean the temporary files at the moment.  Log the error and move on.
@@ -1704,13 +1736,39 @@ class TimelapseRenderJob(threading.Thread):
             self._render_job_info.rendering_error = r_error
             self.on_render_error(self.create_callback_payload(0, "The render process failed."), r_error)
 
-    def _preprocess_images(self):
-        logger.info("Starting preprocessing of images.")
-        if self._snapshot_metadata is None:
-            logger.warning("No snapshot metadata was found, cannot preprocess images.")
+    # ffmpeg progress regexes
+    _ffmpeg_duration_regex = re.compile(r"Duration: (\d{2}):(\d{2}):(\d{2})\.\d{2}")
+    _ffmpeg_current_regex = re.compile(r"time=(\d{2}):(\d{2}):(\d{2})\.\d{2}")
+
+    def _process_ffmpeg_output(self, line):
+        # We should be getting the time more often, so try it first
+        current_time = TimelapseRenderJob._ffmpeg_current_regex.search(line)
+        if current_time is not None and self._render_parsed_duration != 0:
+            current_s = self._convert_time(*current_time.groups())
+            render_progress = current_s / float(self._render_parsed_duration) * 100
+            self.on_render_progress('rendering', render_progress)
+        else:
+            duration = TimelapseRenderJob._ffmpeg_duration_regex.search(line)
+            if duration is not None:
+                self._render_parsed_duration = self._convert_time(*duration.groups())
+
+    @staticmethod
+    def _convert_time(hours, minutes, seconds):
+        return (int(hours) * 60 + int(minutes)) * 60 + int(seconds)
+
+    def _add_text_overlays(self):
+        if not self._render_job_info.rendering.overlay_text_template:
             return
+
+        if self._snapshot_metadata is None:
+            logger.warning("No snapshot metadata was found, cannot add text overlays images.")
+            return
+
+        logger.info("Started adding text overlays.")
         first_timestamp = float(self._snapshot_metadata[0]['time_taken'])
+        num_images = len(self._snapshot_metadata)
         for index, data in enumerate(self._snapshot_metadata):
+            self.update_progress('adding_overlays', float(index)/num_images*100)
             # TODO:  MAKE SURE THIS WORKS IF THERE ARE ANY ERRORS
             # Variables the user can use in overlay_text_template.format().
             format_vars = {}
@@ -1756,7 +1814,7 @@ class TimelapseRenderJob(threading.Thread):
                     shutil.move(output_path, file_path)
             else:
                 logger.error("The snapshot at %s does not exist.  Skipping preprocessing.", file_path)
-        logger.info("Preprocessing success!")
+        logger.info("Finished adding text overlays.")
 
     def _rename_images(self):
         # First, we need to rename our files, but we have to change the file name so that it won't overwrite any existing files
@@ -1844,7 +1902,6 @@ class TimelapseRenderJob(threading.Thread):
 
         )
 
-
         return Image.alpha_composite(image.convert('RGBA'), text_image).convert('RGB')
 
     def _apply_pre_post_roll(self):
@@ -1852,7 +1909,7 @@ class TimelapseRenderJob(threading.Thread):
         # This routine assumes that images exist, that the first image has number 0, and that
         # there are no missing images
         logger.info("Starting pre/post roll.")
-        # start with pre-roll.
+        # start with pre_roll.
         pre_roll_frames = int(self._render_job_info.rendering.pre_roll_seconds * self._fps)
         if pre_roll_frames > 0:
             # We will be adding images starting with -1 and decrementing 1 until we've added the
@@ -1864,16 +1921,16 @@ class TimelapseRenderJob(threading.Thread):
             )
 
             # rename all of the current files. The snapshot number should be
-            # incremented by the number of pre-roll frames. Start with the last
+            # incremented by the number of pre_roll frames. Start with the last
             # image and work backwards to avoid overwriting files we've already moved
-
             for image_number in range(pre_roll_frames):
+                self.update_progress('pre_roll', float(image_number) / pre_roll_frames * 100)
                 new_image_path = os.path.join(
                     self._temp_rendering_dir,
                     self._render_job_info.pre_roll_snapshot_filename_format % (0, image_number)
                 )
                 utility.fast_copy(first_image_path, new_image_path)
-        # finish with post
+
         post_roll_frames = int(self._render_job_info.rendering.post_roll_seconds * self._fps)
         if post_roll_frames > 0:
             last_frame_index = self._image_count - 1
@@ -1881,29 +1938,18 @@ class TimelapseRenderJob(threading.Thread):
                 self._temp_rendering_dir, self._render_job_info.snapshot_filename_format % last_frame_index
             )
             for post_roll_index in range(post_roll_frames):
+                self.update_progress('post_roll', float(post_roll_index) / post_roll_frames * 100)
                 new_image_path = os.path.join(
                     self._temp_rendering_dir,
                     self._render_job_info.pre_roll_snapshot_filename_format % (last_frame_index, post_roll_index)
                 )
                 utility.fast_copy(last_image_path, new_image_path)
-
         if pre_roll_frames > 0:
             # pre or post roll frames were added, so we need to rename all of our images
             self._rename_images()
         logger.info("Pre/post roll generated successfully.")
 
-    @staticmethod
-    def _get_vcodec_from_output_format(output_format):
-        VCODECS = {"avi": "mpeg4",
-                   "flv": "flv1",
-                   "gif": "gif",
-                   "h264": "h264",
-                   "mp4": "mpeg4",
-                   "mpeg": "mpeg2video",
-                   "vob": "mpeg2video"}
-        return VCODECS.get(output_format.lower(), "mpeg2video")
-
-    def _create_ffmpeg_command_string(self, input_file_format, output_file, watermark=None, pix_fmt="yuv420p"):
+    def _create_ffmpeg_command_args(self, input_file_format, output_file, watermark=None, pix_fmt="yuv420p"):
         """
         Create ffmpeg command string based on input parameters.
         Arguments:
@@ -1915,24 +1961,29 @@ class TimelapseRenderJob(threading.Thread):
             (str): Prepared command string to render `input` to `output` using ffmpeg.
         """
 
-        v_codec = self._get_vcodec_from_output_format(self._render_job_info.rendering.output_format)
+        v_codec = RenderJobInfo.get_vcodec_from_output_format(self._render_job_info.rendering.output_format)
 
-        command = [self._ffmpeg, '-framerate', "{}".format(self._fps), '-loglevel', 'error', '-i',
-                   '"{}"'.format(input_file_format)]
-        command.extend(
-            ['-threads', "{}".format(self._threads), '-r', "{}".format(self._fps), '-y', '-b', "{}".format(self._render_job_info.rendering.bitrate), '-vcodec', v_codec, '-f', self._render_job_info.rendering_output_format])
+        command = [self._ffmpeg, '-framerate', "{}".format(self._fps), '-loglevel', 'info', '-i', input_file_format]
+        command.extend([
+            '-threads', "{}".format(self._threads),
+            '-r', "{}".format(self._fps),
+            '-y',
+            '-b', "{}".format(self._render_job_info.rendering.bitrate),
+            '-vcodec', v_codec,
+            '-f', RenderJobInfo.get_ffmpeg_format_from_output_format(self._render_job_info.rendering_output_format)]
+        )
 
         filter_string = self._create_filter_string(watermark=watermark, pix_fmt=pix_fmt)
 
         if filter_string is not None:
             logger.debug("Applying video filter chain: %s", filter_string)
-            command.extend(["-vf", sarge.shell_quote(filter_string)])
+            command.extend(["-vf", filter_string])
 
         # finalize command with output file
         logger.debug("Rendering movie to %s", output_file)
-        command.append('"{}"'.format(output_file))
+        command.append(output_file)
 
-        return " ".join(command)
+        return command
 
     @classmethod
     def _create_filter_string(cls, watermark=None, pix_fmt="yuv420p"):

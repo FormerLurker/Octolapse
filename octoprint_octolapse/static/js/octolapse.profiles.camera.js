@@ -268,7 +268,7 @@ $(function() {
         self.showWebcamSettings = function() {
             var profile = self.toJS();
             self.webcam_settings_popup.showWebcamSettingsForProfile(profile, function(webcam_settings) {
-                console.log("Applying new settings to camera profile.");
+                //console.log("Applying new settings to camera profile.");
                 profile.webcam_settings = webcam_settings;
                 self.webcam_settings.updateWebcamSettings(profile);
             });

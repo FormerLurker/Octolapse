@@ -329,7 +329,7 @@ $(function () {
                     self.updateSettings(newSettings.settings);
                     Octolapse.Globals.updateState(newSettings);
                     // Load the current state before running the success callback.
-                    console.log("Settings and state loaded.");
+                    //console.log("Settings and state loaded.");
 
                     // Todo:  Add an error callback if the current state cannot be loaded
                     if(success_callback)
@@ -429,7 +429,7 @@ $(function () {
                         };
                         Octolapse.displayPopupForKey(options, 'update-profile-from-server','update-profile-from-server');
                     }
-                    console.log("Check for updates complete.");
+                    //console.log("Check for updates complete.");
 
 
                 },
@@ -889,7 +889,7 @@ $(function () {
             dialog.unbind_validation = function()
             {
                 if (dialog.validator != null) {
-                    console.log("octolapse.settings.js - Unbinding validation.");
+                    //console.log("octolapse.settings.js - Unbinding validation.");
                     dialog.validator.destroy();
                     dialog.validator = null;
                 }

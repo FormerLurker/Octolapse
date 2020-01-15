@@ -3159,6 +3159,21 @@ class OctolapsePlugin(
         }
         self._plugin_manager.send_plugin_message(self._identifier, data)
 
+    def send_render_progress_message(self, progress, job):
+        data = {
+            "type": "render-progress",
+            "status": {
+                "unfinished_renderings": {
+                    'in_process': {
+                        "rendering": job,
+                        "progress_percent": progress,
+                        "change_type": "progress"
+                    }
+                }
+            }
+        }
+        self._plugin_manager.send_plugin_message(self._identifier, data)
+
     def on_timelapse_start(self):
         data = {
             "type": "timelapse-start",
@@ -3450,7 +3465,7 @@ class OctolapsePlugin(
         self.send_movie_done_event(gcode_filename, output_file_path, output_file_name)
 
     def on_render_progress(self, payload, job):
-        pass
+        self.send_render_progress_message(payload, job)
 
     def send_movie_done_event(self, gcode_filename, movie_path, movie_basename):
         event = Events.PLUGIN_OCTOLAPSE_MOVIE_DONE

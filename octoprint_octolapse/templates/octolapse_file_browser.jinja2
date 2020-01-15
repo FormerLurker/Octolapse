@@ -69,7 +69,7 @@
 </script>
 
 <script type="text/html" id="octolapse-file-browser-custom-row">
-    <tr>
+    <tr data-bind="css: {disabled: $data.disabled}">
         <td data-bind="visible: $data.data.parent.is_admin" class="list-item-selection-dropdown">
             <input type="checkbox" data-bind="checked: $data.selected"/>
         </td>

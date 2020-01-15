@@ -36,4 +36,23 @@
 <script type="text/html" id="octolapse-rendering-in-process-template">
     <!-- ko template: {name: 'octolapse-list', data: in_process_renderings} --><!-- /ko -->
 </script>
+<script type="text/html" id="octolpase-rendering-progress">
+    <div class="progress progress-striped active" style="margin:0">
+        <div data-bind="attr: {'aria-valuenow': progress_percent}, style: {width: progress_percent().toFixed(1).toString() + '%'}"
+             class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <span class="progress-text" data-bind="text: progress_text"></span>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" id="octolapse-rendering-progress">
+    <!-- ko if: item.value.ShowProgressBar -->
+      <!-- ko template: {name: 'octolpase-rendering-progress', data: item.value} --><!-- /ko -->
+    <!-- /ko -->
+    <!-- ko ifnot: item.value.ShowProgressBar -->
+        <span data-bind="text: item.value.progress_text"></span>
+    <!-- /ko -->
+</script>
+
+
 

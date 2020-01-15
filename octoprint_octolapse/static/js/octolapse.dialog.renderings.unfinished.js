@@ -245,6 +245,9 @@ $(function () {
         });
 
         self._delete = function(item, on_success, on_error){
+            if (item.disabled())
+                return;
+            item.disabled(true);
             var data = {
                 'job_guid': item.value.job_guid,
                 'camera_guid': item.value.camera_guid,
@@ -265,6 +268,7 @@ $(function () {
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    item.disabled(false);
                     if (on_error) {
                         on_error(XMLHttpRequest, textStatus, errorThrown);
                     }
@@ -295,7 +299,7 @@ $(function () {
         };
 
         self._delete_selected = function(){
-            var selected_files = self.failed_renderings.selected(['id', 'job_guid', 'camera_guid', 'size']);
+            var selected_files = self.failed_renderings.selected();
 
             if (selected_files.length == 0)
                 return;
@@ -374,13 +378,16 @@ $(function () {
             });
         };
 
-        self._render = function(item_data, on_success, on_error){
+        self._render = function(item, on_success, on_error){
+            if (item.disabled())
+                return;
+            item.disabled(true);
             var data = {
-                'id': item_data.id,
-                'job_guid': item_data.job_guid,
-                'camera_guid': item_data.camera_guid,
-                'render_profile_override_guid': item_data.render_profile_override_guid || null,
-                'camera_profile_override_guid': item_data.camera_profile_override_guid || null
+                'id': item.id,
+                'job_guid': item.value.job_guid,
+                'camera_guid': item.value.camera_guid,
+                'render_profile_override_guid': item.value.render_profile_override_guid() || null,
+                'camera_profile_override_guid': item.value.camera_profile_override_guid() || null
             };
             $.ajax({
                 url: "./plugin/octolapse/renderFailedRendering",
@@ -389,15 +396,16 @@ $(function () {
                 contentType: "application/json",
                 dataType: "json",
                 success: function (results) {
-                    var removed = self.failed_renderings.remove(item_data.id);
+                    var removed = self.failed_renderings.remove(item.id);
                     if (removed) {
-                        self.failed_renderings_size(self.failed_renderings_size() - item_data.file_size);
+                        self.failed_renderings_size(self.failed_renderings_size() - item.value.file_size);
                     }
                     if (on_success){
-                        on_success(item_data.id);
+                        on_success(item.id);
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    item.disabled(false);
                     if (on_error) {
                         on_error(XMLHttpRequest, textStatus, errorThrown);
                     }
@@ -407,17 +415,8 @@ $(function () {
         };
 
         self.render = function(item){
-            var data = {
-                'id': item.id,
-                'job_guid': item.value.job_guid,
-                'camera_guid': item.value.camera_guid,
-                'render_profile_override_guid': item.value.render_profile_override_guid() || null,
-                'camera_profile_override_guid': item.value.camera_profile_override_guid() || null,
-                'file_size': item.value.file_size
-            };
-
             self._render(
-                data,
+                item,
                 function(){
                     var options = {
                         title: 'Failed Rendering Queued',
@@ -442,9 +441,7 @@ $(function () {
         };
 
         self._render_selected = function(){
-            var selected_unfinished_renderings = self.failed_renderings.selected(
-                ['id', 'job_guid', 'camera_guid', 'render_profile_override_guid', 'camera_profile_override_guid', 'file_size']
-            );
+            var selected_unfinished_renderings = self.failed_renderings.selected();
 
             if (selected_unfinished_renderings.length == 0)
                 return;
@@ -507,15 +504,7 @@ $(function () {
 
             var render_item = function() {
                 var item = selected_unfinished_renderings[current_index];
-                var data = {
-                    'id': item.id,
-                    'job_guid': item.value.job_guid,
-                    'camera_guid': item.value.camera_guid,
-                    'render_profile_override_guid': item.value.render_profile_override_guid || null,
-                    'camera_profile_override_guid': item.value.camera_profile_override_guid || null,
-                    'file_size': item.value.file_size
-                };
-                self._render(data, render_success, render_failed);
+                self._render(item, render_success, render_failed);
             };
 
             render_item();

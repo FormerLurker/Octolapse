@@ -262,7 +262,7 @@ $(function () {
 
             self.load_files = function()
             {
-                console.log("ocotlapse.status.js - loading dialog files.");
+                //console.log("ocotlapse.status.js - loading dialog files.");
                 self.timelapse_files_dialog.load();
                 self.dialog_rendering_in_process.load();
                 self.dialog_rendering_unfinished.load();

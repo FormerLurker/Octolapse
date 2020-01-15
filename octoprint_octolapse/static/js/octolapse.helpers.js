@@ -43,7 +43,7 @@ $(function () {
         self.data.parent = parent;
         //self.selected = ko.observable(!!selected);
         self.selected = ko.observable(!!selected);
-
+        self.disabled = ko.observable(false);
         self.get_list_item_value = function(column){
             var value = null;
             if (self.value !== null && self.value[column.id] !== undefined)
@@ -160,7 +160,7 @@ $(function () {
         });
 
         self.resize = function(){
-            console.log("octolapse.helpers.js - resize");
+            //console.log("octolapse.helpers.js - resize");
             if (self.on_resize)
                 self.on_resize();
         };
@@ -169,31 +169,31 @@ $(function () {
         });
 
         self.all_selected.subscribe(function(value){
-            console.log("octolapse.helpers.js - all selected");
+            //console.log("octolapse.helpers.js - all selected");
             self.select('all', value);
         });
 
         self.page_selected.subscribe(function(value){
-            console.log("octolapse.helpers.js - page selected");
+            //console.log("octolapse.helpers.js - page selected");
             self.select('page', value);
         });
 
         self.page_size.octolapseSubscribeChanged(function (newValue, oldValue) {
-            console.log("octolapse.helpers.js - page size changed");
+            //console.log("octolapse.helpers.js - page size changed");
             var new_page = Math.floor(self.current_page_index()*oldValue/newValue);
             self.current_page_index(new_page);
             self.resize();
         });
 
         self.num_pages = ko.pureComputed(function(){
-            console.log("octolapse.helpers.js - num pages changed");
+            //console.log("octolapse.helpers.js - num pages changed");
             if (self.list_items().length === 0)
                 return 0;
             return Math.ceil(self.list_items().length / self.page_size())
         });
 
         self.pager = ko.pureComputed(function(){
-            console.log("octolapse.helpers.js - pager changed");
+            //console.log("octolapse.helpers.js - pager changed");
             if (self.pagination_pages < 6) {
                 console.error("The file browser pager must have at least 6 pages.");
                 return [];
@@ -275,7 +275,7 @@ $(function () {
             if (!column.sortable)
                 return;
 
-            console.log("octolapse.helpers.js - sorting by column:" + column.id);
+            //console.log("octolapse.helpers.js - sorting by column:" + column.id);
             var ascending = true;
             if (column.id !== self.sort_column())
             {
@@ -291,7 +291,7 @@ $(function () {
         };
 
         self.get_current_page_indexes = function(){
-            console.log("octolapse.helpers.js - current page indexes changed");
+            //console.log("octolapse.helpers.js - current page indexes changed");
             if (self.page_size() === 0 || self.list_items().length === 0)
                 return null;
             var page_start_index = Math.max(self.current_page_index() * self.page_size(), 0);
@@ -300,7 +300,7 @@ $(function () {
         };
 
         self.list_items_sorted = ko.pureComputed(function() {
-            console.log("octolapse.helpers.js - list items sorting");
+            //console.log("octolapse.helpers.js - list items sorting");
             var current_sort_column = self.get_column(self.sort_column());
             if (!current_sort_column)
                 return self.list_items();
@@ -316,7 +316,7 @@ $(function () {
         });
 
         self.current_page = ko.pureComputed(function(){
-            console.log("octolapse.helpers.js - current page changing");
+            //console.log("octolapse.helpers.js - current page changing");
             var page_indexes = self.get_current_page_indexes();
             if (!page_indexes) {
                 return[];
@@ -327,7 +327,7 @@ $(function () {
         //self.max_page = ko.pureComputed(function(){return Math.floor(self.list_items().length/self.page_size());});
 
         self._fix_page_numbers = function() {
-            console.log("octolapse.helpers.js - repairing page numbers");
+            //console.log("octolapse.helpers.js - repairing page numbers");
             // Ensure we are not off of any existing pages.  This can happen during a reload, after a delete, or
             // maybe some other scenarios.
             // Make sure we haven't deleted ourselves off the the current page!
@@ -419,7 +419,7 @@ $(function () {
         };
 
         self.select = function(type, selection){
-            console.log("octolapse.helpers.js - selecting " + type);
+            //console.log("octolapse.helpers.js - selecting " + type);
             // force selection to true or false
             selection = !!selection;
             var page_indexes = null;
@@ -471,7 +471,7 @@ $(function () {
         });
 
         self.selected = function(fields_to_return){
-            console.log("octolapse.helpers.js - returning selected items.");
+            //console.log("octolapse.helpers.js - returning selected items.");
             var selected_items = [];
             for (var index=0; index < self.list_items().length; index++)
             {

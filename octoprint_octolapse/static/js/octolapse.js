@@ -814,7 +814,7 @@ $(function () {
 
     ko.bindingHandlers.streamLoading = {
         init:  function(element, valueAccessor) {
-            console.log("Camera Stream Init");
+            //console.log("Camera Stream Init");
             var self = this;
             self.empty_src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
             self.get_src = function(src)
@@ -848,7 +848,7 @@ $(function () {
                     // If the src is empty, that means we have closed the stream, or we have no stream src.
                     // When we close the stream we set it to an empty image to prevent the error
                     // handler from being called.  However, assume this is an error.
-                    console.log("Stream closed, or we have no stream address.");
+                    //console.log("Stream closed, or we have no stream address.");
                     $(options.loading_selector).hide();
                     $(element).hide();
                     $(options.error_selector).html("<div><p>No stream url was provided.  Check the 'Stream Address Template' setting.</p></div>").fadeIn(1000);
@@ -858,7 +858,7 @@ $(function () {
                 var max_height = options.max_height || 333;
                 var max_width = options.max_width || 588;
                 $(element).width('auto').height('auto');
-                console.log("Stream Loaded.");
+                //console.log("Stream Loaded.");
                 // get the width and height of the stream element
                 var stream_width = $(element).width();
                 var stream_height = $(element).height();
@@ -877,7 +877,7 @@ $(function () {
                 $(options.error_selector).hide();
                 $(options.loading_selector).hide();
                 $(element).show();
-                console.log("Stream shown.");
+                //console.log("Stream shown.");
             };
 
 
@@ -888,14 +888,14 @@ $(function () {
 
             var current_src = $(element).attr('src');
             var new_src = self.get_src(options.src);
-            console.log("Camera stream is updating from old_src: " + current_src + " to new src: " + new_src + " for id: ??.");
+            //console.log("Camera stream is updating from old_src: " + current_src + " to new src: " + new_src + " for id: ??.");
             $(element).unbind("load").one("load", {options: options}, self.on_loaded);
             $(element).unbind("error").one("error", {options: options}, self.on_error);
             $(options.loading_selector).html("<div><p>Loading webcam stream at: " + options.src + "</p></div>").show();
             $(element).hide();
             $(options.error_selector).hide();
             $(element).attr('src', new_src);
-            console.log("Finished updating camera stream.");
+            //console.log("Finished updating camera stream.");
 
         }
     };
@@ -1326,7 +1326,7 @@ $(function () {
         self.getInitialState = function() {
             //console.log("Getting initial state");
             if (self.is_admin()) {
-                console.log("octolapse.js - Loading settings for admin current user after startup.");
+                //console.log("octolapse.js - Loading settings for admin current user after startup.");
                 Octolapse.Settings.loadSettings(function(){
                     // Settings are loaded, show the UI
                     self.has_loaded_state(true);
@@ -1337,7 +1337,7 @@ $(function () {
             } else
             {
                 self.loadState(function(){
-                    console.log("octolapse.js - Loading state for non-admin user after startup.");
+                    //console.log("octolapse.js - Loading state for non-admin user after startup.");
                     // Settings are loaded, show the UI
                     self.has_loaded_state(true);
                 });
@@ -1350,7 +1350,7 @@ $(function () {
         };
 
         self.loadState = function (success_callback) {
-            console.log("octolapse.js - Loading State");
+            //console.log("octolapse.js - Loading State");
             $.ajax({
                 url: "./plugin/octolapse/loadState",
                 type: "POST",
@@ -1359,7 +1359,7 @@ $(function () {
                 contentType: "application/json",
                 dataType: "json",
                 success: function (result) {
-                    console.log("The state has been loaded.");
+                    //console.log("The state has been loaded.");
                     self.initial_state_loaded = true;
                     self.updateState(result);
                     if(success_callback) {
@@ -1378,7 +1378,7 @@ $(function () {
         self.onUserLoggedIn = function (user) {
             self.is_admin(self.loginState.isAdmin());
             if(self.is_admin() && self.startup_complete) {
-                console.log("octolapse.js - User Logged In after startup - Loading settings.  User: " + user.name);
+                //console.log("octolapse.js - User Logged In after startup - Loading settings.  User: " + user.name);
                 Octolapse.Settings.loadSettings();
                 Octolapse.Status.load_files();
             }
@@ -1530,7 +1530,7 @@ $(function () {
             //console.log(data);
             switch (data.type) {
                 case "snapshot-plan-preview":
-                    console.log("Previewing snapshot plans.");
+                    //console.log("Previewing snapshot plans.");
                     self.updateState(data);
 
                     break;
@@ -1829,7 +1829,7 @@ $(function () {
                     break;
                 case "directories-changed":
                 {
-                    console.log('octolapse.js - directories changed.');
+                    //console.log('octolapse.js - directories changed.');
                     var directories = data.directories;
                     if (directories.temporary_directory_changed)
                     {
@@ -1850,13 +1850,13 @@ $(function () {
                 break;
                 case "unfinished-renderings-loaded":
                     {
-                        console.log('octolapse.js - unfinished-renderings-loaded');
+                        //console.log('octolapse.js - unfinished-renderings-loaded');
                         self.updateState(data);
                     }
                     break;
                 case "unfinished-renderings-changed":
                     {
-                        console.log('octolapse.js - unfinished-renderings-changed');
+                        //console.log('octolapse.js - unfinished-renderings-changed');
                         self.updateState(data);
                     }
                     break;
@@ -1929,11 +1929,14 @@ $(function () {
                         Octolapse.displayPopup(options);
                         break;
                 }
+                case "render-progress":
+                    //console.log('octolapse.js - render-progress');
+                    self.updateState(data);
+                    break;
                 case "render-complete":
                     self.updateState(data);
                     //console.log('octolapse.js - render-complete');
-                    self.OctoprintTimelapse.requestData();
-
+                    //self.OctoprintTimelapse.requestData();
                     var options = {
                         title: 'Octolapse Rendering Complete',
                         text: data.msg,

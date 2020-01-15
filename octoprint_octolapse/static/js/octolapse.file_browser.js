@@ -146,6 +146,13 @@ $(function () {
         };
 
         self._delete_file = function(file, on_success, on_error){
+            if (file.disabled())
+            {
+                if (on_error) {
+                    on_error(XMLHttpRequest, textStatus, errorThrown);
+                }
+            }
+            file.disabled(true);
             var data = {
                 'type': self.file_type,
                 'id': file.id,
@@ -169,6 +176,7 @@ $(function () {
                     if (on_error) {
                         on_error(XMLHttpRequest, textStatus, errorThrown);
                     }
+                    file.disabled(false);
                 }
             });
         };
@@ -182,16 +190,7 @@ $(function () {
                 function(){
                     self._delete_file(
                         file,
-                        function(XMLHttpRequest, textStatus, errorThrown) {
-                            var options = {
-                                title: 'Error Deleting File',
-                                text: "Status: " + textStatus + ".  Error: " + errorThrown,
-                                type: 'error',
-                                hide: false,
-                                addclass: "octolapse"
-                            };
-                            Octolapse.displayPopupForKey(options, "file-error",["file-error"]);
-                        },
+                        null,
                         function() {
                             var options = {
                                 title: 'Error Deleting File',
@@ -206,7 +205,7 @@ $(function () {
         };
 
         self._delete_selected = function(){
-            var selected_files = self.files.selected(['id', 'size']);
+            var selected_files = self.files.selected();
             if (selected_files.length == 0)
                 return;
             var num_errors = 0;
@@ -270,13 +269,7 @@ $(function () {
             };
 
             var delete_file = function() {
-                var file_info = {
-                    id: selected_files[current_index].id,
-                    value: {
-                        size: selected_files[current_index].value.size
-                    },
-                };
-                self._delete_file(file_info, delete_success, delete_failed)
+                self._delete_file(selected_files[current_index], delete_success, delete_failed)
             };
 
             delete_file();

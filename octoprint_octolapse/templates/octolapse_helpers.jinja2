@@ -112,7 +112,7 @@
                         <!-- /ko -->
                     </thead>
                     <tbody data-bind="foreach: {data: current_page}">
-                        <tr>
+                        <tr data-bind="css: {disabled: $data.disabled}">
                             <td data-bind="css: $parent.selection_class, visible: $parent.selection_enabled">
                                 <input type="checkbox" data-bind="checked: selected">
                             </td>
