@@ -72,9 +72,9 @@ $(function () {
             }
         };
 
-        self.get_download_url = function(list_item){
-            return '/plugin/octolapse/downloadFile?type=failed_rendering&job_guid=' + list_item.value.job_guid
-                + '&camera_guid=' + list_item.value.camera_guid;
+        self.get_download_url = function(){
+            return '/plugin/octolapse/downloadFile?type=failed_rendering&job_guid=' + self.job_guid
+                + '&camera_guid=' + self.camera_guid;
         }
     };
 
@@ -519,6 +519,43 @@ $(function () {
                 self._render_selected();
             });
         };
+
+        self._download = function(url, event, callback)
+        {
+
+            var $icon = $(event.target);
+            if ($icon.hasClass('disabled'))
+                return;
+            console.log("Downloading!");
+            var icon_classes = $icon.attr('class');
+            $icon.attr('class', 'fa fa-spinner fa-spin disabled');
+            var request = new XMLHttpRequest();
+            request.responseType = 'blob';
+            request.open('GET', url);
+            request.addEventListener('load', function(){
+                $icon.attr('class', icon_classes);
+                callback();
+            });
+            request.addEventListener('error', function(){
+                $icon.attr('class', icon_classes);
+            });
+            request.addEventListener('progress', function(){
+                console.log("file download progress")
+            });
+
+            request.send();
+
+        };
+        self.download = function(data, event)
+        {
+            var url =data.item.value.get_download_url();
+            self._download(url, event, function(){
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = true;
+                a.click();
+            });
+        }
     };
 
 });

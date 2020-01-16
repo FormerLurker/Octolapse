@@ -28,7 +28,7 @@
         <i class="fa fa-lg icon-film"></i>
     </a>
     &nbsp;|&nbsp;
-    <a data-bind="attr: {href: item.value.get_download_url(item)}" download title="Zip and download snapshot files">
+    <a data-bind="click: item.data.parent.download" download title="Zip and download snapshot files">
         <i class="fa fa-lg fa-download"></i>
     </a>
     &nbsp;|&nbsp;
