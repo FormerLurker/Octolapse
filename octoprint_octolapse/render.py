@@ -1802,9 +1802,11 @@ class TimelapseRenderJob(threading.Thread):
             self._render_job_info.rendering_error = r_error
             self.on_render_error(self.create_callback_payload(0, "The render process failed."), r_error)
 
-    # ffmpeg progress regexes
-    _ffmpeg_duration_regex = re.compile(r"Duration: (\d{2}):(\d{2}):(\d{2})\.\d{2}")
-    _ffmpeg_current_regex = re.compile(r"time=(\d{2}):(\d{2}):(\d{2})\.\d{2}")
+    # The ffmpeg duration regexes, _process_ffmpeg_output, and _convert_time functions below
+    # are based on similar code within the OctoPrint timelapse plugin, which can be found here:
+    #
+    _ffmpeg_duration_regex = re.compile(r"Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})")
+    _ffmpeg_current_regex = re.compile(r"time=(\d{2}):(\d{2}):(\d{2}\.\d{2})")
 
     def _process_ffmpeg_output(self, line):
         # We should be getting the time more often, so try it first
@@ -1820,7 +1822,7 @@ class TimelapseRenderJob(threading.Thread):
 
     @staticmethod
     def _convert_time(hours, minutes, seconds):
-        return (int(hours) * 60 + int(minutes)) * 60 + int(seconds)
+        return (int(hours) * 60.0 + int(minutes)) * 60.0 + float(seconds)
 
     def _add_text_overlays(self):
         if not self._render_job_info.rendering.overlay_text_template:
