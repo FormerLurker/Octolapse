@@ -62,7 +62,7 @@
 </script>
 
 <script type="text/html" id="octolapse-snapshot-archive-custom-actions">
-        <a data-bind="attr: {href: $data.value.get_download_url($data)}" download>
+        <a data-bind="click: $data.data.parent.download">
         <i class="fa fa-lg fa-download"></i>
     </a>
     <span data-bind="visible: $data.data.parent.is_admin">&nbsp;|&nbsp;
@@ -71,13 +71,13 @@
         </a>
     </span>
     &nbsp;|&nbsp;
-    <a data-bind="click: function(){ $data.data.parent.data.parent.add_archive_to_unfinished_rendering($data); }" title="Extract the archive and add to the unfinished renderings list.">
+    <a data-bind="click: function(){ $data.data.parent.add_archive_to_unfinished_rendering($data); }" title="Extract the archive and add to the unfinished renderings list.">
         <i class="fa fa-lg fa-film"></i>
     </a>
 </script>
 
 <script type="text/html" id="octolapse-timelapse-files-custom-actions">
-        <a data-bind="attr: {href: $data.value.get_download_url($data)}" download>
+    <a data-bind="click: $data.data.parent.download">
         <i class="fa fa-lg fa-download"></i>
     </a>
     <span data-bind="visible: $data.data.parent.is_admin">&nbsp;|&nbsp;

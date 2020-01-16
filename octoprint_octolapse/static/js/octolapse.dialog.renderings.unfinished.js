@@ -425,7 +425,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse"
                     };
-                    Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
+                    Octolapse.displayPopupForKey(options, "render_message",["render_message"]);
                 },
                 function(){
                     var options = {
@@ -435,7 +435,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse"
                     };
-                    Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
+                    Octolapse.displayPopupForKey(options, "render_message",["render_message"]);
                 });
 
         };
@@ -498,7 +498,7 @@ $(function () {
                         };
                     }
 
-                    Octolapse.displayPopupForKey(options, "failed_rendering",["failed_rendering"]);
+                    Octolapse.displayPopupForKey(options, "render_message",["render_message"]);
                 }
             };
 
@@ -520,41 +520,35 @@ $(function () {
             });
         };
 
-        self._download = function(url, event, callback)
+        self.download = function(data, e)
         {
-
-            var $icon = $(event.target);
+            // Get the url
+            var url = data.item.value.get_download_url();
+            // Get the icon that was clicked
+            var $icon = $(e.target);
+            // If the icon is disabled, exit since it is already downloading.
             if ($icon.hasClass('disabled'))
                 return;
-            console.log("Downloading!");
-            var icon_classes = $icon.attr('class');
-            $icon.attr('class', 'fa fa-spinner fa-spin disabled');
-            var request = new XMLHttpRequest();
-            request.responseType = 'blob';
-            request.open('GET', url);
-            request.addEventListener('load', function(){
-                $icon.attr('class', icon_classes);
-                callback();
-            });
-            request.addEventListener('error', function(){
-                $icon.attr('class', icon_classes);
-            });
-            request.addEventListener('progress', function(){
-                console.log("file download progress")
-            });
-
-            request.send();
-
-        };
-        self.download = function(data, event)
-        {
-            var url =data.item.value.get_download_url();
-            self._download(url, event, function(){
-                var a = document.createElement('a');
-                a.href = url;
-                a.download = true;
-                a.click();
-            });
+            var icon_classes = null;
+            var options = {
+                on_start: function(event, url){
+                    icon_classes = $icon.attr('class');
+                    $icon.attr('class', 'fa fa-spinner fa-spin disabled');
+                },
+                on_load: function(data, file_href, filename){
+                    var a = document.createElement('a');
+                    a.href = file_href;
+                    a.download = filename;
+                    a.click();
+                },
+                on_end: function(e, url){
+                    if ($icon && icon_classes)
+                    {
+                        $icon.attr('class', icon_classes);
+                    }
+                }
+            };
+            Octolapse.download(url, event, options);
         }
     };
 

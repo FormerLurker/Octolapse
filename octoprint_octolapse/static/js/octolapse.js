@@ -120,7 +120,6 @@ $(function () {
         };
     ko.bindingHandlers.octolapseToggle = Octolapse.toggleContent ;
 
-
     Octolapse.arrayFirstIndexOf = function (array, predicate, predicateOwner) {
         for (var i = 0, j = array.length; i < j; i++) {
             if (predicate.call(predicateOwner, array[i])) {
@@ -1282,6 +1281,82 @@ $(function () {
         return result;
     };
 
+    Octolapse.createObjectURL = window.webkitURL ? window.webkitURL.createObjectURL : (
+        window.URL && window.URL.createObjectURL ? window.URL.createObjectURL : null
+    );
+    Octolapse.download = function(url, event, options){
+        var on_start = options.on_start;
+        var on_load = options.on_load;
+        var on_error = options.on_error;
+        var on_abort = options.on_abort;
+        var on_progress = options.on_progress;
+        var on_end = options.on_end;
+
+        if (on_start)
+        {
+            on_start(event, url);
+        }
+
+        if (!Octolapse.createObjectURL)
+        {
+            if(on_load)
+            {
+                // Fallback
+                on_load(null, url, "");
+            }
+            if (on_end)
+            {
+                on_end(event, url);
+            }
+            return;
+        }
+
+        var request = new XMLHttpRequest();
+        request.responseType = 'blob';
+        request.open('GET', url);
+        request.addEventListener('load', function(e){
+            var contentDispo = this.getResponseHeader('Content-Disposition');
+            // https://stackoverflow.com/a/23054920/
+            var filename = contentDispo.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1];
+            if (on_load)
+            {
+                var file_href = Octolapse.createObjectURL(e.target.response);
+                on_load(e, file_href, filename);
+            }
+            if (on_end){
+                on_end(event, url);
+            }
+        });
+        request.addEventListener('error', function(
+            message, source, lineno, colno, error
+        ){
+            console.error("Unable to download a file from '" + url + "'.  Error Details:  " + (
+                message ? message.toString() : "unknown"
+            ));
+            if (on_error)
+            {
+                on_error(message, source, lineno, colno, error);
+            }
+            if (on_end){
+                on_end(event, url);
+            }
+        });
+        request.addEventListener('abort', function(e){
+            if (on_abort){
+                on_abort(e);
+            }
+            if (on_end){
+                on_end(event, url);
+            }
+        });
+        request.addEventListener('progress', function(e){
+            if (on_progress){
+                on_progress(e);
+            }
+        });
+        request.send();
+    };
+
     OctolapseViewModel = function (parameters) {
         var self = this;
         Octolapse.Globals = self;
@@ -1864,6 +1939,7 @@ $(function () {
                     {
                         //console.log('octolapse.js - render-start');
                         self.updateState(data);
+                        /*
                         Octolapse.Status.snapshot_error(false);
                         var options = {
                             title: 'Octolapse Rendering Started',
@@ -1875,7 +1951,7 @@ $(function () {
                                 desktop: true
                             }
                         };
-                        Octolapse.displayPopupForKey(options,"render_message", ["render_message"]);
+                        Octolapse.displayPopupForKey(options,"render_message", ["render_message"]);*/
                     }
                     break;
                 case "render-failed":{
@@ -1917,6 +1993,7 @@ $(function () {
                 case "render-complete":
                     self.updateState(data);
                     //console.log('octolapse.js - render-complete');
+                    /*
                     //self.OctoprintTimelapse.requestData();
                     var options = {
                         title: 'Octolapse Rendering Complete',
@@ -1928,7 +2005,7 @@ $(function () {
                             desktop: true
                         }
                     };
-                    Octolapse.displayPopupForKey(options,"render_complete",["render_complete", "render_message"]);
+                    Octolapse.displayPopupForKey(options,"render_complete",["render_complete", "render_message"]);*/
                     break;
                 case "render-end":
                     {

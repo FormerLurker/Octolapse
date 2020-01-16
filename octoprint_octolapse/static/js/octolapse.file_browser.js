@@ -286,5 +286,37 @@ $(function () {
                 }
             );
         };
+
+        self.download = function(data, e)
+        {
+            // Get the url
+            var url = data.value.get_download_url(data);
+            // Get the icon that was clicked
+            var $icon = $(e.target);
+            // If the icon is disabled, exit since it is already downloading.
+            if ($icon.hasClass('disabled'))
+                return;
+            var icon_classes = null;
+            var options = {
+                on_start: function(event, url){
+                    icon_classes = $icon.attr('class');
+                    $icon.attr('class', 'fa fa-spinner fa-spin disabled');
+                },
+                on_load: function(data, file_href, filename){
+                    var a = document.createElement('a');
+                    a.href = file_href;
+                    a.download = filename;
+                    a.click();
+                },
+                on_end: function(e, url){
+                    if ($icon && icon_classes)
+                    {
+                        $icon.attr('class', icon_classes);
+                    }
+                }
+            };
+            Octolapse.download(url, event, options);
+        }
+
     };
 });
