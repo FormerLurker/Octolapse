@@ -645,8 +645,11 @@ def get_system_fonts(base_directory):
     font_names = set()
     # first add all of our supplied fonts
     default_font_path = os.path.join(base_directory, "data", "fonts", "DejaVu")
-    for f in [ x for x in os.listdir(default_font_path) if os.path.isfile(os.path.join(default_font_path, x))]:
-        if f.endswith(".ttf"):
+    logger.info("Searching for default fonts in: %s", default_font_path)
+    for f in os.listdir(default_font_path):
+        font_path = os.path.join(default_font_path, f)
+        if os.path.isfile(font_path) and f.endswith(".ttf"):
+            logger.info("Found Font: %s", f)
             font_names.add(f)
             font_paths.append(os.path.join(default_font_path, f))
 
