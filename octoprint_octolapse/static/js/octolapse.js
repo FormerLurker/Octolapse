@@ -1284,6 +1284,9 @@ $(function () {
     Octolapse.createObjectURL = window.webkitURL ? window.webkitURL.createObjectURL : (
         window.URL && window.URL.createObjectURL ? window.URL.createObjectURL : null
     );
+    Octolapse.revokeObjectURL = window.webkitURL ? window.webkitURL.revokeObjectURL : (
+        window.URL && window.URL.revokeObjectURL ? window.URL.revokeObjectURL : null
+    );
 
     Octolapse.download = function(url, event, options){
         var on_start = options.on_start;
@@ -1299,7 +1302,7 @@ $(function () {
             on_start(Octolapse.createObjectURL != null, event, url);
         }
 
-        if (!Octolapse.createObjectURL)
+        if (!(Octolapse.createObjectURL && Octolapse.revokeObjectURL))
         {
             // Fallback Download
             var a = document.createElement('a');
@@ -1324,16 +1327,17 @@ $(function () {
                 if (contentDispo)
                 {
                     // https://stackoverflow.com/a/23054920/
-                    filename = contentDispo.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1];
+                    filename = contentDispo.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1].replace(/['"]/g, ''); ;
                 }
                 var file_href = Octolapse.createObjectURL(e.target.response);
                 var a = document.createElement('a');
                 a.href = file_href;
                 a.download = filename;
                 a.click();
+                Octolapse.revokeObjectURL(file_href);
                 if (on_load)
                 {
-                    on_load(e, file_href, filename);
+                    on_load(e, filename);
                 }
             }
             else

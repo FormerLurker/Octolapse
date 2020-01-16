@@ -524,7 +524,8 @@ class RenderingProcessor(threading.Thread):
                         )
             if is_download:
                 metadata = self._get_metadata_for_rendering_files(job_guid, camera_guid, temporary_directory)
-                return RenderJobInfo.get_rendering_name_from_metadata(metadata)
+                target_extension = utility.get_extension_from_full_path(target_path)
+                return "{0}.{1}".format(RenderJobInfo.get_rendering_name_from_metadata(metadata), target_extension)
         return None
 
     def import_snapshot_archive(self, snapshot_archive_path, prevent_archive=False):
