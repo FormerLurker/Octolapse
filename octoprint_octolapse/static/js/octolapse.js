@@ -1284,6 +1284,7 @@ $(function () {
     Octolapse.createObjectURL = window.webkitURL ? window.webkitURL.createObjectURL : (
         window.URL && window.URL.createObjectURL ? window.URL.createObjectURL : null
     );
+
     Octolapse.download = function(url, event, options){
         var on_start = options.on_start;
         var on_load = options.on_load;
@@ -1294,16 +1295,17 @@ $(function () {
 
         if (on_start)
         {
-            on_start(event, url);
+            // If we can't download in the preferred way, make sure to report that to on_start
+            on_start(Octolapse.createObjectURL != null, event, url);
         }
 
         if (!Octolapse.createObjectURL)
         {
-            if(on_load)
-            {
-                // Fallback
-                on_load(null, url, "");
-            }
+            // Fallback Download
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = "";
+            a.click();
             if (on_end)
             {
                 on_end(event, url);
@@ -1316,13 +1318,36 @@ $(function () {
         request.open('GET', url);
         request.addEventListener('load', function(e){
             var contentDispo = this.getResponseHeader('Content-Disposition');
-            // https://stackoverflow.com/a/23054920/
-            var filename = contentDispo.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1];
-            if (on_load)
+            var filename = "";
+            if (e.target.status === 200)
             {
+                if (contentDispo)
+                {
+                    // https://stackoverflow.com/a/23054920/
+                    filename = contentDispo.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)[1];
+                }
                 var file_href = Octolapse.createObjectURL(e.target.response);
-                on_load(e, file_href, filename);
+                var a = document.createElement('a');
+                a.href = file_href;
+                a.download = filename;
+                a.click();
+                if (on_load)
+                {
+                    on_load(e, file_href, filename);
+                }
             }
+            else
+            {
+                if (on_error)
+                {
+                    var error_message = e.target.status.toString() + " (" + e.target.statusText + ")" ;
+                    var console_error_message = "Unable to download an octolapse file from '" + url + "': " +
+                        error_message;
+                    console.error(console_error_message);
+                    on_error(error_message, null, null, null,  null);
+                }
+            }
+
             if (on_end){
                 on_end(event, url);
             }

@@ -520,6 +520,12 @@ $(function () {
             });
         };
 
+        self._downloading_icon_class = "fa fa-spinner fa-spin disabled";
+        self._downloding_icon_error_class = "fa fa-exclamation-triangle text-error";
+        self._download_icon_class = "fa fa-lg fa-download";
+        self._download_icon_title = "Click to download.";
+        self._downloading_icon_title = "Downloading your file, please wait.";
+        self._download_error_icon_title = "An error occurred while downloading your file.";
         self.download = function(data, e)
         {
             // Get the url
@@ -529,26 +535,27 @@ $(function () {
             // If the icon is disabled, exit since it is already downloading.
             if ($icon.hasClass('disabled'))
                 return;
-            var icon_classes = null;
+            var icon_classes = self._download_icon_class;
+            var icon_title = self._download_icon_title;
             var options = {
                 on_start: function(event, url){
-                    icon_classes = $icon.attr('class');
-                    $icon.attr('class', 'fa fa-spinner fa-spin disabled');
-                },
-                on_load: function(data, file_href, filename){
-                    var a = document.createElement('a');
-                    a.href = file_href;
-                    a.download = filename;
-                    a.click();
+                    $icon.attr('class', self._downloading_icon_class);
+                    $icon.attr('title', self._downloading_icon_title)
                 },
                 on_end: function(e, url){
-                    if ($icon && icon_classes)
+                    if ($icon)
                     {
                         $icon.attr('class', icon_classes);
+                        $icon.attr('title', icon_title);
                     }
+                },
+                on_error: function(message)
+                {
+                    icon_classes = self._downloding_icon_error_class;
+                    icon_title = self._download_error_icon_title + '  Error: ' + message;
                 }
             };
-            Octolapse.download(url, event, options);
+            Octolapse.download(url, e, options);
         }
     };
 
