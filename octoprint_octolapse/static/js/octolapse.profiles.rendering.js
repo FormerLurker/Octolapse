@@ -285,10 +285,12 @@ $(function() {
         self.updateFontList = function() {
              return OctoPrint.get(OctoPrint.getBlueprintUrl('octolapse') + 'rendering/font')
                     .then(function(response) {
+                        var server_fonts = response.fonts;
                         var font_list = [];
+
                         // The let expression was not working in safari
-                        for (var index = 0; index< response.length; index++) {
-                            font_list.push(new Font(response[index]));
+                        for (var index = 0; index< server_fonts.length; index++) {
+                            font_list.push(new Font(server_fonts[index]));
                         }
                         self.data.font_list(font_list);
                      }, function(response) {
