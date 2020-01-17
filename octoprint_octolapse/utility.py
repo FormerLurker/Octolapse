@@ -638,18 +638,17 @@ def get_intersections_rectangle(x1, y1, x2, y2, rect_x1, rect_y1, rect_x2, rect_
 
 
 def get_system_fonts(base_directory):
-    """Retrieves a list of fonts for any operating system. Note that this may not be a complete list of fonts discoverable on the system.
-    :returns A list of filepaths to fonts available on the system."""
+    """Retrieves a list of fonts for any operating system. Note that this may not be a complete list of fonts
+       discoverable on the system.
+       :returns A list of filepaths to fonts available on the system."""
 
     font_paths = []
     font_names = set()
     # first add all of our supplied fonts
     default_font_path = os.path.join(base_directory, "data", "fonts", "DejaVu")
-    logger.info("Searching for default fonts in: %s", default_font_path)
     for f in os.listdir(default_font_path):
         font_path = os.path.join(default_font_path, f)
         if os.path.isfile(font_path) and f.endswith(".ttf"):
-            logger.info("Found Font: %s", f)
             font_names.add(f)
             font_paths.append(os.path.join(default_font_path, f))
 
@@ -657,10 +656,8 @@ def get_system_fonts(base_directory):
         # Linux and OS X.
         linux_font_paths = subprocess.check_output("fc-list --format %{file}\\n".split()).split('\n')
         for f in linux_font_paths:
-            logger.info("Searching for default fonts at:", f)
             font_name = os.path.basename(f)
             if not font_name in font_names:
-                logger.info("Found font: %s", font_name)
                 font_names.add(font_name)
                 font_paths.append(f)
     elif sys.platform == "win32" or sys.platform == "cygwin":
