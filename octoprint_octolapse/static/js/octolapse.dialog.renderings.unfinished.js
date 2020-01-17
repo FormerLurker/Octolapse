@@ -206,7 +206,7 @@ $(function () {
             to_list_item: self.to_list_item,
             selection_enabled: self.is_admin,
             select_all_enabled: self.is_admin,
-            sort_column: 'date',
+            sort_column: 'print_start_time_text',
             sort_direction: 'descending',
             top_left_pagination_template_id: 'octolapse-rendering-failed-selected-actions',
             top_right_pagination_template_id: 'octolapse-rendering-failed-file-size',

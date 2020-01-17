@@ -111,7 +111,7 @@ $(function () {
         self.select_header_template_id = self.options.select_header_template_id || "octolapse-list-select-header-checkbox-page-template";
         self.custom_row_template_id = self.options.custom_row_template_id || null;
         self.sort_column = ko.observable(self.options.sort_column || "name");
-        self.sort_direction_ascending = ko.observable(self.options.sort_order === "ascending" || true);
+        self.sort_direction_ascending = ko.observable((self.options.sort_direction || "ascending") === "ascending");
         self.default_sort_direction_ascending = self.sort_direction_ascending();
         self.not_loaded_template_id = options.not_loaded_template_id || "octolapse-list-not-loaded";
         self.pagination_pages = self.options.pagination_pages || 11;
