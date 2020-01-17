@@ -657,9 +657,11 @@ def get_system_fonts(base_directory):
         # Linux and OS X.
         linux_font_paths = subprocess.check_output("fc-list --format %{file}\\n".split()).split('\n')
         for f in linux_font_paths:
+            logger.info("Searching for default fonts at:", f)
             font_name = os.path.basename(f)
             if not font_name in font_names:
-                font_names.add(f)
+                logger.info("Found font: %s", font_name)
+                font_names.add(font_name)
                 font_paths.append(f)
     elif sys.platform == "win32" or sys.platform == "cygwin":
         # Windows.
