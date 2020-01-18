@@ -755,7 +755,9 @@ def is_windows():
 
 # Handle windows errors that do not exist on Linux (why???)
 # Windows Exceptions in Linux
-if not getattr(__builtins__, "WindowsError", None):
+try:
+    from exceptions import WindowsError
+except ImportError:
     class WindowsError(OSError): pass
 
 
@@ -786,7 +788,7 @@ def rmtree(path):
                 raise e
 
 
-ERROR_WINDOWS_FILE_IS_IN_USE = 31
+ERROR_WINDOWS_FILE_IS_IN_USE = 32
 ERROR_WINDOWS_FILE_IS_IN_USE_RETRIES = 10
 ERROR_WINDOWS_FILE_IS_IN_USE_RETRY_SECONDS = 1.0/1000.0
 
