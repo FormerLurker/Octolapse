@@ -720,27 +720,6 @@ def fast_copy(src, dst, buffer_size=1024 * 1024 * 1):
             shutil.copyfileobj(fin, fout, buffer_size)
 
 
-ERROR_WINDOWS_DIRECTORY_NOT_EMPTY = 145
-ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRIES = 10
-ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRY_MS = 1
-
-
-def rmtree(path):
-    num_tries = 0
-    while True:
-        try:
-            shutil.rmtree(path)
-            break
-        except OSError as e:
-            if e.winerror != ERROR_WINDOWS_DIRECTORY_NOT_EMPTY:
-                raise e
-                num_tries += 1
-            if num_tries < ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRIES:
-                time.sleep(0.001)
-            else:
-                raise e
-
-
 # function to walk a directory and return all contained subdirectories
 def walk_directories(root):
     for name in os.listdir(root):
@@ -766,9 +745,11 @@ def walk_files(root, filter_function=None):
                 'date': get_file_creation_date(file_path)
             }
 
+
 FILE_TYPE_SNAPSHOT_ARCHIVE = "snapshot_archive"
 FILE_TYPE_TIMELAPSE_OCTOLAPSE = "timelapse_octolapse"
 FILE_TYPE_TIMELAPSE_OCTOPRINT = "timelapse_octoprint"
+
 
 def get_file_info(file_path):
     name = os.path.basename(file_path)
@@ -780,6 +761,68 @@ def get_file_info(file_path):
         'date': get_file_creation_date(file_path)
     }
 
+
+# Handle windows specific stuff (TODO: need to move other code here too)
+def is_windows():
+    return sys.platform.startswith('win')
+
+
+# Handle windows errors that do not exist on Linux (why???)
+# Windows Exceptions in Linux
+if not getattr(__builtins__, "WindowsError", None):
+    class WindowsError(OSError): pass
+
+
+ERROR_WINDOWS_DIRECTORY_NOT_EMPTY = 145
+ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRIES = 10
+ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRY_MS = 1.0/1000.0
+
+
+def rmtree(path):
+    """
+    Windows doesn't seem to be able to reliably immediately delete a path.  It often works after waiting
+    for a small amount of time.  I added retry to this function so that it works more reliably on windows.
+    :param path:
+    :return:
+    """
+    num_tries = 0
+    while True:
+        try:
+            shutil.rmtree(path)
+            break
+        except WindowsError as e:
+            if not e.winerror != ERROR_WINDOWS_DIRECTORY_NOT_EMPTY:
+                raise e
+            num_tries += 1
+            if num_tries < ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRIES:
+                time.sleep(ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRY_MS)
+            else:
+                raise e
+
+
+ERROR_WINDOWS_FILE_IS_IN_USE = 31
+ERROR_WINDOWS_FILE_IS_IN_USE_RETRIES = 10
+ERROR_WINDOWS_FILE_IS_IN_USE_RETRY_SECONDS = 1.0/1000.0
+
+
+def remove(path):
+    """For some reason closed files are sometimes open if you try to remove them immediately after a file operation.
+       This happens occationally when using Pillow to save images.  I added this function so that windows can retry
+       a delete before failing with an exception.
+    """
+    num_tries = 0
+    while True:
+        try:
+            os.remove(path)
+            break
+        except WindowsError as e:
+            if e.winerror != ERROR_WINDOWS_FILE_IS_IN_USE:
+                raise e
+            num_tries += 1
+            if num_tries < ERROR_WINDOWS_FILE_IS_IN_USE_RETRIES:
+                time.sleep(ERROR_WINDOWS_FILE_IS_IN_USE_RETRY_SECONDS)
+            else:
+                raise e
 
 class TimelapseJobInfo(object):
     timelapse_info_file_name = "timelapse_info.json"
@@ -874,12 +917,14 @@ class TimelapseJobInfo(object):
             print_file_extension=dict_obj["print_file_extension"],
         )
 
+
 if sys.version_info < (3, 0):
     def unquote(value):
         return urllib.unquote(value)
 else:
     def unquote(value):
         return urllib.parse.unquote(value)
+
 
 class RecurringTimerThread(threading.Thread):
     def __init__(self, interval_seconds, callback, cancel_event, first_run_delay_seconds=None):
