@@ -1419,8 +1419,6 @@ class TimelapseRenderJob(threading.Thread):
         self.on_render_progress = on_render_progress
         self._delete_snapshots_for_job_callback = delete_snapshots_callback
         self._archive_snapshots_callback = archive_snapshots_callback
-        # ffmpeg process vars
-        self._render_parsed_duration = 0
 
     def join(self):
         super(TimelapseRenderJob, self).join()
@@ -1997,7 +1995,7 @@ class TimelapseRenderJob(threading.Thread):
             if filename.lower().endswith(".jpg"):
                 output_path = os.path.join(
                     self._temp_rendering_dir,
-                    "{0}.tmp".format(self._render_job_info.get_snapshot_name_from_index(image_index))
+                    "{0}.{1}".format(self._render_job_info.get_snapshot_name_from_index(image_index), utility.temporary_extension)
                 )
                 file_path = os.path.join(self._temp_rendering_dir, filename)
                 utility.move(file_path, output_path)
@@ -2007,10 +2005,11 @@ class TimelapseRenderJob(threading.Thread):
         for filename in os.listdir(self._temp_rendering_dir):
             self.on_render_progress(progress_key, progress_current_step, progress_total_steps)
             progress_current_step += 1
-            if filename.endswith(".tmp"):
-                output_path = os.path.join(self._temp_rendering_dir, filename[:-4])
-                file_path = os.path.join(self._temp_rendering_dir, filename)
-                utility.move(file_path, output_path)
+            extension = utility.get_extension_from_filename(filename)
+            if utility.is_valid_temporary_extension(extension):
+                src = os.path.join(self._temp_rendering_dir, filename)
+                dst = os.path.join(self._temp_rendering_dir, utility.remove_extension_from_filename(filename))
+                utility.move(src, dst)
 
     def _apply_pre_post_roll(self):
         """Copies the first and final frames depending on the pre/post roll length for the given framerate.
@@ -2129,7 +2128,10 @@ class TimelapseRenderJob(threading.Thread):
                 self.on_render_progress(progress_key, progress_current_step, progress_total_steps)
                 progress_current_step += 1
                 filepath = os.path.join(self._temp_rendering_dir, filename)
-                if os.path.isfile(filepath) and filename.upper().endswith(".JPG"):
+                extension = utility.get_extension_from_filename(filename)
+                if os.path.isfile(filepath) and (
+                    utility.is_valid_snapshot_extension(extension) or utility.is_valid_temporary_extension(extension)
+                ):
                     utility.remove(filepath)
             if delete_folder:
                 try:

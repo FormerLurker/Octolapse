@@ -155,6 +155,10 @@ def get_filename_from_full_path(path):
     return ""
 
 
+def remove_extension_from_filename(filename):
+    return os.path.splitext(filename)[0]
+
+
 def get_extension_from_full_path(path):
     return get_extension_from_filename(ntpath.basename(path))
 
@@ -374,6 +378,13 @@ default_snapshot_extension = snapshot_file_extensions[0]
 
 def is_valid_snapshot_extension(extension):
     return extension.lower() in snapshot_file_extensions
+
+
+temporary_extension = "tmp"
+
+
+def is_valid_temporary_extension(extension):
+    return extension.lower() == temporary_extension
 
 
 def get_snapshot_filename(print_name, snapshot_number):
