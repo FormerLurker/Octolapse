@@ -2074,7 +2074,11 @@ class TimelapseRenderJob(threading.Thread):
                 progress_current_step=progress_current_step,
                 progress_total_steps=progress_total_steps
             )
+
+        # update the image count
+        self._image_count += pre_roll_frames + post_roll_frames
         logger.info("Pre/post roll generated successfully.")
+
 
     def _post_render_script(self):
         """Run any post render script that is configured within the camera profile."""
