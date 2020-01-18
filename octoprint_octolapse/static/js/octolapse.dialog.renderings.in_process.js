@@ -228,6 +228,7 @@ $(function () {
                         if (progress_rendering)
                             progress_rendering.value.progress(in_process_rendering_change.progress);
                             progress_rendering.value.progress_percent(progress_percent);
+                        }
 
                     }
                 }
