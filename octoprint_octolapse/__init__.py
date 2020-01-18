@@ -268,7 +268,7 @@ class OctolapsePlugin(
                 os.unlink(file_path)
             if file_directory and os.path.isdir(file_directory):
                 if not os.listdir(file_directory):
-                    shutil.rmtree(file_directory)
+                    utility.rmtree(file_directory)
 
         download_file_path = None
         # get the args
@@ -351,7 +351,7 @@ class OctolapsePlugin(
             # get the parameters
             request_values = request.get_json()
             file_type = request_values["type"]
-            file_name = request_values["id"]
+            file_name = utility.unquote(request_values["id"])
             file_size = request_values["size"]
             client_id = request_values["client_id"]
 

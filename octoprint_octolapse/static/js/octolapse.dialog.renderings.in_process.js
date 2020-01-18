@@ -26,15 +26,14 @@ $(function () {
         "pending": "Pending",
         "preparing": "Preparing",
         "pre_render_script": "Script - Before",
-        "post_render_script": "Script - After",
-        "pre_rendering": "Pre-Rendering",
+        "pre_render_start": "Pre-Rendering",
         "adding_overlays": "Adding Overlays",
-        'pre_roll': "Adding Pre-Roll",
-        'post_roll': "Adding Post-Roll",
+        "rename_images": "Renaming Images",
+        'pre_post_roll': "Pre/Post Roll",
         "rendering": "Rendering",
         "archiving": "Archiving",
-        "deleting_snapshots": "Deleting Snapshots",
-        "deleting_temp_files": "Deleting Temp Files",
+        "post_render_script": "Script - After",
+        "cleanup": "Cleaning Up"
     };
 
     Octolapse.InProcessRenderingListItem = function (values) {
@@ -59,37 +58,27 @@ $(function () {
         self.file_size = values.file_size;
         self.file_size_text = Octolapse.toFileSizeString(values.file_size,1);
         self.progress = ko.observable(values.progress);
-        self.progress_percent = ko.observable(0);
+        self.progress_percent = ko.observable(null);
         self.sort_order = self.progress === "pending" ? 0 : 1;
 
         self.progress_text = ko.pureComputed(function(){
             var progress = self.progress();
             if (progress in Octolapse.RenderProgressTypes) {
-                if (self.ShowProgressBar()) {
+                if (self.progress_percent() !== null) {
                     return Octolapse.RenderProgressTypes[progress] + " " + self.progress_percent().toFixed(1).toString() + "%";
                 }
                 return Octolapse.RenderProgressTypes[progress];
             }
             return progress;
         });
-        self.ShowProgressBar = ko.pureComputed(function(){
-            var progress_type = self.progress();
-            return (
-                progress_type !== "pending" &&
-                progress_type !== "pre_render_script" &&
-                progress_type !== "post_render_script" &&
-                progress_type !== "archiving" &&
-                progress_type !== "deleting_snapshots" &&
-                progress_type !== "deleting_temp_files"
-            )
-        });
+
     };
 
    Octolapse.OctolapseDialogRenderingInProcess = function () {
         var self = this;
         self.dialog_id = "octolapse_dialog_rendering_in_process";
         self.dialog_options = {
-            title: "Renderings - In Process",
+            title: "Renderings - In Progress",
             validation_enabled: false,
             help_enabled: true,
             help_title: 'Renderings - In process',
@@ -119,7 +108,7 @@ $(function () {
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     self.in_process_renderings.set([]);
                     var options = {
-                        title: 'Error Loading In Process Renderings',
+                        title: 'Error Loading In Progress Renderings',
                         text: "Status: " + textStatus + ".  Error: " + errorThrown,
                         type: 'error',
                         hide: false,
@@ -225,7 +214,7 @@ $(function () {
                             self.get_key(in_process_rendering_change.job_guid, in_process_rendering_change.camera_guid)
                         );
 
-                        if (progress_rendering)
+                        if (progress_rendering) {
                             progress_rendering.value.progress(in_process_rendering_change.progress);
                             progress_rendering.value.progress_percent(progress_percent);
                         }

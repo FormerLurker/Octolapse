@@ -720,6 +720,27 @@ def fast_copy(src, dst, buffer_size=1024 * 1024 * 1):
             shutil.copyfileobj(fin, fout, buffer_size)
 
 
+ERROR_WINDOWS_DIRECTORY_NOT_EMPTY = 145
+ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRIES = 10
+ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRY_MS = 1
+
+
+def rmtree(path):
+    num_tries = 0
+    while True:
+        try:
+            shutil.rmtree(path)
+            break
+        except OSError as e:
+            if e.winerror != ERROR_WINDOWS_DIRECTORY_NOT_EMPTY:
+                raise e
+                num_tries += 1
+            if num_tries < ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRIES:
+                time.sleep(0.001)
+            else:
+                raise e
+
+
 # function to walk a directory and return all contained subdirectories
 def walk_directories(root):
     for name in os.listdir(root):

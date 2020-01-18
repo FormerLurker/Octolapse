@@ -668,7 +668,7 @@ class CameraControl(object):
             snapshot_created = os.path.exists(snapshot_full_path)
             return cmd.success(), cmd.error_message, snapshot_created
         finally:
-            shutil.rmtree(temp_directory)
+            utility.rmtree(temp_directory)
 
     @staticmethod
     def _test_camera_before_after_snapshot_script(camera_profile, script_type, base_folder):
@@ -733,7 +733,7 @@ class CameraControl(object):
             cmd.run()
             return cmd.success(), cmd.error_message
         finally:
-            shutil.rmtree(temp_directory)
+            utility.rmtree(temp_directory)
 
     @staticmethod
     def _test_print_script(camera_profile, script_type, base_folder):
@@ -810,7 +810,7 @@ class CameraControl(object):
             cmd.run()
             return cmd.success(), cmd.error_message
         finally:
-            shutil.rmtree(temp_directory)
+            utility.rmtree(temp_directory)
 
     @staticmethod
     def _test_after_render_script(camera_profile, script_type, base_folder):
@@ -874,7 +874,7 @@ class CameraControl(object):
             cmd.run()
             return cmd.success(), cmd.error_message
         finally:
-            shutil.rmtree(temp_directory)
+            utility.rmtree(temp_directory)
 
     @staticmethod
     def load_webcam_defaults(

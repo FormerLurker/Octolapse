@@ -82,7 +82,7 @@ def take_in_memory_snapshot(settings, current_camera):
             return image_file.copy()
     finally:
         # Cleanup.
-        shutil.rmtree(temp_snapshot_dir)
+        utility.rmtree(temp_snapshot_dir)
 
 
 class CaptureSnapshot(object):
