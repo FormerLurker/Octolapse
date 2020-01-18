@@ -377,7 +377,7 @@ class OctolapsePlugin(
                     'error': 'The requested file does not exist.'
                 }), 404
             # remove the file
-            os.remove(full_path)
+            utility.remove(full_path)
             file_info = {
                 "type": file_type,
                 "name": file_name,
@@ -1597,7 +1597,7 @@ class OctolapsePlugin(
                         "Tried to upload watermark to %s but file already exists! Overwriting...",
                         watermark_destination_path
                     )
-                    os.remove(watermark_destination_path)
+                    utility.remove(watermark_destination_path)
             logger.info(
                 "Moving watermark from %s to %s.",
                 watermark_temp_path,
@@ -1639,7 +1639,7 @@ class OctolapsePlugin(
                 return jsonify({
                     'error': "Cannot delete file outside watermarks folder."
                 }), 400
-            os.remove(filepath)
+            utility.remove(filepath)
             return jsonify({
                 'success': "Deleted {} successfully.".format(filepath)
             })

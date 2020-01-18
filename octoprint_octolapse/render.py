@@ -807,7 +807,7 @@ class RenderingProcessor(threading.Thread):
                 ):
                     file_path = os.path.join(camera_path, name)
                     if os.path.isfile(file_path):
-                        os.remove(os.path.join(file_path))
+                        utility.remove(os.path.join(file_path))
                 if progress_callback:
                     progress_callback(progress_key, progress_current_step, progress_total_steps)
                 progress_current_step += 1
@@ -1590,7 +1590,7 @@ class TimelapseRenderJob(threading.Thread):
             # delete the temp rendering file if it exists.
             if os.path.isfile(temp_filepath):
                 try:
-                    os.remove(temp_filepath)
+                    utility.remove(temp_filepath)
                 except (OSError, IOError):
                     logger.exception("Could not delete a temporary rendering file!")
                     pass
@@ -2132,7 +2132,7 @@ class TimelapseRenderJob(threading.Thread):
                 progress_current_step += 1
                 filepath = os.path.join(self._temp_rendering_dir, filename)
                 if os.path.isfile(filepath) and filename.upper().endswith(".JPG"):
-                    os.remove(filepath)
+                    utility.remove(filepath)
             if delete_folder:
                 try:
                     # remove the directory if it is empty, but don't raise an exception.  It doesn't really matter

@@ -1730,7 +1730,7 @@ class MainSettings(Settings):
 
         # test delete
         try:
-            os.remove(test_create_path)
+            utility.remove(test_create_path)
         except (PermissionError, OSError):
             False, 'cannot-delete-file'
 
