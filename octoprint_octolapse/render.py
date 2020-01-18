@@ -1536,7 +1536,7 @@ class TimelapseRenderJob(threading.Thread):
                         p = script.POpenWithTimeoutAsync(on_stderr_line_received=self._process_ffmpeg_output)
                         p.run(command_args)
                         # rename the output file
-                        shutil.move(temp_filepath, self._output_filepath)
+                        utility.move(temp_filepath, self._output_filepath)
                     except Exception as e:
                         logger.exception("An exception occurred while running the ffmpeg process.")
                         raise RenderError('rendering-exception', "ffmpeg failed during rendering of movie. "
@@ -1908,7 +1908,7 @@ class TimelapseRenderJob(threading.Thread):
                     output_path = os.path.join(self._temp_rendering_dir, temp_file_name)
                     img.save(output_path)
                 utility.remove(file_path)
-                shutil.move(output_path, file_path)
+                utility.move(output_path, file_path)
             else:
                 logger.error("The snapshot at %s does not exist.  Skipping preprocessing.", file_path)
         logger.info("Finished adding text overlays.")
@@ -2002,7 +2002,7 @@ class TimelapseRenderJob(threading.Thread):
                     "{0}.tmp".format(self._render_job_info.get_snapshot_name_from_index(image_index))
                 )
                 file_path = os.path.join(self._temp_rendering_dir, filename)
-                shutil.move(file_path, output_path)
+                utility.move(file_path, output_path)
                 image_index += 1
 
         # now loop back through all of the files and remove the .tmp extension
@@ -2012,7 +2012,7 @@ class TimelapseRenderJob(threading.Thread):
             if filename.endswith(".tmp"):
                 output_path = os.path.join(self._temp_rendering_dir, filename[:-4])
                 file_path = os.path.join(self._temp_rendering_dir, filename)
-                shutil.move(file_path, output_path)
+                utility.move(file_path, output_path)
 
     def _apply_pre_post_roll(self):
         """Copies the first and final frames depending on the pre/post roll length for the given framerate.

@@ -1603,7 +1603,7 @@ class OctolapsePlugin(
                 watermark_temp_path,
                 watermark_destination_path
             )
-            shutil.move(watermark_temp_path, watermark_destination_path)
+            utility.move(watermark_temp_path, watermark_destination_path)
 
             return jsonify({}), 200
 
@@ -1821,7 +1821,7 @@ class OctolapsePlugin(
                 self.get_plugin_data_folder()
             )
             target_path = utility.get_collision_free_filepath(os.path.join(target_folder, snapshot_archive_name))
-            shutil.move(snapshot_archive_path, target_path)
+            utility.move(snapshot_archive_path, target_path)
 
             file_info = utility.get_file_info(target_path)
             file_info["type"] = utility.FILE_TYPE_SNAPSHOT_ARCHIVE

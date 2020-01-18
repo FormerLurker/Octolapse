@@ -824,6 +824,26 @@ def remove(path):
             else:
                 raise e
 
+def move(src, dst):
+    """For some reason closed files are sometimes open if you try to remove them immediately after a file operation.
+       This happens occationally when using Pillow to save images.  I added this function so that windows can retry
+       a delete before failing with an exception.
+    """
+    num_tries = 0
+    while True:
+        try:
+            shutil.move(src, dst)
+            break
+        except WindowsError as e:
+            if e.winerror != ERROR_WINDOWS_FILE_IS_IN_USE:
+                raise e
+            num_tries += 1
+            if num_tries < ERROR_WINDOWS_FILE_IS_IN_USE_RETRIES:
+                time.sleep(ERROR_WINDOWS_FILE_IS_IN_USE_RETRY_SECONDS)
+            else:
+                raise e
+
+
 class TimelapseJobInfo(object):
     timelapse_info_file_name = "timelapse_info.json"
 
