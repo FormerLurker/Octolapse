@@ -24,7 +24,6 @@ from __future__ import unicode_literals
 import re
 import math
 import os
-import shutil
 import sys
 import threading
 from six.moves import queue
@@ -38,7 +37,6 @@ from csv import DictReader
 import datetime
 from tempfile import mkdtemp
 import uuid
-import sarge
 from PIL import Image, ImageDraw, ImageFont
 
 import octoprint_octolapse.utility as utility

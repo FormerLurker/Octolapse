@@ -21,7 +21,6 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from __future__ import unicode_literals
-import shutil
 import six
 import os
 import json

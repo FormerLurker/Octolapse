@@ -242,20 +242,6 @@ def round_up(value):
     return -(-value // 1.0)
 
 
-def get_clean_filename(filename):
-    if filename is None:
-        return None
-
-    if u"/" in filename or u"\\" in filename:
-        raise ValueError("name must not contain / or \\")
-
-    result = octoprint.filemanager.LocalFileStorage._slugify(filename).replace(u" ", u"_")
-    if result and result != u"." and result != u".." and result[0] == u".":
-        # hidden files under *nix
-        result = result[1:]
-    return result
-
-
 _snapshot_archive_default_directory = "snapshot_archive"
 
 

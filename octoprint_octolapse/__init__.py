@@ -34,13 +34,11 @@ logger = logging_configurator.get_logger("__init__")
 # be sure to configure the logger after we import all of our modules
 import tornado
 from octoprint.server import util, app
-import urllib
 from octoprint.server.util.tornado import LargeResponseHandler, RequestlessExceptionLoggingMixin, CorsSupportMixin
 import sys
 import base64
 import json
 import os
-import shutil
 from flask import request, send_file, jsonify, Response, stream_with_context, send_from_directory, current_app, Flask
 from flask_principal import Permission, RoleNeed
 import threading
@@ -54,7 +52,6 @@ from io import BytesIO
 import octoprint.plugin
 import octoprint.filemanager
 from octoprint.events import Events
-#from octoprint.server import admin_permission
 from octoprint.server.util.flask import restricted_access
 import octoprint_octolapse.stabilization_preprocessing
 import octoprint_octolapse.camera as camera
