@@ -478,6 +478,12 @@ class POpenWithTimeoutAsync(object):
         if not line:
             return None
         line = fsdecode(line)
+        # remove extra line breaks, so that each line is actually a single line.  Should work for windows too.
+        if line.endswith('\n'):
+            line = line[:-1 * len(os.linesep)]
+        if line.endswith('\r'):
+            line = line[:-1 * len(os.linesep)]
+
         logger.info("%s: %s", type_name, line)
         if callback:
             callback(line)
