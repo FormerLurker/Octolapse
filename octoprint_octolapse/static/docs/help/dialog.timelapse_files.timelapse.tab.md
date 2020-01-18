@@ -1,4 +1,4 @@
-Download and delete any timelapses that are in your current timelapse folder (see **Main Settings** for information about the timelapse folder location).
+Here you can browse all of your timelapse videos.  The video directory defaults to the Octoprint timelapse directory, but can be changed within the Octolapse main settings.  Note that by default both Octolapse and OctoPrint timelapses will be visible (see **Main Settings** for information about the timelapse folder location).
 
 ### Download
 To download a timelapse, simply click on the <i class="fa fa-download" title="Download Icon"></i>.  The timelapse will be downloaded by your browser.

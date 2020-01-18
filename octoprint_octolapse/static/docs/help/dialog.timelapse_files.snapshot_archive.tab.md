@@ -11,4 +11,7 @@ By clicking the <i class="fa fa-film" title="Film Icon"></i> icon you can add an
 
 Note:  Adding archives to the unfinished rendering list will take up at least as much disk space as the size of the archive.  Make sure you have plenty of free disk space before adding archives to the unfinished renderings and before initiating video rendering.
 
+### Importing Archives
+Octolapse supports importing zip files.  See the help icon next to the **Import Snapshot Archive** control for more details.
+
 
