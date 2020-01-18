@@ -47,6 +47,7 @@ from octoprint_octolapse.snapshot import SnapshotMetadata, CameraInfo
 from octoprint_octolapse.settings import OctolapseSettings, CameraProfile, RenderingProfile
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
+
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 
@@ -106,7 +107,7 @@ def preview_overlay(rendering_profile, image=None):
     overlay_outline_color = rendering_profile.get_overlay_outline_color()
     overlay_outline_width = rendering_profile.overlay_outline_width
     if image is None:
-        image_color = (0,0,0,255)
+        image_color = (0, 0, 0, 255)
         if isinstance(overlay_text_color, list):
             image_color = tuple(255 - c for c in overlay_text_color)
         # Create an image with background color inverse to the text color.
@@ -333,7 +334,6 @@ class RenderJobInfo(object):
 
     @staticmethod
     def get_output_tokens_from_metadata(metadata):
-
         print_end_time = metadata["print_end_time"]
         print_start_time = metadata["print_start_time"]
         print_end_state = metadata["print_end_state"]
@@ -360,6 +360,7 @@ class RenderJobInfo(object):
 class RenderingProcessor(threading.Thread):
     """Watch for rendering jobs via a rendering queue.  Extract jobs from the queue, and spawn a rendering thread,
        one at a time for each rendering job.  Notify the calling thread of the number of jobs in the queue on demand."""
+
     def __init__(
         self, rendering_task_queue, data_directory, plugin_version, default_settings_folder,
         octoprint_settings, get_current_settings_callback, on_start, on_success, on_render_progress, on_error, on_end,
@@ -488,7 +489,8 @@ class RenderingProcessor(threading.Thread):
 
         with self.temp_files_lock:
             job_directory = utility.get_temporary_snapshot_job_path(temporary_directory, job_guid)
-            camera_directory = utility.get_temporary_snapshot_job_camera_path(temporary_directory, job_guid, camera_guid)
+            camera_directory = utility.get_temporary_snapshot_job_camera_path(temporary_directory, job_guid,
+                                                                              camera_guid)
             target_directory = utility.get_directory_from_full_path(target_path)
 
             # make sure the job and camera directories both exist, else bail!
@@ -541,9 +543,9 @@ class RenderingProcessor(threading.Thread):
                         progress_callback(progress_key, progress_current_step, progress_total_steps)
 
         if is_download:
-                metadata = self._get_metadata_for_rendering_files(job_guid, camera_guid, temporary_directory)
-                target_extension = utility.get_extension_from_full_path(target_path)
-                return "{0}.{1}".format(RenderJobInfo.get_rendering_name_from_metadata(metadata), target_extension)
+            metadata = self._get_metadata_for_rendering_files(job_guid, camera_guid, temporary_directory)
+            target_extension = utility.get_extension_from_full_path(target_path)
+            return "{0}.{1}".format(RenderJobInfo.get_rendering_name_from_metadata(metadata), target_extension)
         return None
 
     def import_snapshot_archive(self, snapshot_archive_path, prevent_archive=False):
@@ -778,12 +780,11 @@ class RenderingProcessor(threading.Thread):
         self, temporary_directory, job_guid, camera_guid,
         progress_callback=None, progress_key='delete_snapshots', progress_current_step=None, progress_total_steps=None
     ):
-
         with self.temp_files_lock:
             # get the two snapshot paths, one for the job, one for the camera
             job_path = utility.get_temporary_snapshot_job_path(temporary_directory, job_guid)
             camera_path = utility.get_temporary_snapshot_job_camera_path(temporary_directory, job_guid, camera_guid)
-
+            logger.debug("Deleting all snapshot images at: %s", camera_path)
             # get all of the camera files
             camera_files = []
             if os.path.isdir(camera_path):
@@ -819,6 +820,7 @@ class RenderingProcessor(threading.Thread):
                     has_files_or_folders = True
                     break
             if not has_files_or_folders:
+                logger.debug("There are no files or folders in the job path at %s.  Deleting.", job_path)
                 utility.rmtree(job_path)
             progress_current_step += 1
             if progress_callback:
@@ -861,7 +863,7 @@ class RenderingProcessor(threading.Thread):
                         job['paths'].append({'path': path, 'id': camera_guid})
                         # commenting this out.  Used to check for in_process tasks and prevent them from being viewed
                         # as unfinished
-                        #if not (job_guid in in_process and camera_guid in in_process[job_guid]):
+                        # if not (job_guid in in_process and camera_guid in in_process[job_guid]):
                         #    job['paths'].append({'path': path, 'id': camera_guid})
                         is_empty = False
 
@@ -1062,10 +1064,10 @@ class RenderingProcessor(threading.Thread):
                     # failed jobs get added to the unfinished renderings list.
                     failed = (
                         finished_job.rendering_error is not None and not
-                        (
-                            isinstance(finished_job.rendering_error, RenderError)
-                            and finished_job.rendering_error.type == "insufficient-images"
-                        )
+                    (
+                        isinstance(finished_job.rendering_error, RenderError)
+                        and finished_job.rendering_error.type == "insufficient-images"
+                    )
                     )
                     # remove the job from the _pending_rendering_jobs dict
                     self._remove_pending_job(
@@ -1342,7 +1344,6 @@ class RenderingProcessor(threading.Thread):
             progress_current_key != key or
             (self._last_progress_time_update + 0.5 < cur_time and progress != self._previous_render_progress)
         ):
-
             self._current_rendering_job["progress"] = key
             logger.verbose(
                 "Sending render progress message: %s%s", key, " - {0:.1f}".format(progress) if progress else ""
@@ -1372,7 +1373,6 @@ class TimelapseRenderJob(threading.Thread):
     _ffmpeg_duration_regex = re.compile(r"Duration: (\d{2}):(\d{2}):(\d{2})\.\d{2}")
     _ffmpeg_current_regex = re.compile(r"time=(\d{2}):(\d{2}):(\d{2})\.\d{2}")
 
-
     def __init__(
         self,
         render_job_info,
@@ -1385,7 +1385,7 @@ class TimelapseRenderJob(threading.Thread):
         archive_snapshots_callback
     ):
         super(TimelapseRenderJob, self).__init__()
-        assert(isinstance(render_job_info, RenderJobInfo))
+        assert (isinstance(render_job_info, RenderJobInfo))
         self._render_job_info = render_job_info
         self._on_start_event = on_start_event
         self._fps = None
@@ -1398,7 +1398,7 @@ class TimelapseRenderJob(threading.Thread):
         self._ffmpeg = render_job_info.ffmpeg_directory
         if self._ffmpeg is not None:
             self._ffmpeg = self._ffmpeg.strip()
-            #if sys.platform == "win32" and not (self._ffmpeg.startswith('"') and self._ffmpeg.endswith('"')):
+            # if sys.platform == "win32" and not (self._ffmpeg.startswith('"') and self._ffmpeg.endswith('"')):
             #    self._ffmpeg = "\"{0}\"".format(self._ffmpeg)
         ###########
         # callbacks
@@ -1424,7 +1424,6 @@ class TimelapseRenderJob(threading.Thread):
         # ffmpeg process vars
         self._render_parsed_duration = 0
 
-
     def join(self):
         super(TimelapseRenderJob, self).join()
         return self._render_job_info
@@ -1433,10 +1432,253 @@ class TimelapseRenderJob(threading.Thread):
         self._on_start_event.set()
         self._render()
 
-    def _prepare_images(self):
+    def _render(self):
+        """Process the timelapse render job and report progress"""
+
+        # Make sure we can render a timelapse, and that we aren't missing any critical settings
+        self._run_prechecks()
+        # send render start message
+        self.on_render_start(self._create_callback_payload(0, "Starting to render timelapse."))
+        # set an error variable to None, we will return None if there are no problems
+        r_error = None
+        # Variable used to determine if we should delete the snapshots at the end.  We can safely
+        # delete the snapshots only if rendering has completed successfully, or if rendering is
+        # impossible.
+        delete_snapshots = False
+
+        # temporary rendering filepath.  the rendering will be moved after it has been completed
+        temp_filepath = os.path.join(
+            self._temp_rendering_dir, "{0}.{1}".format(str(uuid.uuid4()), "tmp")
+        )
+        # Variables used to calculate cleanup progress, which needs to be specially tracked.
+        cleanup_current_step = 0
+        cleanup_total_steps = None
+        try:
+            # set the outputs - output directory, output filename, output extension
+            self._set_outputs()
+            if self._render_job_info.rendering.enabled:
+                logger.info("Rendering is enabled for camera %s.", self._render_job_info.camera_guid)
+
+                # Create and copy images to the temporary rendering directory, converting them to jpg if necessary
+                # this routine reports progress
+                self._convert_and_copy_snapshot_images()
+
+                # read any metadata produced by the timelapse process
+                # this is used to create text overlays
+                self._read_snapshot_metadata()
+
+                # Run any prerender script configured in the camera profile.  This routine reports a progress
+                # phase change, but does not send completed percentage
+                self._pre_render_script()
+
+                # Verify that we have at least two images.  We can't generate a timelapse with a single frame
+                self._check_image_count()
+
+                # calculate the framerate of the output.
+                self._calculate_fps()
+
+                try:
+
+                    logger.info("Creating the directory at %s", self._output_directory)
+                    if not os.path.exists(self._output_directory):
+                        try:
+                            # create the target output directory
+                            os.makedirs(self._output_directory)
+                        except OSError:
+                            pass
+                except Exception as e:
+                    raise RenderError('create-render-path',
+                                      "Render - An exception was thrown when trying to "
+                                      "create the rendering path at: {0}.  Please check "
+                                      "the logs (plugin_octolapse.log) for details.".format(self._output_directory),
+                                      cause=e)
+
+                # Add a watermark if one is selected in the rendering settings.
+                watermark_path = None
+                if self._render_job_info.rendering.enable_watermark:
+                    watermark_path = self._render_job_info.rendering.selected_watermark
+                    if watermark_path == '':
+                        logger.error("Watermark was enabled but no watermark file was selected.")
+                        watermark_path = None
+                    elif not os.path.exists(watermark_path):
+                        logger.error("Render - Watermark file does not exist.")
+                        watermark_path = None
+                    elif sys.platform == "win32":
+                        # Because ffmpeg hiccups on windows' drive letters and backslashes we have to give the watermark
+                        # path a special treatment. Yeah, I couldn't believe it either...
+                        watermark_path = watermark_path.replace(
+                            "\\", "/").replace(":", "\\\\:")
+
+                # Do image preprocessing.  This relies on the original file name, so no renaming before running
+                # this function
+                self._add_text_overlays()
+
+                # rename the images
+                logger.debug("Renaming images.")
+                self._rename_images()
+
+                # Add pre and post roll.
+                self._apply_pre_post_roll()
+
+                # prepare ffmpeg command
+                command_args = self._create_ffmpeg_command_args(
+                    os.path.join(self._temp_rendering_dir, self._render_job_info.snapshot_filename_format),
+                    temp_filepath,
+                    watermark=watermark_path
+                )
+
+                # Render the timelapse via ffmpeg/avconv
+                logger.info("Running ffmpeg.")
+                with self.render_job_lock:
+                    try:
+                        # create an async thread, along with a callback for processing ffmpeg debug output
+                        # for calculating progress
+                        p = script.POpenWithTimeoutAsync(on_stderr_line_received=self._process_ffmpeg_output)
+                        p.run(command_args)
+                        # rename the output file
+                        shutil.move(temp_filepath, self._output_filepath)
+                    except Exception as e:
+                        logger.exception("An exception occurred while running the ffmpeg process.")
+                        raise RenderError('rendering-exception', "ffmpeg failed during rendering of movie. "
+                                                                 "Please check plugin_octolapse.log for details.",
+                                          cause=e)
+                    if p.return_code != 0:
+                        return_code = p.return_code
+                        stderr_text = "\n".join(p.stderr_lines)
+                        raise RenderError('return-code', "Could not render movie, got return code %r: %s" % (
+                            return_code, stderr_text))
+
+                # run any post rendering scripts, notifying the client if scripts are running (but no progress)
+                self._post_render_script()
+
+            # If snapshot archiving is enabled, or if rendering is disabled, generate an archive
+            if self._archive_snapshots or not self._render_job_info.rendering.enabled:
+                # create the copy directory
+                camera_path = self._render_job_info.snapshot_directory
+                if not os.path.exists(self._render_job_info.snapshot_archive_directory):
+                    try:
+                        os.makedirs(self._render_job_info.snapshot_archive_directory)
+                    except OSError:
+                        pass
+                # Archive the snapshots and send progress to the client
+                self._archive_snapshots_callback(
+                    self._render_job_info.temporary_directory,
+                    self._render_job_info.job_guid,
+                    self._render_job_info.camera_guid,
+                    self._snapshot_archive_path,
+                    progress_callback=self.on_render_progress,
+                    progress_key="archiving"
+                )
+
+            # Rendering has completed successfully.  Indicate that we can delete all snapshots
+            delete_snapshots = True
+        except Exception as e:
+            logger.exception("Rendering Error")
+            if isinstance(e, RenderError):
+                if e.type == 'insufficient-images':
+                    # if there aren't enough images to create a timelapse, just delete the images since they are
+                    # useless.
+                    delete_snapshots = True
+                r_error = e
+            else:
+                r_error = RenderError('render-error',
+                                      "Unknown render error. Please check plugin_octolapse.log for more details.",
+                                      e)
+        finally:
+            # Start cleanup of rendering/snapshot files
+
+            # delete the temp rendering file if it exists.
+            if os.path.isfile(temp_filepath):
+                try:
+                    os.remove(temp_filepath)
+                except (OSError, IOError):
+                    logger.exception("Could not delete a temporary rendering file!")
+                    pass
+
+            if delete_snapshots:
+                # We are going to delete all files in the snapshot directory
+                try:
+                    # get a count of images we need to delete so that we can report accurate progress
+                    num_snapshots = RenderingProcessor.get_snapshot_file_count(
+                        self._render_job_info.temporary_directory,
+                        self._render_job_info.job_guid,
+                        self._render_job_info.camera_guid,
+                    )
+                    # we will also be deleting temporary files.  Get a total count so we can report total progress
+                    cleanup_total_steps = num_snapshots + self._get_num_temporary_files()
+
+                    # delete all snapshots for the current render job, making sure to report total cleanup progress
+                    self._delete_snapshots_for_job_callback(
+                        self._render_job_info.temporary_directory,
+                        self._render_job_info.job_guid,
+                        self._render_job_info.camera_guid,
+                        progress_callback=self.on_render_progress,
+                        progress_key='cleanup',
+                        progress_total_steps=cleanup_total_steps
+                    )
+                    # we have deleted the snapshots, so increment our current step appropriately
+                    cleanup_current_step = num_snapshots
+                except (IOError, OSError) as e:
+                    raise e
+
+            try:
+                if cleanup_total_steps is None:
+                    # if we didn't delete the snapshots due to failure or some other reason, we won't
+                    # have any cleanup steps at this point.  Get the number of temp files so we can report progress.
+                    cleanup_total_steps = self._get_num_temporary_files()
+                # delete all temporary rendering files and report cleanup progress
+                self._clear_temporary_files(
+                    progress_key="cleanup",
+                    progress_current_step=cleanup_current_step,
+                    progress_total_steps=cleanup_total_steps
+                )
+            except (OSError, IOError):
+                # It's not a huge deal if we can't clean the temporary files at the moment.  Log the error and move on.
+                logger.exception("Could not clean temporary rendering files.")
+                pass
+
+        if r_error is None:
+            # Success!
+            self.on_render_success(self._create_callback_payload(0, "Timelapse rendering is complete."))
+        else:
+            # Fail :(
+            self._render_job_info.rendering_error = r_error
+            self.on_render_error(self._create_callback_payload(0, "The render process failed."), r_error)
+
+    def _run_prechecks(self):
+        """Verify that we have an ffmepg and bitrate.  If not, raise an exception.  More prechecks could be done."""
+        if self._ffmpeg is None:
+            raise RenderError('ffmpeg_path', "Cannot create movie, path to ffmpeg is unset. "
+                                             "Please configure the ffmpeg path within the "
+                                             "'Features->Webcam & Timelapse' settings tab.")
+
+        if self._render_job_info.rendering.bitrate is None:
+            raise RenderError('no-bitrate', "Cannot create movie, desired bitrate is unset. "
+                                            "Please set the bitrate within the Octolapse rendering profile.")
+
+    def _set_outputs(self):
+        """Get all of the paths we need to render a timelapse, making sure there are no collisions."""
+        # Rendering path info
+        logger.info("Setting output paths.")
+        self._output_filepath = utility.get_collision_free_filepath(self._render_job_info.rendering_path)
+        self._render_job_info.rendering_path = self._output_filepath
+        self._output_filename = utility.get_filename_from_full_path(self._output_filepath)
+        self._render_job_info.rendering_filename = self._output_filename
+        self._output_directory = utility.get_directory_from_full_path(self._output_filepath)
+        self._output_extension = utility.get_extension_from_full_path(self._output_filepath)
+        self._snapshot_archive_path = utility.get_collision_free_filepath(
+            self._render_job_info.snapshot_archive_path
+        )
+        self._render_job_info.snapshot_archive_path = self._snapshot_archive_path
+        self._render_job_info.snapshot_archive_filename = utility.get_filename_from_full_path(
+            self._snapshot_archive_path
+        )
+
+    def _convert_and_copy_snapshot_images(self):
         """Creates a temporary rendering directory and copies all images to it, verifies all image files,
            counts images, and finds the maximum snapshot number
         """
+        logger.debug("Converting and copying images to the temporary rendering folder")
         self._image_count = 0
         if not os.path.isdir(self._render_job_info.snapshot_directory):
             # No snapshots were created.  Return
@@ -1462,13 +1704,34 @@ class TimelapseRenderJob(threading.Thread):
             progress_total_steps = num_temp_files + num_images
             self._clear_temporary_files(
                 delete_folder=False,
-                progress_key='preparing', progress_total_steps=progress_total_steps
+                progress_key='preparing',
+                progress_total_steps=progress_total_steps
             )
             progress_current_step = num_temp_files
 
         # crete the temp directory
         if not os.path.exists(self._temp_rendering_dir):
             os.makedirs(self._temp_rendering_dir)
+
+        def convert_and_copy_snapshot_image(file_path, target_folder):
+            try:
+                file_name = os.path.basename(file_path)
+                target = os.path.join(target_folder, file_name)
+                with Image.open(file_path) as img:
+                    if img.format not in ["JPEG", "JPEG 2000"]:
+                        logger.info(
+                            "The image at %s is in %s format.  Attempting to convert to jpeg.",
+                            file_path,
+                            img.format
+                        )
+                        with img.convert('RGB') as rgb_img:
+                            # save the file with a temp name
+                            rgb_img.save(target)
+                    else:
+                        utility.fast_copy(file_path, target)
+            except IOError as e:
+                logger.exception("The file at path %s is not a valid image file, could not be converted, "
+                                 "and has been removed.", file_path)
 
         for path in snapshot_files:
             self._image_count += 1
@@ -1477,7 +1740,7 @@ class TimelapseRenderJob(threading.Thread):
             if img_num > self._max_image_number:
                 self._max_image_number = img_num
             # verify the image and convert if necessary
-            TimelapseRenderJob._convert_and_copy_image(path, self._temp_rendering_dir)
+            convert_and_copy_snapshot_image(path, self._temp_rendering_dir)
             self.on_render_progress('preparing', progress_current_step, progress_total_steps)
 
         # if we have no camera infos, let's create it now
@@ -1488,68 +1751,38 @@ class TimelapseRenderJob(threading.Thread):
 
         self._render_job_info.output_tokens["SNAPSHOTCOUNT"] = "{0}".format(self._image_count)
 
-    def _get_num_temporary_files(self):
-        return len(os.listdir(self._temp_rendering_dir))
+    def _read_snapshot_metadata(self):
+        """Read all snapshot metadata (csv) if it exists, which is used to generate overlays."""
+        # get the metadata path
+        metadata_path = os.path.join(self._render_job_info.snapshot_directory, SnapshotMetadata.METADATA_FILE_NAME)
+        # make sure the metadata file exists
+        if not os.path.isfile(metadata_path):
+            # nothing to do here.  Exit
+            return
+        # see if the metadata file exists
+        logger.debug('Reading snapshot metadata from %s', metadata_path)
 
-    def _clear_temporary_files(
-        self, progress_key='deleting_temp_files', progress_current_step=None, progress_total_steps=None,
-        delete_folder=True
-    ):
-        if os.path.isdir(self._temp_rendering_dir):
-            temp_rendering_files = os.listdir(self._temp_rendering_dir)
-            if progress_total_steps is None:
-                progress_total_steps = len(temp_rendering_files)
-            if progress_current_step is None:
-                progress_current_step = 0
-            for filename in temp_rendering_files:
-                self.on_render_progress(progress_key, progress_current_step, progress_total_steps)
-                progress_current_step += 1
-                filepath = os.path.join(self._temp_rendering_dir, filename)
-                if os.path.isfile(filepath) and filename.upper().endswith(".JPG"):
-                    os.remove(filepath)
-            if delete_folder:
-                try:
-                    # remove the directory if it is empty, but don't raise an exception.  It doesn't really matter
-                    # if the directory is removed, it's just cosmetic
-                    if not os.listdir(self._temp_rendering_dir):
-                        os.rmdir(self._temp_rendering_dir)
-                except (OSError, IOError):
-                    logger.exception("Could not remove temporary rendering directory.")
-                    pass
-
-    def _pre_render(self):
-        self.on_render_progress('pre_render_start')
-        # read any metadata produced by the timelapse process
-        # this is used to create text overlays
-        self._read_snapshot_metadata()
-
-        # If there aren't enough images, report an error
-        if 0 < self._image_count < 2:
-            raise RenderError(
-                'insufficient-images',
-                "Not enough snapshots were found to generate a timelapse for the '{0}' camera profile.".format(
-                    self._render_job_info.camera.name, self._images_removed_count
-                )
-            )
-        if self._image_count == 0:
-            raise RenderError(
-                'insufficient-images',
-                "No snapshots were available for the '{0}' camera profile.".format(self._render_job_info.camera.name)
-              )
-
-        # calculate the FPS
-        self._calculate_fps()
-        if self._fps < 1:
-            raise RenderError('framerate-too-low', "The calculated FPS is below 1, which is not allowed. "
-                                                   "Please check the rendering settings for Min and Max FPS "
-                                                   "as well as the number of snapshots captured.")
+        try:
+            with open(metadata_path, 'r') as metadata_file:
+                # read the metadaata and convert it to a dict
+                dictreader = DictReader(metadata_file, SnapshotMetadata.METADATA_FIELDS)
+                # convert the dict to a list
+                self._snapshot_metadata = list(dictreader)
+                return
+        except IOError as e:
+            logger.exception("No metadata exists, skipping metadata processing.")
+            # If we fail to read the metadata, it could be that no snapshots were taken.
+            # Let's not throw an error and just render without the metadata
+            pass
 
     def _pre_render_script(self):
+        """Run any pre-rendering scripts that are configured within the camera profile."""
         script_path = self._render_job_info.camera.on_before_render_script.strip()
         if not script_path:
             return
         self.on_render_progress('pre_render_script')
         # Todo:  add the original snapshot directory and template path
+        logger.debug("Executing the pre-rendering script.")
         cmd = script.CameraScriptBeforeRender(
             script_path,
             self._render_job_info.camera.name,
@@ -1568,79 +1801,24 @@ class TimelapseRenderJob(threading.Thread):
                 "plugin_octolapse.log for details. "
             )
 
-    def _post_render_script(self):
-        script_path = self._render_job_info.camera.on_after_render_script.strip()
-        if not script_path:
-            return
-        self.on_render_progress('post_render_script')
-        # Todo:  add the original snapshot directory and template path
-        cmd = script.CameraScriptAfterRender(
-            script_path,
-            self._render_job_info.camera.name,
-            self._temp_rendering_dir,
-            self._render_job_info.snapshot_filename_format,
-            os.path.join(
-                self._temp_rendering_dir,
-                self._render_job_info.snapshot_filename_format
-            ),
-            self._output_directory,
-            self._output_filename,
-            self._output_extension,
-            self._output_filepath
-        )
-        cmd.run()
-        if not cmd.success():
-            self._after_render_error = RenderError(
-                'after_render_script_error',
-                "A script occurred while executing executing the after-render script.  Check "
-                "plugin_octolapse.log for details. "
+    def _check_image_count(self):
+        """Make sure we have enough images to generate a timelapse.  If not, raise an exception."""
+        # If there aren't enough images, report an error
+        if 0 < self._image_count < 2:
+            raise RenderError(
+                'insufficient-images',
+                "Not enough snapshots were found to generate a timelapse for the '{0}' camera profile.".format(
+                    self._render_job_info.camera.name, self._images_removed_count
+                )
+            )
+        if self._image_count == 0:
+            raise RenderError(
+                'insufficient-images',
+                "No snapshots were available for the '{0}' camera profile.".format(self._render_job_info.camera.name)
             )
 
-    @staticmethod
-    def _convert_and_copy_image(file_path, target_folder):
-        try:
-            file_name = os.path.basename(file_path)
-            target = os.path.join(target_folder, file_name)
-            with Image.open(file_path) as img:
-                if img.format not in ["JPEG", "JPEG 2000"]:
-                    logger.info(
-                        "The image at %s is in %s format.  Attempting to convert to jpeg.",
-                        file_path,
-                        img.format
-                    )
-                    with img.convert('RGB') as rgb_img:
-                        # save the file with a temp name
-                        rgb_img.save(target)
-                else:
-                    utility.fast_copy(file_path, target)
-        except IOError as e:
-            logger.exception("The file at path %s is not a valid image file, could not be converted, "
-                             "and has been removed.", file_path)
-
-    def _read_snapshot_metadata(self):
-        # get the metadata path
-        metadata_path = os.path.join(self._render_job_info.snapshot_directory, SnapshotMetadata.METADATA_FILE_NAME)
-        # make sure the metadata file exists
-        if not os.path.isfile(metadata_path):
-            # nothing to do here.  Exit
-            return
-        # see if the metadata file exists
-        logger.info('Reading snapshot metadata from %s', metadata_path)
-
-        try:
-            with open(metadata_path, 'r') as metadata_file:
-                # read the metadaata and convert it to a dict
-                dictreader = DictReader(metadata_file, SnapshotMetadata.METADATA_FIELDS)
-                # convert the dict to a list
-                self._snapshot_metadata = list(dictreader)
-                return
-        except IOError as e:
-            logger.exception("No metadata exists, skipping metadata processing.")
-            # If we fail to read the metadata, it could be that no snapshots were taken.
-            # Let's not throw an error and just render without the metadata
-            pass
-
     def _calculate_fps(self):
+        """Calculate and record the rendering FPS for fixed length renderings, or return the static framerate."""
         self._fps = self._render_job_info.rendering.fps
 
         if self._render_job_info.rendering.fps_calculation_type == 'duration':
@@ -1665,254 +1843,18 @@ class TimelapseRenderJob(threading.Thread):
                 self._render_job_info.rendering.min_fps
             )
         else:
-            logger.info("FPS Calculation Type:%s, Fps:%s", self._render_job_info.rendering.fps_calculation_type, self._fps)
+            logger.info("FPS Calculation Type:%s, Fps:%s", self._render_job_info.rendering.fps_calculation_type,
+                        self._fps)
         # Add the FPS to the output tokens
         self._render_job_info.output_tokens["FPS"] = "{0}".format(int(math.ceil(self._fps)))
 
-    def _set_outputs(self):
-        # Rendering path info
-        logger.info("Setting output paths.")
-        self._output_filepath = utility.get_collision_free_filepath(self._render_job_info.rendering_path)
-        self._render_job_info.rendering_path = self._output_filepath
-        self._output_filename = utility.get_filename_from_full_path(self._output_filepath)
-        self._render_job_info.rendering_filename = self._output_filename
-        self._output_directory = utility.get_directory_from_full_path(self._output_filepath)
-        self._output_extension = utility.get_extension_from_full_path(self._output_filepath)
-        self._snapshot_archive_path = utility.get_collision_free_filepath(
-            self._render_job_info.snapshot_archive_path
-        )
-        self._render_job_info.snapshot_archive_path = self._snapshot_archive_path
-        self._render_job_info.snapshot_archive_filename =  utility.get_filename_from_full_path(
-            self._snapshot_archive_path
-        )
-
-    def create_callback_payload(self, return_code, reason):
-        return RenderingCallbackArgs(
-            reason,
-            return_code,
-            self._render_job_info.job_guid,
-            self._render_job_info.job_directory,
-            self._render_job_info.snapshot_directory,
-            self._output_directory,
-            self._output_filename,
-            self._output_extension,
-            self._render_job_info.snapshot_archive_path if self._render_job_info.archive_snapshots else None,
-            self._image_count,
-            self._render_job_info.job_number,
-            self._render_job_info.jobs_remaining,
-            self._render_job_info.camera.name,
-            self._before_render_error,
-            self._after_render_error,
-            self._render_job_info.timelapse_job_info.PrintFileName,
-            self._render_job_info.timelapse_job_info.PrintFileExtension,
-            self._render_job_info.rendering.enabled,
-        )
-
-    def _run_prechecks(self):
-        if self._ffmpeg is None:
-            raise RenderError('ffmpeg_path', "Cannot create movie, path to ffmpeg is unset. "
-                                             "Please configure the ffmpeg path within the "
-                                             "'Features->Webcam & Timelapse' settings tab.")
-
-        if self._render_job_info.rendering.bitrate is None:
-            raise RenderError('no-bitrate', "Cannot create movie, desired bitrate is unset. "
-                                            "Please set the bitrate within the Octolapse rendering profile.")
-
-    def _render(self):
-        """Rendering runnable."""
-
-        self._run_prechecks()
-        self.on_render_start(self.create_callback_payload(0, "Starting to render timelapse."))
-        # set an error variable to None, we will return None if there are no problems
-        r_error = None
-        delete_snapshots = False
-
-        # temporary rendering filepath.  the rendering will be moved after it has been completed
-        temp_filepath = os.path.join(
-            self._temp_rendering_dir, "{0}.{1}".format(str(uuid.uuid4()), "tmp")
-        )
-        cleanup_current_step = 0
-        cleanup_total_steps = None
-        try:
-            # set the outputs - output directory, output filename, output extension
-            self._set_outputs()
-            if self._render_job_info.rendering.enabled:
-                logger.info("Starting prerender for camera %s.", self._render_job_info.camera_guid)
-
-                self._prepare_images()
-
-                self._pre_render_script()
-
-                self._pre_render()
-
-                try:
-                    logger.info("Creating the directory at %s", self._output_directory)
-
-                    if not os.path.exists(self._output_directory):
-                        try:
-                            os.makedirs(self._output_directory)
-                        except OSError:
-                            pass
-                except Exception as e:
-                    raise RenderError('create-render-path',
-                                      "Render - An exception was thrown when trying to "
-                                      "create the rendering path at: {0}.  Please check "
-                                      "the logs (plugin_octolapse.log) for details.".format(self._output_directory),
-                                      cause=e)
-
-                watermark_path = None
-                if self._render_job_info.rendering.enable_watermark:
-                    watermark_path = self._render_job_info.rendering.selected_watermark
-                    if watermark_path == '':
-                        logger.error("Watermark was enabled but no watermark file was selected.")
-                        watermark_path = None
-                    elif not os.path.exists(watermark_path):
-                        logger.error("Render - Watermark file does not exist.")
-                        watermark_path = None
-                    elif sys.platform == "win32":
-                        # Because ffmpeg hiccups on windows' drive letters and backslashes we have to give the watermark
-                        # path a special treatment. Yeah, I couldn't believe it either...
-                        watermark_path = watermark_path.replace(
-                            "\\", "/").replace(":", "\\\\:")
-
-                # Do image preprocessing.  This relies on the original file name, so no renaming before running
-                # this function
-                self._add_text_overlays()
-
-                # rename the images
-                self._rename_images()
-
-                # Add pre and post roll.
-                self._apply_pre_post_roll()
-
-                # prepare ffmpeg command
-                command_args = self._create_ffmpeg_command_args(
-                    os.path.join(self._temp_rendering_dir, self._render_job_info.snapshot_filename_format),
-                    temp_filepath,
-                    watermark=watermark_path
-                )
-                # rename the output file
-
-                logger.info("Running ffmpeg.")
-                with self.render_job_lock:
-                    try:
-                        p = script.POpenWithTimeoutAsync(on_stderr_line_received=self._process_ffmpeg_output)
-                        p.run(command_args)
-                        os.rename(temp_filepath, self._output_filepath)
-                    except Exception as e:
-                        logger.exception("An exception occurred while running the ffmpeg process.")
-                        raise RenderError('rendering-exception', "ffmpeg failed during rendering of movie. "
-                                                                 "Please check plugin_octolapse.log for details.",
-                                          cause=e)
-                    if p.return_code != 0:
-                        return_code = p.return_code
-                        stderr_text = "\n".join(p.stderr_lines)
-                        raise RenderError('return-code', "Could not render movie, got return code %r: %s" % (
-                            return_code, stderr_text))
-
-                # run any post rendering scripts
-                self._post_render_script()
-
-            if self._archive_snapshots or not self._render_job_info.rendering.enabled:
-                # create the copy directory
-                camera_path = self._render_job_info.snapshot_directory
-                if not os.path.exists(self._render_job_info.snapshot_archive_directory):
-                    try:
-                        os.makedirs(self._render_job_info.snapshot_archive_directory)
-                    except OSError:
-                        pass
-
-                self._archive_snapshots_callback(
-                    self._render_job_info.temporary_directory,
-                    self._render_job_info.job_guid,
-                    self._render_job_info.camera_guid,
-                    self._snapshot_archive_path,
-                    progress_callback=self.on_render_progress,
-                    progress_key="archiving"
-                )
-
-            delete_snapshots = True
-        except Exception as e:
-            logger.exception("Rendering Error")
-            if isinstance(e, RenderError):
-                if e.type == 'insufficient-images':
-                    delete_snapshots = True
-                r_error = e
-            else:
-                r_error = RenderError('render-error',
-                                      "Unknown render error. Please check plugin_octolapse.log for more details.",
-                                      e)
-        finally:
-            # delete the temp rendering file if it exists.
-            if os.path.isfile(temp_filepath):
-                try:
-                    os.remove(temp_filepath)
-                except (OSError, IOError):
-                    logger.exception("Could not delete a temporary rendering file!")
-                    pass
-
-            if delete_snapshots:
-                try:
-                    num_snapshots = RenderingProcessor.get_snapshot_file_count(
-                        self._render_job_info.temporary_directory,
-                        self._render_job_info.job_guid,
-                        self._render_job_info.camera_guid,
-                    )
-                    cleanup_total_steps = num_snapshots + self._get_num_temporary_files()
-
-                    self._delete_snapshots_for_job_callback(
-                        self._render_job_info.temporary_directory,
-                        self._render_job_info.job_guid,
-                        self._render_job_info.camera_guid,
-                        progress_callback=self.on_render_progress,
-                        progress_key='cleanup',
-                        progress_total_steps=cleanup_total_steps
-                    )
-                    cleanup_current_step = num_snapshots
-                except (IOError, OSError) as e:
-                    raise e
-
-            try:
-                if cleanup_total_steps is None:
-                    cleanup_total_steps = self._get_num_temporary_files()
-                self._clear_temporary_files(
-                    progress_key="cleanup",
-                    progress_current_step=cleanup_current_step,
-                    progress_total_steps=cleanup_total_steps
-                )
-            except (OSError, IOError):
-                # It's not a huge deal if we can't clean the temporary files at the moment.  Log the error and move on.
-                logger.exception("Could not clean temporary rendering files.")
-                pass
-
-        if r_error is None:
-            self.on_render_success(self.create_callback_payload(0, "Timelapse rendering is complete."))
-        else:
-            self._render_job_info.rendering_error = r_error
-            self.on_render_error(self.create_callback_payload(0, "The render process failed."), r_error)
-
-    # The ffmpeg duration regexes, _process_ffmpeg_output, and _convert_time functions below
-    # are based on similar code within the OctoPrint timelapse plugin, which can be found here:
-    #
-    _ffmpeg_duration_regex = re.compile(r"Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})")
-    _ffmpeg_current_regex = re.compile(r"time=(\d{2}):(\d{2}):(\d{2}\.\d{2})")
-
-    def _process_ffmpeg_output(self, line):
-        # We should be getting the time more often, so try it first
-        current_time = TimelapseRenderJob._ffmpeg_current_regex.search(line)
-        if current_time is not None and self._render_parsed_duration != 0:
-            current_s = self._convert_time(*current_time.groups())
-            self.on_render_progress('rendering', current_s, self._render_parsed_duration)
-        else:
-            duration = TimelapseRenderJob._ffmpeg_duration_regex.search(line)
-            if duration is not None:
-                self._render_parsed_duration = self._convert_time(*duration.groups())
-
-    @staticmethod
-    def _convert_time(hours, minutes, seconds):
-        return (int(hours) * 60.0 + int(minutes)) * 60.0 + float(seconds)
+        if self._fps < 1:
+            raise RenderError('framerate-too-low', "The calculated FPS is below 1, which is not allowed. "
+                                                   "Please check the rendering settings for Min and Max FPS "
+                                                   "as well as the number of snapshots captured.")
 
     def _add_text_overlays(self):
+        """Adds any text overlays configured within the rendering settings to every timelapse image."""
         if not self._render_job_info.rendering.overlay_text_template:
             return
 
@@ -1950,59 +1892,26 @@ class TimelapseRenderJob(threading.Thread):
                 # Open the image in Pillow and do preprocessing operations.
                 with Image.open(file_path) as img:
                     img = self.add_overlay(img,
-                                     text_template=self._render_job_info.rendering.overlay_text_template,
-                                     format_vars=format_vars,
-                                     font_path=self._render_job_info.rendering.overlay_font_path,
-                                     font_size=self._render_job_info.rendering.overlay_font_size,
-                                     overlay_location=self._render_job_info.rendering.overlay_text_pos,
-                                     overlay_text_alignment=self._render_job_info.rendering.overlay_text_alignment,
-                                     overlay_text_valign=self._render_job_info.rendering.overlay_text_valign,
-                                     overlay_text_halign=self._render_job_info.rendering.overlay_text_halign,
-                                     text_color=self._render_job_info.rendering.get_overlay_text_color(),
-                                     outline_color=self._render_job_info.rendering.get_overlay_outline_color(),
-                                     outline_width=self._render_job_info.rendering.overlay_outline_width)
+                                           text_template=self._render_job_info.rendering.overlay_text_template,
+                                           format_vars=format_vars,
+                                           font_path=self._render_job_info.rendering.overlay_font_path,
+                                           font_size=self._render_job_info.rendering.overlay_font_size,
+                                           overlay_location=self._render_job_info.rendering.overlay_text_pos,
+                                           overlay_text_alignment=self._render_job_info.rendering.overlay_text_alignment,
+                                           overlay_text_valign=self._render_job_info.rendering.overlay_text_valign,
+                                           overlay_text_halign=self._render_job_info.rendering.overlay_text_halign,
+                                           text_color=self._render_job_info.rendering.get_overlay_text_color(),
+                                           outline_color=self._render_job_info.rendering.get_overlay_outline_color(),
+                                           outline_width=self._render_job_info.rendering.overlay_outline_width)
                     # Save processed image.
                     temp_file_name = "{0}.jpg".format(uuid.uuid4())
                     output_path = os.path.join(self._temp_rendering_dir, temp_file_name)
                     img.save(output_path)
-                os.remove(file_path)
+                utility.remove(file_path)
                 shutil.move(output_path, file_path)
             else:
                 logger.error("The snapshot at %s does not exist.  Skipping preprocessing.", file_path)
         logger.info("Finished adding text overlays.")
-
-    def _rename_images(self, progress_key="rename_images", progress_current_step=None, progress_total_steps=None):
-        # First, we need to rename our files, but we have to change the file name so that it won't overwrite any existing files
-        sorted_temp_files = sorted(os.listdir(self._temp_rendering_dir))
-        image_index = 0
-        if not progress_total_steps:
-            progress_total_steps = len(sorted_temp_files) * 2
-        if not progress_current_step:
-            progress_current_step = 0
-        # count the files and multiply by two since they need to be
-        # renamed twice (once with a tmp extention, and another to remove the
-        # tmp extension)
-        for filename in sorted_temp_files:
-            self.on_render_progress(progress_key, progress_current_step, progress_total_steps)
-            progress_current_step += 1
-            # make sure the file is a jpg image
-            if filename.lower().endswith(".jpg"):
-                output_path = os.path.join(
-                    self._temp_rendering_dir,
-                    "{0}.tmp".format(self._render_job_info.get_snapshot_name_from_index(image_index))
-                )
-                file_path = os.path.join(self._temp_rendering_dir, filename)
-                shutil.move(file_path, output_path)
-                image_index += 1
-
-        # now loop back through all of the files and remove the .tmp extension
-        for filename in os.listdir(self._temp_rendering_dir):
-            self.on_render_progress(progress_key, progress_current_step, progress_total_steps)
-            progress_current_step += 1
-            if filename.endswith(".tmp"):
-                output_path = os.path.join(self._temp_rendering_dir, filename[:-4])
-                file_path = os.path.join(self._temp_rendering_dir, filename)
-                shutil.move(file_path, output_path)
 
     @staticmethod
     def add_overlay(image, text_template, format_vars, font_path, font_size, overlay_location, overlay_text_alignment,
@@ -2071,11 +1980,47 @@ class TimelapseRenderJob(threading.Thread):
 
         return Image.alpha_composite(image.convert('RGBA'), text_image).convert('RGB')
 
+    def _rename_images(self, progress_key="rename_images", progress_current_step=None, progress_total_steps=None):
+        """Rename all images so that they start with 00000 and increment by 1.  This is requried for FFMPEG."""
+        # First, we need to rename our files, but we have to change the file name so that it won't overwrite any existing files
+        sorted_temp_files = sorted(os.listdir(self._temp_rendering_dir))
+        image_index = 0
+        if not progress_total_steps:
+            progress_total_steps = len(sorted_temp_files) * 2
+        if not progress_current_step:
+            progress_current_step = 0
+        # count the files and multiply by two since they need to be
+        # renamed twice (once with a tmp extention, and another to remove the
+        # tmp extension)
+        for filename in sorted_temp_files:
+            self.on_render_progress(progress_key, progress_current_step, progress_total_steps)
+            progress_current_step += 1
+            # make sure the file is a jpg image
+            if filename.lower().endswith(".jpg"):
+                output_path = os.path.join(
+                    self._temp_rendering_dir,
+                    "{0}.tmp".format(self._render_job_info.get_snapshot_name_from_index(image_index))
+                )
+                file_path = os.path.join(self._temp_rendering_dir, filename)
+                shutil.move(file_path, output_path)
+                image_index += 1
+
+        # now loop back through all of the files and remove the .tmp extension
+        for filename in os.listdir(self._temp_rendering_dir):
+            self.on_render_progress(progress_key, progress_current_step, progress_total_steps)
+            progress_current_step += 1
+            if filename.endswith(".tmp"):
+                output_path = os.path.join(self._temp_rendering_dir, filename[:-4])
+                file_path = os.path.join(self._temp_rendering_dir, filename)
+                shutil.move(file_path, output_path)
+
     def _apply_pre_post_roll(self):
+        """Copies the first and final frames depending on the pre/post roll length for the given framerate.
+           Renames the images if any pre-roll frames were added so that they are all in sequence for ffmpeg.
+        """
         # Here we will be adding pre and post roll frames.
         # This routine assumes that images exist, that the first image has number 0, and that
         # there are no missing images
-        logger.info("Starting pre/post roll.")
         # start with pre_roll.
         pre_roll_frames = int(self._render_job_info.rendering.pre_roll_seconds * self._fps)
         post_roll_frames = int(self._render_job_info.rendering.post_roll_seconds * self._fps)
@@ -2088,6 +2033,7 @@ class TimelapseRenderJob(threading.Thread):
             progress_total_steps += 2 * (len(os.listdir(self._temp_rendering_dir)) + pre_roll_frames + post_roll_frames)
         progress_current_step = 0
         if pre_roll_frames > 0:
+            logger.info("Adding %d pre-roll frames.", pre_roll_frames)
             # We will be adding images starting with -1 and decrementing 1 until we've added the
             # correct number of frames.
 
@@ -2113,6 +2059,7 @@ class TimelapseRenderJob(threading.Thread):
             last_image_path = os.path.join(
                 self._temp_rendering_dir, self._render_job_info.snapshot_filename_format % last_frame_index
             )
+            logger.info("Adding %d post-roll frames.", post_roll_frames)
             for post_roll_index in range(post_roll_frames):
                 self.on_render_progress('pre_post_roll', progress_current_step, progress_total_steps)
                 progress_current_step += 1
@@ -2123,6 +2070,7 @@ class TimelapseRenderJob(threading.Thread):
                 )
                 utility.fast_copy(last_image_path, new_image_path)
         if pre_roll_frames > 0:
+            logger.info("Renaming images because pre-roll images were added.")
             # pre or post roll frames were added, so we need to rename all of our images
             self._rename_images(
                 progress_key="pre_post_roll",
@@ -2130,6 +2078,74 @@ class TimelapseRenderJob(threading.Thread):
                 progress_total_steps=progress_total_steps
             )
         logger.info("Pre/post roll generated successfully.")
+
+    def _post_render_script(self):
+        """Run any post render script that is configured within the camera profile."""
+        script_path = self._render_job_info.camera.on_after_render_script.strip()
+        if not script_path:
+            return
+        self.on_render_progress('post_render_script')
+        # Todo:  add the original snapshot directory and template path
+        logger.debug("Executing post-render script.")
+        cmd = script.CameraScriptAfterRender(
+            script_path,
+            self._render_job_info.camera.name,
+            self._temp_rendering_dir,
+            self._render_job_info.snapshot_filename_format,
+            os.path.join(
+                self._temp_rendering_dir,
+                self._render_job_info.snapshot_filename_format
+            ),
+            self._output_directory,
+            self._output_filename,
+            self._output_extension,
+            self._output_filepath
+        )
+        cmd.run()
+        if not cmd.success():
+            self._after_render_error = RenderError(
+                'after_render_script_error',
+                "A script occurred while executing executing the after-render script.  Check "
+                "plugin_octolapse.log for details. "
+            )
+
+    def _get_num_temporary_files(self):
+        """Returns the number of files within the temporary rendering directory.
+           This is useful for cleanup progress messages
+        """
+        return len(os.listdir(self._temp_rendering_dir))
+
+    def _clear_temporary_files(
+        self, progress_key='deleting_temp_files', progress_current_step=None, progress_total_steps=None,
+        delete_folder=True
+    ):
+        """Delete all temporary rendering files, and report progress."""
+        logger.debug("Cleaning all temporary rendering files.")
+        if os.path.isdir(self._temp_rendering_dir):
+            temp_rendering_files = os.listdir(self._temp_rendering_dir)
+            if progress_total_steps is None:
+                progress_total_steps = len(temp_rendering_files)
+            if progress_current_step is None:
+                progress_current_step = 0
+            for filename in temp_rendering_files:
+                self.on_render_progress(progress_key, progress_current_step, progress_total_steps)
+                progress_current_step += 1
+                filepath = os.path.join(self._temp_rendering_dir, filename)
+                if os.path.isfile(filepath) and filename.upper().endswith(".JPG"):
+                    os.remove(filepath)
+            if delete_folder:
+                try:
+                    # remove the directory if it is empty, but don't raise an exception.  It doesn't really matter
+                    # if the directory is removed, it's just cosmetic
+                    if not os.listdir(self._temp_rendering_dir):
+                        os.rmdir(self._temp_rendering_dir)
+                except (OSError, IOError):
+                    logger.exception("Could not remove temporary rendering directory.")
+                    pass
+
+    ###################
+    ## FFMPEG functions
+    ###################
 
     def _create_ffmpeg_command_args(self, input_file_format, output_file, watermark=None, pix_fmt="yuv420p"):
         """
@@ -2197,6 +2213,54 @@ class TimelapseRenderJob(threading.Thread):
         filter_string = "; ".join(filters)
 
         return filter_string
+
+    # The ffmpeg duration regexes, _process_ffmpeg_output, and _convert_time functions below
+    # are based on similar code within the OctoPrint timelapse plugin, which can be found here:
+    #
+    _ffmpeg_duration_regex = re.compile(r"Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})")
+    _ffmpeg_current_regex = re.compile(r"time=(\d{2}):(\d{2}):(\d{2}\.\d{2})")
+
+    def _process_ffmpeg_output(self, line):
+        """Parse ffmpeg output and update local variables indicating the current rendering progress."""
+        current_time = TimelapseRenderJob._ffmpeg_current_regex.search(line)
+
+        def convert_time(hours, minutes, seconds):
+            return (int(hours) * 60.0 + int(minutes)) * 60.0 + float(seconds)
+
+        if current_time is not None and self._render_parsed_duration != 0:
+            current_s = convert_time(*current_time.groups())
+            self.on_render_progress('rendering', current_s, self._render_parsed_duration)
+        else:
+            duration = TimelapseRenderJob._ffmpeg_duration_regex.search(line)
+            if duration is not None:
+                self._render_parsed_duration = convert_time(*duration.groups())
+
+    ###################
+    ## Callback Helpers
+    ###################
+
+    def _create_callback_payload(self, return_code, reason):
+        """Create callback arguments used for notifying Octolapse of rendering state changes (not progress)."""
+        return RenderingCallbackArgs(
+            reason,
+            return_code,
+            self._render_job_info.job_guid,
+            self._render_job_info.job_directory,
+            self._render_job_info.snapshot_directory,
+            self._output_directory,
+            self._output_filename,
+            self._output_extension,
+            self._render_job_info.snapshot_archive_path if self._render_job_info.archive_snapshots else None,
+            self._image_count,
+            self._render_job_info.job_number,
+            self._render_job_info.jobs_remaining,
+            self._render_job_info.camera.name,
+            self._before_render_error,
+            self._after_render_error,
+            self._render_job_info.timelapse_job_info.PrintFileName,
+            self._render_job_info.timelapse_job_info.PrintFileExtension,
+            self._render_job_info.rendering.enabled,
+        )
 
 
 class RenderError(Exception):

@@ -26,7 +26,6 @@ $(function () {
         "pending": "Pending",
         "preparing": "Preparing",
         "pre_render_script": "Script - Before",
-        "pre_render_start": "Pre-Rendering",
         "adding_overlays": "Adding Overlays",
         "rename_images": "Renaming Images",
         'pre_post_roll': "Pre/Post Roll",

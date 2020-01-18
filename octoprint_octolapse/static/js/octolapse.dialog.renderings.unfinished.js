@@ -113,7 +113,7 @@ $(function () {
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     self.failed_renderings.set([]);
                     var options = {
-                        title: 'Error Loading Failed Renderings',
+                        title: 'Error Loading Unfinished Renderings',
                         text: "Status: " + textStatus + ".  Error: " + errorThrown,
                         type: 'error',
                         hide: false,
@@ -176,7 +176,7 @@ $(function () {
                 }
                 else
                 {
-                    console.error("A 'Failed Rendering' update was received, but there was no data to process.");
+                    console.error("An 'Unfinished Rendering' update was received, but there was no data to process.");
                 }
             }
         };
@@ -419,8 +419,8 @@ $(function () {
                 item,
                 function(){
                     var options = {
-                        title: 'Failed Rendering Queued',
-                        text: "The failed rendering was added to the rendering queue.",
+                        title: 'Added to Rendering Queue',
+                        text: "An unfinished rendering rendering was added to the rendering queue.",
                         type: 'success',
                         hide: true,
                         addclass: "octolapse"
@@ -429,7 +429,7 @@ $(function () {
                 },
                 function(){
                     var options = {
-                        title: 'Error Deleting Failed Rendering',
+                        title: 'Error Deleting Unfinished Rendering',
                         text: "Status: " + textStatus + ".  Error: " + errorThrown,
                         type: 'error',
                         hide: false,
