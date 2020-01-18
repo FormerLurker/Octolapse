@@ -2218,26 +2218,19 @@ class TimelapseRenderJob(threading.Thread):
 
         return filter_string
 
-    # The ffmpeg duration regexes, _process_ffmpeg_output, and _convert_time functions below
-    # are based on similar code within the OctoPrint timelapse plugin, which can be found here:
-    #
-    _ffmpeg_duration_regex = re.compile(r"Duration: (\d{2}):(\d{2}):(\d{2}\.\d{2})")
-    _ffmpeg_current_regex = re.compile(r"time=(\d{2}):(\d{2}):(\d{2}\.\d{2})")
-
+    # Regex for extracting the current frame
+    _ffmpeg_current_frame_regex = re.compile(r"frame=(?:\s+)?(\d+)")
+    # This function was inspired by code within the OctoPrint timelapse plugin, which can be found here:
+    # https://github.com/foosel/OctoPrint/blob/464d9c0757632ecfcbc2c3c0d0ca3f180714fdff/src/octoprint/timelapse.py#L916-L934
+    # However, we use a different method based on the number of frames, which is simpler and reports progress more often.
     def _process_ffmpeg_output(self, line):
         """Parse ffmpeg output and update local variables indicating the current rendering progress."""
-        current_time = TimelapseRenderJob._ffmpeg_current_regex.search(line)
-
-        def convert_time(hours, minutes, seconds):
-            return (int(hours) * 60.0 + int(minutes)) * 60.0 + float(seconds)
-
-        if current_time is not None and self._render_parsed_duration != 0:
-            current_s = convert_time(*current_time.groups())
-            self.on_render_progress('rendering', current_s, self._render_parsed_duration)
-        else:
-            duration = TimelapseRenderJob._ffmpeg_duration_regex.search(line)
-            if duration is not None:
-                self._render_parsed_duration = convert_time(*duration.groups())
+        # frame based duration - this is a bit simpler than the time based duration since we already know how many
+        # frames we have
+        current_frame = TimelapseRenderJob._ffmpeg_current_frame_regex.search(line)
+        # see if we've parsed the current frame
+        if current_frame is not None:
+            self.on_render_progress('rendering', int(current_frame.groups()[0]), self._image_count)
 
     ###################
     ## Callback Helpers
