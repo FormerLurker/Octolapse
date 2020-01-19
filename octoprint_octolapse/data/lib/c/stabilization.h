@@ -116,14 +116,18 @@ protected:
 	 * \param x The current x stabilization point, will be replaced with the next x point.
 	 * \param y The current y stabilization point, will be replaced with the next y point
 	 */
+	void delete_gcode_parser();
+	void delete_gcode_position();
 	void get_next_xy_coordinates(double &x, double &y) const;
 	virtual void process_pos(position* p_current_pos, position* p_previous_pos, bool found_command);
+	virtual void on_processing_start();
 	virtual void on_processing_complete();
 	virtual std::vector<stabilization_processing_issue> get_internal_processing_issues();
 	virtual std::vector<stabilization_quality_issue> get_quality_issues();
 	virtual std::vector<stabilization_processing_issue> get_processing_issues();
 	std::vector<snapshot_plan> p_snapshot_plans_;
 	bool is_running_;
+	gcode_position_args gcode_position_args_;
 	stabilization_args stabilization_args_;
 	progressCallback native_progress_callback_;
 	pythonProgressCallback progress_callback_;

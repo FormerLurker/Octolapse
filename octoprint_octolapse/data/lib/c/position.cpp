@@ -111,7 +111,8 @@ position::position()
 	last_extrusion_height_null = true;
 	layer = 0;
 	height = 0;
-	current_height_increment = 0;
+	height_increment = 0;
+	height_increment_change_count = 0;
 	is_printer_primed = false;
 	has_definite_position = false;
 	z_relative = 0;
@@ -120,6 +121,7 @@ position::position()
 	is_zhop = false;
 	is_layer_change = false;
 	is_height_change = false;
+	is_height_increment_change = false;
 	is_xy_travel = false;
 	is_xyz_travel = false;
 	has_xy_position_changed = false;
@@ -166,7 +168,8 @@ position::position(int extruder_count)
 	last_extrusion_height_null = true;
 	layer = 0;
 	height = 0;
-	current_height_increment = 0;
+	height_increment = 0;
+	height_increment_change_count = 0;
 	is_printer_primed = false;
 	has_definite_position = false;
 	z_relative = 0;
@@ -175,6 +178,7 @@ position::position(int extruder_count)
 	is_zhop = false;
 	is_layer_change = false;
 	is_height_change = false;
+	is_height_increment_change = false;
 	is_xy_travel = false;
 	is_xyz_travel = false;
 	has_xy_position_changed = false;
@@ -222,7 +226,8 @@ position::position(const position &pos)
 	last_extrusion_height_null = pos.last_extrusion_height_null;
 	layer = pos.layer;
 	height = pos.height;
-	current_height_increment = pos.current_height_increment;
+	height_increment = pos.height_increment;
+	height_increment_change_count = pos.height_increment_change_count;
 	is_printer_primed = pos.is_printer_primed;
 	has_definite_position = pos.has_definite_position;
 	z_relative = pos.z_relative;
@@ -231,6 +236,7 @@ position::position(const position &pos)
 	is_zhop = pos.is_zhop;
 	is_layer_change = pos.is_layer_change;
 	is_height_change = pos.is_height_change;
+	is_height_increment_change = pos.is_height_increment_change;
 	is_xy_travel = pos.is_xy_travel;
 	is_xyz_travel = pos.is_xyz_travel;
 	has_xy_position_changed = pos.has_xy_position_changed;
@@ -286,7 +292,8 @@ position& position::operator=(const position& pos) {
 	last_extrusion_height_null = pos.last_extrusion_height_null;
 	layer = pos.layer;
 	height = pos.height;
-	current_height_increment = pos.current_height_increment;
+	height_increment = pos.height_increment;
+	height_increment_change_count = pos.height_increment_change_count;
 	is_printer_primed = pos.is_printer_primed;
 	has_definite_position = pos.has_definite_position;
 	z_relative = pos.z_relative;
@@ -295,6 +302,7 @@ position& position::operator=(const position& pos) {
 	is_zhop = pos.is_zhop;
 	is_layer_change = pos.is_layer_change;
 	is_height_change = pos.is_height_change;
+	is_height_increment_change = pos.is_height_increment_change;
 	is_xy_travel = pos.is_xy_travel;
 	is_xyz_travel = pos.is_xyz_travel;
 	has_xy_position_changed = pos.has_xy_position_changed;
@@ -375,6 +383,7 @@ void position::reset_state()
 {
 	is_layer_change = false;
 	is_height_change = false;
+	is_height_increment_change = false;
 	is_xy_travel = false;
 	is_xyz_travel = false;
 	has_position_changed = false;
@@ -412,7 +421,7 @@ PyObject* position::to_py_tuple()
 	//std::cout << "Building position py_tuple.\r\n";
 	PyObject* pyPosition = Py_BuildValue(
 		// ReSharper disable once StringLiteralTypo
-		"ddddddddddddddddddllllllllllllllllllllllllllllllllllllllOO",
+		"ddddddddddddddddddlllllllllllllllllllllllllllllllllllllllllOO",
 		// Floats
 		x, // 0
 		y, // 1
@@ -434,50 +443,52 @@ PyObject* position::to_py_tuple()
 		0.0, // 17 - Firmware Unretraction ZLift
 		// Int
 		layer, // 18
-		current_tool, // 19
-		num_extruders, // 20
+		height_increment, // 19 !!!!!!!!!
+		height_increment_change_count, // 20 !!!!!!
+		current_tool, // 21
+		num_extruders, // 22
 		// Bool (represented as an integer)
-		x_homed, // 21
-		y_homed, // 22
-		z_homed, // 23
-		is_relative, // 24
-		is_extruder_relative, // 25
-		is_metric, // 26
-		is_printer_primed, // 27
-		has_definite_position, // 28
-		is_layer_change, // 29
-		is_height_change, // 30
-		is_xy_travel, // 31
-		is_xyz_travel, // 32
-		is_zhop, // 33
-		has_xy_position_changed, // 34
-		has_position_changed, // 35
-		has_received_home_command, // 36
-		is_in_position, // 37
-		in_path_position, // 38
-		is_in_bounds, // 39
+		x_homed, // 23
+		y_homed, // 24
+		z_homed, // 25
+		is_relative, // 26
+		is_extruder_relative, // 27
+		is_metric, // 28
+		is_printer_primed, // 29
+		has_definite_position, // 30
+		is_layer_change, // 31
+		is_height_change, // 32
+		is_height_increment_change, // 33
+		is_xy_travel, // 34
+		is_xyz_travel, // 35
+		is_zhop, // 36
+		has_xy_position_changed, // 37
+		has_position_changed, // 38
+		has_received_home_command, // 39
+		is_in_position, // 40
+		in_path_position, // 41
+		is_in_bounds, // 42
 		// Null bool, represented as integers
-		x_null, // 40
-		y_null, // 41
-		z_null, // 42
-		f_null, // 43
-		is_relative_null, // 44
-		is_extruder_relative_null, // 45
-		last_extrusion_height_null, // 46
-		is_metric_null, // 47
-		true, // 48 - Firmware retraction length null
-		true, // 49 - Firmware unretraction additional length null
-		true, // 50 - Firmware retraction feedrate null
-		true, // 51 - Firmware unretraction feedrate null
-		true, // 52 - Firmware ZLift Null
+		x_null, // 43
+		y_null, // 44
+		z_null, // 45
+		f_null, // 46
+		is_relative_null, // 47
+		is_extruder_relative_null, // 48
+		last_extrusion_height_null, // 49
+		is_metric_null, // 50
+		true, // 51 - Firmware retraction length null
+		true, // 52 - Firmware unretraction additional length null
+		true, // 53 - Firmware retraction feedrate null
+		true, // 54 - Firmware unretraction feedrate null
+		true, // 55 - Firmware ZLift Null
 		// file statistics
-		file_line_number, // 53
-		gcode_number, // 54
-		file_position, // 55
-		
+		file_line_number, // 56
+		gcode_number, // 57
+		file_position, // 58
 		// Objects
-		py_command, // 56
-		py_extruders // 57
+		py_command, // 59
+		py_extruders // 60
 
 	);
 	if (pyPosition == NULL)
@@ -512,7 +523,7 @@ PyObject* position::to_py_dict()
 		return NULL;
 	}
 	PyObject * p_position = Py_BuildValue(
-		"{s:O,s:O,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
+		"{s:O,s:O,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:d,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i,s:i}",
 		"parsed_command",
 		py_command,
 		"extruders",
@@ -542,8 +553,6 @@ PyObject* position::to_py_dict()
 		last_extrusion_height,
 		"height",
 		height,
-		"current_height_increment_",
-		current_height_increment,
 		"firmware_retraction_length",
 		0.0,
 		"firmware_unretraction_additional_length",
@@ -559,6 +568,10 @@ PyObject* position::to_py_dict()
 		// Ints
 		"layer", 
 		layer,
+		"height_increment",
+		height_increment,
+		"height_increment_change_count",
+		height_increment_change_count,
 		"current_tool",
 		current_tool,
 		"num_extruders",
@@ -612,6 +625,8 @@ PyObject* position::to_py_dict()
 		is_layer_change,
 		"is_height_change",
 		is_height_change,
+		"is_height_increment_change",
+		is_height_increment_change,
 		"is_xy_travel",
 		is_xy_travel,
 		"is_xyz_travel",

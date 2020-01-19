@@ -17,6 +17,6 @@ Timelapses will be rendered in the order they are sent, and go through following
 7.  **Rendering** - Thanks to a recent OctoPrint update, I was able to add a rendering progress indicator based on the code from a pull request!  This is usually the most time consuming phase, and can take quite a bit of time and CPU power to complete.  If Octoprint is running on multi-threaded hardware, you can reduce the rendering time by increasing the number of rendering threads within your rendering profile.  Check the **Rendering Thread Count** help within your rendering profile for details.
 8.  **Archiving** - Depending on your settings, an archive (.zip) file may be created.  This can take a while to complete, especially if there are a lot of high resolution images in your timelapse.  Note that the snapshots are the original images, unmodified by the rendering process, and will contain metadata and settings that can be used to re-create the rendering.
 9.  **Post Render Script** - If your camera has any **After Render Scripts** configured, Octolapse will run these.  Just like the **Script - Before** phase, there is no progress bar shown.
-10.  **Cleanup** - At this point all snapshots in the temporary directory are deleted along with the original timelapse images.  Progress is displayed during this phase, but it is generally quite fast.
+10.  **Cleanup** - At this point all snapshots in the temporary directory are deleted along with the original timelapse images.  Progress is displayed during this phase.
 
 

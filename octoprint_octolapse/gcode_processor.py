@@ -174,6 +174,8 @@ class Pos(object):
         "firmware_unretraction_feedrate",
         "firmware_z_lift",
         "layer",
+        "height_increment",
+        "height_increment_change_count",
         "current_tool",
         "num_extruders",
         "x_homed",
@@ -186,6 +188,7 @@ class Pos(object):
         "has_definite_position",
         "is_layer_change",
         "is_height_change",
+        "is_height_increment_change",
         "is_xy_travel",
         "is_xyz_travel",
         "is_zhop",
@@ -225,6 +228,8 @@ class Pos(object):
         self.is_metric = True
         self.last_extrusion_height = None
         self.layer = 0
+        self.height_increment = 0
+        self.height_increment_change_count = 0
         self.height = 0
         self.is_printer_primed = False
         self.firmware_retraction_length = None
@@ -240,6 +245,7 @@ class Pos(object):
         # State
         self.is_layer_change = False
         self.is_height_change = False
+        self.is_height_increment_change = False
         self.is_xy_travel = False
         self.is_xyz_travel = False
         self.is_zhop = False
@@ -256,10 +262,10 @@ class Pos(object):
 
     @staticmethod
     def copy_from_cpp_pos(cpp_pos, target):
-        target.x = None if cpp_pos[40] > 0 else cpp_pos[0]
-        target.y = None if cpp_pos[41] > 0 else cpp_pos[1]
-        target.z = None if cpp_pos[42] > 0 else cpp_pos[2]
-        target.f = None if cpp_pos[43] > 0 else cpp_pos[3]
+        target.x = None if cpp_pos[43] > 0 else cpp_pos[0]
+        target.y = None if cpp_pos[44] > 0 else cpp_pos[1]
+        target.z = None if cpp_pos[45] > 0 else cpp_pos[2]
+        target.f = None if cpp_pos[46] > 0 else cpp_pos[3]
         target.x_offset = cpp_pos[4]
         target.y_offset = cpp_pos[5]
         target.z_offset = cpp_pos[6]
@@ -267,46 +273,49 @@ class Pos(object):
         target.y_firmware_offset = cpp_pos[8]
         target.z_firmware_offset = cpp_pos[9]
         target.z_relative = cpp_pos[10]
-        target.last_extrusion_height = None if cpp_pos[46] > 0 else cpp_pos[11]
+        target.last_extrusion_height = None if cpp_pos[49] > 0 else cpp_pos[11]
         target.height = cpp_pos[12]
-        target.firmware_retraction_length = None if cpp_pos[48] > 0 else cpp_pos[13]
-        target.firmware_unretraction_additional_length = None if cpp_pos[49] > 0 else cpp_pos[14]
-        target.firmware_retraction_feedrate = None if cpp_pos[50] > 0 else cpp_pos[15]
-        target.firmware_unretraction_feedrate = None if cpp_pos[51] > 0 else cpp_pos[16]
-        target.firmware_z_lift = None if cpp_pos[52] > 0 else cpp_pos[17]
+        target.firmware_retraction_length = None if cpp_pos[51] > 0 else cpp_pos[13]
+        target.firmware_unretraction_additional_length = None if cpp_pos[52] > 0 else cpp_pos[14]
+        target.firmware_retraction_feedrate = None if cpp_pos[53] > 0 else cpp_pos[15]
+        target.firmware_unretraction_feedrate = None if cpp_pos[54] > 0 else cpp_pos[16]
+        target.firmware_z_lift = None if cpp_pos[55] > 0 else cpp_pos[17]
         target.layer = cpp_pos[18]
-        target.current_tool = cpp_pos[19]
-        target.num_extruders = cpp_pos[20]
-        target.x_homed = cpp_pos[21] > 0
-        target.y_homed = cpp_pos[22] > 0
-        target.z_homed = cpp_pos[23] > 0
-        target.is_relative = None if cpp_pos[44] > 0 else cpp_pos[24] > 0
-        target.is_extruder_relative = None if cpp_pos[45] > 0 else cpp_pos[25] > 0
-        target.is_metric = None if cpp_pos[47] > 0 else cpp_pos[26] > 0
-        target.is_printer_primed = cpp_pos[27] > 0
-        target.has_definite_position = cpp_pos[28] > 0
+        target.height_increment = cpp_pos[19]
+        target.height_increment_change_count = cpp_pos[20]
+        target.current_tool = cpp_pos[21]
+        target.num_extruders = cpp_pos[22]
+        target.x_homed = cpp_pos[23] > 0
+        target.y_homed = cpp_pos[24] > 0
+        target.z_homed = cpp_pos[25] > 0
+        target.is_relative = None if cpp_pos[47] > 0 else cpp_pos[26] > 0
+        target.is_extruder_relative = None if cpp_pos[48] > 0 else cpp_pos[27] > 0
+        target.is_metric = None if cpp_pos[50] > 0 else cpp_pos[28] > 0
+        target.is_printer_primed = cpp_pos[29] > 0
+        target.has_definite_position = cpp_pos[30] > 0
 
-        target.is_layer_change = cpp_pos[29] > 0
-        target.is_height_change = cpp_pos[30] > 0
-        target.is_xy_travel = cpp_pos[31] > 0
-        target.is_xyz_travel = cpp_pos[32] > 0
-        target.is_zhop = cpp_pos[33] > 0
-        target.has_xy_position_changed = cpp_pos[34] > 0
-        target.has_position_changed = cpp_pos[35] > 0
-        target.has_received_home_command = cpp_pos[36] > 0
+        target.is_layer_change = cpp_pos[31] > 0
+        target.is_height_change = cpp_pos[32] > 0
+        target.is_height_increment_change = cpp_pos[33]
+        target.is_xy_travel = cpp_pos[34] > 0
+        target.is_xyz_travel = cpp_pos[35] > 0
+        target.is_zhop = cpp_pos[36] > 0
+        target.has_xy_position_changed = cpp_pos[37] > 0
+        target.has_position_changed = cpp_pos[38] > 0
+        target.has_received_home_command = cpp_pos[39] > 0
         # Todo:  figure out how to deal with these things which must be currently ignored
-        target.is_in_position = cpp_pos[37] > 0
-        target.in_path_position = cpp_pos[38] > 0
-        target.is_in_bounds = cpp_pos[39] > 0
-        target.file_line_number = cpp_pos[53]
-        target.gcode_number = cpp_pos[54]
-        target.file_position = cpp_pos[55]
-        parsed_command = cpp_pos[56]
+        target.is_in_position = cpp_pos[40] > 0
+        target.in_path_position = cpp_pos[41] > 0
+        target.is_in_bounds = cpp_pos[42] > 0
+        target.file_line_number = cpp_pos[56]
+        target.gcode_number = cpp_pos[57]
+        target.file_position = cpp_pos[58]
+        parsed_command = cpp_pos[59]
         if parsed_command is not None:
             target.parsed_command = ParsedCommand(parsed_command[0], parsed_command[1], parsed_command[2], parsed_command[3])
         else:
             target.parsed_command = None
-        extruders = cpp_pos[57]
+        extruders = cpp_pos[60]
         if extruders is not None:
             target.extruders = []
             for extruder in extruders:
@@ -321,6 +330,52 @@ class Pos(object):
         pos = Pos()
         Pos.copy_from_cpp_pos(cpp_pos, pos)
         return pos
+
+    @staticmethod
+    def copy(source, target):
+        """does not copy all items, only what is necessary for the Position.Update command"""
+        target.f = source.f
+        target.x = source.x
+        target.x_offset = source.x_offset
+        target.x_homed = source.x_homed
+        target.y = source.y
+        target.y_offset = source.y_offset
+        target.y_homed = source.y_homed
+        target.z = source.z
+        target.z_offset = source.z_offset
+        target.z_homed = source.z_homed
+        target.is_relative = source.is_relative
+        target.is_extruder_relative = source.is_extruder_relative
+        target.is_metric = source.is_metric
+        target.last_extrusion_height = source.last_extrusion_height
+        target.layer = source.layer
+        target.height_increment = source.height_increment
+        target.height_increment_change_count = source.height_increment_change_count
+        target.height = source.height
+        target.is_printer_primed = source.is_printer_primed
+        target.firmware_retraction_length = source.firmware_retraction_length
+        target.firmware_unretraction_additional_length = source.firmware_unretraction_additional_length
+        target.firmware_retraction_feedrate = source.firmware_retraction_feedrate
+        target.firmware_unretraction_feedrate = source.firmware_unretraction_feedrate
+        target.firmware_z_lift = source.firmware_z_lift
+        target.has_definite_position = source.has_definite_position
+        target.in_path_position = source.in_path_position
+        target.is_zhop = source.is_zhop
+        target.is_in_position = source.is_in_position
+
+        # copy extruders
+        target.extruders = []
+        for extruder in source.extruders:
+            target.extruders.append(Extruder(copy_from=extruder))
+
+        # Resets state changes
+        target.is_layer_change = False
+        target.is_height_change = False
+        target.is_height_increment_change = False
+        target.is_xy_travel = False
+        target.has_position_changed = False
+        target.has_received_home_command = False
+        target.is_in_bounds = True
 
     def get_current_extruder(self):
         tool_index = self.current_tool
@@ -367,6 +422,7 @@ class Pos(object):
             "has_definite_position": self.has_definite_position,
             "is_layer_change": self.is_layer_change,
             "is_height_change": self.is_height_change,
+            "is_height_increment_change": self.is_height_change,
             "is_zhop": self.is_zhop,
             "is_relative": self.is_relative,
             "is_extruder_relative": self.is_extruder_relative,
@@ -426,6 +482,7 @@ class Pos(object):
             "is_metric": self.is_metric,
             "last_extrusion_height": self.last_extrusion_height,
             "is_layer_change": self.is_layer_change,
+            "is_height_increment_change": self.is_height_increment_change,
             "is_zhop": self.is_zhop,
             "is_in_position": self.is_in_position,
             "in_path_position": self.in_path_position,
@@ -433,6 +490,8 @@ class Pos(object):
             "has_xy_position_changed": self.has_xy_position_changed,
             "has_position_changed": self.has_position_changed,
             "layer": self.layer,
+            "height_increment": self.height_increment,
+            "height_increment_change_count": self.height_increment_change_count,
             "height": self.height,
             "has_received_home_command": self.has_received_home_command,
             "file_line_number": self.file_line_number,

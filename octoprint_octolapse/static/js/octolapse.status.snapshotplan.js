@@ -54,6 +54,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.autoclose = ko.observable(false);
             self.autoclose_seconds = ko.observable(0);
             self.quality_issues = ko.observable("");
+            self.missed_snapshots = ko.observable(0);
 
             setInterval(function() {
                 var newTimer = self.autoclose_seconds() -1;
@@ -77,6 +78,11 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     if(typeof state.quality_issues !== 'undefined')
                     {
                         self.quality_issues(state.quality_issues);
+                    }
+
+                    if(typeof state.missed_snapshots !== 'undefined')
+                    {
+                        self.missed_snapshots(state.missed_snapshots);
                     }
 
                     if (typeof state.autoclose !== 'undefined') {

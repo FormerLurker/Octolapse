@@ -38,6 +38,7 @@ gcode_position_args::gcode_position_args(const gcode_position_args &pos_args)
 
 	priming_height = pos_args.priming_height;
 	minimum_layer_height = pos_args.minimum_layer_height;
+	height_increment = pos_args.height_increment;
 	g90_influences_extruder = pos_args.g90_influences_extruder;
 	xyz_axis_default_mode = pos_args.xyz_axis_default_mode;
 	e_axis_default_mode = pos_args.e_axis_default_mode;
@@ -97,6 +98,7 @@ gcode_position_args& gcode_position_args::operator=(const gcode_position_args& p
 	
 	priming_height = pos_args.priming_height;
 	minimum_layer_height = pos_args.minimum_layer_height;
+	height_increment = pos_args.height_increment;
 	g90_influences_extruder = pos_args.g90_influences_extruder;
 	xyz_axis_default_mode = pos_args.xyz_axis_default_mode;
 	e_axis_default_mode = pos_args.e_axis_default_mode;
@@ -181,6 +183,7 @@ void gcode_position_args::delete_z_lift_heights()
 		z_lift_heights = NULL;
 	}
 }
+
 void gcode_position_args::delete_x_firmware_offsets()
 {
 	if (x_firmware_offsets != NULL)
@@ -189,6 +192,7 @@ void gcode_position_args::delete_x_firmware_offsets()
 		x_firmware_offsets = NULL;
 	}
 }
+
 void gcode_position_args::delete_y_firmware_offsets()
 {
 	if (y_firmware_offsets != NULL)
@@ -215,6 +219,7 @@ gcode_position::gcode_position()
 	zero_based_extruder_ = true;
 	priming_height_ = 0;
 	minimum_layer_height_ = 0;
+	height_increment_ = 0;
 	g90_influences_extruder_ = false;
 	e_axis_default_mode_ = "absolute";
 	xyz_axis_default_mode_ = "absolute";
@@ -295,6 +300,7 @@ gcode_position::gcode_position(gcode_position_args args)
 
 	priming_height_ = args.priming_height;
 	minimum_layer_height_ = args.minimum_layer_height;
+	height_increment_ = args.height_increment;
 	g90_influences_extruder_ = args.g90_influences_extruder;
 	e_axis_default_mode_ = args.e_axis_default_mode;
 	xyz_axis_default_mode_ = args.xyz_axis_default_mode;
@@ -620,6 +626,17 @@ void gcode_position::update(parsed_command& command, const long file_line_number
 							p_current_pos->height = p_current_pos->z;
 							p_current_pos->is_layer_change = true;
 							p_current_pos->layer++;
+							if (height_increment_ != 0)
+							{
+								const double increment_double = p_current_pos->height / height_increment_;
+								unsigned const int increment = utilities::round_up_to_int(increment_double);
+								if (increment > p_current_pos->height_increment && increment > 1)
+								{
+									p_current_pos->height_increment = increment;
+									p_current_pos->is_height_increment_change = true;
+									p_current_pos->height_increment_change_count++;
+								}
+							}
 						}
 					}
 				}

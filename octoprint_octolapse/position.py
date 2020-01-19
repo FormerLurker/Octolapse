@@ -109,52 +109,6 @@ class Position(object):
         self.undo_pos = None
         return previous_position
 
-    @staticmethod
-    def copy_pos(source, target):
-        """does not copy all items, only what is necessary for the Position.Update command"""
-        assert(isinstance(source, Pos))
-        assert (isinstance(target, Pos))
-
-        target.f = source.f
-        target.x = source.x
-        target.x_offset = source.x_offset
-        target.x_homed = source.x_homed
-        target.y = source.y
-        target.y_offset = source.y_offset
-        target.y_homed = source.y_homed
-        target.z = source.z
-        target.z_offset = source.z_offset
-        target.z_homed = source.z_homed
-        target.is_relative = source.is_relative
-        target.is_extruder_relative = source.is_extruder_relative
-        target.is_metric = source.is_metric
-        target.last_extrusion_height = source.last_extrusion_height
-        target.layer = source.layer
-        target.height = source.height
-        target.is_printer_primed = source.is_printer_primed
-        target.firmware_retraction_length = source.firmware_retraction_length
-        target.firmware_unretraction_additional_length = source.firmware_unretraction_additional_length
-        target.firmware_retraction_feedrate = source.firmware_retraction_feedrate
-        target.firmware_unretraction_feedrate = source.firmware_unretraction_feedrate
-        target.firmware_z_lift = source.firmware_z_lift
-        target.has_definite_position = source.has_definite_position
-        target.in_path_position = source.in_path_position
-        target.is_zhop = source.is_zhop
-        target.is_in_position = source.is_in_position
-
-        # copy extruders
-        target.extruders = []
-        for extruder in source.extruders:
-            target.extruders.append(Extruder(copy_from=extruder))
-
-        # Resets state changes
-        target.is_layer_change = False
-        target.is_height_change = False
-        target.is_xy_travel = False
-        target.has_position_changed = False
-        target.has_received_home_command = False
-        target.is_in_bounds = True
-
     def update(self, gcode, file_line_number=None):
         # Move the current position to the previous and the previous to the undo position
         # then copy previous to current
@@ -165,7 +119,7 @@ class Position(object):
         self.previous_pos = self.current_pos
         self.current_pos = old_undo_pos
 
-        Position.copy_pos(self.previous_pos, self.current_pos)
+        Pos.copy(self.previous_pos, self.current_pos)
 
         # process the gcode and update our current position
         GcodeProcessor.update(gcode, self.current_pos)

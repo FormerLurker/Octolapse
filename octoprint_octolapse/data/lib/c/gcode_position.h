@@ -46,6 +46,7 @@ struct gcode_position_args {
 		y_firmware_offsets = NULL;
 		priming_height = 0;
 		minimum_layer_height = 0;
+		height_increment = 0;
 		g90_influences_extruder = false;
 		xyz_axis_default_mode = "absolute";
 		e_axis_default_mode = "absolute";
@@ -91,6 +92,7 @@ struct gcode_position_args {
 	double* y_firmware_offsets;
 	double priming_height;
 	double minimum_layer_height;
+	double height_increment;
 	bool g90_influences_extruder;
 	bool is_bound_;
 	double snapshot_x_min;
@@ -154,6 +156,7 @@ private:
 	double * retraction_lengths_;
 	double * z_lift_heights_;
 	double minimum_layer_height_;
+	double height_increment_;
 	bool g90_influences_extruder_;
 	std::string e_axis_default_mode_;
 	std::string xyz_axis_default_mode_;

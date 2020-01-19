@@ -68,7 +68,8 @@ struct position
 	bool last_extrusion_height_null;
 	long layer;
 	double height;
-	int current_height_increment;
+	int height_increment;
+	int height_increment_change_count;
 	bool is_printer_primed;
 	bool has_definite_position;
 	double z_relative;
@@ -78,6 +79,7 @@ struct position
 	bool is_extruder_relative_null;
 	bool is_layer_change;
 	bool is_height_change;
+	bool is_height_increment_change;
 	bool is_xy_travel;
 	bool is_xyz_travel;
 	bool is_zhop;

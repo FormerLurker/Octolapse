@@ -45,9 +45,10 @@ stabilization::stabilization(gcode_position_args position_args, stabilization_ar
 	py_get_snapshot_position_callback = py_get_coordinates_callback;
 	native_progress_callback_ = NULL;
 	stabilization_args_ = stab_args;
+	gcode_position_args_ = position_args;
 	is_running_ = true;
-	gcode_parser_ = new gcode_parser();
-	gcode_position_ = new gcode_position(position_args);
+	gcode_parser_ = NULL;
+	gcode_position_ = NULL;
 	file_size_ = 0;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
@@ -56,7 +57,7 @@ stabilization::stabilization(gcode_position_args position_args, stabilization_ar
 	stabilization_x_ = 0;
 	stabilization_y_ = 0;
 	snapshots_enabled_ = true;
-	
+
 }
 
 stabilization::stabilization()
@@ -66,6 +67,7 @@ stabilization::stabilization()
 	native_progress_callback_ = NULL;
 	progress_callback_ = NULL;
 	stabilization_args_ = stabilization_args();
+	gcode_position_args_ = gcode_position_args();
 	is_running_ = true;
 	gcode_parser_ = NULL;
 	gcode_position_ = NULL;
@@ -90,9 +92,10 @@ stabilization::stabilization(gcode_position_args position_args, stabilization_ar
 	native_progress_callback_ = progress;
 	progress_callback_ = NULL;
 	stabilization_args_ = args;
+	gcode_position_args_ = position_args;
 	is_running_ = true;
-	gcode_parser_ = new gcode_parser();
-	gcode_position_ = new gcode_position(position_args);
+	gcode_parser_ = NULL;
+	gcode_position_ = NULL;
 	file_size_ = 0;
 	lines_processed_ = 0;
 	gcodes_processed_ = 0;
@@ -115,11 +118,9 @@ stabilization::stabilization(const stabilization &source)
 
 stabilization::~stabilization()
 {
-	if (gcode_parser_ != NULL)
-	{
-		delete gcode_parser_;
-		gcode_parser_ = NULL;
-	}
+	delete_gcode_parser();
+	delete_gcode_position();
+		
 	if (gcode_position_ != NULL)
 	{
 		delete gcode_position_;
@@ -129,6 +130,24 @@ stabilization::~stabilization()
 		Py_XDECREF(py_on_progress_received);
 	if (py_get_snapshot_position_callback != NULL)
 		Py_XDECREF(py_get_snapshot_position_callback);
+}
+
+void stabilization::delete_gcode_parser()
+{
+	if (gcode_parser_ != NULL)
+	{
+		delete gcode_parser_;
+		gcode_parser_ = NULL;
+	}
+}
+
+void stabilization::delete_gcode_position()
+{
+	if (gcode_position_ != NULL)
+	{
+		delete gcode_position_;
+		gcode_position_ = NULL;
+	}
 }
 
 long stabilization::get_file_size(const std::string& file_path)
@@ -154,6 +173,20 @@ double stabilization::get_time_elapsed(double start_clock, double end_clock)
 
 stabilization_results stabilization::process_file()
 {
+	if (gcode_parser_ != NULL)
+	{
+		delete gcode_parser_;
+		gcode_parser_ = NULL;
+	}
+	if (gcode_position_ != NULL)
+	{
+		delete gcode_position_;
+		gcode_position_ = NULL;
+	}
+	on_processing_start();
+	// Construct the gcode_parser and gcode_position objects.
+	gcode_parser_ = new gcode_parser();
+	gcode_position_ = new gcode_position(gcode_position_args_);
 	// Create a stringstream we can use for messaging.
 	std::stringstream stream;
 	// Make sure snapshots are enabled at the start of the process.
@@ -284,6 +317,8 @@ stabilization_results stabilization::process_file()
 	results.quality_issues = get_quality_issues();
 	results.snapshot_plans = p_snapshot_plans_;
 	results.processing_issues = get_processing_issues();
+	// Calculate number of missed layers
+	results.missed_layer_count = missed_snapshots_;
 	stream.clear();
 	stream.str("");
 	stream << "Completed file processing\r\n";
@@ -349,6 +384,11 @@ void stabilization::notify_progress(const double percent_progress, const double 
 void stabilization::process_pos(position* current_pos, position* previous_pos, bool found_command)
 {
 	throw std::exception();
+}
+
+void stabilization::on_processing_start()
+{
+	// empty by default
 }
 
 void stabilization::on_processing_complete()

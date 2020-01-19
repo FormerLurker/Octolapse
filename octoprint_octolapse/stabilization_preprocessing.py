@@ -175,15 +175,12 @@ class StabilizationPreprocessingThread(Thread):
         # and vase mode is enabled, use the layer height setting if it exists
         # I'm keeping this out of the c++ routine so it can be more easily changed based on slicer
         # changes.  I might add this to the settings class.
-        if self.trigger_profile.layer_trigger_height == 0:
-            if (
-                self.printer_profile.gcode_generation_settings.vase_mode and
-                self.printer_profile.gcode_generation_settings.layer_height
-            ):
-                height_increment = self.printer_profile.gcode_generation_settings.layer_height
-            else:
-                # use the default height increment
-                height_increment = self.printer_profile.minimum_layer_height
+        if (
+            self.trigger_profile.layer_trigger_height == 0 and
+            self.printer_profile.gcode_generation_settings.vase_mode and
+            self.printer_profile.gcode_generation_settings.layer_height
+        ):
+            height_increment = self.printer_profile.gcode_generation_settings.layer_height
         else:
             height_increment = self.trigger_profile.layer_trigger_height
 

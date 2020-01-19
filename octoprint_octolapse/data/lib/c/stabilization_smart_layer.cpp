@@ -10,8 +10,6 @@ stabilization_smart_layer::stabilization_smart_layer()
 	smart_layer_args_ = smart_layer_args();
 	// initialize layer/height tracking variables
 	is_layer_change_wait_ = false;
-	current_layer_ = 0;
-	current_height_increment_ = 0;
 	has_one_extrusion_speed_ = true;
 	last_tested_gcode_number_ = -1;
 	stabilization_x_ = 0;
@@ -21,7 +19,7 @@ stabilization_smart_layer::stabilization_smart_layer()
 	fastest_extrusion_speed_ = -1;
 	slowest_extrusion_speed_ = -1;
 	last_snapshot_layer_ = 0;
-	last_snapshot_height_increment_ = 0;
+	last_snapshot_height_increment_change_count_ = 0;
 	trigger_position_args default_args;
 	closest_positions_.initialize(default_args);
 }
@@ -31,10 +29,8 @@ stabilization_smart_layer::stabilization_smart_layer(
 ) :stabilization(position_args, stab_args, progress)
 {
 	is_layer_change_wait_ = false;
-	current_layer_ = 0;
-	current_height_increment_ = 0;
 	last_snapshot_layer_ = 0;
-	last_snapshot_height_increment_ = 0;
+	last_snapshot_height_increment_change_count_ = 0;
 	has_one_extrusion_speed_ = true;
 	last_tested_gcode_number_ = -1;
 	fastest_extrusion_speed_ = -1;
@@ -63,10 +59,8 @@ stabilization_smart_layer::stabilization_smart_layer(
 ) : stabilization(position_args, stab_args, get_coordinates, py_get_coordinates_callback, progress, py_progress_callback)
 {
 	is_layer_change_wait_ = false;
-	current_layer_ = 0;
-	current_height_increment_ = 0;
 	last_snapshot_layer_ = 0;
-	last_snapshot_height_increment_ = 0;
+	last_snapshot_height_increment_change_count_ = 0;
 	has_one_extrusion_speed_ = true;
 	last_tested_gcode_number_ = -1;
 	fastest_extrusion_speed_ = -1;
@@ -100,6 +94,11 @@ stabilization_smart_layer::~stabilization_smart_layer()
 	
 }
 
+void stabilization_smart_layer::on_processing_start()
+{
+	gcode_position_args_.height_increment = stabilization_args_.height_increment;
+}
+
 void stabilization_smart_layer::update_stabilization_coordinates()
 {
 	const bool snap_to_print_smooth = smart_layer_args_.smart_layer_trigger_type == trigger_type_snap_to_print && smart_layer_args_.snap_to_print_smooth;
@@ -125,47 +124,50 @@ void stabilization_smart_layer::process_pos(position* p_current_pos, position* p
 	if (!found_command)
 		return;
 	//std::cout << "StabilizationSmartLayer::process_pos - Processing Position...";
-	// if we're at a layer change, add the current saved plan
-	if (p_current_pos->is_layer_change && p_current_pos->layer > 1)
-	{
-		//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Layer change detected.");
-		is_layer_change_wait_ = true;
-		// get distance from current point to the stabilization point
+	if (
+			p_current_pos->is_layer_change && 
+			p_current_pos->layer > 1 
 		
-		standard_layer_trigger_distance_ = utilities::get_cartesian_distance(
-			p_current_pos->x, p_current_pos->y,
-			stabilization_x_, stabilization_y_
-		);
+	)
+	{
+		if (
+			stabilization_args_.height_increment != 0 &&
+			!(p_current_pos->is_height_increment_change && p_current_pos->height_increment > 1)
+		) 
+		{
+			// We need to clear all of the closest positions here, since there was not
+			//height increment change.  Else our snapshot height incrementation may not be stable.
+			closest_positions_.clear();
+		}
+		else
+		{
+			// This is either a layer change or a height increment change.
+			//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Layer change detected.");
+			is_layer_change_wait_ = true;
+
+			// Determine if we've missed a snapshot layer or height increment
+			if (stabilization_args_.height_increment != 0)
+			{
+				if (p_current_pos->height_increment_change_count > 2 && p_current_pos->height_increment_change_count - 2 > last_snapshot_height_increment_change_count_)
+					missed_snapshots_++;
+			}
+			else
+			{
+				if (p_current_pos->layer - 2 > last_snapshot_layer_)
+					missed_snapshots_++;
+			}
+
+			// get distance from current point to the stabilization point
+			standard_layer_trigger_distance_ = utilities::get_cartesian_distance(
+				p_current_pos->x, p_current_pos->y,
+				stabilization_x_, stabilization_y_
+			);
+		}
 	}
 			
 	if (is_layer_change_wait_ && !closest_positions_.is_empty())
 	{
-		bool can_add_saved_plan = true;
-		if (stabilization_args_.height_increment != 0)
-		{
-			can_add_saved_plan = false;
-			const double increment_double = p_current_pos->height / stabilization_args_.height_increment;
-			unsigned const int increment = utilities::round_up_to_int(increment_double);
-			if (increment > current_height_increment_)
-			{
-				// We only update the height increment if we've detected extrusion on a layer
-				if (increment > 1.0 && !closest_positions_.is_empty())
-				{
-					current_height_increment_ = increment;
-					can_add_saved_plan = true;
-				}
-				else
-				{
-					octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::WARNING, "Octolapse missed a layer while creating a snapshot plan due to a height restriction.");
-				}
-			}
-		}
-		if (can_add_saved_plan)
-		{
-			add_plan();
-
-		}
-
+		add_plan();
 	}
 	//octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::VERBOSE, "Adding closest position.");
 	closest_positions_.try_add(p_current_pos, p_previous_pos);
@@ -231,7 +233,6 @@ void stabilization_smart_layer::add_plan()
 
 		// Add the plan
 		p_snapshot_plans_.push_back(p_plan);
-		current_layer_ = p_closest.pos.layer;
 		last_snapshot_initial_position_ = p_plan.initial_position;
 		// only get the next coordinates if we've actually added a plan.
 		update_stabilization_coordinates();
@@ -240,21 +241,10 @@ void stabilization_smart_layer::add_plan()
 		reset_saved_positions();
 		// Need to set the initial position after resetting the saved positions
 		closest_positions_.set_previous_initial_position(last_snapshot_initial_position_);
-		// Determine if we've missed a snapshot layer or height increment
-		if(stabilization_args_.height_increment != 0)
-		{
-			if (current_height_increment_ > 2 && current_height_increment_ - 1 > last_snapshot_height_increment_)
-				missed_snapshots_++;
-		}
-		else
-		{
-			if (current_layer_ - 1 > last_snapshot_layer_)
-				missed_snapshots_++;
-		}
-
+		
 		// update the last snapshot layer and increment
-		last_snapshot_layer_ = current_layer_;
-		last_snapshot_height_increment_ = current_height_increment_;
+		last_snapshot_layer_ = p_closest.pos.layer;
+		last_snapshot_height_increment_change_count_ = p_closest.pos.height_increment_change_count;
 	}
 	else
 	{

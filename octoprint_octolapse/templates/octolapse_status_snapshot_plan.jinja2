@@ -130,10 +130,15 @@
             </div>
         </div>
         <div class="panel-footer" data-bind="visible: SnapshotPlanState.is_confirmation_popup()">
+            <div data-bind="visible: SnapshotPlanState.missed_snapshots()  > 0">
+                <p>
+                    <span class="label label-important">Warning</span>&nbsp;<span data-bind="text: SnapshotPlanState.missed_snapshots"></span> snapshots were missed!<a class="octolapse_help" data-help-url="snapshot_plan_missed_snapshots.md" data-help-title="Missed Snapshots" />
+                </p>
+            </div>
             <div data-bind="visible: SnapshotPlanState.quality_issues().length > 0">
                 <div data-bind="foreach: SnapshotPlanState.quality_issues">
                     <p>
-                        <span class="label label-important">Warning</span>&nbsp;</span><span data-bind="text: description"></span><a class="octolapse_help" data-bind="attr: {'data-help-url':help_link, 'data-help-title':name}" />
+                        <span class="label label-important">Warning</span>&nbsp;<span data-bind="text: description"></span><a class="octolapse_help" data-bind="attr: {'data-help-url':help_link, 'data-help-title':name}" />
                     </p>
                 </div>
             </div>

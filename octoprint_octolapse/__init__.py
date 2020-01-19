@@ -140,6 +140,7 @@ class OctolapsePlugin(
         self.saved_snapshot_plans = None
         self.saved_parsed_command = None
         self.saved_preprocessing_quality_issues = ""
+        self.saved_missed_snapshots = 0
         self.snapshot_plan_preview_autoclose = False
         self.snapshot_plan_preview_close_time = 0
         self.autoclose_snapshot_preview_thread_lock = threading.Lock()
@@ -2743,7 +2744,7 @@ class OctolapsePlugin(
             else:
                 self.pre_processing_success(
                     timelapse_settings, parsed_command, snapshot_plans, seconds_elapsed,
-                    gcodes_processed, lines_processed, quality_issues
+                    gcodes_processed, lines_processed, quality_issues, missed_snapshots
                 )
         # complete, exit loop
 
@@ -2756,6 +2757,7 @@ class OctolapsePlugin(
             self.snapshot_plan_preview_autoclose = False
             self.snapshot_plan_preview_close_time = 0
             self.saved_preprocessing_quality_issues = ""
+            self.saved_missed_snapshots = 0
 
     def pre_processing_cancelled(self):
         # signal complete to the UI (will close the progress popup
@@ -2780,15 +2782,15 @@ class OctolapsePlugin(
 
     def pre_processing_success(
         self, timelapse_settings, parsed_command, snapshot_plans, total_seconds,
-        gcodes_processed, lines_processed, quality_issues
+        gcodes_processed, lines_processed, quality_issues, missed_snapshots
     ):
         # inform the timelapse object that preprocessing is complete and successful by sending it the first gcode
         # which was saved when pring start was detected
         self.send_pre_processing_progress_message(100, total_seconds, 0, gcodes_processed, lines_processed)
-
         self.saved_timelapse_settings = timelapse_settings
         self.saved_snapshot_plans = snapshot_plans
         self.saved_preprocessing_quality_issues = quality_issues
+        self.saved_missed_snapshots = missed_snapshots
         self.saved_parsed_command = parsed_command
         if timelapse_settings["settings"].main_settings.preview_snapshot_plan_autoclose:
             self.snapshot_plan_preview_autoclose = True
@@ -2862,7 +2864,8 @@ class OctolapsePlugin(
                 "current_file_line": 0,
                 "autoclose": autoclose,
                 "autoclose_seconds": autoclose_seconds,
-                "quality_issues": self.saved_preprocessing_quality_issues
+                "quality_issues": self.saved_preprocessing_quality_issues,
+                "missed_snapshots": self.saved_missed_snapshots
             }
         }
 

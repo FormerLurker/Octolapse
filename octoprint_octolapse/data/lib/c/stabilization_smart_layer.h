@@ -35,6 +35,7 @@ public:
 private:
 	stabilization_smart_layer(const stabilization_smart_layer &source); // don't copy me
 	void process_pos(position* p_current_pos, position* p_previous_pos, bool found_command) override;
+	void on_processing_start() override;
 	void on_processing_complete() override;
 	std::vector<stabilization_quality_issue> get_quality_issues() override;
 	void add_plan();
@@ -52,10 +53,8 @@ private:
 	void update_stabilization_coordinates();
 	// Layer/height tracking variables
 	bool is_layer_change_wait_;
-	int current_layer_;
 	int last_snapshot_layer_;
-	unsigned int current_height_increment_;
-	unsigned int last_snapshot_height_increment_;
+	unsigned int last_snapshot_height_increment_change_count_;
 	int last_tested_gcode_number_;
 	double fastest_extrusion_speed_;
 	double slowest_extrusion_speed_;
