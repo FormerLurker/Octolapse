@@ -2801,9 +2801,13 @@ class OctolapsePlugin(
             def autoclose_snapshot_preview(preprocessing_job_guid):
                 while True:
                     # if we aren't autoclosing any longer, return
-                    if str(self.preprocessing_job_guid) != str(preprocessing_job_guid) == 0:
+                    if (
+                        str(self.preprocessing_job_guid) != str(preprocessing_job_guid) or
+                        self.snapshot_plan_preview_close_time == 0
+                    ):
                         return
-                    if time.time() > self.snapshot_plan_preview_close_time:
+
+                    elif time.time() > self.snapshot_plan_preview_close_time:
                         # close all of the snapshot preview popups
                         self.send_snapshot_preview_complete_message()
                         # start the print
