@@ -50,7 +50,7 @@ $(function () {
         self.preview_snapshot_plan_seconds_text = ko.pureComputed(function(){
             if (!self.preview_snapshot_plan_seconds())
                 return "unknown";
-            return self.preview_snapshot_plan_seconds.toString();
+            return self.preview_snapshot_plan_seconds().toString();
         });
         self.update = function (settings, defaults) {
             //console.log("Updating Main Settings")
