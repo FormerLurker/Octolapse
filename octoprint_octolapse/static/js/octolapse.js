@@ -1395,6 +1395,13 @@ $(function () {
         self.OctoprintTimelapse = parameters[2];
         // Main settings
         self.main_settings = new Octolapse.MainSettingsViewModel();
+        self.version_text = ko.pureComputed(function(){
+            if (self.main_settings.octolapse_version() && self.main_settings.octolapse_version != "unknown")
+            {
+                return "v" + self.main_settings.octolapse_version();
+            }
+            return "unknown";
+        });
         self.is_admin = ko.observable(false);
         self.toggleAdmin = function()
         {

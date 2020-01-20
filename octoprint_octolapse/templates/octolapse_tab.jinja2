@@ -197,11 +197,30 @@
             </div>
         </div>
         <div data-bind="template:'latest-snapshot-template'"></div>
-        <div class="text-right">
-            <h6>
-                Octolapse <i data-bind="text:Octolapse.Globals.main_settings.octolapse_version"></i>
-            </h6>
+        <div class="row-fluid">
+
+            <div class="span7">
+                <small>
+                    <a data-bind="click: function() {openOctolapseSettings('about');}"><i class="fa fa-info-circle"></i>&nbsp;About</a>
+                    &nbsp;|&nbsp;
+                    <a href="https://github.com/FormerLurker/Octolapse" target="_blank"><i class="fa fa-github">&nbsp;Github</i></a>
+                    &nbsp;|&nbsp;
+                    <a href="https://youtube.com/c/FormerLurker" target="_blank"><i class="fa fa-youtube"></i>&nbsp;YouTube</a>
+                    &nbsp;|&nbsp;
+                    <a href="https://paypal.me/formerlurker" target="_blank"><i class="fa fa-paypal"></i>&nbsp;PayPal</a>
+                    &nbsp;|&nbsp;
+                    <a href="https://www.patreon.com/bePatron?u=9588101" target="_blank"><i class="fa fa-patreon"></i>&nbsp;Patreon</a>
+                </small>
+            </div>
+
+            <div class="span5 text-right muted">
+                <small>
+                    Octolapse&nbsp;<i data-bind="text:Octolapse.Globals.version_text"></i>
+                </small>
+            </div>
+
         </div>
+
         <div data-bind="template:  { name: 'webcam-settings-popup-template', data: webcam_settings_popup}"></div>
         <div data-bind="template:'snapshot-plan-preview-template'"></div>
     </div>
