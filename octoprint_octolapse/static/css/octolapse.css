@@ -153,6 +153,17 @@ div#octolapse-current-camera{
     background-color: #b94a48!important;
     color: #cccccc!important;
 }
+
+.octolapse button.btn-danger.btn {
+    color: #fff;
+    text-shadow: 0 -1px 0 rgba(0,0,0,.25);
+    background-color: #da4f49;
+}
+.octolapse button.btn-danger.btn:hover {
+    color: #fff;
+    background-color: #bd362f;
+}
+
 .text-left{
     text-align:left;
 }
@@ -460,6 +471,7 @@ form.octolapse_form .modal-body {
 .icon_warning_color {
     color: orange;
 }
+
 .icon_error_color {
     color: red;
 }
