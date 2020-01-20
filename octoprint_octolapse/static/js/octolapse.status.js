@@ -1329,7 +1329,7 @@ $(function () {
                 if (self.is_primed())
                     return "fa-minus";
                 if (self.is_extruding_start())
-                    return "fa-play-o";
+                    return "fa-play-circle-o";
                 if (self.is_extruding())
                     return "fa-play";
                 return "fa-times";
