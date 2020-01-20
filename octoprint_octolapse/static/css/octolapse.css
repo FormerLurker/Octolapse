@@ -164,6 +164,9 @@ div#octolapse-current-camera{
     background-color: #bd362f;
 }
 
+.octolapse .info-panel-icon {
+    color: black;
+}
 .text-left{
     text-align:left;
 }
