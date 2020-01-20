@@ -1650,7 +1650,7 @@ $(function () {
                     }
                     return waitText;
                 }
-                else if (self.height_increment() > 0) {
+                else if (self.height_increment() != null && self.height_increment() > 0) {
                     var heightToTrigger = self.height_increment() * (self.current_increment() + 1);
                     return "Triggering when height reaches " + Octolapse.roundToIncrement(heightToTrigger,0.01).toString() + "mm.";
                 }
@@ -1660,21 +1660,21 @@ $(function () {
             }, self);
 
             self.triggerTypeText = ko.pureComputed(function(){
-                if (self.height_increment === 0) {
+                if (self.height_increment() === 0) {
                     return "Layer";
                 }
                 return "Height";
             });
 
             self.currentTriggerIncrement = ko.pureComputed(function(){
-                if (self.height_increment === 0) {
+                if (self.height_increment() === 0) {
                     return self.layer;
                 }
                 return Octolapse.roundToIncrement(self.current_increment(),0.01).toString()  + "mm";
             });
 
             self.triggerOnText = ko.pureComputed(function () {
-                if (self.height_increment === 0)
+                if (self.height_increment !== null || self.height_increment() === 0)
                 {
                     return "Every Layer";
                 }
