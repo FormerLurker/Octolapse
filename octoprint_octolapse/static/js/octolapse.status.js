@@ -247,8 +247,7 @@ $(function () {
 
             };
 
-            self.create_current_settings_profile = function(type, values)
-            {
+            self.create_current_settings_profile = function(type, values){
                 var profiles = [];
                 if (values)
                 {
@@ -260,16 +259,14 @@ $(function () {
                 return profiles;
             };
 
-            self.load_files = function()
-            {
+            self.load_files = function(){
                 //console.log("ocotlapse.status.js - loading dialog files.");
                 self.timelapse_files_dialog.load();
                 self.dialog_rendering_in_process.load();
                 self.dialog_rendering_unfinished.load();
             };
 
-            self.files_changed = function(file_info, action)
-            {
+            self.files_changed = function(file_info, action){
                 self.timelapse_files_dialog.files_changed(file_info, action);
             };
 
@@ -731,25 +728,6 @@ $(function () {
 
             }, self);
 
-            self.getTimelapseStateText =  ko.pureComputed(function () {
-                //console.log("GettingTimelapseStateText")
-                if(!self.is_timelapse_active())
-                    return 'Octolapse is not running';
-                if(!self.PrinterState.is_initialized())
-                    return 'Waiting for update from server.  You may have to turn on the "Position State Info Panel" from the "Current Settings" below to receive an update.';
-                if( self.PrinterState.hasPrinterStateErrors())
-                    return 'Waiting to initialize';
-                return 'Octolapse is initialized and running';
-            }, self);
-
-            self.getTimelapseStateColor =  ko.pureComputed(function () {
-                if(!self.is_timelapse_active())
-                    return '';
-                if(self.is_real_time() && (!self.PrinterState.is_initialized() || self.PrinterState.hasPrinterStateErrors()))
-                    return 'orange';
-                return 'greenyellow';
-            }, self);
-
             self.getStatusText = ko.pureComputed(function () {
                 if (self.is_timelapse_active() || self.is_rendering())
                     return '';
@@ -1071,7 +1049,6 @@ $(function () {
                 });
             };
 
-
             self.getColor = function (value, trueColor, falseColor, nullColor) {
                 return ko.computed({
                     read: function () {
@@ -1123,7 +1100,7 @@ $(function () {
                    return "Current position is not fully known.";
             });
 
-            self.getis_in_printerStateText = ko.pureComputed(function () {
+            self.getIsInPositionStateText = ko.pureComputed(function () {
                 if (self.is_in_position())
                     return "In position";
                 else if (self.in_path_position())
@@ -1132,7 +1109,7 @@ $(function () {
                     return "Not in position";
             }, self);
 
-            self.getis_metricStateText = ko.pureComputed(function () {
+            self.getIsMetricStateText = ko.pureComputed(function () {
                 if (self.is_metric())
                     return "Metric";
                 else if (self.is_metric() === null)
@@ -1173,7 +1150,7 @@ $(function () {
                 else
                     return "Absolute";
             }, self);
-            self.getis_layer_changeStateText = ko.pureComputed(function () {
+            self.getIsLayerChangeStateText = ko.pureComputed(function () {
                 if (self.is_layer_change())
                     return "Layer change detected";
                 else
@@ -1209,20 +1186,8 @@ $(function () {
                 this.z_offset(state.z_offset);
                 this.e(state.e);
                 this.e_offset(state.e_offset);
-                //self.plotPosition(state.x, state.y, state.z);
             };
-            /*
-            self.plotPosition = function(x, y,z)
-            {
-                //console.log("Plotting Position")
-                var canvas = document.getElementById("octolapse_position_canvas");
-                canvas.width = 250;
-                canvas.height = 200;
-                var ctx = canvas.getContext("2d");
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillRect(x + 2, x - 2,4, 4);
 
-            }*/
         };
 
         Octolapse.extruderStateViewModel = function () {

@@ -142,7 +142,7 @@
                                     <div class="ol-text-status-1">
                                         Units
                                     </div>
-                                    <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getis_metricStateText}">
+                                    <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getIsMetricStateText}">
                                         <span class="fa fa-circle fa-stack-2x outline"></span>
                                         <span class="fa fa-circle fa-stack-2x" data-bind="style: {color:PrinterState.getColor(PrinterState.is_metric(),'greenyellow','red','red')}"></span>
                                         <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_metric(),'icon-ok-circle','fa-times','fa-times')"></span>
@@ -157,7 +157,7 @@
                                     <div class="ol-text-status-1">
                                         Position
                                     </div>
-                                    <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getis_in_printerStateText}">
+                                    <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getIsInPositionStateText}">
                                         <span class="fa fa-circle fa-stack-2x outline"></span>
                                         <span class="fa fa-circle fa-stack-2x" data-bind="style: {color:PrinterState.getColor(PrinterState.is_in_position() || PrinterState.in_path_position(),'greenyellow','orange','orange')}"></span>
                                         <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_in_position() || PrinterState.in_path_position(), 'icon-ok-circle', 'fa-times','fa-times')"></span>
@@ -173,7 +173,7 @@
                                     <div class="ol-text-status-1">
                                         Change
                                     </div>
-                                    <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getis_layer_changeStateText}">
+                                    <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getIsLayerChangeStateText}">
                                         <span class="fa fa-circle fa-stack-2x outline"></span>
                                         <span class="fa fa-circle fa-stack-2x position-state-icon"></span>
                                         <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_layer_change(),'icon-ok-circle','icon-circle-blank','icon-circle-blank')"></span>

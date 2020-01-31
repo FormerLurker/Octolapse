@@ -2011,9 +2011,11 @@ class OctolapsePlugin(
     def on_settings_migrate(self, target, current):
             # If we don't have a current version, look at the current settings file for the most recent version.
         if current is None:
-            current_version = OctolapseSettings.get_settings_version(
-                self.get_settings_file_path()
-            )
+            current_version = 'unknown'
+            if os.path.isfile(self.get_settings_file_path()):
+                current_version = OctolapseSettings.get_settings_version(
+                    self.get_settings_file_path()
+                )
             if current_version == 'unknown':
                 current_version = None
         else:

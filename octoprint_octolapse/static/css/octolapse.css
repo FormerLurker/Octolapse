@@ -776,16 +776,17 @@ fieldset.octolapse legend
     background-color: rgba(0,0,0,0.05);
 }
 
-.select_with_edit {
+.select-with-edit {
     display:flex;
     align-items: center;
     margin-bottom: 10px;
 }
-.select_with_edit select{
+.select-with-edit select{
     flex:1;
     margin-bottom: 0;
+    z-index:257;
 }
-.select_with_edit a{
+.select-with-edit a{
     padding: 0 0 0 6px;
 
 }

@@ -64,7 +64,7 @@
                 <p>Can be found in 'Printer Settings->Extruder->Retraction'</p>
             </div>
             <div data-bind="foreach: slicers.slic3r_pe.extruders" class="row-fluid octolapse-table-list-row">
-                <div>
+                <div class="span6">
                     <fieldset class="octolapse">
                         <legend data-bind="text: ('Extruder ' + ($index()+1).toString())"></legend>
                         <div>
@@ -147,7 +147,6 @@
                     </fieldset>
                 </div>
             </div>
-
         </div>
     </div>
 </script>
