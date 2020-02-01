@@ -166,64 +166,54 @@ class LoggingConfigurator(object):
             self._file_handler.delete_all_backups()
 
 
-    def configure_loggers(self, log_file_path=None, debug_settings=None):
+    def configure_loggers(self, log_file_path=None, logging_settings=None):
         default_log_level = logging.DEBUG
         log_to_console = True
-        if debug_settings is not None:
-            default_log_level = debug_settings.default_log_level
-            log_to_console = debug_settings.log_to_console
+        if logging_settings is not None:
+            default_log_level = logging_settings.default_log_level
+            log_to_console = logging_settings.log_to_console
 
         # clear any handlers from the root logger
         self._remove_handlers()
         # set the log level
         self._root_logger.setLevel(logging.NOTSET)
 
-        if (
-            debug_settings is None or
-            debug_settings.enabled or
-            debug_settings.enabled_loggers
-            or debug_settings.log_all_errors
-        ):
-            if log_file_path is not None:
-                # ensure that the logging path and file exist
-                directory = os.path.dirname(log_file_path)
-                import distutils.dir_util
-                distutils.dir_util.mkpath(directory)
-                if not os.path.isfile(log_file_path):
-                    open(log_file_path, 'w').close()
+        if log_file_path is not None:
+            # ensure that the logging path and file exist
+            directory = os.path.dirname(log_file_path)
+            import distutils.dir_util
+            distutils.dir_util.mkpath(directory)
+            if not os.path.isfile(log_file_path):
+                open(log_file_path, 'w').close()
 
-                # add the file handler
-                self._add_file_handler(log_file_path, logging.NOTSET)
+            # add the file handler
+            self._add_file_handler(log_file_path, logging.NOTSET)
 
-            # if we are logging to console, add the console logging handler
-            if log_to_console:
-                self._add_console_handler(logging.NOTSET)
-            for logger_full_name in self.child_loggers:
+        # if we are logging to console, add the console logging handler
+        if log_to_console:
+            self._add_console_handler(logging.NOTSET)
+        for logger_full_name in self.child_loggers:
 
-                if logger_full_name.startswith("octolapse."):
-                    logger_name = logger_full_name[10:]
+            if logger_full_name.startswith("octolapse."):
+                logger_name = logger_full_name[10:]
+            else:
+                logger_name = logger_full_name
+            if logging_settings is not None:
+                current_logger = self._root_logger.getChild(logger_name)
+                found_enabled_logger = None
+                for enabled_logger in logging_settings.enabled_loggers:
+                    if enabled_logger.name == logger_full_name:
+                        found_enabled_logger = enabled_logger
+                        break
+
+                if found_enabled_logger is None or current_logger.level > logging.ERROR:
+                    current_logger.setLevel(logging.ERROR)
+
+                elif found_enabled_logger is not None:
+                    current_logger.setLevel(found_enabled_logger.log_level)
                 else:
-                    logger_name = logger_full_name
-                if debug_settings is not None:
-                    current_logger = self._root_logger.getChild(logger_name)
-                    found_enabled_logger = None
-                    for enabled_logger in debug_settings.enabled_loggers:
-                        if enabled_logger["name"] == logger_full_name:
-                            found_enabled_logger = enabled_logger
-                            break
-
-                    if (
-                        debug_settings.log_all_errors and (
-                            found_enabled_logger is None or current_logger.level > logging.ERROR
-                        )
-                    ):
-                        current_logger.setLevel(logging.ERROR)
-
-                    elif found_enabled_logger is not None:
-                        current_logger.setLevel(found_enabled_logger["log_level"])
-                    else:
-                        # log level critical + 1 will not log anything
-                        current_logger.setLevel(logging.CRITICAL + 1)
-                else:
-                    current_logger = self._root_logger.getChild(logger_name)
-                    current_logger.setLevel(default_log_level)
+                    # log level critical + 1 will not log anything
+                    current_logger.setLevel(logging.CRITICAL + 1)
+            else:
+                current_logger = self._root_logger.getChild(logger_name)
+                current_logger.setLevel(default_log_level)

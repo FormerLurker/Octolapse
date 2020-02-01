@@ -44,4 +44,4 @@ class TestSettingsSlicer(unittest.TestCase):
         with open(file_path) as settingsJson:
             data = json.load(settingsJson)
             loaded_settings = OctolapseSettings.create_from("c:\\temp\\temp.log", "0.3.4", data)
-            self.assertNotEqual(loaded_settings.profiles.debug[0].name, "Default Debug")
+            self.assertNotEqual(loaded_settings.profiles.logging[0].name, "Default Logging")

@@ -656,7 +656,7 @@ class TestTimelapse(unittest.TestCase):
         self.assertTrue(self.Timelapse_GcodeTrigger.OctoprintPrinter.IsPaused)
 
     def test_GcodeSent_IgnoredStates(self):
-        """Tests WaitingForTrigger,	RequestingReturnPosition, SendingSnapshotGcode, TakingSnapshot, RequestingSnapshotPosition, SendingReturnGcode, all of which should be ignored except for a debug message."""
+        """Tests WaitingForTrigger,	RequestingReturnPosition, SendingSnapshotGcode, TakingSnapshot, RequestingSnapshotPosition, SendingReturnGcode, all of which should be ignored except for a logging message."""
         snapshotCommand = "snap"
         self.Settings.profiles.current_printer().snapshot_command = snapshotCommand
         self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True

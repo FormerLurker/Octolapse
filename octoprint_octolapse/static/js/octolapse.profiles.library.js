@@ -247,6 +247,8 @@ $(function() {
             // first we have to find this object from the options
             var index = self.getIndexFromIndexedKey(indexed_key);
             var option = self.getOptionForIndexedKey(indexed_key);
+            if (!option)
+                return;
             var key = self.getKeyFromIndexedKey(indexed_key);
             var option_value;
             if (key == "null")

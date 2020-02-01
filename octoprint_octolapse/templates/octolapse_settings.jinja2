@@ -65,7 +65,7 @@
                             <a href="#octolapse_camera_tab" data-toggle="tab" data-profile-type="camera" >Camera</a>
                         </li>
                         <li>
-                            <a href="#octolapse_debug_tab" data-toggle="tab" data-profile-type="debug">Debug</a>
+                            <a href="#octolapse_logging_tab" data-toggle="tab" data-profile-type="logging">Logging</a>
                         </li>
                         <li>
                             <a href="#octolapse_about_tab" data-toggle="tab" data-profile-type="about">About</a>
@@ -92,7 +92,7 @@
                     <div id="octolapse_camera_tab" class="panel panel-default tab-pane">
                         <div data-bind="template: 'profiles-template'"></div>
                     </div>
-                    <div id="octolapse_debug_tab" class="panel panel-default tab-pane">
+                    <div id="octolapse_logging_tab" class="panel panel-default tab-pane">
                         <div data-bind="template: 'profiles-template'"></div>
                     </div>
                     <div id="octolapse_about_tab" class="panel panel-default tab-pane">
@@ -253,5 +253,5 @@
 {% include "octolapse_profiles_trigger.jinja2" %}
 {% include "octolapse_profiles_rendering.jinja2" %}
 {% include "octolapse_profiles_camera.jinja2" %}
-{% include "octolapse_profiles_debug.jinja2" %}
+{% include "octolapse_profiles_logging.jinja2" %}
 {% include "octolapse_profiles_library.jinja2" %}

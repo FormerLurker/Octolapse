@@ -149,24 +149,24 @@ $(function () {
             Octolapse.Cameras = new Octolapse.ProfilesViewModel(cameraSettings);
 
             /*
-                Create our debug view model
+                Create our logging view model
             */
-            var debugSettings =
+            var loggingSettings =
                 {
                     'current_profile_guid': null,
                     'profiles': [],
                     'default_profile': null,
                     'profileOptions': {},
-                    'profileViewModelCreateFunction': Octolapse.DebugProfileViewModel,
-                    'profileValidationRules': Octolapse.DebugProfileValidationRules,
-                    'bindingElementId': 'octolapse_debug_tab',
-                    'addEditTemplateName': 'debug-template',
-                    'profileTypeName': 'Debug',
+                    'profileViewModelCreateFunction': Octolapse.LoggingProfileViewModel,
+                    'profileValidationRules': Octolapse.LoggingProfileValidationRules,
+                    'bindingElementId': 'octolapse_logging_tab',
+                    'addEditTemplateName': 'logging-profile-template',
+                    'profileTypeName': 'Logging',
                     'addUpdatePath': 'addUpdateProfile',
                     'removeProfilePath': 'removeProfile',
                     'setCurrentProfilePath': 'setCurrentProfile'
                 };
-            Octolapse.DebugProfiles = new Octolapse.ProfilesViewModel(debugSettings);
+            Octolapse.LoggingProfiles = new Octolapse.ProfilesViewModel(loggingSettings);
 
         };
 
@@ -234,16 +234,16 @@ $(function () {
             });
             Octolapse.Cameras.profiles(cameras);
 
-            // Debug
-            var debug_profiles=[];
-            Octolapse.DebugProfiles.default_profile(settings.profiles.defaults.debug);
-            Octolapse.DebugProfiles.profileOptions = settings.profiles.options.debug;
-            Octolapse.DebugProfiles.current_profile_guid(settings.profiles.current_debug_profile_guid);
-            //console.log("Creating Debug Profiles")
-            Object.keys(settings.profiles.debug).forEach(function(key) {
-                debug_profiles.push(new Octolapse.DebugProfileViewModel(settings.profiles.debug[key]));
+            // Logging
+            var logging_profiles=[];
+            Octolapse.LoggingProfiles.default_profile(settings.profiles.defaults.logging);
+            Octolapse.LoggingProfiles.profileOptions = settings.profiles.options.logging;
+            Octolapse.LoggingProfiles.current_profile_guid(settings.profiles.current_logging_profile_guid);
+            //console.log("Creating Logging Profiles")
+            Object.keys(settings.profiles.logging).forEach(function(key) {
+                logging_profiles.push(new Octolapse.LoggingProfileViewModel(settings.profiles.logging[key]));
             });
-            Octolapse.DebugProfiles.profiles(debug_profiles);
+            Octolapse.LoggingProfiles.profiles(logging_profiles);
             Octolapse.Settings.is_loaded(true);
 
         };
@@ -386,11 +386,11 @@ $(function () {
             Octolapse.Cameras.default_profile(null);
             Octolapse.Cameras.current_profile_guid(null);
             Octolapse.Cameras.profileOptions = {};
-            // Debugs
-            Octolapse.DebugProfiles.profiles([]);
-            Octolapse.DebugProfiles.default_profile(null);
-            Octolapse.DebugProfiles.current_profile_guid(null);
-            Octolapse.DebugProfiles.profileOptions = {};
+            // Logging Profiles
+            Octolapse.LoggingProfiles.profiles([]);
+            Octolapse.LoggingProfiles.default_profile(null);
+            Octolapse.LoggingProfiles.current_profile_guid(null);
+            Octolapse.LoggingProfiles.profileOptions = {};
         };
 
         self.checkForProfileUpdates = function(is_silent_test){
@@ -556,7 +556,7 @@ $(function () {
             Octolapse.Triggers.profileOptions.server_profiles = server_profiles["trigger"];
             Octolapse.Renderings.profileOptions.server_profiles = server_profiles["rendering"];
             Octolapse.Cameras.profileOptions.server_profiles = server_profiles["camera"];
-            Octolapse.DebugProfiles.profileOptions.server_profiles = server_profiles["debug"];
+            Octolapse.LoggingProfiles.profileOptions.server_profiles = server_profiles["logging"];
         };
 
 
@@ -624,8 +624,8 @@ $(function () {
                 case "camera-template":
                     Octolapse.Cameras.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
                     break;
-                case "debug-template":
-                    Octolapse.DebugProfiles.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
+                case "logging-profile-template":
+                    Octolapse.LoggingProfiles.addUpdateProfile(profile.profileObservable, self.hideAddEditDialog());
                     break;
                 default:
                     var message = "Cannot save the object, the template (" + profile.templateName + ") is unknown!";

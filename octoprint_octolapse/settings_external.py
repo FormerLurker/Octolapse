@@ -128,7 +128,7 @@ class ExternalSettings(object):
             "trigger": [],
             "rendering": [],
             "camera": [],
-            "debug": [],
+            "logging": [],
 
         }
         updates_available = False

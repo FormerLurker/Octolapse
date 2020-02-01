@@ -1017,265 +1017,290 @@
         "apply_settings_at_startup": true
       }
     },
-    "current_debug_profile_guid": "afbe12d6-0dee-4911-b77e-ee9ebfae7521",
+    "current_logging_profile_guid": "afbe12d6-0dee-4911-b77e-ee9ebfae7521",
     "logging": {
-      "3811da8f-182d-44bf-8fcb-95614e4daf1b": {
-        "name": "Prevent Extrusion",
-        "description": "This test mode profile (all extrusion is prevented) is useful for testing Octolapse without waiting for warm-up or wasting filament.  Test mode will prevent extrusion, bed and extruder heating, fan controls, and a few other commands.  Only errors are logged.  This profile is recommended for your first Octolapse, or for performing a pre-flight check for a new model.",
-        "guid": "3811da8f-182d-44bf-8fcb-95614e4daf1b",
+      "4d7411e9-f97e-41c0-921c-02e262660e83": {
         "automatic_configuration": {
           "key_values": [
             {
-              "name": "Prevent Extrusion - Test Mode",
-              "value": "test_log_errors"
+              "name": "Log Parsing/Preprocessing/Position Tracking",
+              "value": "c++"
             }
           ],
-          "version": "1.0",
           "suppress_update_notification_version": false,
-          "is_custom": false
+          "is_custom": false,
+          "version": "1.0"
         },
-        "log_all_errors": true,
-        "enabled": false,
+        "name": "Log Parsing/Preprocessing/Position Tracking",
         "log_to_console": false,
-        "default_log_level": 10,
-        "is_test_mode": true,
-        "enabled_loggers": []
-      },
-      "68d000d6-0ae3-40f4-9b16-bdcb882604a6": {
-        "name": "Debug",
-        "description": "Logs all but verbose messages during a live print.  This will create a very large log file that can affect performance, so only use this when necessary.  This is useful for debugging issues, or for submitting error reports in the github repository.",
-        "guid": "68d000d6-0ae3-40f4-9b16-bdcb882604a6",
-        "automatic_configuration": {
-          "key_values": [
-            {
-              "name": "Debug",
-              "value": "live_log_debug"
-            }
-          ],
-          "version": "1.3",
-          "suppress_update_notification_version": false,
-          "is_custom": false
-        },
-        "log_all_errors": true,
         "enabled": true,
-        "log_to_console": false,
         "default_log_level": 10,
-        "is_test_mode": false,
+        "guid": "4d7411e9-f97e-41c0-921c-02e262660e83",
         "enabled_loggers": [
           {
-            "name": "octolapse.__init__",
-            "log_level": 10
+            "log_level": 5,
+            "name": "octolapse.stabilization_gcode"
           },
           {
-            "name": "octolapse.camera",
-            "log_level": 10
+            "log_level": 5,
+            "name": "octolapse.snapshot_plan"
           },
           {
-            "name": "octolapse.stabilization_gcode",
-            "log_level": 10
+            "log_level": 5,
+            "name": "octolapse.gcode_commands"
           },
           {
-            "name": "octolapse.gcode_commands",
-            "log_level": 10
+            "log_level": 5,
+            "name": "octolapse.gcode_position"
           },
           {
-            "name": "octolapse.gcode_position",
-            "log_level": 10
+            "log_level": 5,
+            "name": "octolapse.settings_preprocessor"
           },
           {
-            "name": "octolapse.settings_preprocessor",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.messenger_worker",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.position",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.render",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.settings",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.migration",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.snapshot",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.snapshot_plan",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.stabilization_preprocessing",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.timelapse",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.trigger",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.utility",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.settings_external",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.gcode_processor",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.gcode_parser",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.script",
-            "log_level": 10
+            "log_level": 5,
+            "name": "octolapse.gcode_parser"
           }
-        ]
-      },
-      "072f506e-3e5e-4e84-922b-fb4e01690398": {
-        "name": "Debug - Prevent Extrusion",
-        "description": "This test mode profile (all extrusion is prevented) is useful for debugging issues during a print without waiting for warm-up or wasting filament.  Test mode will prevent extrusion, bed and extruder heating, fan controls, and a few other commands.  Logs all but verbose messages.  This will create a very large log file that can affect performance, so only use this when necessary.  This is useful for debugging issues, or for submitting error reports in the github repository.",
-        "guid": "072f506e-3e5e-4e84-922b-fb4e01690398",
-        "automatic_configuration": {
-          "key_values": [
-            {
-              "name": "Debug - Prevent Extrusion",
-              "value": "test_log_debug"
-            }
-          ],
-          "version": "1.3",
-          "suppress_update_notification_version": false,
-          "is_custom": false
-        },
-        "log_all_errors": true,
-        "enabled": true,
-        "log_to_console": false,
-        "default_log_level": 10,
-        "is_test_mode": true,
-        "enabled_loggers": [
-          {
-            "name": "octolapse.stabilization_preprocessing",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.__init__",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.camera",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.stabilization_gcode",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.gcode_commands",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.gcode_position",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.settings_preprocessor",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.position",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.render",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.settings",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.migration",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.snapshot",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.snapshot_plan",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.timelapse",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.trigger",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.utility",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.messenger_worker",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.settings_external",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.gcode_processor",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.gcode_parser",
-            "log_level": 10
-          },
-          {
-            "name": "octolapse.script",
-            "log_level": 10
-          }
-        ]
+        ],
+        "description": "This logging profile is useful for debugging problems parsing gcode, tracking the printer's position and state, or preprocessing gcode to create snapshot plans using the new smart layer trigger.  This profile will create very large log files and will make preprocessing VERY VERY slow, so use this only when necessary to solve a specific issue."
       },
       "afbe12d6-0dee-4911-b77e-ee9ebfae7521": {
-        "name": "Log All Errors",
-        "description": "Logs only errors and exceptions.  This is the recommended default profile, logs a minimal amount of data, and has a low impact on performance.",
-        "guid": "afbe12d6-0dee-4911-b77e-ee9ebfae7521",
         "automatic_configuration": {
           "key_values": [
             {
               "name": "Log All Errors - Recommended",
-              "value": "live_log_errors"
+              "value": "errors"
             }
           ],
-          "version": "1.0",
           "suppress_update_notification_version": false,
-          "is_custom": false
+          "is_custom": false,
+          "version": "1.0"
         },
-        "log_all_errors": true,
-        "enabled": false,
+        "name": "Log All Errors",
         "log_to_console": false,
+        "enabled": false,
         "default_log_level": 10,
-        "is_test_mode": false,
-        "enabled_loggers": []
+        "guid": "afbe12d6-0dee-4911-b77e-ee9ebfae7521",
+        "enabled_loggers": [],
+        "description": "Logs only errors and exceptions.  This is the recommended default profile, logs a minimal amount of data, and has a low impact on performance."
+      },
+      "a417b5bf-9d26-4456-81ec-ba2f04f57084": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Debug Logging",
+              "value": "debug"
+            }
+          ],
+          "suppress_update_notification_version": false,
+          "is_custom": false,
+          "version": "1.0"
+        },
+        "name": "Debug",
+        "log_to_console": false,
+        "enabled": true,
+        "default_log_level": 10,
+        "guid": "a417b5bf-9d26-4456-81ec-ba2f04f57084",
+        "enabled_loggers": [
+          {
+            "log_level": 10,
+            "name": "octolapse.__init__"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.camera"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.stabilization_gcode"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.gcode_commands"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.gcode_position"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.settings_preprocessor"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.messenger_worker"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.position"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.render"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.settings"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.settings_migration"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.snapshot"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.snapshot_plan"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.stabilization_preprocessing"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.timelapse"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.trigger"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.utility"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.settings_external"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.gcode_processor"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.gcode_parser"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.script"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.migration"
+          }
+        ],
+        "description": "Logs all but verbose messages.  This will create a very large log file that can affect performance, so only use this when necessary.  This is useful for debugging issues, or for submitting error reports in the github repository."
+      },
+      "02717525-3684-4bf7-ac53-037cdfbd4e66": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Log Everything",
+              "value": "verbose"
+            }
+          ],
+          "suppress_update_notification_version": false,
+          "is_custom": false,
+          "version": "1.0"
+        },
+        "name": "Log Everything",
+        "log_to_console": false,
+        "enabled": true,
+        "default_log_level": 10,
+        "guid": "02717525-3684-4bf7-ac53-037cdfbd4e66",
+        "enabled_loggers": [
+          {
+            "log_level": 5,
+            "name": "octolapse.stabilization_gcode"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.snapshot_plan"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.gcode_commands"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.gcode_position"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.settings_preprocessor"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.__init__"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.camera"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.messenger_worker"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.position"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.render"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.settings"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.settings_external"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.settings_migration"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.snapshot"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.stabilization_preprocessing"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.timelapse"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.trigger"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.utility"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.gcode_processor"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.gcode_parser"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.script"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.migration"
+          }
+        ],
+        "description": "This will log absolutely everything that Octolapse is capable of logging.  It will severely impact performance, and is only recommended for very difficult to debug or uncommon errors.  I do not recommend you use this profile unless you are asked for a verbose log after creating an issue in the Octolapse Github repository."
       }
     }
   },

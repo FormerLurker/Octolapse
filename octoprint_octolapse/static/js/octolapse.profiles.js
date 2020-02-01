@@ -332,9 +332,9 @@ $(function() {
                 warning = null;
                 if(Octolapse.Status.is_timelapse_active())
                 {
-                     if(newProfile.profileTypeName() == 'Debug')
+                     if(newProfile.profileTypeName() == 'Logging')
                      {
-                        warning = "A timelapse is active.  All debug settings will IMMEDIATELY take effect, except for 'Test Mode' which will not take effect until the next print.";
+                        warning = "A timelapse is active.  All logging settings will IMMEDIATELY take effect.";
                      }
                      else
                         warning = "A timelapse is active.  Any changes made here will NOT take effect until the next print.";

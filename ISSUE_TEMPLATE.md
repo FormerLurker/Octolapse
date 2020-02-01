@@ -58,7 +58,7 @@ You can find out more about diagnostic logging here:
 https://github.com/FormerLurker/Octolapse/wiki/Debug-Profiles#log-additional-information
 
 It is very helpful for certain problems.  If you can reproduce the issue with
-one of the Diagnostic debug profiles, please do so before submitting an issue.
+one of the Diagnostic logging profiles, please do so before submitting an issue.
 -->
 Diagnostic Logging was Enabled: YES_OR_NO
 

@@ -488,6 +488,7 @@ def migrate_pre_0_4_0_rc1_dev2(current_version, settings_dict, default_settings_
 def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_path):
     # adjust each slicer profile to account for the new multiple extruder settings
     printers = settings_dict["profiles"]["printers"]
+    default_settings = get_default_settings(default_settings_path)
     for key, printer in six.iteritems(printers):
 
         # Adjust gcode generation settings
@@ -626,17 +627,15 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
         if "trigger_type" in trigger and trigger["trigger_type"] == 'smart-layer':
             trigger["trigger_type"] = "smart"
 
-    debug_profiles = settings_dict["profiles"]["debug"]
-    for key, debug in six.iteritems(debug_profiles):
-        if "enabled_loggers" in debug:
-            for enabled_logger in debug["enabled_loggers"]:
-                if enabled_logger["name"] == "octolapse.gcode_preprocessing":
-                    enabled_logger["name"] = "octolapse.settings_preprocessor"
-                elif enabled_logger["name"] == "octolapse.gcode":
-                    enabled_logger["name"] = "octolapse.stabilization_gcode"
-                elif enabled_logger["name"] == "octolapse.settings_migration":
-                    enabled_logger["name"] = "octolapse.migration"
+    # Reset the debug profiles to the defaults
+    if "debug" in settings_dict["profiles"]:
+        del settings_dict["profiles"]["debug"]
+    if "current_debug_profile_guid" in settings_dict["profiles"]:
+        del settings_dict["profiles"]["current_debug_profile_guid"]
+    settings_dict["profiles"]["logging"] = default_settings["profiles"]["logging"]
+    settings_dict["profiles"]["current_logging_profile_guid"] = default_settings["profiles"]["current_logging_profile_guid"]
 
+    # set the version
     settings_dict["main_settings"]["version"] = "0.4.0rc1.dev3"
     return settings_dict
 

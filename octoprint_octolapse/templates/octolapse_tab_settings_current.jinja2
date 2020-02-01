@@ -167,44 +167,52 @@
 
         <div class="row-fluid">
             <div class="span2 text-right">
-                <a data-bind="click: function() {openOctolapseSettings('debug');}"
-                   title="Open all debug settings.">
-                    Debug
+                <a data-bind="click: function() {openOctolapseSettings('logging');}"
+                   title="Open all logging settings.">
+                    Logging
                 </a>
             </div>
             <div class="span9">
-                <select id="octolapse_tab_debug_profile"
+                <select id="octolapse_tab_logging_profile"
                     class="input-block-level"
                     data-bind="
                     enable: Octolapse.Globals.is_admin() && Octolapse.Settings.is_loaded(),
-                    options: Octolapse.Status.debug_sorted,
+                    options: Octolapse.Status.logging_profiles_sorted,
                     optionsText: 'name',
                     optionsValue: 'guid',
                     optionsAfterRender: setDescriptionAsTitle,
-                    event: {change: Octolapse.Status.defaultDebugProfileChanged},
-                    value: Octolapse.Status.current_debug_profile_guid,
-                        attr: {title: Octolapse.Status.getDebugProfileTitle}">
+                    event: {change: Octolapse.Status.defaultLoggingProfileChanged},
+                    value: Octolapse.Status.current_logging_profile_guid,
+                        attr: {title: Octolapse.Status.getLoggingProfileTitle}">
                 </select>
-                <div class="text-warning">
-                    <p data-bind="visible: Octolapse.Status.is_test_mode_active() && !Octolapse.Status.getCurrentDebugProfileIsTestMode()">
-                        Test mode is currently active and will end once the print is finished.  Your printer will not warm up or extrude plastic while test mode is enabled.
-                    </p>
-                    <p data-bind="visible: Octolapse.Status.is_test_mode_active() && Octolapse.Status.getCurrentDebugProfileIsTestMode()">
-                        Test mode is currently active.  Your printer will not warm up or extrude plastic while test mode is enabled.
-                    </p>
-                    <p data-bind="visible: !Octolapse.Status.is_test_mode_active() && Octolapse.Status.getCurrentDebugProfileIsTestMode()">
-                        This profile has test mode enabled.  Your printer will not warm up or extrude plastic while test mode is enabled.
-                    </p>
-                </div>
             </div>
             <div class="span1">
-                <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_debug_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentDebugProfile" title="Edit this debug profile.">
+                <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Status.current_logging_profile_guid() != null && Octolapse.Settings.is_loaded(), click: openCurrentLoggingProfile" title="Edit this logging profile.">
                     <i class="fa fa-pencil fa-2x"></i>
                 </a>
             </div>
         </div>
-        <div>
-            <div class="row-fluid" data-bind="visible:Octolapse.Globals.is_admin">
+        <div class="row-fluid">
+            <div class="span2 text-right">
+                <input type="checkbox" id="octolapse_test_mode_enabled" data-bind="checked: Octolapse.Globals.main_settings.test_mode_enabled(), click: function() {return Octolapse.Globals.main_settings.toggleTestMode();}" title="Enable or Disable Test Mode" style="display:none;">
+
+                <label for="octolapse_test_mode_enabled" data-bind="attr: {title: (is_timelapse_active() ? 'Test mode changes will take affect after the current print completes ' : (!Octolapse.Globals.main_settings.test_mode_enabled() ? 'Enable the test mode to prevent extrusion and warmup' : 'Disable test mode') )}">
+                    <span>Test Mode</span><br/>
+                </label>
+            </div>
+            <div class="span9">
+                <label for="octolapse_test_mode_enabled">
+                    <i class="fa fa-lg fa-toggle-off" data-bind="css: {'fa-toggle-on': Octolapse.Globals.main_settings.test_mode_enabled, 'fa-toggle-off': !Octolapse.Globals.main_settings.test_mode_enabled()}"></i>
+                    <span data-bind="text: (Octolapse.Globals.main_settings.test_mode_enabled() ? 'Enabled' : 'Disabled')"></span>
+                    <a class="octolapse_help" data-help-url="main_settings.is_test_mode.md" data-help-title="Test Mode - Prevent Extrusion and Warmup"/>
+                </label>
+            </div>
+            <div class="span1">
+
+            </div>
+
+        </div>
+        <div class="row-fluid" data-bind="visible:Octolapse.Globals.is_admin">
                 <div data-bind="visible:!Octolapse.Status.is_real_time()" class="span12 text-right2 text-center">
                     <input type="checkbox" id="octolapse-show_snapshot_plan_information" data-bind="checked: Octolapse.Globals.main_settings.show_snapshot_plan_information(), click: function() {toggleInfoPanel(Octolapse.Globals.main_settings.show_snapshot_plan_information,'show_snapshot_plan_information');}" style="display:none;">
                     <label for="octolapse-show_snapshot_plan_information" data-bind="attr: {title: (!Octolapse.Globals.main_settings.show_snapshot_plan_information() ? 'Enable the info panel' : (!is_timelapse_active() ? 'The info panel will display when a timelapse is active.' : 'Disable the info panel') )}">
@@ -212,7 +220,7 @@
 
                         <i class="fa fa-lg fa-toggle-off" data-bind="css: {'fa-toggle-on': Octolapse.Globals.main_settings.show_snapshot_plan_information, 'fa-toggle-off': !Octolapse.Globals.main_settings.show_snapshot_plan_information()}"></i>
                         <span data-bind="text: (Octolapse.Globals.main_settings.show_snapshot_plan_information() ? 'Enabled' : 'Disabled')"></span>
-
+                        <a class="octolapse_help" data-help-url="main_settings.show_snapshot_plan_information.md" data-help-title="Show Snapshot Plan Information" />
                     </label>
                 </div>
                 <div data-bind="visible:Octolapse.Status.is_real_time()" class="text-center">
@@ -224,6 +232,7 @@
                                 <div>Trigger State</div>
                                 <i class="fa fa-lg fa-toggle-off" data-bind="css: {'fa-toggle-on': Octolapse.Globals.main_settings.show_trigger_state_changes, 'fa-toggle-off': !Octolapse.Globals.main_settings.show_trigger_state_changes()}"></i>
                                 <span data-bind="text: (Octolapse.Globals.main_settings.show_trigger_state_changes() ? 'Enabled' : 'Disabled')"></span>
+                                <a class="octolapse_help" data-help-url="main_settings.show_trigger_state_changes.md" data-help-title="Show Trigger State Changes" />
                             </label>
                         </span>
                     </div>
@@ -233,7 +242,9 @@
                             <label for="octolapse-show_extruder_state_changes">
                                 <div>Extruder State</div>
                                 <i class="fa fa-lg fa-toggle-off" data-bind="css: {'fa-toggle-on': Octolapse.Globals.main_settings.show_extruder_state_changes, 'fa-toggle-off': !Octolapse.Globals.main_settings.show_extruder_state_changes()}"></i>
-                                <span data-bind="text: (Octolapse.Globals.main_settings.show_extruder_state_changes() ? 'Enabled' : 'Disabled')"></span>                                         </label>
+                                <span data-bind="text: (Octolapse.Globals.main_settings.show_extruder_state_changes() ? 'Enabled' : 'Disabled')"></span>
+                                <a class="octolapse_help" data-help-url="main_settings.show_extruder_state_changes.md" data-help-title="Show Extruder State Changes" />
+                            </label>
                         </span>
                     </div>
                     <div class="span3 text-center">
@@ -243,6 +254,7 @@
                                 <div>Position State</div>
                                 <i class="fa fa-lg fa-toggle-off" data-bind="css: {'fa-toggle-on': Octolapse.Globals.main_settings.show_printer_state_changes, 'fa-toggle-off': !Octolapse.Globals.main_settings.show_printer_state_changes()}"></i>
                                 <span data-bind="text: (Octolapse.Globals.main_settings.show_printer_state_changes() ? 'Enabled' : 'Disabled')"></span>
+                                <a class="octolapse_help" data-help-url="main_settings.show_printer_state_changes.md" data-help-title="Show Position State Changes" />
                             </label>
                         </span>
                     </div>
@@ -253,12 +265,13 @@
                                 <div>Position Changes</div>
                                 <i class="fa fa-lg fa-toggle-off" data-bind="css: {'fa-toggle-on': Octolapse.Globals.main_settings.show_position_changes, 'fa-toggle-off': !Octolapse.Globals.main_settings.show_position_changes()}"></i>
                                 <span data-bind="text: (Octolapse.Globals.main_settings.show_position_changes() ? 'Enabled' : 'Disabled')"></span>
+                                <a class="octolapse_help" data-help-url="main_settings.show_position_changes.md" data-help-title="Show Position Changes" />
                             </label>
                         </span>
                     </div>
                 </div>
             </div>
-        </div>
+
     </div>
 </script>
 

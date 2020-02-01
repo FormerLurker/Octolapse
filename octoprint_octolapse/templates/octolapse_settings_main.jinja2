@@ -50,6 +50,17 @@
                                         </label>
                                     </div>
                                 </div>
+                                <div class="control-group">
+                                    <div class="controls">
+                                        <label class="checkbox">
+                                            <input type="checkbox" data-bind="checked: main_settings.test_mode_enabled" title="Enable test mode" />Test Mode Enabled
+                                            <a class="octolapse_help" data-help-url="main_settings.is_test_mode.md" data-help-title="Test Mode - Prevent Extrusion and Warmup" />
+                                            <span class="help-inline">
+                                                Prevents your printer from warming up your bed and extruder, enabing fans, or extruding filament.  This is very useful for quickly testing your Octolapse configuration without wasting filament or waiting for warm up.
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </fieldset>
                         <fieldset class="octolapse">
@@ -311,12 +322,17 @@
         <span data-bind="text: global_settings.is_octolapse_enabled() ? 'Octolapse is enabled' : 'Octolapse is disabled'"></span>
     </div>
     <div>
+        <span class="fa-lg" data-bind="attr: { title: global_settings.test_mode_enabled() ? 'Test Mode is enabled - Your printer will not warm up or extrude filament' : 'Test Mode is disabled - Your printer will print normally'}">
+            <span class="fa fa-check " data-bind="css:{'fa-check': (test_mode_enabled()  ), 'fa-close': (!test_mode_enabled() ) },style: { color: (test_mode_enabled()  ) ? 'limegreen' : '' }"></span>
+        </span>
+        <span data-bind="text: global_settings.test_mode_enabled() ? 'Test Mode is enabled' : 'Test Mode is disabled'"></span>
+    </div>
+    <div>
         <span class="fa-lg" data-bind="attr: { title: global_settings.cancel_print_on_startup_error() ? 'Cancel print on startup error' : 'Do not cancel print on startup error'}">
             <span class="fa fa-check " data-bind="css:{'fa-check': (cancel_print_on_startup_error()  ), 'fa-close': (!cancel_print_on_startup_error() ) },style: { color: (cancel_print_on_startup_error()  ) ? 'limegreen' : '' }"></span>
         </span>
         <span data-bind="text: global_settings.cancel_print_on_startup_error() ? 'Cancel print on startup error' : 'Do not cancel print on startup error'"></span>
     </div>
-
     <div>
         <span class="fa-lg" data-bind="attr: { title: global_settings.auto_reload_latest_snapshot() ? 'Auto loading latest snapshot, up to ' + global_settings.auto_reload_frames() + ' frames.'  : 'Auto snapshot reload is disabled'}">
 

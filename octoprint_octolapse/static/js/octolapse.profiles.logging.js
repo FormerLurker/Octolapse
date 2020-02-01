@@ -22,14 +22,13 @@
 ##################################################################################
 */
 $(function () {
-    Octolapse.DebugProfileViewModel = function (values) {
+    Octolapse.LoggingProfileViewModel = function (values) {
         var self = this;
-        self.profileTypeName = ko.observable("Debug");
+        self.profileTypeName = ko.observable("Logging");
         self.guid = ko.observable(values.guid);
         self.name = ko.observable(values.name);
         self.description = ko.observable(values.description);
         self.enabled = ko.observable(values.enabled);
-        self.is_test_mode = ko.observable(values.is_test_mode);
         self.log_to_console = ko.observable(values.log_to_console);
         self.log_all_errors = ko.observable(values.log_all_errors);
         self.enabled_loggers = ko.observableArray();
@@ -53,8 +52,8 @@ $(function () {
         };
         self.available_loggers = ko.computed(function () {
             var available_loggers = [];
-            for (var logger_index = 0; logger_index < Octolapse.DebugProfiles.profileOptions.all_logger_names.length; logger_index++) {
-                var logger_name = Octolapse.DebugProfiles.profileOptions.all_logger_names[logger_index];
+            for (var logger_index = 0; logger_index < Octolapse.LoggingProfiles.profileOptions.all_logger_names.length; logger_index++) {
+                var logger_name = Octolapse.LoggingProfiles.profileOptions.all_logger_names[logger_index];
                 var found_logger_index = self.get_enabled_logger_index_by_name(logger_name);
                 if (found_logger_index === -1) {
                     available_loggers.push({'name': logger_name, 'log_level': self.default_log_level});
@@ -93,15 +92,14 @@ $(function () {
         // makes the control much more user friendly if you want to add several loggers.
         // TODO:  Scroll down only the width of a new control, which will be necessary if we add more controls below the logger controls.
         self.scrollToBottom = function () {
-            var debug_container = document.getElementById("octolapse_add_edit_profile_model_body");
-            debug_container.scrollTop = debug_container.scrollHeight;
+            var logging_container = document.getElementById("octolapse_add_edit_profile_model_body");
+            logging_container.scrollTop = logging_container.scrollHeight;
         };
 
         self.updateFromServer = function (values) {
             self.name(values.name);
             self.description(values.description);
             self.enabled(values.enabled);
-            self.is_test_mode(values.is_test_mode);
             self.log_to_console(values.log_to_console);
             self.log_all_errors(values.log_all_errors);
             self.enabled_loggers([]);
@@ -177,7 +175,7 @@ $(function () {
 
         self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
             values.automatic_configuration,
-            Octolapse.DebugProfiles.profileOptions.server_profiles,
+            Octolapse.LoggingProfiles.profileOptions.server_profiles,
             self.profileTypeName(),
             self,
             self.updateFromServer
@@ -197,11 +195,11 @@ $(function () {
 
         self.automatic_configuration.is_confirming.subscribe(function (value) {
             //console.log("IsClickable" + value.toString());
-            Octolapse.DebugProfiles.setIsClickable(!value);
+            Octolapse.LoggingProfiles.setIsClickable(!value);
         });
 
     };
-    Octolapse.DebugProfileValidationRules = {
+    Octolapse.LoggingProfileValidationRules = {
         rules: {
             name: "required"
         },

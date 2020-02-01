@@ -92,7 +92,6 @@ class Timelapse(object):
 
         self._octoprint_printer_profile = None
         self._current_job_info = None
-        self._ffmpeg_path = None
         self._stabilization = None
         self._trigger = None
         self._trigger_profile = None
@@ -101,7 +100,7 @@ class Timelapse(object):
         self._capture_snapshot = None
         self._position = None
         self._state = TimelapseState.Idle
-        self._is_test_mode = False
+        self._test_mode_enabled = False
         # State Tracking that should only be reset when starting a timelapse
         self._has_been_stopped = False
         self._timelapse_stop_requested = False
@@ -211,7 +210,7 @@ class Timelapse(object):
         )
 
         self._state = TimelapseState.WaitingForTrigger
-        self._is_test_mode = self._settings.profiles.current_debug_profile().is_test_mode
+        self._test_mode_enabled = self._settings.main_settings.test_mode_enabled
         self._triggers = Triggers(self._settings)
         self._triggers.create()
 
@@ -636,7 +635,7 @@ class Timelapse(object):
         return True
 
     def get_is_test_mode_active(self):
-        return self._is_test_mode
+        return self._test_mode_enabled
 
     def get_is_taking_snapshot(self):
         return self._snapshot_task_queue.qsize() > 0
@@ -709,7 +708,7 @@ class Timelapse(object):
                 return Commands.to_string(parsed_command)
 
             # look for test mode
-            if self._is_test_mode and self._state >= TimelapseState.WaitingForTrigger:
+            if self._test_mode_enabled and self._state >= TimelapseState.WaitingForTrigger:
                 return self._commands.alter_for_test_mode(parsed_command)
 
         # Send the original unaltered command
@@ -1288,7 +1287,7 @@ class Timelapse(object):
         self._current_job_info = None
         self._snapshotGcodes = None
         self._positionRequestAttempts = 0
-        self._is_test_mode = False
+        self._test_mode_enabled = False
         self._position_request_sent = False
 
         # A list of callbacks who want to be informed when a timelapse ends
@@ -1303,7 +1302,7 @@ class Timelapse(object):
             "snapshot": "",
             "rendering": "",
             "camera": "",
-            "debug_profile": ""
+            "logging_profile": ""
         }
         # fetch position private variables
         self._position_payload = None

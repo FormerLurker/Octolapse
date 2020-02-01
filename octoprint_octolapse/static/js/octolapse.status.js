@@ -43,10 +43,6 @@ $(function () {
                 self.enabled = ko.observable(values.enabled);
                 self.enable_custom_image_preferences = values.enable_custom_image_preferences
             }
-            else if(type === "debug_profile")
-            {
-                self.is_test_mode = values.is_test_mode;
-            }
         };
 
         Octolapse.StatusViewModel = function () {
@@ -67,7 +63,7 @@ $(function () {
             self.current_trigger_profile_guid = ko.observable();
             self.current_snapshot_profile_guid = ko.observable();
             self.current_rendering_profile_guid = ko.observable();
-            self.current_debug_profile_guid = ko.observable();
+            self.current_logging_profile_guid = ko.observable();
             self.current_settings_showing = ko.observable(true);
             self.profiles = ko.observable({
                 'printers': ko.observableArray([new Octolapse.CurrentSettingViewModel("printer", {name: "Unknown", guid: "", description:"",has_been_saved_by_user: false})]),
@@ -76,7 +72,7 @@ $(function () {
                 'snapshots': ko.observableArray([new Octolapse.CurrentSettingViewModel("snapshot", {name: "Unknown", guid: "", description:""})]),
                 'renderings': ko.observableArray([new Octolapse.CurrentSettingViewModel("rendering", {name: "Unknown", guid: "", description:""})]),
                 'cameras': ko.observableArray([new Octolapse.CurrentSettingViewModel("camera", {name: "Unknown", guid: "", description:"", enabled: false})]),
-                'debug_profiles': ko.observableArray([new Octolapse.CurrentSettingViewModel("debug_profile", {name: "Unknown", guid: "", description:"", is_test_mode:false})])
+                'logging_profiles': ko.observableArray([new Octolapse.CurrentSettingViewModel("logging_profile", {name: "Unknown", guid: "", description:""})])
             });
             self.is_real_time = ko.observable(true);
             self.is_test_mode_active = ko.observable(false);
@@ -221,6 +217,7 @@ $(function () {
                 self.dialog_rendering_in_process.on_after_binding();
                 self.dialog_rendering_unfinished.on_after_binding();
                 self.timelapse_files_dialog.on_after_binding();
+                Octolapse.Help.bindHelpLinks("#octolapse_status_settings_current_panel");
             };
 
             // Update the current tab state
@@ -294,13 +291,13 @@ $(function () {
                     self.profiles().triggers(self.create_current_settings_profile("trigger", settings.profiles.triggers));
                     self.profiles().renderings(self.create_current_settings_profile("rendering", settings.profiles.renderings));
                     self.profiles().cameras(self.create_current_settings_profile("camera", settings.profiles.cameras));
-                    self.profiles().debug_profiles(self.create_current_settings_profile("debug_profile", settings.profiles.debug_profiles));
+                    self.profiles().logging_profiles(self.create_current_settings_profile("logging_profile", settings.profiles.logging_profiles));
                     self.current_printer_profile_guid(settings.profiles.current_printer_profile_guid);
                     self.current_stabilization_profile_guid(settings.profiles.current_stabilization_profile_guid);
                     self.current_trigger_profile_guid(settings.profiles.current_trigger_profile_guid);
                     self.current_snapshot_profile_guid(settings.profiles.current_snapshot_profile_guid);
                     self.current_rendering_profile_guid(settings.profiles.current_rendering_profile_guid);
-                    self.current_debug_profile_guid(settings.profiles.current_debug_profile_guid);
+                    self.current_logging_profile_guid(settings.profiles.current_logging_profile_guid);
                 }
                 if (settings.unfinished_renderings)
                 {
@@ -375,14 +372,6 @@ $(function () {
                 if (current_printer != null)
                     return self.is_timelapse_active() || current_printer.slicer_type == 'automatic' || current_printer.has_been_saved_by_user;
                 return true;
-            },this);
-
-            self.getCurrentDebugProfileIsTestMode = ko.pureComputed(function(){
-                var current_debug_profile = self.getCurrentProfileByGuid(self.profiles().debug_profiles(),Octolapse.Status.current_debug_profile_guid());
-                if (current_debug_profile != null) {
-                    return current_debug_profile.is_test_mode;
-                }
-                return false;
             },this);
 
             self.getCurrentTriggerProfileIsRealTime = function(){
@@ -935,19 +924,19 @@ $(function () {
                 self.updateLatestSnapshotImage(true);
             };
 
-            // Debug Profile Settings
-            self.debug_sorted = ko.computed(function() { return self.nameSort(self.profiles().debug_profiles) });
-            self.openCurrentDebugProfile = function () {
-                //console.log("Opening current debug profile from tab.")
-                Octolapse.DebugProfiles.showAddEditDialog(self.current_debug_profile_guid(), false);
+            // Logging Profile Settings
+            self.logging_profiles_sorted = ko.computed(function() { return self.nameSort(self.profiles().logging_profiles) });
+            self.openCurrentLoggingProfile = function () {
+                //console.log("Opening current logging profile from tab.")
+                Octolapse.LoggingProfiles.showAddEditDialog(self.current_logging_profile_guid(), false);
             };
-            self.defaultDebugProfileChanged = function (obj, event) {
+            self.defaultLoggingProfileChanged = function (obj, event) {
                 if (Octolapse.Globals.is_admin()) {
                     if (event.originalEvent) {
                         // Get the current guid
-                        var guid = $("#octolapse_tab_debug_profile").val();
-                        //console.log("Default Debug Profile is changing to " + guid);
-                        Octolapse.DebugProfiles.setCurrentProfile(guid);
+                        var guid = $("#octolapse_tab_logging_profile").val();
+                        //console.log("Default Logging Profile is changing to " + guid);
+                        Octolapse.LoggingProfiles.setCurrentProfile(guid);
                         return true;
                     }
                 }
@@ -983,8 +972,8 @@ $(function () {
                     return "";
                 return currentProfile.description;
             });
-            self.getDebugProfileTitle = ko.computed(function () {
-                var currentProfile = self.getCurrentProfileByGuid(self.profiles().debug_profiles(),Octolapse.Status.current_debug_profile_guid());
+            self.getLoggingProfileTitle = ko.computed(function () {
+                var currentProfile = self.getCurrentProfileByGuid(self.profiles().logging_profiles(),Octolapse.Status.current_logging_profile_guid());
                 if (currentProfile == null)
                     return "";
                 return currentProfile.description;

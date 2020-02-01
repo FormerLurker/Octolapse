@@ -85,7 +85,7 @@ class TestRender(unittest.TestCase):
         self.on_render_error = Mock(return_value=None)
         return TimelapseRenderJob(job_id=self.rendering_job_id,
                                   rendering=rendering,
-                                  debug=self.octolapse_settings.current_debug_profile(),
+                                  logging=self.octolapse_settings.current_logging_profile(),
                                   print_filename=self.print_name,
                                   capture_dir=self.snapshot_dir_path,
                                   snapshot_filename_format=self.capture_template,

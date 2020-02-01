@@ -1389,7 +1389,7 @@ $(function () {
     OctolapseViewModel = function (parameters) {
         var self = this;
         Octolapse.Globals = self;
-
+        Octolapse.Help = new OctolapseHelp();
         self.loginState = parameters[0];
         Octolapse.PrinterStatus = parameters[1];
         self.OctoprintTimelapse = parameters[2];
@@ -1417,6 +1417,7 @@ $(function () {
 
         self.onBeforeBinding = function () {
             self.is_admin(self.loginState.isAdmin());
+
         };
 
         self.startup_complete = false;
@@ -1425,7 +1426,7 @@ $(function () {
             //console.log("Startup Complete")
             self.getInitialState();
             self.startup_complete = true;
-            Octolapse.Help = new OctolapseHelp();
+
 
         };
 
@@ -2096,8 +2097,23 @@ $(function () {
                                 desktop: true
                             }
                         };
-                        Octolapse.displayPopup(options);
+                        Octolapse.displayPopupForKey(options,"settings-change-not-applied", ["settings-change-not-applied"]);
                     }
+                break;
+                case "test-mode-changed-running":
+                {
+                    var options = {
+                            title: 'Test Mode Changed, Octolapse Running',
+                            text: data.msg,
+                            type: 'notice',
+                            hide: true,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                       Octolapse.displayPopupForKey(options,"settings-change-not-applied", ["settings-change-not-applied"]);
+                }
                 break;
                 case "timelapse-stopped-error":
                     {

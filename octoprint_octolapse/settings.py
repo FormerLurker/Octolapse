@@ -179,6 +179,7 @@ class Settings(object):
         else:
             super(Settings, self).__setattr__(a, v)
 
+
 class ProfileSettings(Settings):
 
     def __init__(self, name=""):
@@ -1567,17 +1568,21 @@ class LoggerSettings(Settings):
         self.name = name
         self.log_level = log_level
 
+    def to_dict(self):
+        return {
+            'name': self.name,
+            'log_level': self.log_level
+        }
 
-class DebugProfile(AutomaticConfigurationProfile):
 
-    def __init__(self, name="New Debug Profile"):
-        super(DebugProfile, self).__init__(name)
+class LoggingProfile(AutomaticConfigurationProfile):
+
+    def __init__(self, name="New Logging Profile"):
+        super(LoggingProfile, self).__init__(name)
         # Configure the logger if it has not been created
-        self.log_all_errors = True
         self.enabled = False
         self.log_to_console = False
         self.default_log_level = log.DEBUG
-        self.is_test_mode = False
         self.enabled_loggers = []
         for logger_name in logging_configurator.get_logger_names():
             self.enabled_loggers.append(LoggerSettings(logger_name, self.default_log_level))
@@ -1587,21 +1592,19 @@ class DebugProfile(AutomaticConfigurationProfile):
         if key == 'enabled_loggers':
             try:
                 if value is not None:
-                    return DebugProfile.get_enabled_loggers(value)
+                    return LoggingProfile.get_enabled_loggers(value)
             except Exception as e:
                 logger.exception("Unable to convert 'enabled_loggers', returning default.")
                 return []
 
-        return super(DebugProfile, cls).try_convert_value(destination, value, key)
+        return super(LoggingProfile, cls).try_convert_value(destination, value, key)
 
     @classmethod
     def get_enabled_loggers(cls, values):
         logger_list = []
         for enabled_logger in values:
-            logger_list.append({
-                'name': enabled_logger["name"],
-                'log_level': enabled_logger["log_level"]
-            })
+            logger_settings = LoggerSettings(enabled_logger["name"], enabled_logger["log_level"])
+            logger_list.append(logger_settings)
         return logger_list
 
     @staticmethod
@@ -1611,9 +1614,7 @@ class DebugProfile(AutomaticConfigurationProfile):
                 dict(value=log.VERBOSE, name='Verbose'),
                 dict(value=log.DEBUG, name='Debug'),
                 dict(value=log.INFO, name='Info'),
-                dict(value=log.WARNING, name='Warning'),
-                dict(value=log.ERROR, name='Error'),
-                dict(value=log.CRITICAL, name='Critical'),
+                dict(value=log.WARNING, name='Warning')
             ],
             'all_logger_names': logging_configurator.get_logger_names()
         }
@@ -1644,6 +1645,7 @@ class MainSettings(Settings):
         self.snapshot_archive_directory = ""
         self.timelapse_directory = ""
         self.temporary_directory = ""
+        self.test_mode_enabled = False
 
     def get_snapshot_archive_directory(self, data_folder):
         directory = self.snapshot_archive_directory.strip()
@@ -1744,7 +1746,7 @@ class ProfileOptions(StaticSettings):
         self.trigger = TriggerProfile.get_options()
         self.rendering = RenderingProfile.get_options()
         self.camera = CameraProfile.get_options()
-        self.debug = DebugProfile.get_options()
+        self.logging = LoggingProfile.get_options()
 
     def update_server_options(self, available_profiles):
         if not available_profiles:
@@ -1755,7 +1757,7 @@ class ProfileOptions(StaticSettings):
         self.trigger["server_profiles"] = available_profiles.get("trigger", None)
         self.rendering["server_profiles"] = available_profiles.get("rendering", None)
         self.camera["server_profiles"] = available_profiles.get("camera", None)
-        self.debug["server_profiles"] = available_profiles.get("debug", None)
+        self.logging["server_profiles"] = available_profiles.get("logging", None)
 
 
 class ProfileDefaults(StaticSettings):
@@ -1765,7 +1767,7 @@ class ProfileDefaults(StaticSettings):
         self.trigger = TriggerProfile("Default Trigger")
         self.rendering = RenderingProfile("Default Rendering")
         self.camera = CameraProfile("Default Camera")
-        self.debug = DebugProfile("Default Debug")
+        self.logging = LoggingProfile("Default Logging")
         self.main_settings = MainSettings(plugin_version)
 
 
@@ -1792,8 +1794,8 @@ class Profiles(Settings):
         self.current_camera_profile_guid = self.defaults.camera.guid
         self.cameras = {self.defaults.camera.guid: self.defaults.camera}
 
-        self.current_debug_profile_guid = self.defaults.debug.guid
-        self.debug = {self.defaults.debug.guid: self.defaults.debug}
+        self.current_logging_profile_guid = self.defaults.logging.guid
+        self.logging = {self.defaults.logging.guid: self.defaults.logging}
 
     def get_profiles_dict(self):
         profiles_dict = {
@@ -1802,13 +1804,13 @@ class Profiles(Settings):
             'current_trigger_profile_guid': self.current_trigger_profile_guid,
             'current_rendering_profile_guid': self.current_rendering_profile_guid,
             'current_camera_profile_guid': self.current_camera_profile_guid,
-            'current_debug_profile_guid': self.current_debug_profile_guid,
+            'current_logging_profile_guid': self.current_logging_profile_guid,
             'printers': [],
             'stabilizations': [],
             'triggers': [],
             'renderings': [],
             'cameras': [],
-            'debug': []
+            'logging': []
         }
 
         for key, printer in self.printers.items():
@@ -1851,12 +1853,11 @@ class Profiles(Settings):
                 "enable_custom_image_preferences": camera.enable_custom_image_preferences
             })
 
-        for key, debugProfile in self.debug.items():
-            profiles_dict["debug"].append({
-                "name": debugProfile.name,
-                "guid": debugProfile.guid,
-                "description": debugProfile.description,
-                "is_test_mode": debugProfile.is_test_mode
+        for key, loggingProfile in self.logging.items():
+            profiles_dict["logging"].append({
+                "name": loggingProfile.name,
+                "guid": loggingProfile.guid,
+                "description": loggingProfile.description
             })
         return profiles_dict
 
@@ -1885,10 +1886,10 @@ class Profiles(Settings):
             return self.cameras[self.current_camera_profile_guid]
         return self.defaults.camera
 
-    def current_debug_profile(self):
-        if self.current_debug_profile_guid in self.debug:
-            return self.debug[self.current_debug_profile_guid]
-        return self.defaults.debug
+    def current_logging_profile(self):
+        if self.current_logging_profile_guid in self.logging:
+            return self.logging[self.current_logging_profile_guid]
+        return self.defaults.logging
 
     def active_cameras(self):
         _active_cameras = []
@@ -1946,8 +1947,8 @@ class Profiles(Settings):
             profile = self.renderings[guid]
         elif profile_type == "camera":
             profile = self.cameras[guid]
-        elif profile_type == "debug":
-            profile = self.debug[guid]
+        elif profile_type == "logging":
+            profile = self.logging[guid]
         else:
             raise ValueError('An unknown profile type {} was received.'.format(profile_type))
         return profile
@@ -1971,9 +1972,9 @@ class Profiles(Settings):
         elif profile_type == "camera":
             new_profile = CameraProfile.create_from(profile_json)
             existing_profiles = self.cameras
-        elif profile_type == "debug":
-            new_profile = DebugProfile.create_from(profile_json)
-            existing_profiles = self.debug
+        elif profile_type == "logging":
+            new_profile = LoggingProfile.create_from(profile_json)
+            existing_profiles = self.logging
         else:
             raise Exception("Unknown settings type:{0}".format(profile_type))
         # see if any existing profiles have the same name
@@ -2022,11 +2023,11 @@ class Profiles(Settings):
             self.cameras[guid] = new_profile
             if len(self.cameras) == 1 or self.current_camera_profile_guid not in self.cameras:
                 self.current_camera_profile_guid = new_profile.guid
-        elif profile_type == "debug":
-            new_profile = DebugProfile.create_from(profile)
-            self.debug[guid] = new_profile
-            if len(self.debug) == 1 or self.current_debug_profile_guid not in self.debug:
-                self.current_debug_profile_guid = new_profile.guid
+        elif profile_type == "logging":
+            new_profile = LoggingProfile.create_from(profile)
+            self.logging[guid] = new_profile
+            if len(self.logging) == 1 or self.current_logging_profile_guid not in self.logging:
+                self.current_logging_profile_guid = new_profile.guid
         else:
             raise ValueError('An unknown profile type {} was received.'.format(profile_type))
         return new_profile
@@ -2052,10 +2053,10 @@ class Profiles(Settings):
             del self.renderings[guid]
         elif profile_type == "camera":
             del self.cameras[guid]
-        elif profile_type == "debug":
-            if self.current_debug_profile_guid == guid:
+        elif profile_type == "logging":
+            if self.current_logging_profile_guid == guid:
                 return False
-            del self.debug[guid]
+            del self.logging[guid]
         else:
             raise ValueError('An unknown profile type {} was received.'.format(profile_type)(profile_type))
 
@@ -2075,8 +2076,8 @@ class Profiles(Settings):
             self.current_rendering_profile_guid = guid
         elif profile_type == "camera":
             self.current_camera_profile_guid = guid
-        elif profile_type == "debug":
-            self.current_debug_profile_guid = guid
+        elif profile_type == "logging":
+            self.current_logging_profile_guid = guid
         else:
             raise ValueError('An unknown profile type {} was received.'.format(profile_type))
 
@@ -2105,9 +2106,9 @@ class Profiles(Settings):
                 elif key == 'cameras':
                     profiles = self.cameras
                     create_from = CameraProfile.create_from
-                elif key == 'debug':
-                    profiles = self.debug
-                    create_from = DebugProfile.create_from
+                elif key == 'logging':
+                    profiles = self.logging
+                    create_from = LoggingProfile.create_from
                 else:
                     profiles_found = False
 
@@ -2148,10 +2149,10 @@ class Profiles(Settings):
             # get the current profile
             current_profile = CameraProfile.create_from(current_profile_dict)
             new_profile = CameraProfile.update_from_server_profile(current_profile, server_profile_dict)
-        elif profile_type == "debug":
+        elif profile_type == "logging":
             # get the current profile
-            current_profile = DebugProfile.create_from(current_profile_dict)
-            new_profile = DebugProfile.update_from_server_profile(current_profile, server_profile_dict)
+            current_profile = LoggingProfile.create_from(current_profile_dict)
+            new_profile = LoggingProfile.update_from_server_profile(current_profile, server_profile_dict)
         else:
             raise ValueError('An unknown profile type {} was received.'.format(profile_type))
         return new_profile
@@ -2163,7 +2164,7 @@ class Profiles(Settings):
             "trigger": [],
             "rendering": [],
             "camera": [],
-            "debug": []
+            "logging": []
         }
         has_profiles = False
         for key, printer_profile in six.iteritems(self.printers):
@@ -2196,11 +2197,11 @@ class Profiles(Settings):
                 identifiers = camera_profile.get_server_update_identifiers_dict()
                 profiles["camera"].append(identifiers)
 
-        for key, debug_profile in six.iteritems(self.debug):
-            if debug_profile.is_updatable_from_server():
+        for key, logging_profile in six.iteritems(self.logging):
+            if logging_profile.is_updatable_from_server():
                 has_profiles = True
-                identifiers = debug_profile.get_server_update_identifiers_dict()
-                profiles["debug"].append(identifiers)
+                identifiers = logging_profile.get_server_update_identifiers_dict()
+                profiles["logging"].append(identifiers)
 
         if not has_profiles:
             return None
@@ -2231,7 +2232,7 @@ class OctolapseSettings(Settings):
     def is_rendering_settings_file(file_name):
         return file_name.lower() == OctolapseSettings.rendering_settings_file_name
 
-    DefaultDebugProfile = None
+    DefaultLoggingProfile = None
 
     def __init__(self, plugin_version="unknown"):
         self.main_settings = MainSettings(plugin_version)

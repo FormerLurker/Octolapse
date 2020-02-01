@@ -65,7 +65,7 @@ from octoprint_octolapse.stabilization_gcode import SnapshotGcodeGenerator
 from octoprint_octolapse.gcode_commands import Commands
 from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, TriggerProfile, \
-    CameraProfile, RenderingProfile, DebugProfile, SlicerSettings, CuraSettings, OtherSlicerSettings, \
+    CameraProfile, RenderingProfile, LoggingProfile, SlicerSettings, CuraSettings, OtherSlicerSettings, \
     Simplify3dSettings, Slic3rPeSettings, SettingsJsonEncoder, MjpgStreamer, MainSettings
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState, TimelapseStartException
 from octoprint_octolapse.stabilization_preprocessing import StabilizationPreprocessingThread
@@ -75,10 +75,10 @@ from octoprint_octolapse.render import RenderError, RenderingProcessor, Renderin
 
 try:
     # noinspection PyCompatibility
-    from urlparse import urlparse
+    from urlparse import urlparse as urlparse
 except ImportError:
     # noinspection PyUnresolvedReferences
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse as urlparse
 
 # configure all imported loggers
 logging_configurator.configure_loggers()
@@ -159,9 +159,9 @@ class OctolapsePlugin(
     def get_sorting_key(self, context=None):
         return 1
 
-    def get_current_debug_profile_function(self):
+    def get_current_logging_profile_function(self):
         if self._octolapse_settings is not None:
-            return self._octolapse_settings.profiles.current_debug_profile
+            return self._octolapse_settings.profiles.current_logging_profile
 
     def get_current_octolapse_settings(self):
         # returns a guaranteed up-to-date settings object
@@ -558,6 +558,32 @@ class OctolapsePlugin(
             data = {
                 'success': True,
                 'enabled': enable_octolapse
+            }
+            return jsonify(data)
+
+    @octoprint.plugin.BlueprintPlugin.route("/setTestMode", methods=["POST"])
+    @restricted_access
+    def set_test_mode_request(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            client_id = request_values["client_id"]
+            test_mode_enabled = request_values["test_mode_enabled"]
+            if (
+                self._timelapse is not None and
+                self._timelapse.is_timelapse_active()
+            ):
+                self.send_plugin_message(
+                    "test-mode-changed-running",
+                    "Test mode has been changed, but Octolapse is currently active.  The new setting will take effect"
+                    "after the current print ends"
+                )
+            # save the updated settings to a file.
+            self._octolapse_settings.main_settings.test_mode_enabled = test_mode_enabled
+            self.save_settings()
+            self.send_state_changed_message(None, client_id)
+            data = {
+                'success': True,
+                'enabled': test_mode_enabled
             }
             return jsonify(data)
 
@@ -1905,7 +1931,7 @@ class OctolapsePlugin(
 
     def configure_loggers(self):
         logging_configurator.configure_loggers(
-            self.get_log_file_path(), self._octolapse_settings.profiles.current_debug_profile()
+            self.get_log_file_path(), self._octolapse_settings.profiles.current_logging_profile()
         )
 
     def load_settings(self, force_defaults=False):
@@ -1948,24 +1974,35 @@ class OctolapsePlugin(
             # for all cameras.
             try:
                 # adjust the snapshot url
-                o = urlparse(snapshot_url)
-                camera_address = o.scheme + "://" + o.netloc + o.path
-                logger.info("Setting octolapse camera address to %s.", camera_address)
-                snapshot_action = urlparse(snapshot_url).query
-                snapshot_request_template = "{camera_address}?" + snapshot_action
+                if snapshot_url:
+                    o = urlparse(snapshot_url)
+                    camera_address = o.scheme + "://" + o.netloc + o.path
+                    logger.info("Setting octolapse camera address to %s.", camera_address)
+                    snapshot_action = urlparse(snapshot_url).query
+                    snapshot_request_template = "{camera_address}?" + snapshot_action
+                    logger.info("Setting octolapse camera snapshot template to %s.",
+                                snapshot_request_template.replace('{', '{{').replace('}', '}}'))
+                    self._octolapse_settings.profiles.defaults.camera.webcam_settings.address = camera_address
+                    self._octolapse_settings.profiles.defaults.camera.webcam_settings.snapshot_request_template = snapshot_request_template
+                    if apply_to_current_profile:
+                        logger.info("Applying the default snapshot url to the Octolapse camera profiles.")
+                        for profile in self._octolapse_settings.profiles.cameras.values():
+                            profile.webcam_settings.address = camera_address
+                            profile.webcam_settings.snapshot_request_template = snapshot_request_template
+                else:
+                    logger.warning("No snapshot url was set in the Octoprint settings, unable to apply defaults.")
                 # adjust the webcam stream url
                 webcam_stream_template = webcam_stream_url
+                if webcam_stream_template:
+                    logger.info("Setting octolapse defalt streaming url to %s.", webcam_stream_url)
+                    self._octolapse_settings.profiles.defaults.camera.webcam_settings.stream_template = webcam_stream_template
+                    if apply_to_current_profile:
+                        logger.info("Applying the default streaming url to the Octolapse camera profiles.")
+                        for profile in self._octolapse_settings.profiles.cameras.values():
+                            profile.webcam_settings.stream_template = webcam_stream_template
+                else:
+                    logger.warning("No streaming url was set in the Octoprint settings, unable to apply defaults.")
 
-                logger.info("Setting octolapse camera snapshot template to %s.", snapshot_request_template.replace('{', '{{').replace('}','}}'))
-                self._octolapse_settings.profiles.defaults.camera.webcam_settings.address = camera_address
-                self._octolapse_settings.profiles.defaults.camera.webcam_settings.snapshot_request_template = snapshot_request_template
-                self._octolapse_settings.profiles.defaults.camera.webcam_settings.stream_template = webcam_stream_template
-
-                if apply_to_current_profile:
-                    for profile in self._octolapse_settings.profiles.cameras.values():
-                        profile.webcam_settings.address = camera_address
-                        profile.webcam_settings.snapshot_request_template = snapshot_request_template
-                        profile.webcam_settings.stream_template = webcam_stream_template
             except Exception as e:
                 # cannot send a popup yet,because no clients will be connected.  We should write a routine that
                 # checks to make sure Octolapse is correctly configured if it is enabled and send some kind of
@@ -1975,10 +2012,15 @@ class OctolapsePlugin(
                 logger.exception("Unable to copy the default webcam settings from OctoPrint.")
 
             bitrate = self._settings.global_get(["webcam", "bitrate"])
-            self._octolapse_settings.profiles.defaults.rendering.bitrate = bitrate
-            if apply_to_current_profile:
-                for profile in self._octolapse_settings.profiles.renderings.values():
-                    profile.bitrate = bitrate
+            if bitrate:
+                self._octolapse_settings.profiles.defaults.rendering.bitrate = bitrate
+                logger.info("Setting the default octolapse rendering bitrate to the Octoprint default of %s.", bitrate)
+                if apply_to_current_profile and bitrate:
+                    logger.info("Applying default bitrate to the Octolapse rendering profiles.")
+                    for profile in self._octolapse_settings.profiles.renderings.values():
+                        profile.bitrate = bitrate
+            else:
+                logger.warning("No rendering bitrate was set in the Octoprint settings.  Unable to apply the defaults.")
         except Exception as e:
             logger.exception("Unable to copy default settings from OctoPrint.")
 
@@ -2043,17 +2085,17 @@ class OctolapsePlugin(
                 is_timelapse_active = self._timelapse.is_timelapse_active()
                 if is_timelapse_active:
                     is_test_mode_active = self._timelapse.get_is_test_mode_active()
-                # Always get the current debug settings, else they won't update from the tab while a timelapse is
+                # Always get the current logging settings, else they won't update from the tab while a timelapse is
                 # running.
                 if include_profiles:
                     if is_timelapse_active:
                         profiles_dict = self._timelapse.get_current_profiles()
                     else:
                         profiles_dict = self._octolapse_settings.profiles.get_profiles_dict()
-                    profiles_dict["current_debug_profile_guid"] = (
-                        self._octolapse_settings.profiles.current_debug_profile_guid
+                    profiles_dict["current_logging_profile_guid"] = (
+                        self._octolapse_settings.profiles.current_logging_profile_guid
                     )
-                    profiles_dict["debug_profiles"] = profiles_dict["debug"]
+                    profiles_dict["logging_profiles"] = profiles_dict["logging"]
                     # always get the latest current camera profile guid.
                     profiles_dict["current_camera_profile_guid"] = (
                         self._octolapse_settings.profiles.current_camera_profile_guid
@@ -2313,6 +2355,11 @@ class OctolapsePlugin(
             elif event == Events.PRINT_DONE:
                 self.on_print_completed()
                 self.on_print_end()
+            elif event == Events.SETTINGS_UPDATED:
+                # See if the ffmpeg directory changed.
+                ffmpeg_directory = self._settings.global_get(["webcam", "ffmpeg"])
+                if self._rendering_processor.set_ffmpeg_directory(ffmpeg_directory):
+                    logger.info("FFMPEG directory changed to %s, updating the rendering processor", ffmpeg_directory)
         except Exception as e:
             logger.exception("An error occurred while handling an OctoPrint event.")
             raise e
@@ -3479,7 +3526,7 @@ class OctolapsePlugin(
                 "js/octolapse.profiles.camera.js",
                 "js/octolapse.profiles.camera.webcam.js",
                 "js/octolapse.profiles.camera.webcam.mjpg_streamer.js",
-                "js/octolapse.profiles.debug.js",
+                "js/octolapse.profiles.logging.js",
                 "js/octolapse.status.js",
                 "js/octolapse.status.snapshotplan.js",
                 "js/octolapse.status.snapshotplan_preview.js",

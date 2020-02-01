@@ -476,6 +476,12 @@ class RenderingProcessor(threading.Thread):
             "ffmpeg_directory_changed": ffmpeg_directory_changed
         }
 
+    def set_ffmpeg_directory(self, directory):
+        if self._ffmpeg_directory != directory:
+            self._ffmpeg_directory = directory
+            return True
+        return False
+
     def archive_unfinished_job(
         self, temporary_directory, job_guid, camera_guid, target_path, is_download=False,
         progress_callback=None, progress_key='archiving', progress_current_step=0, progress_total_steps=None
@@ -1430,11 +1436,11 @@ class TimelapseRenderJob(threading.Thread):
 
     def _render(self):
         """Process the timelapse render job and report progress"""
-
-        # Make sure we can render a timelapse, and that we aren't missing any critical settings
-        self._run_prechecks()
         # send render start message
         self.on_render_start(self._create_callback_payload(0, "Starting to render timelapse."))
+        # Make sure we can render a timelapse, and that we aren't missing any critical settings
+        self._run_prechecks()
+
         # set an error variable to None, we will return None if there are no problems
         r_error = None
         # Variable used to determine if we should delete the snapshots at the end.  We can safely
@@ -1531,8 +1537,10 @@ class TimelapseRenderJob(threading.Thread):
                         # for calculating progress
                         p = script.POpenWithTimeoutAsync(on_stderr_line_received=self._process_ffmpeg_output)
                         p.run(command_args)
-                        # rename the output file
-                        utility.move(temp_filepath, self._output_filepath)
+                        # only move the file if the script completed.  If it did not, we will get a failed return code later.
+                        if p.completed:
+                            # rename the output file
+                            utility.move(temp_filepath, self._output_filepath)
                     except Exception as e:
                         logger.exception("An exception occurred while running the ffmpeg process.")
                         raise RenderError('rendering-exception', "ffmpeg failed during rendering of movie. "

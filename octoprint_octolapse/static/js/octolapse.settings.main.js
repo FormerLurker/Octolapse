@@ -44,6 +44,7 @@ $(function () {
         self.snapshot_archive_directory = ko.observable();
         self.timelapse_directory = ko.observable();
         self.temporary_directory = ko.observable();
+        self.test_mode_enabled = ko.observable();
         // rename this so that it never gets updated when saved
         self.octolapse_version = ko.observable("unknown");
         // Computed Observables
@@ -73,7 +74,8 @@ $(function () {
             self.snapshot_archive_directory(settings.snapshot_archive_directory);
             self.timelapse_directory(settings.timelapse_directory);
             self.temporary_directory(settings.temporary_directory);
-            self.octolapse_version(settings.version)
+            self.octolapse_version(settings.version);
+            self.test_mode_enabled(settings.test_mode_enabled);
             if (defaults)
                 self.defaults = settings.defaults
         };
@@ -101,6 +103,43 @@ $(function () {
                     var message = "Unable to enable/disable Octolapse.  Status: " + textStatus + ".  Error: " + errorThrown;
                     var options = {
                         title: 'Enable/Disable Error',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
+                }
+            });
+            return true;
+        };
+
+        self.toggleTestMode = function(){
+
+            var newValue = !self.test_mode_enabled();
+            var data = {
+                "test_mode_enabled": newValue,
+                "client_id": Octolapse.Globals.client_id
+            };
+            //console.log("Toggling test mode.")
+            $.ajax({
+                url: "./plugin/octolapse/setTestMode",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    // update the global value and the local value
+                    self.test_mode_enabled(newValue);
+                    Octolapse.Globals.main_settings.test_mode_enabled(newValue);
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    var message = "Unable to enable/disable test mode.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    var options = {
+                        title: 'Enable/Disable Test Mode Error',
                         text: message,
                         type: 'error',
                         hide: false,
