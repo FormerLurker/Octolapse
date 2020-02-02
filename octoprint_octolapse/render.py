@@ -1537,10 +1537,6 @@ class TimelapseRenderJob(threading.Thread):
                         # for calculating progress
                         p = script.POpenWithTimeoutAsync(on_stderr_line_received=self._process_ffmpeg_output)
                         p.run(command_args)
-                        # only move the file if the script completed.  If it did not, we will get a failed return code later.
-                        if p.completed:
-                            # rename the output file
-                            utility.move(temp_filepath, self._output_filepath)
                     except Exception as e:
                         logger.exception("An exception occurred while running the ffmpeg process.")
                         raise RenderError('rendering-exception', "ffmpeg failed during rendering of movie. "
@@ -1551,6 +1547,10 @@ class TimelapseRenderJob(threading.Thread):
                         stderr_text = "\n".join(p.stderr_lines)
                         raise RenderError('return-code', "Could not render movie, got return code %r: %s" % (
                             return_code, stderr_text))
+                    else:
+                        # only rename the temporary file if the script completed.
+                        # If it did not, we will get a failed return code later.
+                        utility.move(temp_filepath, self._output_filepath)
 
                 # run any post rendering scripts, notifying the client if scripts are running (but no progress)
                 self._post_render_script()
