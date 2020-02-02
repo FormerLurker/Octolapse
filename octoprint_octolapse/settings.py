@@ -1476,7 +1476,10 @@ class CameraProfile(AutomaticConfigurationProfile):
         super(CameraProfile, self).__init__(name)
         self.enabled = True
         self.camera_type = CameraProfile.camera_type_webcam
+        self.on_before_snapshot_gcode = ""
         self.gcode_camera_script = ""
+        self.on_after_snapshot_gcode = ""
+
         self.on_print_start_script = ""
         # self.print_start_script_timeout_ms = 0
         self.on_before_snapshot_script = ""

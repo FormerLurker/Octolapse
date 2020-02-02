@@ -32,7 +32,9 @@ $(function() {
         self.enabled = ko.observable(values.enabled);
         self.description = ko.observable(values.description);
         self.camera_type = ko.observable(values.camera_type);
+        self.on_before_snapshot_gcode = ko.observable(values.on_before_snapshot_gcode);
         self.gcode_camera_script = ko.observable(values.gcode_camera_script);
+        self.on_after_snapshot_gcode = ko.observable(values.on_after_snapshot_gcode);
         self.on_print_start_script = ko.observable(values.on_print_start_script);
         self.on_before_snapshot_script = ko.observable(values.on_before_snapshot_script);
         self.external_camera_snapshot_script = ko.observable(values.external_camera_snapshot_script);
@@ -334,19 +336,24 @@ $(function() {
             self.enabled(values.enabled);
             self.description(values.description);
             self.camera_type(values.camera_type);
-            //self.gcode_camera_script = ko.observable(values.gcode_camera_script);
+            self.on_before_snapshot_gcode = ko.observable(values.on_before_snapshot_gcode);
+            self.gcode_camera_script = ko.observable(values.gcode_camera_script);
+            self.on_after_snapshot_gcode = ko.observable(values.on_after_snapshot_gcode);
+            self.on_before_snapshot_gcode = ko.observable(values.on_before_snapshot_gcode);
             self.enable_custom_image_preferences(values.enable_custom_image_preferences);
-            self.on_print_start_script(values.on_print_start_script);
-            self.on_before_snapshot_script(values.on_before_snapshot_script);
-            //self.external_camera_snapshot_script = ko.observable(values.external_camera_snapshot_script);
-            //self.on_after_snapshot_script = ko.observable(values.on_after_snapshot_script);
-            //self.on_before_render_script = ko.observable(values.on_before_render_script);
-            //self.on_after_render_script = ko.observable(values.on_after_render_script);
             self.delay(values.delay);
             self.timeout_ms(values.timeout_ms);
             self.apply_settings_before_print(values.apply_settings_before_print);
             self.apply_settings_at_startup(values.apply_settings_at_startup);
             self.snapshot_transpose(values.snapshot_transpose);
+
+            //self.on_print_start_script(values.on_print_start_script);
+            //self.on_before_snapshot_script(values.on_before_snapshot_script);
+            //self.external_camera_snapshot_script = ko.observable(values.external_camera_snapshot_script);
+            //self.on_after_snapshot_script = ko.observable(values.on_after_snapshot_script);
+            //self.on_before_render_script = ko.observable(values.on_before_render_script);
+            //self.on_after_render_script = ko.observable(values.on_after_render_script);
+
             self.webcam_settings.updateWebcamSettings(values);
         };
 

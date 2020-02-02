@@ -243,10 +243,15 @@ class Timelapse(object):
     def send_snapshot_gcode_array(self, gcode_array, tags):
         self._octoprint_printer.commands(gcode_array, tags=tags)
 
-    def send_gcode_for_camera(self, gcode_array, timeout):
-        self.get_position_async(
-            start_gcode=gcode_array, timeout=timeout, tags={'camera-gcode'}
-        )
+    def send_gcode_for_camera(self, gcode_array, timeout, wait_for_completion=True, tags=None):
+        if tags is None:
+            tags = {'camera-gcode'}
+        if wait_for_completion:
+            self.get_position_async(
+                start_gcode=gcode_array, timeout=timeout, tags=tags
+            )
+        else:
+            self.send_snapshot_gcode_array(gcode_array, tags=tags)
 
     def _test_position_request(self):
         if self.get_position_async(timeout=self._position_timeout_very_short, no_wait=True):
@@ -257,6 +262,7 @@ class Timelapse(object):
     # this ensures any gcode sent in the start_gcode parameter will be executed before the function returns.
     _position_acquisition_array_wait = ["M400", "M114"]
     _position_acquisition_no_wait = ["M400", "M114"]
+
     def get_position_async(self, start_gcode=None, timeout=None, tags=None, no_wait=False):
         self._position_payload = None
         if timeout is None:
@@ -1132,6 +1138,10 @@ class Timelapse(object):
             logf("Pre processing finished gcode - %s: %s", msg, cmd)
         elif "current-position" in tags:
             logf("Current position gcode - %s: %s", msg, cmd)
+        elif "before-snapshot-gcode" in tags:
+            logf("Before snapshot gcode - %s: %s", msg, cmd)
+        elif "after-snapshot-gcode" in tags:
+            logf("After snapshot gcode - %s: %s", msg, cmd)
         elif "camera-gcode" in tags:
             logf("Camera gcode - %s: %s", msg, cmd)
         elif "force_xyz_axis" in tags:

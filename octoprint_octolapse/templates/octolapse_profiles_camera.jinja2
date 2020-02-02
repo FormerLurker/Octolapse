@@ -289,7 +289,33 @@
             <div>
                 <h4>Custom Camera Scripts</h4>
             </div>
-
+            <div>
+                <h5>Gcode Scripts</h5>
+                <div class="control-group">
+                    <label class="control-label">Before Snapshot Gcode</label>
+                    <div class="controls">
+                        <textarea id="octolapse_camera_on_before_snapshot_gcode" name="octolapse_camera_on_before_snapshot_gcode"
+                                  class="input-xlg ignore_hidden_errors"
+                                  data-bind="value: on_before_snapshot_gcode"
+                                  type="text" />
+                        <a class="octolapse_help" data-help-url="profiles.camera.on_before_snapshot_gcode.md" data-help-title="Gcode Script Camera" />
+                        <div class="error_label_container text-error" data-error-for="octolapse_camera_on_before_snapshot_gcode"></div>
+                        <span class="help-inline">Gcode sent before the snapshot is taken.</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">After Snapshot Gcode</label>
+                    <div class="controls">
+                        <textarea id="octolapse_camera_on_after_snapshot_gcode" name="octolapse_camera_on_after_snapshot_gcode"
+                                  class="input-xlg ignore_hidden_errors"
+                                  data-bind="value: on_after_snapshot_gcode"
+                                  type="text" />
+                        <a class="octolapse_help" data-help-url="profiles.camera.on_after_snapshot_gcode.md" data-help-title="Gcode Script Camera" />
+                        <div class="error_label_container text-error" data-error-for="octolapse_camera_on_after_snapshot_gcode"></div>
+                        <span class="help-inline">Gcode sent after the snapshot is taken.</span>
+                    </div>
+                </div>
+            </div>
             <div>
                 <div class="control-group">
                     <label class="control-label">Before Print Start Script</label>

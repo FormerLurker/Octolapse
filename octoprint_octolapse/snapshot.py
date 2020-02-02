@@ -166,6 +166,18 @@ class CaptureSnapshot(object):
                     thread
                 )
 
+        # Now that the before snapshot threads are prepared, send any before snapshot gcodes
+        for current_camera in self.Cameras:
+            if current_camera.on_before_snapshot_gcode:
+                on_before_snapshot_gcode = Commands.string_to_gcode_array(current_camera.on_before_snapshot_gcode)
+                if len(on_before_snapshot_gcode) > 0:
+                    logger.info("Sending on_before_snapshot_gcode for the %s camera.", current_camera.name)
+                    self.SendGcodeArrayCallback(
+                        on_before_snapshot_gcode,
+                        current_camera.timeout_ms / 1000.0,
+                        tags={'before-snapshot-gcode'}
+                    )
+
         if len(before_snapshot_threads) > 0:
             logger.info("Starting %d before snapshot threads", len(before_snapshot_threads))
 
@@ -197,11 +209,19 @@ class CaptureSnapshot(object):
         # now send any gcode for gcode cameras
         for current_camera in self.Cameras:
             if current_camera.camera_type == "gcode":
-                logger.info("Sending snapshot gcode array to %s.", current_camera.name)
-                # just send the gcode now so it all goes in order
-                self.SendGcodeArrayCallback(
-                    Commands.string_to_gcode_array(current_camera.gcode_camera_script), current_camera.timeout_ms/1000.0
-                )
+                script_sent = False
+                if current_camera.gcode_camera_script:
+                    gcode_camera_script = Commands.string_to_gcode_array(current_camera.gcode_camera_script)
+                    if len(gcode_camera_script) > 0:
+                        logger.info("Sending snapshot gcode array to %s.", current_camera.name)
+                        # just send the gcode now so it all goes in order
+                        self.SendGcodeArrayCallback(
+                            Commands.string_to_gcode_array(current_camera.gcode_camera_script),
+                            current_camera.timeout_ms/1000.0
+                        )
+                        script_sent
+                    if not script_sent:
+                        logger.warning("The gcode camera '%s' is enabled, but failed to produce any snapshot gcode.", current_camera.name)
 
         for t, snapshot_job_info, event in snapshot_threads:
             if event:
@@ -237,6 +257,18 @@ class CaptureSnapshot(object):
 
         if len(after_snapshot_threads) > 0:
             logger.info("Starting %d after snapshot threads.", len(after_snapshot_threads))
+
+        # Now that the after snapshot threads are prepared, send any after snapshot gcodes
+        for current_camera in self.Cameras:
+            if current_camera.on_after_snapshot_gcode:
+                on_after_snapshot_gcode = Commands.string_to_gcode_array(current_camera.on_after_snapshot_gcode)
+                if len(on_after_snapshot_gcode) > 0:
+                    logger.info("Sending on_after_snapshot_gcode for the %s camera.", current_camera.name)
+                    self.SendGcodeArrayCallback(
+                        on_after_snapshot_gcode,
+                        current_camera.timeout_ms / 1000.0,
+                        tags={'after-snapshot-gcode'}
+                    )
 
         # start the after-snapshot threads
         for t in after_snapshot_threads:
