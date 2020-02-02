@@ -167,47 +167,6 @@ class OctolapsePlugin(
         # returns a guaranteed up-to-date settings object
         return self._octolapse_settings
 
-    # Blueprint Plugin Mixin Requests
-    @octoprint.plugin.BlueprintPlugin.route("/snapshot", methods=["GET"])
-    def snapshot_request(self):
-        file_type = request.args.get('file_type')
-        guid = request.args.get('camera_guid')
-
-        if self._timelapse is not None:
-            temporary_folder = self._timelapse.get_current_temporary_folder()
-        else:
-            temporary_folder = self._octolapse_settings.main_settings.get_temporary_directory(
-                self.get_plugin_data_folder()
-            )
-        """Public access function to get the latest snapshot image"""
-        if file_type == 'snapshot':
-            # get the latest snapshot image
-            mime_type = 'image/jpeg'
-            filename = utility.get_latest_snapshot_download_path(
-                temporary_folder, guid, self._basefolder)
-            if not os.path.isfile(filename):
-                # we haven't captured any images, return the built in png.
-                mime_type = 'image/png'
-                filename = utility.get_no_snapshot_image_download_path(
-                    self._basefolder)
-        elif file_type == 'thumbnail':
-            # get the latest snapshot image
-            mime_type = 'image/jpeg'
-            filename = utility.get_latest_snapshot_thumbnail_download_path(
-                temporary_folder, guid, self._basefolder)
-            if not os.path.isfile(filename):
-                # we haven't captured any images, return the built in png.
-                mime_type = 'image/png'
-                filename = utility.get_no_snapshot_image_download_path(
-                    self._basefolder)
-        else:
-            # we don't recognize the snapshot type
-            mime_type = 'image/png'
-            filename = utility.get_error_image_download_path(self._basefolder)
-
-        # not getting the latest image
-        return send_file(filename, mimetype=mime_type, cache_timeout=-1)
-
     @octoprint.plugin.BlueprintPlugin.route("/clearLog", methods=["POST"])
     @restricted_access
     def clear_log_request(self):
@@ -255,6 +214,45 @@ class OctolapsePlugin(
         if not allowed:
             return None
         return directory
+
+    # Callback handler for /getSnapshot
+    # uses the OctolapseLargeResponseHandler
+    def get_snapshot_request(self, request_handler):
+        download_file_path = None
+        # get the args
+        file_type = request_handler.get_query_arguments('file_type')[0]
+        guid = request_handler.get_query_arguments('camera_guid')[0]
+
+        if self._timelapse is not None:
+            temporary_folder = self._timelapse.get_current_temporary_folder()
+        else:
+            temporary_folder = self._octolapse_settings.main_settings.get_temporary_directory(
+                self.get_plugin_data_folder()
+            )
+        """Public access function to get the latest snapshot image"""
+        if file_type == 'snapshot':
+            # get the latest snapshot image
+            filename = utility.get_latest_snapshot_download_path(
+                temporary_folder, guid, self._basefolder)
+            if not os.path.isfile(filename):
+                # we haven't captured any images, return the built in png.
+                filename = utility.get_no_snapshot_image_download_path(
+                    self._basefolder)
+        elif file_type == 'thumbnail':
+            # get the latest snapshot image
+            filename = utility.get_latest_snapshot_thumbnail_download_path(
+                temporary_folder, guid, self._basefolder)
+            if not os.path.isfile(filename):
+                # we haven't captured any images, return the built in png.
+                filename = utility.get_no_snapshot_image_download_path(
+                    self._basefolder)
+        else:
+            # we don't recognize the snapshot type
+            filename = utility.get_error_image_download_path(self._basefolder)
+
+        if not os.path.isfile(filename):
+            raise tornado.web.HTTPError(404)
+        return filename
 
     # Callback Handler for /downloadFile
     # uses the OctolapseLargeResponseHandler
@@ -3646,6 +3644,14 @@ class OctolapsePlugin(
                     access_validation=util.tornado.validation_chain(*admin_validation_chain)
                 )
 
+            ),
+            (
+                r"/getSnapshot",
+                OctolapseLargeResponseHandler,
+                dict(
+                    request_callback=self.get_snapshot_request,
+                    as_attachment=False
+                )
             )
         ]
 
