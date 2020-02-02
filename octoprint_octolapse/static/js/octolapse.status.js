@@ -130,12 +130,6 @@ $(function () {
                 return "Renderings";
             });
 
-            self.open_rendering_text_class = ko.pureComputed(function(){
-                if(!self.dialog_rendering_unfinished.is_empty())
-                    return "text-error";
-                return "";
-            });
-
             self.unfinished_renderings_changed = function(data){
                 if (data.failed)
                 {
@@ -467,7 +461,7 @@ $(function () {
                                     }
                                     else
                                     {
-                                                // fade out the current image
+                                        // fade out the current image
                                         animate_snapshots($images, $current, 0, 1, 1, 100);
                                     }
 
@@ -494,13 +488,39 @@ $(function () {
                 if (self.current_camera_guid() === null || self.current_camera_guid() === "")
                     console.error("Current camera guid requested, but it is null.");
                 else {
-                    if (getLatestSnapshotThumbnailUrl(self.current_camera_guid()))
-                    {
-                        self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', getLatestSnapshotThumbnailUrl(self.current_camera_guid())
-                            + "&time=" + new Date().getTime());
-                    }
+                    self.updateSnapshotAnimation(
+                        'octolapse_snapshot_thumbnail_container',
+                        (
+                            getLatestSnapshotThumbnailUrl(self.current_camera_guid())
+                            + "&time=" + new Date().getTime()
+                        )
+                    );
                 }
 
+            };
+
+            self.updateLatestSnapshotImage = function (force) {
+                force = force || false;
+                //console.log("Trying to update the latest snapshot image.");
+                if (!force) {
+                    if (!Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
+                        //console.log("Auto-Update latest snapshot image is disabled.");
+                        return
+                    }
+                    else if (!self.IsLatestSnapshotDialogShowing) {
+                        //console.log("The full screen dialog is not showing, not updating the latest snapshot.");
+                        return
+                    }
+                }
+                //console.log("Requesting image for camera:" + Octolapse.Status.current_camera_guid())
+                if(!(Octolapse.Status.current_camera_guid() == null || Octolapse.Status.current_camera_guid() == ""))
+                    self.updateSnapshotAnimation(
+                        'octolapse_snapshot_image_container',
+                        (
+                            getLatestSnapshotUrl(Octolapse.Status.current_camera_guid())
+                            + "&time=" + new Date().getTime()
+                        )
+                    );
             };
 
             self.erasePreviousSnapshotImages = function (targetId, eraseCurrentImage) {
@@ -567,20 +587,22 @@ $(function () {
                 // create the newest image
                 var $newSnapshot = $(document.createElement('img'));
 
-                // Clear any existing events
-                $newSnapshot.off('load');
-                $newSnapshot.off('error');
-                // append the image to the container
-
                 //console.log("Adding the new snapshot image to the latest snapshot container.");
                 // create on load event for the newest image
                 if (Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
                     // Add the new snapshot to the container
                     $newSnapshot.appendTo($latestSnapshotContainer);
-                    $newSnapshot.one('load', function () {
-                        self.startSnapshotAnimation(targetId);
-                    });
-
+                    if (!(targetId in self.IsAnimating) || !self.IsAnimating[targetId])
+                    {
+                        $newSnapshot.one('load', function () {
+                            self.startSnapshotAnimation(targetId);
+                        });
+                    }
+                    else {
+                        // We could have a race condition here.  Need to ensure the opacity of this element is
+                        // set to 1 after any animations are finished.
+                        $newSnapshot.css("opacity","0");
+                    }
                 }
                 else {
                     $newSnapshot.one('load', function () {
@@ -612,7 +634,7 @@ $(function () {
                     });
                 }
                 $newSnapshot.one('error', function () {
-                    //console.log("An error occurred loading the newest image, reverting to previous image.");
+                    console.error("An error occurred loading the newest image, reverting to previous image.");
                     // move the latest preview image back into the newest image section
                     $latestSnapshot.removeClass();
                     $latestSnapshot.appendTo($latestSnapshotContainer)
@@ -621,25 +643,6 @@ $(function () {
 
                 // set the src and start to load
                 $newSnapshot.attr('src', newSnapshotAddress)
-            };
-
-            self.updateLatestSnapshotImage = function (force) {
-                force = force || false;
-                //console.log("Trying to update the latest snapshot image.");
-                if (!force) {
-                    if (!Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
-                        //console.log("Auto-Update latest snapshot image is disabled.");
-                        return
-                    }
-                    else if (!self.IsLatestSnapshotDialogShowing) {
-                        //console.log("The full screen dialog is not showing, not updating the latest snapshot.");
-                        return
-                    }
-                }
-                //console.log("Requesting image for camera:" + Octolapse.Status.current_camera_guid())
-                if(!(Octolapse.Status.current_camera_guid() == null || Octolapse.Status.current_camera_guid() == ""))
-                    self.updateSnapshotAnimation('octolapse_snapshot_image_container', getLatestSnapshotUrl(Octolapse.Status.current_camera_guid()) + "&time=" + new Date().getTime());
-
             };
 
             self.toggleInfoPanel = function (observable, panelType){
