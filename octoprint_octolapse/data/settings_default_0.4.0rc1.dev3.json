@@ -17,7 +17,8 @@
     "preview_snapshot_plan_autoclose": false,
     "preview_snapshot_plan_seconds": 30,
     "automatic_updates_enabled": true,
-    "automatic_update_interval_days": 30
+    "automatic_update_interval_days": 30,
+    "test_mode_enabled": false
   },
   "profiles": {
     "options": null,
