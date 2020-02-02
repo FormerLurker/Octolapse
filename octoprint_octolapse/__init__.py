@@ -573,7 +573,7 @@ class OctolapsePlugin(
                 self.send_plugin_message(
                     "test-mode-changed-running",
                     "Test mode has been changed, but Octolapse is currently active.  The new setting will take effect"
-                    "after the current print ends"
+                    " after the current print ends"
                 )
             # save the updated settings to a file.
             self._octolapse_settings.main_settings.test_mode_enabled = test_mode_enabled
