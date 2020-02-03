@@ -1734,18 +1734,26 @@ class TimelapseRenderJob(threading.Thread):
                             rgb_img.save(target)
                     else:
                         utility.fast_copy(file_path, target)
+                    return True
             except IOError as e:
                 logger.exception("The file at path %s is not a valid image file, could not be converted, "
                                  "and has been removed.", file_path)
+            return False
 
         for path in snapshot_files:
-            self._image_count += 1
+            # increment the progress
             progress_current_step += 1
+            # verify the image and convert if necessary
+            if not convert_and_copy_snapshot_image(path, self._temp_rendering_dir):
+                # if there was a copy failure (perhaps the file was of zero size?) we don't really have an image, so
+                # continue
+                continue
+            self._image_count += 1
+
             img_num = utility.get_snapshot_number_from_path(path)
             if img_num > self._max_image_number:
                 self._max_image_number = img_num
-            # verify the image and convert if necessary
-            convert_and_copy_snapshot_image(path, self._temp_rendering_dir)
+
             self.on_render_progress('preparing', progress_current_step, progress_total_steps)
 
         # if we have no camera infos, let's create it now

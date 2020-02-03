@@ -708,7 +708,9 @@ def get_file_creation_date(path):
 # MUCH faster than the standard shutil.copy
 def fast_copy(src, dst, buffer_size=1024 * 1024 * 1):
     #    Optimize the buffer for small files
-    buffer_size = min(buffer_size, os.path.getsize(src))
+    file_size = os.path.getsize(src)
+
+    buffer_size = min(buffer_size, file_size)
     if buffer_size == 0:
         buffer_size = 1024
 
