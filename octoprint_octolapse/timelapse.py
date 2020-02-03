@@ -47,7 +47,7 @@ logger = logging_configurator.get_logger(__name__)
 
 class TimelapseStartException(Exception):
     def __init__(self, message, type):
-        super(TimelapseStartException).__init__()
+        super(TimelapseStartException).__init__(message)
         self.message = message
         self.type = type
 
