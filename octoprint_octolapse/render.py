@@ -573,7 +573,8 @@ class RenderingProcessor(threading.Thread):
 
             with ZipFile(snapshot_archive_path) as zip_file:
                 archive_files_temp_dict = {}  # a temporary dict to hold values while we construct the jobs
-                for fileinfo in zip_file.infolist():
+                fileinfos = [x for x in zip_file.infolist() if not x.filename.startswith("__MACOSX") ]
+                for fileinfo in fileinfos:
                     # see if the current item is a directory
                     if not fileinfo.filename.endswith(os.sep):
                         parts = utility.split_all(fileinfo.filename)
@@ -684,7 +685,7 @@ class RenderingProcessor(threading.Thread):
 
         return {
             'success': False,
-            'error': 'No files new jobs were found within the uploaded file.'
+            'error': 'No image files were found in the root of the archive, or within a JOB_GUID/CAMERA_GUID structure.'
         }
 
     def _get_renderings_in_process(self):
