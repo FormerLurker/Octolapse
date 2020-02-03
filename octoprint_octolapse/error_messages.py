@@ -328,6 +328,17 @@ _octolapse_errors = {
                 }
             }
         }
+    },
+    'rendering': {
+        'archive': {
+            'import': {
+                'no_files_found': {
+                    "name": "No Files Were Found",
+                    "description": "No files were found within the archive.",
+                    "help_link": "error_help_rendering_archive_import_no_files_found.md"
+                }
+            }
+        }
     }
 }
 

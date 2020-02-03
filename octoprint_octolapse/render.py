@@ -685,7 +685,7 @@ class RenderingProcessor(threading.Thread):
 
         return {
             'success': False,
-            'error': 'No image files were found in the root of the archive, or within a JOB_GUID/CAMERA_GUID structure.'
+            'error_keys': ['rendering', 'archive', 'import', 'no_files_found']
         }
 
     def _get_renderings_in_process(self):

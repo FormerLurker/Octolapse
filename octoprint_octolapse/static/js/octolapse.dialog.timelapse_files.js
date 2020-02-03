@@ -191,12 +191,20 @@ $(function () {
                     else {
                         var options = {
                             title: 'Error Adding Archive',
-                            text: results.error,
+                            text: results.errors,
                             type: 'error',
                             hide: false,
-                            addclass: "octolapse"
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
                         };
-                        Octolapse.displayPopupForKey(options, "add-archive-to-unfinished-renderings",["add-archive-to-unfinished-renderings"]);
+                        Octolapse.Help.showPopupForErrors(
+                            options,
+                            "add-archive-to-unfinished-renderings",
+                            ["add-archive-to-unfinished-renderings"],
+                            results["errors"]
+                        );
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {

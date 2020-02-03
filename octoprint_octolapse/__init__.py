@@ -1817,11 +1817,12 @@ class OctolapsePlugin(
                 raise e
 
             if not results["success"]:
-                logger.error("Unable to import the snapshot archive.  Error: %s", results["error"])
+                error = error_messages.get_error(results["error_keys"])
+                logger.info(error["description"])
                 return jsonify({
                     "success": False,
-                    "error": results["error"]
-                }), 500
+                    "errors": [error]
+                })
 
             return jsonify({
                 "success": True
