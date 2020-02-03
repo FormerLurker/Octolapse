@@ -1810,8 +1810,14 @@ class OctolapsePlugin(
             )
             snapshot_archive_path = os.path.join(snapshot_archive_directory, snapshot_archive_name)
             # attempt to import the zip file
-            results = self._rendering_processor.import_snapshot_archive(snapshot_archive_path, prevent_archive=True)
+            try:
+                results = self._rendering_processor.import_snapshot_archive(snapshot_archive_path, prevent_archive=True)
+            except Exception as e:
+                logger.exception("Unable to import the snapshot archive.")
+                raise e
+
             if not results["success"]:
+                logger.error("Unable to import the snapshot archive.  Error: %s", results["error"])
                 return jsonify({
                     "success": False,
                     "error": results["error"]
