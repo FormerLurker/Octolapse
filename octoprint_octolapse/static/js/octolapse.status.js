@@ -211,7 +211,7 @@ $(function () {
                 self.dialog_rendering_in_process.on_after_binding();
                 self.dialog_rendering_unfinished.on_after_binding();
                 self.timelapse_files_dialog.on_after_binding();
-                Octolapse.Help.bindHelpLinks("#octolapse_status_settings_current_panel");
+                Octolapse.Help.bindHelpLinks("#octolapse_tab");
             };
 
             // Update the current tab state

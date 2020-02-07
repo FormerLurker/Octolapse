@@ -26,7 +26,6 @@ $(function () {
             Buttons: {
               closer: false,
               sticker: false
-
             },
             confirm: {
                 confirm: true,
