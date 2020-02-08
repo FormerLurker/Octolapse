@@ -575,6 +575,7 @@ $(function () {
                 // Get the latest image
                 var $latestSnapshotContainer = $target.find('.latest-snapshot');
                 var $latestSnapshot = $latestSnapshotContainer.find('img');
+                var $fullscreenControl = $target.find("a.fullscreen");
                 if (Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
                     // Get the previous snapshot container
                     var $previousSnapshotContainer = $target.find('.previous-snapshots');
@@ -618,7 +619,7 @@ $(function () {
                 var $newSnapshot = $(document.createElement('img'));
 
                 self.current_camera_state_text("");
-
+                $fullscreenControl.hide();
                 // Set the finish handler
                 var on_snapshot_load_finished = function() {
                     $newSnapshot.off('error');
@@ -633,6 +634,7 @@ $(function () {
                     $latestSnapshot.removeClass();
                     $latestSnapshot.appendTo($latestSnapshotContainer);
                     self.current_camera_state_text(error_message);
+
                     on_snapshot_load_finished();
                 };
 
@@ -654,6 +656,7 @@ $(function () {
                     {
                         $newSnapshot.one('load', function () {
                             self.startSnapshotAnimation(targetId);
+                            $fullscreenControl.show();
                             on_snapshot_load_finished();
                         });
                     }
@@ -665,6 +668,7 @@ $(function () {
                 }
                 else {
                     $newSnapshot.one('load', function () {
+                        $fullscreenControl.show();
                         // Hide the latest image
                         on_snapshot_load_finished();
                         if ($latestSnapshot.length == 1)
