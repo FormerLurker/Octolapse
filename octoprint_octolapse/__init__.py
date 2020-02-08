@@ -2538,6 +2538,17 @@ class OctolapsePlugin(
             error = error_messages.get_error(["init", "directory_test_failed"], failed_directories=error_folders)
             return {"success": False, "error": error}
 
+        # test rendering overlay font path
+        current_rendering_profile = self._octolapse_settings.profiles.current_rendering()
+        if (
+            current_rendering_profile.overlay_text_template and
+            not os.path.isfile(current_rendering_profile.overlay_font_path)
+        ):
+            error = error_messages.get_error(
+                ["init", "overlay_font_path_not_found"],
+                overlay_font_path=current_rendering_profile.overlay_font_path)
+            return {"success": False, "error": error}
+
         return {"success": True}
 
     def get_octoprint_timelapse_location(self):

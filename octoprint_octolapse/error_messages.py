@@ -294,6 +294,11 @@ _octolapse_errors = {
             "name": "Directory Tests Failed",
             "description": "The following Octolapse directories failed testing:  {failed_directories}.",
             'help_link': "error_help_init_directory_test_failed.md"
+        },
+        "overlay_font_path_not_found": {
+            "name": "Rendering Overlay Font Not Found",
+            "description": "The current rendering profile has a rendering overlay, but the selected font could not be found in the following location:  {overlay_font_path}.",
+            'help_link': "error_help_init_overlay_font_path_not_found.md"
         }
 
 
