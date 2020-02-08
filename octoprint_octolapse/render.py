@@ -1871,6 +1871,9 @@ class TimelapseRenderJob(threading.Thread):
         if not self._render_job_info.rendering.overlay_text_template:
             return
 
+        if not os.path.isfile(self._render_job_info.rendering.overlay_font_path):
+            raise RenderError("overlay-font", "The rendering overlay font path does not exist.  Check your rendering settings and select a different font.")
+
         if self._snapshot_metadata is None:
             logger.warning("No snapshot metadata was found, cannot add text overlays images.")
             return
@@ -1941,9 +1944,10 @@ class TimelapseRenderJob(threading.Thread):
         text = text_template.format(**format_vars)
 
         # No font selected
-        if not font_path:
-            # raise RenderError('overlay-font', "No overlay font was specified when attempting to add overlay.")
-            return image
+        if not font_path or not os.path.isfile(font_path):
+            raise RenderError('overlay-font', "The rendering overlay font path does not exist.  Check your rendering "
+                                              "settings and select a different font.")
+
         font = ImageFont.truetype(font_path, size=font_size)
 
         # Create the image to draw on.

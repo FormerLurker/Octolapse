@@ -663,7 +663,7 @@ def get_system_fonts(base_directory):
             if f.endswith(".ttf"):
                 if not f in font_names:
                     font_names.add(f)
-                    font_paths.append(os.path.join(os.environ['WINDIR'], f))
+                    font_paths.append(os.path.join(os.environ['WINDIR'], "fonts", f))
     else:
         # I don't know how to find these for Mac OS  Maybe someone can help with this?
         pass
