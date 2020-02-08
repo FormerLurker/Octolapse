@@ -214,44 +214,9 @@ $(function () {
                 self.dialog_rendering_in_process.on_after_binding();
                 self.dialog_rendering_unfinished.on_after_binding();
                 self.timelapse_files_dialog.on_after_binding();
-                //self.getCameraImageState();
                 Octolapse.Help.bindHelpLinks("#octolapse_tab");
             };
-/*
-            self.getCameraImageState = function() {
-                $.ajax({
-                    url: "./plugin/octolapse/cameraImageState",
-                    type: "POST",
-                    contentType: "application/json",
-                    success: function (result) {
-                        // Loop through the results and set the initial images
-                        self.camera_image_states = result;
-                        if (result.hasOwnProperty(self.current_camera_guid()))
-                        {
-                            var cameraState = result[key];
-                            if (cameraState["has_thumbnail"])
-                            {
-                                self.current_camera_state("No images are available for this camera.  A preview of your timelapse will start to appear here as snapshots are taken by octolapse.");
-                            }
-                        }
-                    },
-                    error: function (XMLHttpRequest, textStatus, errorThrown) {
-                        var message = "Unable to get the latest snapshot images from each camera profile";
-                        var options = {
-                            title: 'Camera Image Retrieval Error',
-                            text: message,
-                            type: 'error',
-                            hide: false,
-                            addclass: "octolapse",
-                            desktop: {
-                                desktop: true
-                            }
-                        };
-                        Octolapse.displayPopupForKey(options,"camera_key",["camera_key"]);
-                    }
-                });
-            };
-*/
+
             // Update the current tab state
             self.updateState = function(state){
                 //console.log("octolapse.status.js - Updating State")
