@@ -541,6 +541,8 @@ $(function () {
                 var $latestSnapshotContainer = $target.find('.latest-snapshot');
                 var $latestSnapshot = $latestSnapshotContainer.find('img');
                 var $fullscreenControl = $target.find("a.fullscreen");
+                var $animationPlayControl = $target.find("a.play");
+                $animationPlayControl.hide();
                 if (Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
                     // Get the previous snapshot container
                     var $previousSnapshotContainer = $target.find('.previous-snapshots');
@@ -561,7 +563,8 @@ $(function () {
                     var $previousSnapshots = $previousSnapshotContainer.find("img");
 
                     var numSnapshots = $previousSnapshots.length;
-
+                    if (numSnapshots > 0)
+                        $animationPlayControl.show();
                     while (numSnapshots > parseInt(Octolapse.Globals.main_settings.auto_reload_frames())) {
                         //console.log("Removing overflow previous images according to Auto Reload Frames setting.");
                         var $element = $previousSnapshots.first();
@@ -585,11 +588,6 @@ $(function () {
 
                 self.current_camera_state_text("");
                 $fullscreenControl.hide();
-                // Set the finish handler
-                var on_snapshot_load_finished = function() {
-                    $newSnapshot.off('error');
-                    $newSnapshot.off('load');
-                };
                 // Set the error handler
                 var error_message = "No snapshots have been taken with with the current camera.  A preview of your" +
                     " timelapse will start to appear here as snapshots are taken by Octolapse.";
@@ -600,7 +598,6 @@ $(function () {
                     $latestSnapshot.appendTo($latestSnapshotContainer);
                     self.current_camera_state_text(error_message);
 
-                    on_snapshot_load_finished();
                 };
 
                 if (!newSnapshotAddress)
@@ -617,12 +614,11 @@ $(function () {
                 if (Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
                     // Add the new snapshot to the container
                     $newSnapshot.appendTo($latestSnapshotContainer);
-                    if (!(targetId in self.IsAnimating) || !self.IsAnimating[targetId])
+                    if ((!(targetId in self.IsAnimating) || !self.IsAnimating[targetId]))
                     {
                         $newSnapshot.one('load', function () {
                             self.startSnapshotAnimation(targetId);
                             $fullscreenControl.show();
-                            on_snapshot_load_finished();
                         });
                     }
                     else {
@@ -635,7 +631,6 @@ $(function () {
                     $newSnapshot.one('load', function () {
                         $fullscreenControl.show();
                         // Hide the latest image
-                        on_snapshot_load_finished();
                         if ($latestSnapshot.length == 1)
                         {
                             $latestSnapshot.fadeOut(250, function () {
