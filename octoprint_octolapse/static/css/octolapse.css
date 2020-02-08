@@ -818,14 +818,18 @@ fieldset.octolapse legend
 {
     width:100%;
     height:100%;
-    position: relative;;
+    position: relative;
 }
-
-.octolapse-snapshot-button-overlay a, .octolapse-snapshot-button-overlay span
+.octolapse-snapshot-button-overlay > a, .octolapse-snapshot-button-overlay > span
 {
     opacity: 1;
     position: absolute;
     z-index:257;
+}
+
+.octolapse-snapshot-button-overlay > a, .octolapse-snapshot-button-overlay > span > a
+{
+
     -webkit-transition: opacity 0.25s;
     -moz-transition: opacity 0.25s;
     -o-transition: opacity 0.25s;
@@ -841,11 +845,10 @@ fieldset.octolapse legend
     left:50%;
     top:50%;
 }
-.octolapse-snapshot-button-overlay a.play > i, .octolapse-snapshot-button-overlay .snapshot-indicator > i {
+.octolapse-snapshot-button-overlay span.play-button a > i, .octolapse-snapshot-button-overlay .snapshot-indicator > i {
     margin: -42px 0 0 -42px;
 }
-.octolapse-snapshot-button-overlay a.play{
-    opacity:0;
+.octolapse-snapshot-button-overlay span.play-button{
     left:50%;
     top:50%;
 }

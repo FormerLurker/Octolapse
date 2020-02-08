@@ -94,6 +94,7 @@ $(function () {
             self.IsLatestSnapshotDialogShowing = false;
             self.current_print_volume = null;
             self.current_camera_enabled = ko.observable(false);
+            self.show_play_button = ko.observable(false);
             self.camera_image_states = {};
             self.current_camera_state_text = ko.observable("");
             self.canEditSettings = ko.pureComputed(function(){
@@ -541,8 +542,7 @@ $(function () {
                 var $latestSnapshotContainer = $target.find('.latest-snapshot');
                 var $latestSnapshot = $latestSnapshotContainer.find('img');
                 var $fullscreenControl = $target.find("a.fullscreen");
-                var $animationPlayControl = $target.find("a.play");
-                $animationPlayControl.hide();
+
                 if (Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
                     // Get the previous snapshot container
                     var $previousSnapshotContainer = $target.find('.previous-snapshots');
@@ -563,8 +563,7 @@ $(function () {
                     var $previousSnapshots = $previousSnapshotContainer.find("img");
 
                     var numSnapshots = $previousSnapshots.length;
-                    if (numSnapshots > 0)
-                        $animationPlayControl.show();
+                    self.show_play_button(numSnapshots>0);
                     while (numSnapshots > parseInt(Octolapse.Globals.main_settings.auto_reload_frames())) {
                         //console.log("Removing overflow previous images according to Auto Reload Frames setting.");
                         var $element = $previousSnapshots.first();
@@ -582,7 +581,10 @@ $(function () {
                         $element.css('z-index', previousImageIndex.toString());
                     }
                 }
-
+                else
+                {
+                    self.show_play_button(false);
+                }
                 // create the newest image
                 var $newSnapshot = $(document.createElement('img'));
 
