@@ -94,6 +94,8 @@ $(function () {
             self.IsLatestSnapshotDialogShowing = false;
             self.current_print_volume = null;
             self.current_camera_enabled = ko.observable(false);
+            self.camera_image_states = {};
+            self.current_camera_state_text = ko.observable("");
             self.canEditSettings = ko.pureComputed(function(){
                 // Get the current camera profile
                 var current_camera = self.getCurrentProfileByGuid(self.profiles().cameras(),self.current_camera_guid());
@@ -103,6 +105,7 @@ $(function () {
                     }
                 return false;
             });
+
             self.showWebcamSettings = function(){
                 self.webcam_settings_popup.showWebcamSettingsForGuid(self.current_camera_guid());
             };
@@ -211,9 +214,44 @@ $(function () {
                 self.dialog_rendering_in_process.on_after_binding();
                 self.dialog_rendering_unfinished.on_after_binding();
                 self.timelapse_files_dialog.on_after_binding();
+                //self.getCameraImageState();
                 Octolapse.Help.bindHelpLinks("#octolapse_tab");
             };
-
+/*
+            self.getCameraImageState = function() {
+                $.ajax({
+                    url: "./plugin/octolapse/cameraImageState",
+                    type: "POST",
+                    contentType: "application/json",
+                    success: function (result) {
+                        // Loop through the results and set the initial images
+                        self.camera_image_states = result;
+                        if (result.hasOwnProperty(self.current_camera_guid()))
+                        {
+                            var cameraState = result[key];
+                            if (cameraState["has_thumbnail"])
+                            {
+                                self.current_camera_state("No images are available for this camera.  A preview of your timelapse will start to appear here as snapshots are taken by octolapse.");
+                            }
+                        }
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        var message = "Unable to get the latest snapshot images from each camera profile";
+                        var options = {
+                            title: 'Camera Image Retrieval Error',
+                            text: message,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: true
+                            }
+                        };
+                        Octolapse.displayPopupForKey(options,"camera_key",["camera_key"]);
+                    }
+                });
+            };
+*/
             // Update the current tab state
             self.updateState = function(state){
                 //console.log("octolapse.status.js - Updating State")
@@ -485,18 +523,13 @@ $(function () {
                     }
                 }
 
-                if (self.current_camera_guid() === null || self.current_camera_guid() === "")
-                    console.error("Current camera guid requested, but it is null.");
-                else {
-                    self.updateSnapshotAnimation(
-                        'octolapse_snapshot_thumbnail_container',
-                        (
-                            getLatestSnapshotThumbnailUrl(self.current_camera_guid())
-                            + "&time=" + new Date().getTime()
-                        )
-                    );
+                var snapshotUrl = null;
+                if (self.current_camera_guid())
+                {
+                    snapshotUrl = getLatestSnapshotThumbnailUrl(self.current_camera_guid())+ "&time=" + new Date().getTime();
                 }
 
+                self.updateSnapshotAnimation('octolapse_snapshot_thumbnail_container', snapshotUrl);
             };
 
             self.updateLatestSnapshotImage = function (force) {
@@ -505,22 +538,19 @@ $(function () {
                 if (!force) {
                     if (!Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
                         //console.log("Auto-Update latest snapshot image is disabled.");
-                        return
+                        return;
                     }
                     else if (!self.IsLatestSnapshotDialogShowing) {
                         //console.log("The full screen dialog is not showing, not updating the latest snapshot.");
-                        return
+                        return;
                     }
                 }
-                //console.log("Requesting image for camera:" + Octolapse.Status.current_camera_guid())
-                if(!(Octolapse.Status.current_camera_guid() == null || Octolapse.Status.current_camera_guid() == ""))
-                    self.updateSnapshotAnimation(
-                        'octolapse_snapshot_image_container',
-                        (
-                            getLatestSnapshotUrl(Octolapse.Status.current_camera_guid())
-                            + "&time=" + new Date().getTime()
-                        )
-                    );
+                var snapshotUrl = null;
+                if (self.current_camera_guid())
+                {
+                    snapshotUrl = getLatestSnapshotUrl(self.current_camera_guid())+ "&time=" + new Date().getTime();
+                }
+                self.updateSnapshotAnimation('octolapse_snapshot_image_container', snapshotUrl);
             };
 
             self.erasePreviousSnapshotImages = function (targetId, eraseCurrentImage) {
@@ -587,6 +617,34 @@ $(function () {
                 // create the newest image
                 var $newSnapshot = $(document.createElement('img'));
 
+                self.current_camera_state_text("");
+
+                // Set the finish handler
+                var on_snapshot_load_finished = function() {
+                    $newSnapshot.off('error');
+                    $newSnapshot.off('load');
+                };
+                // Set the error handler
+                var error_message = "No snapshots have been taken with with the current camera.  A preview of your" +
+                    " timelapse will start to appear here as snapshots are taken by Octolapse.";
+                var on_snapshot_load_error = function(){
+                    //console.error("An error occurred loading the newest image, reverting to previous image.");
+                    // move the latest preview image back into the newest image section
+                    $latestSnapshot.removeClass();
+                    $latestSnapshot.appendTo($latestSnapshotContainer);
+                    self.current_camera_state_text(error_message);
+                    on_snapshot_load_finished();
+                };
+
+                if (!newSnapshotAddress)
+                {
+                    error_message = "No camera is selected.  Choose a camera in the dropdown below.";
+                    on_snapshot_load_error(error_message);
+                    return;
+                }
+
+                $newSnapshot.one('error', on_snapshot_load_error);
+
                 //console.log("Adding the new snapshot image to the latest snapshot container.");
                 // create on load event for the newest image
                 if (Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
@@ -596,6 +654,7 @@ $(function () {
                     {
                         $newSnapshot.one('load', function () {
                             self.startSnapshotAnimation(targetId);
+                            on_snapshot_load_finished();
                         });
                     }
                     else {
@@ -607,7 +666,7 @@ $(function () {
                 else {
                     $newSnapshot.one('load', function () {
                         // Hide the latest image
-
+                        on_snapshot_load_finished();
                         if ($latestSnapshot.length == 1)
                         {
                             $latestSnapshot.fadeOut(250, function () {
@@ -633,14 +692,6 @@ $(function () {
                         }
                     });
                 }
-                $newSnapshot.one('error', function () {
-                    console.error("An error occurred loading the newest image, reverting to previous image.");
-                    // move the latest preview image back into the newest image section
-                    $latestSnapshot.removeClass();
-                    $latestSnapshot.appendTo($latestSnapshotContainer)
-
-                });
-
                 // set the src and start to load
                 $newSnapshot.attr('src', newSnapshotAddress)
             };

@@ -1519,6 +1519,7 @@ class CameraProfile(AutomaticConfigurationProfile):
             'name': self.name,
             'stream_template': self.format_stream_template(),
             'address': self.address,
+            'address': self.address,
             'brightness': self.brightness,
             'contrast': self.contrast,
             'saturation': self.saturation,

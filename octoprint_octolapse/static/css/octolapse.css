@@ -617,16 +617,34 @@ form.octolapse_form .modal-body {
 #octolapse_snapshot_thumbnail_container{
     position:relative;
 }
-.octolapse-snapshot-text {
+
+.octolapse-camera-state-text {
     position: absolute;
-    top: 15px;
-    left: 50%;
-    transform: translate(-50%, 0%);
-    color: white;
-    text-shadow: 0px 0px 2px #000000;
-    font-size:28px;
-    z-index:256;
+    display:table;
+    height:282px;
+    width:590px;
+    z-index:257;
 }
+.octolapse-camera-state-text div.octolapse-camera-state-text-wrapper {
+    display: table-cell;
+    vertical-align: middle;
+    width:100%;
+}
+.octolapse-camera-state-text div.octolapse-camera-state-text-wrapper div{
+    display: table-cell;
+    vertical-align: middle;
+    font-size:28px;
+    line-height: 1em;
+    background-color: rgba(255,255,255,1);
+    padding-top: 15px;
+    width:590px;
+}
+.octolapse-camera-state-text p{
+    color: black;
+    margin: 0;
+    padding: 0 15px 15px 15px;
+}
+
 .snapshot-container
 {
     position: relative;

@@ -71,11 +71,18 @@
         <div class="row-fluid">
             <div class="span12">
                 <div id="octolapse_snapshot_thumbnail_container" class="text-center octolapse-secondary-gray-background">
-                        <span class="text-center">
+                    <span class="text-center">
                             Timelapse Preview
                         </span>
-
                     <div class="snapshot-container">
+                        <div class="octolapse-camera-state-text" data-bind="visible:!current_camera_enabled() || current_camera_state_text() != ''">
+                            <div class="octolapse-camera-state-text-wrapper">
+                                <div>
+                                    <p data-bind="visible: !current_camera_enabled()">Camera Disabled</p>
+                                    <p data-bind="visible: current_camera_state_text() != '', text:current_camera_state_text()"></p>
+                                </div>
+                            </div>
+                        </div>
                         <span class="previous-snapshots">
                         </span>
                         <div class="latest-snapshot" data-bind="click: function() { startSnapshotAnimation('octolapse_snapshot_thumbnail_container'); }">
@@ -88,7 +95,6 @@
                                     <i class="fa fa-play-circle fa-stack-1x fa-inverse outline"></i>
                                     <i class="fa fa-play-circle fa-stack-1x"></i>
                                 </i>
-
                             </a>
                             <span class="snapshot-indicator" data-bind="css: {'fade-out': !is_taking_snapshot()}, click: function() { startSnapshotAnimation('octolapse_snapshot_thumbnail_container'); }">
                                 <i class="fa-stack fa-3x">
@@ -126,9 +132,6 @@
                            data-bind="visible: canEditSettings() && Octolapse.Globals.is_admin, click: showWebcamSettings">
                            <i class="fa fa-pencil fa-2x"></i>
                         </a>
-                    </div>
-                    <div class="octolapse-snapshot-text">
-                        <span data-bind="visible:!current_camera_enabled()">Camera Disabled</span>
                     </div>
                 </div>
             </div>

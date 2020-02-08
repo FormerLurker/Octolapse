@@ -234,18 +234,18 @@ class OctolapsePlugin(
             # get the latest snapshot image
             filename = utility.get_latest_snapshot_download_path(
                 temporary_folder, guid, self._basefolder)
-            if not os.path.isfile(filename):
-                # we haven't captured any images, return the built in png.
-                filename = utility.get_no_snapshot_image_download_path(
-                    self._basefolder)
+            # if not os.path.isfile(filename):
+            #     # we haven't captured any images, return the built in png.
+            #     filename = utility.get_no_snapshot_image_download_path(
+            #         self._basefolder)
         elif file_type == 'thumbnail':
             # get the latest snapshot image
             filename = utility.get_latest_snapshot_thumbnail_download_path(
                 temporary_folder, guid, self._basefolder)
-            if not os.path.isfile(filename):
-                # we haven't captured any images, return the built in png.
-                filename = utility.get_no_snapshot_image_download_path(
-                    self._basefolder)
+            # if not os.path.isfile(filename):
+            #     # we haven't captured any images, return the built in png.
+            #     filename = utility.get_no_snapshot_image_download_path(
+            #         self._basefolder)
         else:
             # we don't recognize the snapshot type
             filename = utility.get_error_image_download_path(self._basefolder)
@@ -339,6 +339,40 @@ class OctolapsePlugin(
         if not os.path.isfile(full_path):
             raise tornado.web.HTTPError(404)
         return full_path
+
+    # Return snapshot image and thumbnail state for each camera
+    @octoprint.plugin.BlueprintPlugin.route("/cameraImageState", methods=["POST"])
+    @restricted_access
+    def camera_image_state_request(self):
+        # get the temporary snapshot path
+        if self._timelapse is not None:
+            temporary_folder = self._timelapse.get_current_temporary_folder()
+        else:
+            temporary_folder = self._octolapse_settings.main_settings.get_temporary_directory(
+                self.get_plugin_data_folder()
+            )
+        # get all of the camera guids
+        guids = self._octolapse_settings.profiles.cameras.keys()
+        camera_image_state = {}
+        for guid in guids:
+            # start creating state information for our camera image state
+            current_camera_image_state = {
+                'has_thumbnail': False,
+                'has_image': False
+            }
+            # see if camera has a thumbnail
+            thumbnail_path = utility.get_latest_snapshot_thumbnail_download_path(
+                temporary_folder, guid, self._basefolder)
+            if os.path.isfile(thumbnail_path):
+                current_camera_image_state["has_thumbnail"] = True
+            # see if the camera has an image
+            image_path = utility.get_latest_snapshot_download_path(
+                temporary_folder, guid, self._basefolder)
+            if os.path.isfile(image_path):
+                current_camera_image_state["has_image"] = True
+            # set the camera's entry
+            camera_image_state[guid] = current_camera_image_state
+        return jsonify(camera_image_state)
 
     @octoprint.plugin.BlueprintPlugin.route("/deleteFile", methods=["POST"])
     @restricted_access
