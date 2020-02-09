@@ -509,20 +509,22 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <p data-bind="visible: overlay_font_path() == ''" class="text-error">No font is selected.  You must select a font in order to use Overlays.</p>
                         </div>
-                        <div class="row-fluid">
-                            <div class="span4"></div>
-                            <div class="span6">
-                                <p data-bind="visible: overlay_font_path() == ''" class="text-error">No font is selected.  You must select a font in order to use Overlays.</p>
-                            </div>
-                            <div class="span2">
-                                <div class="text-right">
-                                    <a class="octolapse_help" data-help-url="profiles.rendering.overlay_preview.md" data-help-title="Overlay Preview" />
+                        <div class="octolapse-secondary-gray-background">
+                            <h5>Image Overlay Preview&nbsp;<a class="octolapse_help" data-help-url="profiles.rendering.overlay_preview.md" data-help-title="Overlay Preview" /></h5>
+                            <div class="row-fluid text-center">
+                                <div class="rendering-overlay-preview text-center" data-bind="click: requestOverlayPreview">
+                                    <div class="valign">
+                                        <img class="image-fluid" data-bind="visible: data.overlay_preview_image_error() === '', attr:{src: data.overlay_preview_image_src}"/>
+                                    </div>
+                                    <div class="valign" data-bind="visible: data.overlay_preview_image_error() != ''">
+                                        <span data-bind="text: data.overlay_preview_image_error"></span>
+                                    </div>
                                 </div>
                             </div>
+                            <div><span class="label label-important">Note</span>&nbsp;If the preview appears blank, please try another font.</div>
                         </div>
-                        <img class="image-fluid" data-bind="click: requestOverlayPreview, attr:{src: data.overlay_preview_image_src, alt: data.overlay_preview_image_error}" />
-                        <div><span class="label label-important">Note</span>&nbsp;If the preview appears blank, please try another font.</div>
                     </div>
                 </div>
             </div>

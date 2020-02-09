@@ -23,13 +23,10 @@
 -->
 <script type="text/html" id="octolapse-settings-current">
     <div class="row-fluid">
-        <div class="span3">
+        <div class="span12">
             <a data-bind="css: {'muted': !hasConfigIssues(), 'text-error': hasConfigIssues()}, octolapseToggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#octolapse_status_settings_current_panel', toggle_observable: current_settings_showing }">
-                <i data-bind="visible: hasConfigIssues" class="fa fa-exclamation"> </i>Current Settings <i class="fa fa-no-shadow fa-caret-down"></i>
+                <i data-bind="visible: hasConfigIssues" class="fa fa-exclamation"> </i>Current Run Configuration&nbsp;<i class="fa fa-no-shadow fa-caret-down"></i>
             </a>
-        </div>
-        <div class="span9 text-right">
-
         </div>
     </div>
     <div id="octolapse_status_settings_current_panel">

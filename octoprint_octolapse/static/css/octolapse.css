@@ -46,6 +46,14 @@
     line-height:20px;
 }
 
+.right {
+    float:right;
+}
+
+.alert.octolapse{
+    padding: 8px 14px 8px 14px;
+}
+
 .two-column .column{
     /*-webkit-column-gap: 20px;
        -moz-column-gap: 20px;
@@ -430,10 +438,12 @@ form.octolapse_form .modal-body {
 .ol-compact-row.row-fluid [class*="span"] {
     min-height: unset;
 }
-
+/*
 .octolapse_add_edit_dialog .row-fluid [class*="span"] {
     text-align: left;
 }
+*/
+
 .octolapse .text-center
 {
     text-align: center;
@@ -1335,4 +1345,22 @@ fieldset.octolapse legend
 .fixed-width-label {
     width: 10em;
     overflow-wrap: break-word;
+}
+
+div.rendering-overlay-preview img {
+    max-height:480px;
+    max-width:890px;
+}
+div.rendering-overlay-preview {
+    position:relative;
+    width:890px;
+    height:480px;
+}
+
+.octolapse .valign
+{
+    position:absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width:100%;
 }

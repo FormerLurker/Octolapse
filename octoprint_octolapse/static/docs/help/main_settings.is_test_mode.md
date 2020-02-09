@@ -8,7 +8,7 @@ Before using test mode, **UNLOAD YOUR FILAMENT**! Even though I attempted to str
 
 You can enable or disable test mode in two ways:
 
-1.  Expand the **Current Settings** within the Octolapse tab and click on **Test Mode** to toggle the setting.
+1.  Expand the **Current Run Configuration** within the Octolapse tab and click on **Test Mode** to toggle the setting.
 2.  Open the Octolapse **Main Settings** by clicking on the <i class="fa fa-gear"></i> (gear) icon within the Octolapse tab, then click on the **Edit Main Settings** button to edit the Octlapse main settings.  You can find and edit **Test Mode** there.  Be sure to save your changes!
 
 #### Important Safety Information

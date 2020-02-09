@@ -306,6 +306,23 @@ $(function() {
 
         // Request a preview of the overlay from the server.
         self.requestOverlayPreview = function() {
+            if (!self.overlay_text_template())
+            {
+                self.data.overlay_preview_image('');
+                self.data.overlay_preview_image_error(
+                    "Enter the text you wish to appear in your overlay in the 'Text' box above, and click refresh to preview the rendering overlay."
+                );
+                return;
+            }
+            if (self.overlay_font_path() === "")
+            {
+                self.data.overlay_preview_image('');
+                self.data.overlay_preview_image_error(
+                    "Choose a font from the list above, and click refresh to preview the rendering overlay."
+                );
+                return;
+            }
+
             var data = {
                 'overlay_text_template': self.overlay_text_template(),
                 'overlay_font_path': self.overlay_font_path(),
