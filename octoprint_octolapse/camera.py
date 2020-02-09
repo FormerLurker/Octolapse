@@ -1235,14 +1235,14 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
                 "An SSL error was raised while applying the {0} setting to the '{1}' camera profile."
                 .format(name, self.camera_name)
             )
-            logger.error(message)
+            logger.exception(message)
             raise CameraError('ssl_error', message, cause=e)
         except Exception as e:
             message = (
                 "An unexpected error was raised while applying the {0} setting to the '{1}' camera profile."
                 .format(name, self.camera_name)
             )
-            logger.error(message)
+            logger.exception(message)
             raise CameraError('webcam_settings_apply_error', message, cause=e)
 
 
