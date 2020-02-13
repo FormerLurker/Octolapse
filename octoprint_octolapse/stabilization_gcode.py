@@ -172,11 +172,32 @@ class SnapshotPlan(object):
             metadata["x"] = self.initial_position.x
             metadata["y"] = self.initial_position.y
             metadata["z"] = self.initial_position.z
+            metadata["f"] = self.initial_position.f
             extruder = self.initial_position.get_current_extruder()
             if extruder is not None:
                 metadata["e"] = extruder.e
-        return metadata
 
+            x_snapshot = None
+            y_snapshot = None
+            z_snapshot = None
+            e_snapshot = None
+            f_snapshot = None
+            for step in self.steps:
+                if step.action == SnapshotPlan.TRAVEL_ACTION:
+                    x_snapshot = step.x
+                    y_snapshot = step.y
+                    z_snapshot = step.z
+                    e_snapshot = step.e
+                    f_snapshot = step.f
+                    break
+
+            metadata["x_snapshot"] = x_snapshot
+            metadata["y_snapshot"] = y_snapshot
+            metadata["z_snapshot"] = z_snapshot
+            metadata["e_snapshot"] = e_snapshot
+            metadata["f_snapshot"] = f_snapshot
+
+        return metadata
 
     def to_dict(self):
         try:
