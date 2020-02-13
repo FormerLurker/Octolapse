@@ -29,6 +29,7 @@ import uuid
 import tempfile
 import sys
 import re
+import errno
 from distutils.version import LooseVersion
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.log as log
@@ -1725,21 +1726,21 @@ class MainSettings(Settings):
         if not os.path.isdir(path):
             try:
                 os.makedirs(path)
-            except (PermissionError, OSError) as e:
+            except (IOError, OSError) as e:
                 return False, 'cannot-create'
 
         subdirectory = os.path.join(path, "octolapse_test_temp")
         if not os.path.isdir(subdirectory):
             try:
                 os.mkdir(subdirectory)
-            except (PermissionError, OSError) as e:
+            except (IOError, OSError) as e:
                 return False, 'cannot-create-subdirectory'
         else:
             return False, 'subdirectory-test-path-exists'
 
         try:
             os.rmdir(subdirectory)
-        except (PermissionError, OSError) as e:
+        except (IOError, OSError) as e:
             return False, 'cannot-delete-subdirectory'
 
         # test create and read
@@ -1747,13 +1748,13 @@ class MainSettings(Settings):
         try:
             with open(test_create_path, 'w+'):
                 os.utime(path, None)
-        except (PermissionError, OSError):
+        except (IOError, OSError):
             False, 'cannot-write-file'
 
         # test delete
         try:
             utility.remove(test_create_path)
-        except (PermissionError, OSError):
+        except (IOError, OSError):
             False, 'cannot-delete-file'
 
         return True, None
@@ -2278,8 +2279,11 @@ class OctolapseSettings(Settings):
             if not os.path.exists(snapshot_directory):
                 try:
                     os.makedirs(snapshot_directory)
-                except FileExistsError:
-                    pass
+                except OSError as e:
+                    if e.errno == errno.EEXIST:
+                        pass
+                    else:
+                        raise
 
             # get the rendering profile json
             rendering_profile_json = self.get_profile_export_json(

@@ -33,6 +33,7 @@ root_logger = logging_configurator.get_root_logger()
 logger = logging_configurator.get_logger("__init__")
 # be sure to configure the logger after we import all of our modules
 import tornado
+import errno
 from octoprint.server import util, app
 from octoprint.server.util.tornado import LargeResponseHandler, RequestlessExceptionLoggingMixin, CorsSupportMixin
 import sys
@@ -1599,8 +1600,11 @@ class OctolapsePlugin(
                 logger.info("Creating watermarks directory at %s.".format(full_watermarks_dir))
                 try:
                     os.makedirs(full_watermarks_dir)
-                except FileExistsError:
-                    pass
+                except OSError as e:
+                    if e.errno == errno.EEXIST:
+                        pass
+                    else:
+                        raise
 
             # Move the image.
             watermark_destination_path = os.path.join(full_watermarks_dir, image_filename)

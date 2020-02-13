@@ -32,7 +32,7 @@ from csv import DictWriter
 from random import randint
 from shutil import rmtree
 from tempfile import mkdtemp, NamedTemporaryFile
-
+import errno
 from PIL import Image
 from mock import Mock
 
@@ -52,8 +52,12 @@ class TestRender(unittest.TestCase):
         # Make sure any nested folders specified by the capture template exist.
         try:
             os.makedirs(os.path.dirname("{0}{1}".format(dir, capture_template) % 0))
-        except FileExistsError:
-            pass
+        except OSError as e:
+            if e.errno == errno.EEXIST:
+                pass
+            else:
+                raise
+
         # Make images and save them with the correct names.
         random.seed(0)
 

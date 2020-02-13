@@ -33,6 +33,7 @@ import shutil
 # file called 'LICENSE', which is part of this source code package.
 import requests
 import os
+import errno
 # Todo:  Do we need to add this to setup.py?
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import SSLError
@@ -702,8 +703,11 @@ class CameraControl(object):
                 if not os.path.exists(target_directory):
                     try:
                         os.makedirs(target_directory)
-                    except FileExistsError:
-                        pass
+                    except OSError as e:
+                        if e.errno == errno.EEXIST:
+                            pass
+                        else:
+                            raise
                 shutil.copy(test_image_path, snapshot_full_path)
 
             if script_type == 'before-snapshot':
@@ -773,8 +777,11 @@ class CameraControl(object):
             if not os.path.exists(snapshot_directory):
                 try:
                     os.makedirs(snapshot_directory)
-                except FileExistsError:
-                    pass
+                except OSError as e:
+                    if e.errno == errno.EEXIST:
+                        pass
+                    else:
+                        raise
 
             for snapshot_number in range(10):
                 snapshot_file_name = utility.get_snapshot_filename(
@@ -827,8 +834,11 @@ class CameraControl(object):
             if not os.path.exists(snapshot_directory):
                 try:
                     os.makedirs(snapshot_directory)
-                except FileExistsError:
-                    pass
+                except OSError as e:
+                    if e.errno == errno.EEXIST:
+                        pass
+                    else:
+                        raise
 
             for snapshot_number in range(10):
                 snapshot_file_name = utility.get_snapshot_filename(

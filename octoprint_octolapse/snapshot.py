@@ -36,7 +36,7 @@ from tempfile import mkdtemp
 from uuid import uuid4
 from time import time
 from PIL import Image
-
+import errno
 # create the module level logger
 import octoprint_octolapse.camera as camera
 import octoprint_octolapse.utility as utility
@@ -345,8 +345,11 @@ class ImagePostProcessing(object):
             if not os.path.exists(self.snapshot_job_info.snapshot_directory):
                 try:
                     os.makedirs(self.snapshot_job_info.snapshot_directory)
-                except FileExistsError:
-                    pass
+                except OSError as e:
+                    if e.errno == errno.EEXIST:
+                        pass
+                    else:
+                        raise
             with open(self.snapshot_job_info.snapshot_full_path, 'wb+') as snapshot_file:
                 for chunk in self.request.iter_content(chunk_size=512 * 1024):
                     if chunk:
@@ -370,8 +373,11 @@ class ImagePostProcessing(object):
             if not os.path.exists(self.snapshot_job_info.snapshot_directory):
                 try:
                     os.makedirs(self.snapshot_job_info.snapshot_directory)
-                except FileExistsError:
-                    pass
+                except OSError as e:
+                    if e.errno == errno.EEXIST:
+                        pass
+                    else:
+                        raise
 
             with open(metadata_path, 'a') as metadata_file:
                 dictwriter = DictWriter(metadata_file, SnapshotMetadata.METADATA_FIELDS)
@@ -859,8 +865,11 @@ class CameraInfo(object):
         if not os.path.exists(file_directory):
             try:
                 os.makedirs(file_directory)
-            except FileExistsError:
-                pass
+            except OSError as e:
+                if e.errno == errno.EEXIST:
+                    pass
+                else:
+                    raise
         with open(file_path, 'w') as camera_info:
             json.dump(self.to_dict(), camera_info)
 

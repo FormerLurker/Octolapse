@@ -34,6 +34,7 @@ import traceback
 import threading
 import json
 import shutil
+import errno
 from slugify import Slugify
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -42,7 +43,6 @@ logger = logging_configurator.get_logger(__name__)
 
 from threading import Timer
 FLOAT_MATH_EQUALITY_RANGE = 0.0000001
-
 
 def get_float(value, default):
     if value is None:
@@ -673,6 +673,8 @@ def get_system_fonts(base_directory):
     return font_paths
 
 
+
+
 def get_directory_size(root, recurse=False):
     total_size = 0
     try:
@@ -684,7 +686,9 @@ def get_directory_size(root, recurse=False):
                 total_size += os.path.getsize(file_path)
             elif recurse and os.path.isdir(file_path):
                 total_size += get_directory_size(file_path, recurse)
-    except FileNotFoundError as e:
+    except EnvironmentError as e:
+        if e.errno != errno.ENOENT:
+            raise
         logger.exception(e)
     return total_size
 
