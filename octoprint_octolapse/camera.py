@@ -1283,7 +1283,6 @@ class CameraSettingScriptThread(Thread):
             self.error = CameraError('error_message_returned', cmd.error_message)
 
 
-
 class CameraError(Exception):
     def __init__(self, error_type, message, cause=None):
         super(CameraError, self).__init__()
