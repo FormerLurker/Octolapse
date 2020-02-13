@@ -440,18 +440,19 @@ class Timelapse(object):
                     if self._stabilization.wait_for_moves_to_finish:
                         snapshot_position = self.get_position_async(
                             start_gcode=gcodes_to_send,
-                            tags={'snapshot-gcode'},
+                            tags={'snapshot-gcode'}
                         )
+                        if snapshot_position is None:
+                            has_error = True
+                            logger.error(
+                                "The snapshot position is None.  Either the print has cancelled or a timeout has been "
+                                "reached. "
+                            )
                     else:
                         snapshot_position = None
                         self.send_snapshot_gcode_array(gcodes_to_send, {'snapshot-gcode'})
                     gcodes_to_send = []
-                    if snapshot_position is None:
-                        has_error = True
-                        logger.error(
-                            "The snapshot position is None.  Either the print has cancelled or a timeout has been "
-                            "reached. "
-                        )
+
                     # TODO:  ALLOW MULTIPLE PAYLOADS
                     timelapse_snapshot_payload["snapshot_position"] = snapshot_position
                     # take a snapshot
