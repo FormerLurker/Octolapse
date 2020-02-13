@@ -251,11 +251,7 @@
                         <div class="error_label_container text-error" data-error-for="octolapse_rendering_output_template"></div>
                         <span class="help-inline">
                             Determines the rendering file name.  You can use the following replacement tokens:
-                            <i>
-                                <span data-bind="foreach: Octolapse.Renderings.profileOptions.rendering_file_templates">
-                                    <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko -->{<span data-bind="text: $data"></span>}
-                                </span>
-                            </i>
+                            <i><span data-bind="foreach: Octolapse.Renderings.profileOptions.rendering_file_templates"><!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko -->{<span data-bind="text: $data"></span>}</span></i>
                         </span>
                     </div>
                 </div>
@@ -374,11 +370,7 @@
                             <div class="error_label_container text-error" data-error-for="octolapse_rendering_overlay_text_template"></div>
                             <p class="help-inline">
                                 Determines the overlay text. Leave blank to disable the overlay text. You can use the following replacement tokens:
-                                <i>
-                                    <span data-bind="foreach: Octolapse.Renderings.profileOptions.overlay_text_templates">
-                                        <!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko -->{<span data-bind="text: $data"></span>}
-                                    </span>
-                                </i>
+                                <i><span data-bind="foreach: Octolapse.Renderings.profileOptions.overlay_text_templates"><!-- ko if: $index() != 0 -->,&nbsp;<!-- /ko -->{<span data-bind="text: $data"></span>}</span></i>
                             </p>
                         </div>
                     </div>
