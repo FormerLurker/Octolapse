@@ -1226,7 +1226,7 @@ class RenderingProfile(AutomaticConfigurationProfile):
                 "y",
                 "z",
                 "e",
-                "f"
+                "f",
                 "x_snapshot",
                 "y_snapshot",
                 "z_snapshot",
