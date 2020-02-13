@@ -881,6 +881,12 @@ class StabilizationProfile(AutomaticConfigurationProfile):
         self.y_relative_path_invert_loop = True
         self.wait_for_moves_to_finish = True
 
+    def is_disabled(self):
+        return (
+            self.x_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_DISABLED and
+            self.y_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_DISABLED
+        )
+
     def get_stabilization_paths(self):
         x_stabilization_path = StabilizationPath()
         x_stabilization_path.type = self.x_type

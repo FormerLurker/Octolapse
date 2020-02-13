@@ -73,7 +73,7 @@ $(function () {
             self.y_relative_path(values.y_relative_path);
             self.y_relative_path_loop(values.y_relative_path_loop);
             self.y_relative_path_invert_loop(values.y_relative_path_invert_loop);
-            if (values.wait_for_moves_to_finish) {
+            if (typeof values.wait_for_moves_to_finish !== 'undefined') {
                 self.wait_for_moves_to_finish(values.wait_for_moves_to_finish);
             }
         };

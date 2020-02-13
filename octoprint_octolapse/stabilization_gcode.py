@@ -975,7 +975,8 @@ class SnapshotGcodeGenerator(object):
             if parsed_command_position.is_xy_travel:
                 logger.info("The triggering command is travel only, skipping return command generation")
                 snapshot_plan.return_position = None
-        elif triggered_type == Triggers.TRIGGER_TYPE_IN_PATH:
+        elif triggered_type == Triggers.TRIGGER_TYPE_IN_PATH and self._stabilization.wait_for_moves_to_finish:
+            # if we aren't waiting for moves to finish, there is no reason to split up the gcode...
             # see if the snapshot command is a g1 or g0
             if snapshot_plan.triggering_command.cmd:
                 if snapshot_plan.triggering_command.cmd not in ["G0", "G1"]:
@@ -1102,33 +1103,38 @@ class SnapshotGcodeGenerator(object):
 
         # create the start command if it exists
         self.send_start_command()
-        # retract if necessary
-        self.retract()
-        # lift if necessary
-        self.lift_z()
 
-        has_taken_snapshot = False
+        # There is no need to stabilize the extruder if we aren't waiting for moves to finish
+        if self._stabilization.wait_for_moves_to_finish:
+            # retract if necessary
+            self.retract()
+            # lift if necessary
+            self.lift_z()
+
+
         assert(isinstance(snapshot_plan, SnapshotPlan))
         for step in snapshot_plan.steps:
             assert(isinstance(step, SnapshotPlanStep))
             if step.action == SnapshotPlan.TRAVEL_ACTION:
-                self.add_travel_action(step)
+                if self._stabilization.wait_for_moves_to_finish:
+                    self.add_travel_action(step)
             if step.action == SnapshotPlan.SNAPSHOT_ACTION:
                 self.add_snapshot_action()
 
-        # Create Return Gcode
-        self.return_to_original_position()
+        if self._stabilization.wait_for_moves_to_finish:
+            # Create Return Gcode
+            self.return_to_original_position()
 
-        # If we zhopped in the beginning, lower z
-        self.delift_z()
+            # If we zhopped in the beginning, lower z
+            self.delift_z()
 
-        # deretract if necessary
-        self.deretract()
+            # deretract if necessary
+            self.deretract()
 
-        # reset the coordinate systems for the extruder and axis
-        self.return_to_original_coordinate_systems()
+            # reset the coordinate systems for the extruder and axis
+            self.return_to_original_coordinate_systems()
 
-        self.return_to_original_feedrate()
+            self.return_to_original_feedrate()
 
         self.send_end_command()
 

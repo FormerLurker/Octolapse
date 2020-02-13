@@ -437,7 +437,9 @@ class Timelapse(object):
                     snapshot_position = self.get_position_async(
                         start_gcode=gcodes_to_send,
                         tags={'snapshot-gcode'},
-                        no_wait=not self._stabilization.wait_for_moves_to_finish
+                        no_wait= (
+                            not self._stabilization.wait_for_moves_to_finish
+                        )
                     )
                     gcodes_to_send = []
                     if snapshot_position is None:
