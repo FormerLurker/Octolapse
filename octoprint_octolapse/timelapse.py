@@ -304,7 +304,7 @@ class Timelapse(object):
         else:
             logger.info("Octolapse has received an position response but did not request one.  Ignoring.")
 
-    def _take_snapshots(self):
+    def _take_snapshots(self, metadata):
         snapshot_payload = {
             "success": False,
             "error": "Waiting on thread to signal, aborting"
@@ -314,7 +314,7 @@ class Timelapse(object):
         self._snapshot_task_queue.join()
         self._snapshot_task_queue.put("snapshot_job")
         try:
-            results = self._capture_snapshot.take_snapshots()
+            results = self._capture_snapshot.take_snapshots(metadata)
         finally:
             self._snapshot_task_queue.get()
             self._snapshot_task_queue.task_done()
@@ -449,7 +449,7 @@ class Timelapse(object):
                     # TODO:  ALLOW MULTIPLE PAYLOADS
                     timelapse_snapshot_payload["snapshot_position"] = snapshot_position
                     # take a snapshot
-                    timelapse_snapshot_payload["snapshot_payload"] = self._take_snapshots()
+                    timelapse_snapshot_payload["snapshot_payload"] = self._take_snapshots(self.current_snapshot_plan.get_snapshot_metadata())
                 else:
                     gcodes_to_send.append(gcode)
 

@@ -135,11 +135,14 @@ def preview_overlay(rendering_profile, image=None):
     image = draw_center(image, "Preview", image_text_color, dy=-20)
     image = draw_center(image, "Click to refresh", image_text_color, dy=20)
 
-    format_vars = {'snapshot_number': 1234,
-                   'file_name': 'image.jpg',
-                   'time_taken': time.time(),
-                   'current_time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
-                   'time_elapsed': "{}".format(datetime.timedelta(seconds=round(9001)))}
+    format_vars = {
+        'snapshot_number': 1234,
+        'file_name': 'image.jpg',
+        'time_taken': time.time(),
+        'current_time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
+        'time_elapsed': "{}".format(datetime.timedelta(seconds=round(9001))),
+        'layer': "53"
+    }
     image = TimelapseRenderJob.add_overlay(image,
                                            text_template=rendering_profile.overlay_text_template,
                                            format_vars=format_vars,
@@ -1885,12 +1888,13 @@ class TimelapseRenderJob(threading.Thread):
             self.on_render_progress('adding_overlays', index, num_images)
             # TODO:  MAKE SURE THIS WORKS IF THERE ARE ANY ERRORS
             # Variables the user can use in overlay_text_template.format().
-            format_vars = {}
+            format_vars = utility.SafeDict()
 
             # Extra metadata according to SnapshotMetadata.METADATA_FIELDS.
             format_vars['snapshot_number'] = snapshot_number = int(data['snapshot_number']) + 1
             format_vars['file_name'] = data['file_name']
             format_vars['time_taken_s'] = time_taken = float(data['time_taken'])
+            format_vars['layer'] = "" if "layer" not in data else "{0}".format(data["layer"])
 
             # Verify that the file actually exists.
 

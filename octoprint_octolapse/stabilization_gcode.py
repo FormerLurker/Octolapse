@@ -157,6 +157,16 @@ class SnapshotPlan(object):
 
     SNAPSHOT_ACTION = "snapshot"
 
+    def get_snapshot_metadata(self):
+        metadata = {
+            'layer': None
+        }
+        if self.initial_position is not None:
+            metadata["layer"] = self.initial_position.layer
+
+        return metadata
+
+
     def to_dict(self):
         try:
             return {

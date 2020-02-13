@@ -962,3 +962,8 @@ class RecurringTimerThread(threading.Thread):
             self._callback()
         while not self._cancel_event.wait(self._interval_seconds):
             self._callback()
+
+
+class SafeDict(dict):
+    def __missing__(self, key):
+        return '{' + key + '}'

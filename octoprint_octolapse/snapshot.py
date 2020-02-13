@@ -50,7 +50,7 @@ logger = logging_configurator.get_logger(__name__)
 
 class SnapshotMetadata(object):
     METADATA_FILE_NAME = 'metadata.csv'
-    METADATA_FIELDS = ['snapshot_number', 'file_name', 'time_taken']
+    METADATA_FIELDS = ['snapshot_number', 'file_name', 'time_taken', 'layer']
 
     @staticmethod
     def is_metadata_file(file_name):
@@ -105,7 +105,7 @@ class CaptureSnapshot(object):
         self.OnNewThumbnailAvailableCallback = on_new_thumbnail_available_callback
         self.on_post_processing_error_callback = on_post_processing_error_callback
 
-    def take_snapshots(self):
+    def take_snapshots(self, metadata={}):
         logger.info("Starting snapshot acquisition")
         start_time = time()
 
@@ -124,7 +124,8 @@ class CaptureSnapshot(object):
                     self.temporary_directory,
                     camera_info.snapshot_attempt,
                     current_camera,
-                    'before-snapshot'
+                    'before-snapshot',
+                    metadata=metadata
                 )
                 thread = ExternalScriptSnapshotJob(before_snapshot_job_info, 'before-snapshot')
                 thread.daemon = True
@@ -133,7 +134,12 @@ class CaptureSnapshot(object):
                 )
 
             snapshot_job_info = SnapshotJobInfo(
-                self.TimelapseJobInfo, self.temporary_directory, camera_info.snapshot_attempt, current_camera, 'snapshot'
+                self.TimelapseJobInfo,
+                self.temporary_directory,
+                camera_info.snapshot_attempt,
+                current_camera,
+                'snapshot',
+                metadata=metadata
             )
             if current_camera.camera_type == "script":
                 thread = ExternalScriptSnapshotJob(
@@ -156,7 +162,12 @@ class CaptureSnapshot(object):
                 snapshot_threads.append((thread, snapshot_job_info, download_started_event))
 
             after_snapshot_job_info = SnapshotJobInfo(
-                self.TimelapseJobInfo, self.temporary_directory, camera_info.snapshot_attempt, current_camera, 'after-snapshot'
+                self.TimelapseJobInfo,
+                self.temporary_directory,
+                camera_info.snapshot_attempt,
+                current_camera,
+                'after-snapshot',
+                metadata=metadata
             )
             # post_snapshot threads
             if current_camera.on_after_snapshot_script:
@@ -245,11 +256,7 @@ class CaptureSnapshot(object):
             else:
                 info.errors_count += 1
                 self.ErrorsTotal += 1
-            # todo:  remove unnecessary logging
-            logger.info("Saving Camera Info")
             info.save(self.temporary_directory, self.TimelapseJobInfo.JobGuid, snapshot_job_info.camera_guid)
-            # todo:  remove unnecessary logging
-            logger.info("Camera Info Saved")
             results.append(snapshot_job_info)
 
         if len(snapshot_threads) > 0:
@@ -369,6 +376,7 @@ class ImagePostProcessing(object):
                     'snapshot_number': "{}".format(self.snapshot_job_info.snapshot_number),
                     'file_name': self.snapshot_job_info.snapshot_file_name,
                     'time_taken': "{}".format(time()),
+                    'layer': "{}".format(self.snapshot_job_info.layer)
                 })
         except Exception as e:
             logger.exception("An unexpected exception occurred while saving snapshot metadata for "
@@ -781,7 +789,7 @@ class SnapshotError(Exception):
 
 
 class SnapshotJobInfo(object):
-    def __init__(self, timelapse_job_info, temporary_directory, snapshot_number, current_camera, job_type):
+    def __init__(self, timelapse_job_info, temporary_directory, snapshot_number, current_camera, job_type, metadata={}):
         self.camera = current_camera
         self.temporary_directory = temporary_directory
         self.snapshot_directory = utility.get_temporary_snapshot_job_camera_path(
@@ -799,6 +807,9 @@ class SnapshotJobInfo(object):
         self.timeout_seconds = current_camera.timeout_ms / 1000.0
         self.snapshot_number = snapshot_number
         self.job_type = job_type
+        self.layer = None
+        if "layer" in metadata:
+            self.layer = metadata["layer"]
 
 
 class CameraInfo(object):
