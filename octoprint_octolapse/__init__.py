@@ -2094,7 +2094,7 @@ class OctolapsePlugin(
                 # running.
                 if include_profiles:
                     if is_timelapse_active:
-                        profiles_dict = self._timelapse.get_current_profiles()
+                        profiles_dict = self._timelapse.get_current_settings().profiles.get_profiles_dict()
                     else:
                         profiles_dict = self._octolapse_settings.profiles.get_profiles_dict()
                     profiles_dict["current_logging_profile_guid"] = (

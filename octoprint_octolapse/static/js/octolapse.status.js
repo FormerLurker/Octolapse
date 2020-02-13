@@ -34,6 +34,10 @@ $(function () {
             {
                 self.has_been_saved_by_user = values.has_been_saved_by_user;
             }
+            else if (type === "stabilization")
+            {
+                self.wait_for_moves_to_finish = values.wait_for_moves_to_finish;
+            }
             else if (type ==="trigger")
             {
                 self.trigger_type = values.trigger_type;
@@ -76,6 +80,7 @@ $(function () {
             });
             self.is_real_time = ko.observable(true);
             self.is_test_mode_active = ko.observable(false);
+            self.wait_for_moves_to_finish = ko.observable(false);
             self.current_camera_guid = ko.observable(null);
             self.dialog_rendering_unfinished = new Octolapse.OctolapseDialogRenderingUnfinished();
             self.dialog_rendering_in_process = new Octolapse.OctolapseDialogRenderingInProcess();
@@ -307,6 +312,23 @@ $(function () {
                 self.current_camera_guid(self.getInitialCameraSelection());
                 self.set_current_camera_enabled();
             };
+
+            self.current_stabilization_profile_guid.subscribe(function(newValue){
+                var current_stabilization_profile = null;
+                for (var i = 0; i < self.profiles().stabilizations().length; i++) {
+                    var stabilization_profile = self.profiles().stabilizations()[i];
+                    if (stabilization_profile.guid == self.current_stabilization_profile_guid()) {
+                        current_stabilization_profile = stabilization_profile;
+                        break;
+                    }
+                }
+                if (current_stabilization_profile)
+                    self.wait_for_moves_to_finish(current_stabilization_profile.wait_for_moves_to_finish);
+                else
+                    self.wait_for_moves_to_finish(false);
+            });
+
+
 
             // Subscribe to current camera guid changes
             self.current_camera_guid.subscribe(function(newValue){
@@ -860,6 +882,7 @@ $(function () {
                     }
                 }
             };
+
 
             // Trigger Profile Settings
             self.triggers_sorted = ko.computed(function() { return self.nameSort(self.profiles().triggers) });

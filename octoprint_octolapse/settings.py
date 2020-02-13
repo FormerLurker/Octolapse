@@ -1847,6 +1847,7 @@ class Profiles(Settings):
                 "name": stabilization.name,
                 "guid": stabilization.guid,
                 "description": stabilization.description,
+                "wait_for_moves_to_finish": stabilization.wait_for_moves_to_finish
             })
 
         for key, trigger in self.triggers.items():

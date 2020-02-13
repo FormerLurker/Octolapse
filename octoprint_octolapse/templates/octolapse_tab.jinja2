@@ -36,23 +36,23 @@
     </script>
     <div data-bind="visible:Octolapse.Globals.has_loaded_state" style="display:none">
         <div class="row-fluid">
-                    <div class="span6">
-                        <span data-bind="visible: Octolapse.Globals.is_admin, click: function() {return Octolapse.Globals.main_settings.toggleOctolapse();}" title="Enable or Disable Octolapse">
-                            <i class="fa fa-lg" data-bind="css: {'fa-toggle-on': Octolapse.Globals.main_settings.is_octolapse_enabled, 'fa-toggle-off': !Octolapse.Globals.main_settings.is_octolapse_enabled()}"></i>
-                        </span>
-                        <span data-bind="text: getEnabledButtonText, attr: {title: getStateSummaryText}"></span>
-                    </div>
-                    <div class="span6 text-right">
-                        <span class="text-center" data-bind="visible: (is_timelapse_active() && Octolapse.Globals.is_admin())">
-                            <a title="Stop Octolapse" data-bind="click: function() {$data.stopTimelapse();}">
-                                <i class="fa fa-stop-circle fa-lg"></i>
-                            </a>
-                        </span>
-                        &nbsp;
-                        <a title="Open Octolapse Main Settings" data-bind="visible: Octolapse.Globals.is_admin, click: function() {openOctolapseSettings('main-settings');}"><i class="fa fa-gear fa-lg"></i></a>
+            <div class="span6">
+                <span data-bind="visible: Octolapse.Globals.is_admin, click: function() {return Octolapse.Globals.main_settings.toggleOctolapse();}" title="Enable or Disable Octolapse">
+                    <i class="fa fa-lg" data-bind="css: {'fa-toggle-on': Octolapse.Globals.main_settings.is_octolapse_enabled, 'fa-toggle-off': !Octolapse.Globals.main_settings.is_octolapse_enabled()}"></i>
+                </span>
+                <span data-bind="text: getEnabledButtonText, attr: {title: getStateSummaryText}"></span>
+            </div>
+            <div class="span6 text-right">
+                <span class="text-center" data-bind="visible: (is_timelapse_active() && Octolapse.Globals.is_admin())">
+                    <a title="Stop Octolapse" data-bind="click: function() {$data.stopTimelapse();}">
+                        <i class="fa fa-stop-circle fa-lg"></i>
+                    </a>
+                </span>
+                &nbsp;
+                <a title="Open Octolapse Main Settings" data-bind="visible: Octolapse.Globals.is_admin, click: function() {openOctolapseSettings('main-settings');}"><i class="fa fa-gear fa-lg"></i></a>
 
-                    </div>
-                </div>
+            </div>
+        </div>
         <div>
             <div class="alert alert-danger octolapse" data-bind="visible: getStatusText() != ''">
                 <span data-bind="text: getStatusText"></span>
@@ -63,9 +63,15 @@
                 </div>
             </div>
             <div data-bind="visible: !is_timelapse_active() && Octolapse.Globals.main_settings.test_mode_enabled() && Octolapse.Globals.main_settings.is_octolapse_enabled()" class="row-fluid">
-
                 <div class="span12 alert alert-info octolapse">
                     <span>Test mode will be activated when your next print starts.</span>&nbsp;<a class="octolapse_help right" data-help-url="main_settings.is_test_mode.md" data-help-title="Test Mode - Prevent Extrusion and Warmup"></a>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div data-bind="visible: !wait_for_moves_to_finish()" class="row-fluid">
+                <div class="span12 alert alert-info octolapse">
+                    <span>Wait for moves to finish has been disabled within your stabilization profile.</span>&nbsp;<a class="octolapse_help right" data-help-url="profiles.stabilization.wait_for_moves_to_finish.md" data-help-title="Wait For Moves To Finish"></a>
                 </div>
             </div>
         </div>
@@ -73,8 +79,8 @@
             <div class="span12">
                 <div id="octolapse_snapshot_thumbnail_container" class="text-center octolapse-secondary-gray-background">
                     <span class="text-center">
-                            Timelapse Preview
-                        </span>
+                        Timelapse Preview
+                    </span>
                     <div class="snapshot-container">
                         <div class="octolapse-camera-state-text" data-bind="visible:!current_camera_enabled() || current_camera_state_text() != ''">
                             <div class="octolapse-camera-state-text-wrapper">
@@ -92,7 +98,7 @@
                         <div class="octolapse-snapshot-button-overlay">
                             <span class="play-button" data-bind="visible: show_play_button">
                                 <a title="Play animation if there are enough frames stored." class="play"
-                                    data-bind="css: {'fade-out': !is_taking_snapshot()}, click: function() { startSnapshotAnimation('octolapse_snapshot_thumbnail_container'); }" style="display:none;">
+                                   data-bind="css: {'fade-out': !is_taking_snapshot()}, click: function() { startSnapshotAnimation('octolapse_snapshot_thumbnail_container'); }" style="display:none;">
                                     <i class="fa-stack fa-3x">
                                         <i class="fa fa-play-circle fa-stack-1x fa-inverse outline"></i>
                                         <i class="fa fa-play-circle fa-stack-1x"></i>
@@ -129,11 +135,10 @@
                                            optionsText: 'name',
                                            optionsValue: 'guid',
                                            optionsCaption: 'Select a camera',
-                                           value: Octolapse.Status.current_camera_guid">
-                        </select>
+                                           value: Octolapse.Status.current_camera_guid"></select>
                         <a title="Edit image preferences"
                            data-bind="visible: canEditSettings() && Octolapse.Globals.is_admin, click: showWebcamSettings">
-                           <i class="fa fa-pencil fa-2x"></i>
+                            <i class="fa fa-pencil fa-2x"></i>
                         </a>
                     </div>
                 </div>
@@ -179,7 +184,7 @@
             <hr data-bind="visible: (Octolapse.Globals.main_settings.show_trigger_state_changes ||
                                     Octolapse.Globals.main_settings.show_extruder_state_changes ||
                                     Octolapse.Globals.main_settings.show_printer_state_changes() ||
-                                    Octolapse.Globals.main_settings.show_position_change)"/>
+                                    Octolapse.Globals.main_settings.show_position_change)" />
             <div data-bind="visible: Octolapse.Globals.main_settings.show_printer_state_changes() || (Octolapse.Status.is_timelapse_active() && Octolapse.Status.PrinterState.hasPrinterStateErrors()), template:'position-state-status-template'">
             </div>
             <div data-bind="visible: Octolapse.Globals.main_settings.show_extruder_state_changes, template:'extruder-status-template'">
@@ -207,7 +212,7 @@
             </div>
         </div>
         <div data-bind="template:'latest-snapshot-template'"></div>
-        <br/>
+        <br />
         <div class="row-fluid">
             <div class="span7">
                 <small>

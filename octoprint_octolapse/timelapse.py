@@ -151,6 +151,9 @@ class Timelapse(object):
     def get_current_profiles(self):
         return self._current_profiles
 
+    def get_current_settings(self):
+        return self._settings
+
     def get_current_state(self):
         return self._state
 
