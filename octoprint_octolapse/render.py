@@ -1902,17 +1902,28 @@ class TimelapseRenderJob(threading.Thread):
             format_vars['snapshot_number'] = snapshot_number = int(data['snapshot_number']) + 1
             format_vars['file_name'] = data['file_name']
             format_vars['time_taken_s'] = time_taken = float(data['time_taken'])
-            format_vars['layer'] = "" if "layer" not in data else "{0}".format(data["layer"])
-            format_vars['height'] = "" if "height" not in data else "None" if data["height"] == "None" else "{0:.3f}".format(float(data["height"]))
-            format_vars['x'] = "" if "x" not in data else "None" if data["x"] == "None" else "{0:.3f}".format(float(data["x"]))
-            format_vars['y'] = "" if "y" not in data else "None" if data["y"] == "None" else "{0:.3f}".format(float(data["y"]))
-            format_vars['z'] = "" if "z" not in data else "None" if data["z"] == "None" else "{0:.3f}".format(float(data["z"]))
-            format_vars['e'] = "" if "e" not in data else "None" if data["e"] == "None" else "{0:.5f}".format(float(data["e"]))
-            format_vars['f'] = "" if "f" not in data else "None" if data["f"] == "None" else "{0}".format(int(float(data["f"])))
-            format_vars['x_snapshot'] = "" if "x_snapshot" not in data else "None" if data["x_snapshot"] == "None" else "{0:.3f}".format(float(data["x_snapshot"]))
-            format_vars['y_snapshot'] = "" if "y_snapshot" not in data else "None" if data["y_snapshot"] == "None" else "{0:.3f}".format(float(data["y_snapshot"]))
-            # Verify that the file actually exists.
 
+            layer = None if "layer" not in data or data["layer"] is None or data["layer"] == "None" else int(data["layer"])
+            height = None if "height" not in data or data["height"] is None or data["height"] == "None" else float(data["height"])
+            x = None if "x" not in data or data["x"] is None or data["x"] == "None" else float(data["x"])
+            y = None if "y" not in data or data["y"] is None or data["y"] == "None" else float(data["y"])
+            z = None if "z" not in data or data["z"] is None or data["z"] == "None" else float(data["z"])
+            e = None if "e" not in data or data["e"] is None or data["e"] == "None" else float(data["e"])
+            f = None if "f" not in data or data["f"] is None or data["f"] == "None" else int(float(data["f"]))
+            x_snapshot = None if "x_snapshot" not in data or data["x_snapshot"] is None or data["x_snapshot"] == "None" else float(data["x_snapshot"])
+            y_snapshot = None if "y_snapshot" not in data or data["y_snapshot"] is None or data["y_snapshot"] == "None" else float(data["y_snapshot"])
+
+            format_vars['layer'] = "None" if layer is None else "{0}".format(layer)
+            format_vars['height'] = "None" if height is None else "{0}".format(height)
+            format_vars['x'] = "None" if x is None else "{0:.3f}".format(x)
+            format_vars['y'] = "None" if y is None else "{0:.3f}".format(y)
+            format_vars['z'] = "None" if z is None else "{0:.3f}".format(z)
+            format_vars['e'] = "None" if e is None else "{0:.5f}".format(e)
+            format_vars['f'] = "None" if f is None else "{0}".format(f)
+            format_vars['x_snapshot'] = "None" if x_snapshot is None else "{0:.3f}".format(x_snapshot)
+            format_vars['y_snapshot'] = "None" if y_snapshot is None else "{0:.3f}".format(y_snapshot)
+
+            # Verify that the file actually exists.
             file_path = os.path.join(
                 self._temp_rendering_dir,
                 self._render_job_info.get_snapshot_name_from_index(index)
