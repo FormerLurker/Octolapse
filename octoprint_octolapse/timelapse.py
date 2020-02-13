@@ -257,7 +257,7 @@ class Timelapse(object):
             self.send_snapshot_gcode_array(gcode_array, tags=tags)
 
     def _test_position_request(self):
-        if self.get_position_async(timeout=self._position_timeout_very_short, no_wait=True):
+        if self.get_position_async(timeout=self._position_timeout_short, no_wait=True):
             return True
         return False
 
