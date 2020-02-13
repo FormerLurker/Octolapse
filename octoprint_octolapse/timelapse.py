@@ -437,13 +437,14 @@ class Timelapse(object):
                         "Queuing %d snapshot commands, an M400 and an M114 command.  Note that the actual snapshot command is never sent.",
                         len(gcodes_to_send)
                     )
-                    snapshot_position = self.get_position_async(
-                        start_gcode=gcodes_to_send,
-                        tags={'snapshot-gcode'},
-                        no_wait= (
-                            not self._stabilization.wait_for_moves_to_finish
+                    if self._stabilization.wait_for_moves_to_finish:
+                        snapshot_position = self.get_position_async(
+                            start_gcode=gcodes_to_send,
+                            tags={'snapshot-gcode'},
                         )
-                    )
+                    else:
+                        snapshot_position = None
+                        self.send_snapshot_gcode_array(gcodes_to_send, {'snapshot-gcode'})
                     gcodes_to_send = []
                     if snapshot_position is None:
                         has_error = True
