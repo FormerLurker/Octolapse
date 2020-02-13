@@ -1911,12 +1911,12 @@ class TimelapseRenderJob(threading.Thread):
             format_vars['y'] = "" if "y" not in data else "None" if data["y"] is None else "{0:.3f}".format(float(data["y"]))
             format_vars['z'] = "" if "z" not in data else "None" if data["z"] is None else "{0:.3f}".format(float(data["z"]))
             format_vars['e'] = "" if "e" not in data else "None" if data["e"] is None else "{0:.5f}".format(float(data["e"]))
-            format_vars['f'] = "" if "f" not in data else "None" if data["f"] is None else "{0}".format(int(data["f"]))
+            format_vars['f'] = "" if "f" not in data else "None" if data["f"] is None else "{0}".format(int(float(data["f"])))
             format_vars['x_snapshot'] = "" if "x_snapshot" not in data else "None" if data["x_snapshot"] is None else "{0:.3f}".format(float(data["x_snapshot"]))
             format_vars['y_snapshot'] = "" if "y_snapshot" not in data else "None" if data["y_snapshot"] is None else "{0:.3f}".format(float(data["y_snapshot"]))
             format_vars['z_snapshot'] = "" if "z_snapshot" not in data else "None" if data["z_snapshot"] is None else "{0:.3f}".format(float(data["z_snapshot"]))
             format_vars['e_snapshot'] = "" if "e_snapshot" not in data else "None" if data["e_snapshot"] is None else "{0:.5f}".format(float(data["e_snapshot"]))
-            format_vars['f_snapshot'] = "" if "f_snapshot" not in data else "None" if data["f_snapshot"] is None else "{0}".format(int(data["f_snapshot"]))
+            format_vars['f_snapshot'] = "" if "f_snapshot" not in data else "None" if data["f_snapshot"] is None else "{0}".format(int(float(data["f_snapshot"])))
             # Verify that the file actually exists.
 
             file_path = os.path.join(
