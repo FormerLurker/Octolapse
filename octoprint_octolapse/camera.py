@@ -1192,7 +1192,7 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
             address=self.address,
             querystring=querystring
         )
-        logger.debug("Changing %s to %s for %s.  Querystring: %s", name, str(value), self.camera_name, querystring)
+        logger.debug("Changing %s to %s for %s.  Request: %s", name, str(value), self.camera_name, url)
         try:
             if len(self.username) > 0:
                 r = requests.get(url, auth=HTTPBasicAuth(self.username, self.password),

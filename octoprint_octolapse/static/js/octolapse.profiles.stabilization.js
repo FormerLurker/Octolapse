@@ -48,6 +48,7 @@ $(function () {
         self.y_relative_path = ko.observable(values.y_relative_path);
         self.y_relative_path_loop = ko.observable(values.y_relative_path_loop);
         self.y_relative_path_invert_loop = ko.observable(values.y_relative_path_invert_loop);
+        self.wait_for_moves_to_finish = ko.observable(values.wait_for_moves_to_finish);
 
         self.updateFromServer = function(values) {
             self.name(values.name);
@@ -72,6 +73,9 @@ $(function () {
             self.y_relative_path(values.y_relative_path);
             self.y_relative_path_loop(values.y_relative_path_loop);
             self.y_relative_path_invert_loop(values.y_relative_path_invert_loop);
+            if (values.wait_for_moves_to_finish) {
+                self.wait_for_moves_to_finish(values.wait_for_moves_to_finish);
+            }
         };
 
         self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(

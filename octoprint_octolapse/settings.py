@@ -879,6 +879,7 @@ class StabilizationProfile(AutomaticConfigurationProfile):
         self.y_relative_path = "50"
         self.y_relative_path_loop = True
         self.y_relative_path_invert_loop = True
+        self.wait_for_moves_to_finish = True
 
     def get_stabilization_paths(self):
         x_stabilization_path = StabilizationPath()

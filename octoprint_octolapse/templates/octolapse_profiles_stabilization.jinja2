@@ -31,7 +31,7 @@
             <label class="control-label">Name</label>
             <div class="controls">
                 <input id="octolapse_stabilization_name" name="octolapse_stabilization_name"
-                       class="input-block-level form-input" 
+                       class="input-block-level form-input"
                        data-bind="value: name"
                        type="text"
                 />
@@ -307,6 +307,22 @@
                     />Enabled
                     <a class="octolapse_help" data-help-url="profiles.stabilization.y_relative_path_invert_loop.md" data-help-title="Y Relative Path Invert Loop"/>
                 </label>
+            </div>
+        </div>
+        <a data-bind="toggleContent: { class: 'fa-caret-right fa-caret-down', container: '#advanced-stabilization-settings.hide'}"><i class="fa fa-no-shadow fa-caret-right"></i>&nbsp;Advanced Settings</a>
+        <div id="advanced-stabilization-settings" class="control-group hide">
+            <label class="control-label">Wait for Moves To Finish</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input id="octolapse_stabilization_wait_for_moves_to_finish" name="octolapse_stabilization_wait_for_moves_to_finish"
+                           data-bind="checked: wait_for_moves_to_finish"
+                           type="checkbox"
+                    />Enabled
+                    <a class="octolapse_help" data-help-url="profiles.stabilization.wait_for_moves_to_finish.md" data-help-title="Wait For Moves To Finish"/>
+                </label>
+                <span class="help-inline">
+                    <span class="label label-important">Important</span>&nbsp;Disabling this option will result in a destabilized timelapse, similar to the stock Octoprint timelapse.
+                    </span>
             </div>
         </div>
     </div>
