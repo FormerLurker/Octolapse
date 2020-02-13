@@ -1220,7 +1220,12 @@ class RenderingProfile(AutomaticConfigurationProfile):
                 "snapshot_number",
                 "current_time",
                 "time_elapsed",
-                "layer"
+                "layer",
+                "height",
+                "x",
+                "y",
+                "z",
+                "e"
             ],
             'overlay_text_alignment_options': [
                 "left",

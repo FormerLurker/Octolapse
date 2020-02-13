@@ -141,7 +141,12 @@ def preview_overlay(rendering_profile, image=None):
         'time_taken': time.time(),
         'current_time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())),
         'time_elapsed': "{}".format(datetime.timedelta(seconds=round(9001))),
-        'layer': "53"
+        'layer': "53",
+        'height': "22.3302",
+        'x': "150.33222",
+        'y': "-23.0001",
+        'z': "15.023",
+        'e': "1504.632",
     }
     image = TimelapseRenderJob.add_overlay(image,
                                            text_template=rendering_profile.overlay_text_template,
@@ -1895,6 +1900,11 @@ class TimelapseRenderJob(threading.Thread):
             format_vars['file_name'] = data['file_name']
             format_vars['time_taken_s'] = time_taken = float(data['time_taken'])
             format_vars['layer'] = "" if "layer" not in data else "{0}".format(data["layer"])
+            format_vars['height'] = "" if "height" not in data else "None" if data["height"] is None else "{0:.3f}".format(float(data["height"]))
+            format_vars['x'] = "" if "x" not in data else "None" if data["x"] is None else "{0:.3f}".format(float(data["x"]))
+            format_vars['y'] = "" if "y" not in data else "None" if data["y"] is None else "{0:.3f}".format(float(data["y"]))
+            format_vars['z'] = "" if "z" not in data else "None" if data["z"] is None else "{0:.3f}".format(float(data["z"]))
+            format_vars['e'] = "" if "e" not in data else "None" if data["e"] is None else "{0:.5f}".format(float(data["e"]))
 
             # Verify that the file actually exists.
 

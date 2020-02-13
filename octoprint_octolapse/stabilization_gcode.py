@@ -159,11 +159,22 @@ class SnapshotPlan(object):
 
     def get_snapshot_metadata(self):
         metadata = {
-            'layer': None
+            "layer": None,
+            "height": None,
+            "x": None,
+            "y": None,
+            "z": None,
+            "e": None,
         }
         if self.initial_position is not None:
             metadata["layer"] = self.initial_position.layer
-
+            metadata["height"] = self.initial_position.height
+            metadata["x"] = self.initial_position.x
+            metadata["y"] = self.initial_position.y
+            metadata["z"] = self.initial_position.z
+            extruder = self.initial_position.get_current_extruder()
+            if extruder is not None:
+                metadata["e"] = extruder.e
         return metadata
 
 

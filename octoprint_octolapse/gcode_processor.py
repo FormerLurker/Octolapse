@@ -378,6 +378,10 @@ class Pos(object):
         target.is_in_bounds = True
 
     def get_current_extruder(self):
+        if len(self.extruders) == 0:
+            logger.error("The current extruder was requested, but none was found.")
+            return None
+
         tool_index = self.current_tool
         if tool_index > len(self.extruders) - 1:
             tool_index = len(self.extruders) - 1

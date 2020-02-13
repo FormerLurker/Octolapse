@@ -50,7 +50,7 @@ logger = logging_configurator.get_logger(__name__)
 
 class SnapshotMetadata(object):
     METADATA_FILE_NAME = 'metadata.csv'
-    METADATA_FIELDS = ['snapshot_number', 'file_name', 'time_taken', 'layer']
+    METADATA_FIELDS = ['snapshot_number', 'file_name', 'time_taken', 'layer', 'height', 'x', 'y', 'z', 'e']
 
     @staticmethod
     def is_metadata_file(file_name):
@@ -376,7 +376,12 @@ class ImagePostProcessing(object):
                     'snapshot_number': "{}".format(self.snapshot_job_info.snapshot_number),
                     'file_name': self.snapshot_job_info.snapshot_file_name,
                     'time_taken': "{}".format(time()),
-                    'layer': "{}".format(self.snapshot_job_info.layer)
+                    'layer': "{}".format(None if "layer" not in self.snapshot_job_info.metadata else self.snapshot_job_info.metadata["layer"]),
+                    'height': "{}".format(None if "height" not in self.snapshot_job_info.metadata else self.snapshot_job_info.metadata["height"]),
+                    'x': "{}".format(None if "x" not in self.snapshot_job_info.metadata else self.snapshot_job_info.metadata["x"]),
+                    'y': "{}".format(None if "y" not in self.snapshot_job_info.metadata else self.snapshot_job_info.metadata["y"]),
+                    'z': "{}".format(None if "z" not in self.snapshot_job_info.metadata else self.snapshot_job_info.metadata["z"]),
+                    'e': "{}".format(None if "e" not in self.snapshot_job_info.metadata else self.snapshot_job_info.metadata["e"]),
                 })
         except Exception as e:
             logger.exception("An unexpected exception occurred while saving snapshot metadata for "
@@ -807,9 +812,7 @@ class SnapshotJobInfo(object):
         self.timeout_seconds = current_camera.timeout_ms / 1000.0
         self.snapshot_number = snapshot_number
         self.job_type = job_type
-        self.layer = None
-        if "layer" in metadata:
-            self.layer = metadata["layer"]
+        self.metadata = metadata
 
 
 class CameraInfo(object):
