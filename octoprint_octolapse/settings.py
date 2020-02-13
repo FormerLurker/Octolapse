@@ -1228,10 +1228,7 @@ class RenderingProfile(AutomaticConfigurationProfile):
                 "e",
                 "f",
                 "x_snapshot",
-                "y_snapshot",
-                "z_snapshot",
-                "e_snapshot",
-                "f_snapshot",
+                "y_snapshot"
             ],
             'overlay_text_alignment_options': [
                 "left",

@@ -177,26 +177,15 @@ class SnapshotPlan(object):
             if extruder is not None:
                 metadata["e"] = extruder.e
 
-            x_snapshot = None
-            y_snapshot = None
-            z_snapshot = None
-            e_snapshot = None
-            f_snapshot = None
+            x_snapshot = self.initial_position.x
+            y_snapshot = self.initial_position.y
             for step in self.steps:
                 if step.action == SnapshotPlan.TRAVEL_ACTION:
                     x_snapshot = step.x
                     y_snapshot = step.y
-                    z_snapshot = step.z
-                    e_snapshot = step.e
-                    f_snapshot = step.f
                     break
-
             metadata["x_snapshot"] = x_snapshot
             metadata["y_snapshot"] = y_snapshot
-            metadata["z_snapshot"] = z_snapshot
-            metadata["e_snapshot"] = e_snapshot
-            metadata["f_snapshot"] = f_snapshot
-
         return metadata
 
     def to_dict(self):

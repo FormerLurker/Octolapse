@@ -51,7 +51,8 @@ logger = logging_configurator.get_logger(__name__)
 class SnapshotMetadata(object):
     METADATA_FILE_NAME = 'metadata.csv'
     METADATA_FIELDS = [
-        'snapshot_number', 'file_name', 'time_taken', 'layer', 'height', 'x', 'y', 'z', 'e', 'f', 'x_snapshot', 'y_snapshot', 'z_snapshot', 'e_snapshot', 'f_snapshot'
+        'snapshot_number', 'file_name', 'time_taken', 'layer', 'height', 'x', 'y', 'z', 'e', 'f',
+        'x_snapshot', 'y_snapshot'
     ]
 
     @staticmethod
@@ -387,9 +388,6 @@ class ImagePostProcessing(object):
                     'f': "{}".format(None if "f" not in self.snapshot_job_info.metadata else self.snapshot_job_info.metadata["f"]),
                     'x_snapshot': "{}".format(None if "x_snapshot" not in self.snapshot_job_info.metadata else self.snapshot_job_info.metadata["x_snapshot"]),
                     'y_snapshot': "{}".format(None if "y_snapshot" not in self.snapshot_job_info.metadata else self.snapshot_job_info.metadata["y_snapshot"]),
-                    'z_snapshot': "{}".format(None if "z_snapshot" not in self.snapshot_job_info.metadata else self.snapshot_job_info.metadata["z_snapshot"]),
-                    'e_snapshot': "{}".format(None if "e_snapshot" not in self.snapshot_job_info.metadata else self.snapshot_job_info.metadata["e_snapshot"]),
-                    'f_snapshot': "{}".format(None if "f_snapshot" not in self.snapshot_job_info.metadata else self.snapshot_job_info.metadata["f_snapshot"]),
                 })
         except Exception as e:
             logger.exception("An unexpected exception occurred while saving snapshot metadata for "
