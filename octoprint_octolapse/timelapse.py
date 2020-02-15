@@ -317,7 +317,7 @@ class Timelapse(object):
         self._snapshot_task_queue.join()
         self._snapshot_task_queue.put("snapshot_job")
         try:
-            results = self._capture_snapshot.take_snapshots(metadata)
+            results = self._capture_snapshot.take_snapshots(metadata, no_wait=not self._stabilization.wait_for_moves_to_finish)
         finally:
             self._snapshot_task_queue.get()
             self._snapshot_task_queue.task_done()
@@ -433,15 +433,12 @@ class Timelapse(object):
             # once we hit the snapshot command.
             for gcode in snapshot_gcode.snapshot_commands:
                 if gcode == "{0} {1}".format(PrinterProfile.OCTOLAPSE_COMMAND, PrinterProfile.DEFAULT_OCTOLAPSE_SNAPSHOT_COMMAND):
-                    logger.debug(
-                        "Queuing %d snapshot commands, an M400 and an M114 command.  Note that the actual snapshot command is never sent.",
-                        len(gcodes_to_send)
-                    )
                     if self._stabilization.wait_for_moves_to_finish:
-                        snapshot_position = self.get_position_async(
-                            start_gcode=gcodes_to_send,
-                            tags={'snapshot-gcode'}
+                        logger.debug(
+                            "Queuing %d snapshot commands, an M400 and an M114 command.  Note that the actual snapshot command is never sent.",
+                            len(gcodes_to_send)
                         )
+                        snapshot_position = self.get_position_async(start_gcode=gcodes_to_send, tags={'snapshot-gcode'})
                         if snapshot_position is None:
                             has_error = True
                             logger.error(
@@ -449,6 +446,10 @@ class Timelapse(object):
                                 "reached. "
                             )
                     else:
+                        logger.debug(
+                            "Queuing %d snapshot commands.  Not waiting for moves to finish.",
+                            len(gcodes_to_send)
+                        )
                         snapshot_position = None
                         self.send_snapshot_gcode_array(gcodes_to_send, {'snapshot-gcode'})
                     gcodes_to_send = []
@@ -567,6 +568,7 @@ class Timelapse(object):
 
     def release_job_on_hold_lock(self):
         if self.job_on_hold and self._stabilization_signal.is_set() and self._position_signal.is_set():
+            logger.debug("Releasing job-on-hold lock.")
             self._octoprint_printer.set_job_on_hold(False)
             self.job_on_hold = False
 
@@ -766,6 +768,7 @@ class Timelapse(object):
                     return None
 
                 if self._octoprint_printer.set_job_on_hold(True):
+                    logger.debug("Setting job-on-hold lock.")
                     # this was set to 'False' earlier.  Why?
                     self.job_on_hold = True
                     # We are triggering, take a snapshot
@@ -816,6 +819,7 @@ class Timelapse(object):
                         self._state = TimelapseState.AcquiringLocation
 
                         if self._octoprint_printer.set_job_on_hold(True):
+                            logger.debug("Setting job-on-hold lock.")
                             self.job_on_hold = True
                             thread = threading.Thread(target=self.acquire_position, args=[parsed_command])
                             thread.daemon = True
@@ -832,6 +836,7 @@ class Timelapse(object):
                         if _first_triggering:
                             # get the job lock
                             if self._octoprint_printer.set_job_on_hold(True):
+                                logger.debug("Setting job-on-hold lock.")
                                 self.job_on_hold = True
                                 # We are triggering, take a snapshot
                                 self._state = TimelapseState.TakingSnapshot
@@ -886,6 +891,7 @@ class Timelapse(object):
             ) and self._octoprint_printer.is_printing()
         ):
             if self._octoprint_printer.set_job_on_hold(True):
+                logger.debug("Setting job-on-hold lock.")
                 self.job_on_hold = True
                 self._state = TimelapseState.Initializing
 
@@ -913,6 +919,7 @@ class Timelapse(object):
                         # set the current line to 0 so that the plugin checks for line 1 below after startup.
                         self._current_file_line = 0
                     self._octoprint_printer.set_job_on_hold(False)
+                    logger.debug("Releasing job-on-hold lock.")
                     self.job_on_hold = False
                 else:
                     return None,
@@ -926,6 +933,7 @@ class Timelapse(object):
         if parsed_command is not None:
             self.send_snapshot_gcode_array([parsed_command.gcode], {'pre-processing-end'})
         self._octoprint_printer.set_job_on_hold(False)
+        logger.debug("Releasing job-on-hold lock.")
         self.job_on_hold = False
 
     @staticmethod
@@ -1060,6 +1068,7 @@ class Timelapse(object):
 
         finally:
             self._octoprint_printer.set_job_on_hold(False)
+            logger.debug("Releasing job-on-hold lock.")
             self.job_on_hold = False
 
     def acquire_snapshot_precalculated(self, parsed_command):
@@ -1096,6 +1105,7 @@ class Timelapse(object):
             if not self.is_realtime:
                 self.set_next_snapshot_plan()
             self._octoprint_printer.set_job_on_hold(False)
+            logger.debug("Releasing job-on-hold lock.")
             self.job_on_hold = False
             self._stabilization_signal.set()
 

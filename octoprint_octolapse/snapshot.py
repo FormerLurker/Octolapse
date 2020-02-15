@@ -108,7 +108,7 @@ class CaptureSnapshot(object):
         self.OnNewThumbnailAvailableCallback = on_new_thumbnail_available_callback
         self.on_post_processing_error_callback = on_post_processing_error_callback
 
-    def take_snapshots(self, metadata={}):
+    def take_snapshots(self, metadata={}, no_wait=False):
         logger.info("Starting snapshot acquisition")
         start_time = time()
 
@@ -164,16 +164,16 @@ class CaptureSnapshot(object):
                 thread.daemon = True
                 snapshot_threads.append((thread, snapshot_job_info, download_started_event))
 
-            after_snapshot_job_info = SnapshotJobInfo(
-                self.TimelapseJobInfo,
-                self.temporary_directory,
-                camera_info.snapshot_attempt,
-                current_camera,
-                'after-snapshot',
-                metadata=metadata
-            )
             # post_snapshot threads
             if current_camera.on_after_snapshot_script:
+                after_snapshot_job_info = SnapshotJobInfo(
+                    self.TimelapseJobInfo,
+                    self.temporary_directory,
+                    camera_info.snapshot_attempt,
+                    current_camera,
+                    'after-snapshot',
+                    metadata=metadata
+                )
                 thread = ExternalScriptSnapshotJob(after_snapshot_job_info, 'after-snapshot')
                 thread.daemon = True
                 after_snapshot_threads.append(
@@ -189,6 +189,7 @@ class CaptureSnapshot(object):
                     self.SendGcodeArrayCallback(
                         on_before_snapshot_gcode,
                         current_camera.timeout_ms / 1000.0,
+                        wait_for_completion=not no_wait,
                         tags={'before-snapshot-gcode'}
                     )
 
@@ -201,14 +202,16 @@ class CaptureSnapshot(object):
 
         # join the pre-snapshot threads
         for t in before_snapshot_threads:
-            snapshot_job_info = t.join()
-            assert (isinstance(snapshot_job_info, SnapshotJobInfo))
-            if t.snapshot_thread_error:
-                snapshot_job_info.success = False
-                snapshot_job_info.error = t.snapshot_thread_error
+            if not no_wait:
+                snapshot_job_info = t.join()
+                assert (isinstance(snapshot_job_info, SnapshotJobInfo))
+                if t.snapshot_thread_error:
+                    snapshot_job_info.success = False
+                    snapshot_job_info.error = t.snapshot_thread_error
+                else:
+                    snapshot_job_info.success = True
             else:
                 snapshot_job_info.success = True
-
             results.append(snapshot_job_info)
 
         if len(before_snapshot_threads) > 0:
@@ -231,23 +234,27 @@ class CaptureSnapshot(object):
                         # just send the gcode now so it all goes in order
                         self.SendGcodeArrayCallback(
                             Commands.string_to_gcode_array(current_camera.gcode_camera_script),
-                            current_camera.timeout_ms/1000.0
+                            current_camera.timeout_ms/1000.0,
+                            wait_for_completion=not no_wait
                         )
-                        script_sent
+                        script_sent = True
                     if not script_sent:
                         logger.warning("The gcode camera '%s' is enabled, but failed to produce any snapshot gcode.", current_camera.name)
 
         for t, snapshot_job_info, event in snapshot_threads:
-            if event:
-                event.wait()
-            else:
-                snapshot_job_info = t.join()
-            if t.snapshot_thread_error:
-                snapshot_job_info.success = False
-                snapshot_job_info.error = t.snapshot_thread_error
-            elif t.post_processing_error:
-                snapshot_job_info.success = False
-                snapshot_job_info.error = t.post_processing_error
+            if not no_wait:
+                if event:
+                    event.wait()
+                else:
+                    snapshot_job_info = t.join()
+                if t.snapshot_thread_error:
+                    snapshot_job_info.success = False
+                    snapshot_job_info.error = t.snapshot_thread_error
+                elif t.post_processing_error:
+                    snapshot_job_info.success = False
+                    snapshot_job_info.error = t.post_processing_error
+                else:
+                    snapshot_job_info.success = True
             else:
                 snapshot_job_info.success = True
 
@@ -277,6 +284,7 @@ class CaptureSnapshot(object):
                     self.SendGcodeArrayCallback(
                         on_after_snapshot_gcode,
                         current_camera.timeout_ms / 1000.0,
+                        wait_for_completion=not no_wait,
                         tags={'after-snapshot-gcode'}
                     )
 
@@ -286,12 +294,15 @@ class CaptureSnapshot(object):
 
         # join the after-snapshot threads
         for t in after_snapshot_threads:
-            snapshot_job_info = t.join()
-            assert (isinstance(snapshot_job_info, SnapshotJobInfo))
-            info = self.CameraInfos[snapshot_job_info.camera_guid]
-            if t.snapshot_thread_error:
-                snapshot_job_info.success = False
-                snapshot_job_info.error = t.snapshot_thread_error
+            if not no_wait:
+                snapshot_job_info = t.join()
+                assert (isinstance(snapshot_job_info, SnapshotJobInfo))
+                info = self.CameraInfos[snapshot_job_info.camera_guid]
+                if t.snapshot_thread_error:
+                    snapshot_job_info.success = False
+                    snapshot_job_info.error = t.snapshot_thread_error
+                else:
+                    snapshot_job_info.success = True
             else:
                 snapshot_job_info.success = True
             results.append(snapshot_job_info)
