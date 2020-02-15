@@ -2117,7 +2117,7 @@ class TimelapseRenderJob(threading.Thread):
                     self._render_job_info.pre_roll_snapshot_filename_format % (last_frame_index, post_roll_index)
                 )
                 utility.fast_copy(last_image_path, new_image_path)
-        if pre_roll_frames > 0:
+        if pre_roll_frames > 0 or post_roll_frames > 0:
             logger.info("Renaming images because pre-roll images were added.")
             # pre or post roll frames were added, so we need to rename all of our images
             self._rename_images(
