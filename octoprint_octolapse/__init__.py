@@ -1913,13 +1913,15 @@ class OctolapsePlugin(
                 "files": files
             })
 
-    def apply_camera_settings(self, camera_profiles):
+    def apply_camera_settings(self, camera_profiles, retries=3, backoff_factor=0.3, no_wait=False):
 
         if camera_profiles is None:
             camera_profiles = self._octolapse_settings.profiles.active_cameras()
 
-        success, errors = camera.CameraControl.apply_camera_settings(camera_profiles)
-        if not success:
+        success, errors = camera.CameraControl.apply_camera_settings(
+            camera_profiles, retries=retries, backoff_factor=backoff_factor, no_wait=no_wait
+        )
+        if not success and not no_wait:
             logger.error(errors)
             return False, errors
         else:
@@ -2281,7 +2283,7 @@ class OctolapsePlugin(
 
             # note that errors here will ONLY show up in the log.
             if len(startup_cameras) > 0:
-                self.apply_camera_settings(camera_profiles=startup_cameras)
+                self.apply_camera_settings(camera_profiles=startup_cameras, retries=9, backoff_factor=0.1, no_wait=True)
 
             # start automatic updates
             self.start_automatic_updates()

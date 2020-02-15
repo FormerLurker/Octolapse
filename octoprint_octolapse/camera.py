@@ -171,7 +171,7 @@ class CameraControl(object):
         return False
 
     @staticmethod
-    def apply_camera_settings(cameras, timeout_seconds=5):
+    def apply_camera_settings(cameras, retries=3, backoff_factor=0.1, no_wait=False):
         errors = []
 
         # make sure the supplied cameras are enabled and either webcams or script cameras
@@ -185,7 +185,7 @@ class CameraControl(object):
             thread = None
 
             if current_camera.webcam_settings.server_type == MjpgStreamer.server_type:
-                thread = MjpgStreamerSettingsThread(profile=current_camera)
+                thread = MjpgStreamerSettingsThread(profile=current_camera, retries=retries, backoff_factor=backoff_factor)
                 thread.daemon = True
 
             if thread:
@@ -194,19 +194,16 @@ class CameraControl(object):
         # start the threads
         for thread in threads:
             thread.start()
-        start_time = time.time()
-        timeout_time = start_time + 5
-        # join the threads, but timeout in a reasonable way
-        for thread in threads:
-            timeout_sec = timeout_time - time.time()
-            if timeout_sec < 0:
-                timeout_sec = 0.001
-            thread.join(timeout_sec)
-            if not thread.success:
-                for error in thread.errors:
-                    errors.append(error)
 
-        return len(errors) == 0, CameraControl._get_errors_string(errors)
+        if not no_wait:
+            # join the threads, but timeout in a reasonable way
+            for thread in threads:
+                thread.join(requests.packages.urllib3.util.retry.Retry.BACKOFF_MAX)
+                if not thread.success:
+                    for error in thread.errors:
+                        errors.append(error)
+            return len(errors) == 0, CameraControl._get_errors_string(errors)
+        return True, ""
 
     @staticmethod
     def run_on_print_start_script(cameras):
@@ -316,18 +313,16 @@ class CameraControl(object):
         address,
         username,
         password,
-        ignore_ssl_error,
-        timeout_seconds=5
+        ignore_ssl_error
     ):
         if server_type == 'mjpg-streamer':
             thread = MjpgStreamerSettingThread(
                 setting,
-                camera_name=camera_name,
-                address=address,
-                username=username,
-                password=password,
-                ignore_ssl_error=ignore_ssl_error,
-                timeout_seconds=timeout_seconds
+                address,
+                username,
+                password,
+                ignore_ssl_error,
+                camera_name
             )
             thread.daemon = True
             thread.start()
@@ -346,7 +341,8 @@ class CameraControl(object):
         username,
         password,
         ignore_ssl_error,
-        timeout_seconds=5
+        retries=3,
+        backoff_factor=0.1
     ):
         try:
             errors = []
@@ -359,7 +355,8 @@ class CameraControl(object):
                     password=password,
                     ignore_ssl_error=ignore_ssl_error,
                     camera_name=camera_name,
-                    timeout_seconds=timeout_seconds
+                    retries=retries,
+                    backoff_factor=backoff_factor
                 )
                 thread.daemon = True
                 thread.start()
@@ -418,14 +415,24 @@ class CameraControl(object):
     def _test_mjpg_streamer_control(camera_profile, timeout_seconds=2):
         url = camera_profile.webcam_settings.address + "?action=command&id=-1"
         try:
+            s = requests.Session()
+            s.verify = not camera_profile.webcam_settings.ignore_ssl_error
             if len(camera_profile.webcam_settings.username) > 0:
-                r = requests.get(url, auth=HTTPBasicAuth(camera_profile.webcam_settings.username,
-                                                         camera_profile.webcam_settings.password),
-                                 verify=not camera_profile.webcam_settings.ignore_ssl_error,
-                                 timeout=float(timeout_seconds))
-            else:
-                r = requests.get(
-                    url, verify=not camera_profile.webcam_settings.ignore_ssl_error, timeout=float(timeout_seconds))
+                s.auth = (
+                    camera_profile.webcam_settings.username,
+                    camera_profile.webcam_settings.password
+                )
+
+            r = utility.requests_retry_session(session=s).request("GET", url, timeout=timeout_seconds)
+
+            #if len(camera_profile.webcam_settings.username) > 0:
+            #    r = requests.get(url, auth=HTTPBasicAuth(camera_profile.webcam_settings.username,
+            #                                             camera_profile.webcam_settings.password),
+            #                     verify=not camera_profile.webcam_settings.ignore_ssl_error,
+            #                     timeout=float(timeout_seconds))
+            #else:
+            #    r = requests.get(
+            #        url, verify=not camera_profile.webcam_settings.ignore_ssl_error, timeout=float(timeout_seconds))
 
             webcam_server_type = CameraControl.get_webcam_server_type_from_request(r)
             if webcam_server_type != "mjpg-streamer":
@@ -478,15 +485,27 @@ class CameraControl(object):
         # first see what kind of server we have
         url = format_request_template(
             camera_profile.webcam_settings.address, camera_profile.webcam_settings.snapshot_request_template, "")
+
         try:
+            s = requests.Session()
+            s.verify = not camera_profile.webcam_settings.ignore_ssl_error
             if len(camera_profile.webcam_settings.username) > 0:
-                r = requests.get(url, auth=HTTPBasicAuth(camera_profile.webcam_settings.username,
-                                                         camera_profile.webcam_settings.password),
-                                 verify=not camera_profile.webcam_settings.ignore_ssl_error,
-                                 timeout=float(timeout_seconds))
-            else:
-                r = requests.get(url, verify=not camera_profile.webcam_settings.ignore_ssl_error,
-                                 timeout=float(timeout_seconds))
+                s.auth = (
+                    camera_profile.webcam_settings.username,
+                    camera_profile.webcam_settings.password
+                )
+
+            r = utility.requests_retry_session(session=s).request("GET", url, timeout=timeout_seconds)
+
+
+        #    if len(camera_profile.webcam_settings.username) > 0:
+        #        r = requests.get(url, auth=HTTPBasicAuth(camera_profile.webcam_settings.username,
+        #                                                 camera_profile.webcam_settings.password),
+        #                         verify=not camera_profile.webcam_settings.ignore_ssl_error,
+        #                         timeout=float(timeout_seconds))
+        #    else:
+        #        r = requests.get(url, verify=not camera_profile.webcam_settings.ignore_ssl_error,
+        #                         timeout=float(timeout_seconds))
 
             webcam_server_type = CameraControl.get_webcam_server_type_from_request(r)
 
@@ -537,14 +556,24 @@ class CameraControl(object):
         url = format_request_template(
             camera_profile.webcam_settings.address, camera_profile.webcam_settings.snapshot_request_template, "")
         try:
+            s = requests.Session()
+            s.verify = not camera_profile.webcam_settings.ignore_ssl_error
             if len(camera_profile.webcam_settings.username) > 0:
-                r = requests.get(url, auth=HTTPBasicAuth(camera_profile.webcam_settings.username,
-                                                         camera_profile.webcam_settings.password),
-                                 verify=not camera_profile.webcam_settings.ignore_ssl_error,
-                                 timeout=float(timeout_seconds))
-            else:
-                r = requests.get(
-                    url, verify=not camera_profile.webcam_settings.ignore_ssl_error, timeout=float(timeout_seconds))
+                s.auth = (
+                    camera_profile.webcam_settings.username,
+                    camera_profile.webcam_settings.password
+                )
+
+            r = utility.requests_retry_session(session=s).request("GET", url, timeout=timeout_seconds)
+
+            #if len(camera_profile.webcam_settings.username) > 0:
+            #    r = requests.get(url, auth=HTTPBasicAuth(camera_profile.webcam_settings.username,
+            #                                             camera_profile.webcam_settings.password),
+            #                     verify=not camera_profile.webcam_settings.ignore_ssl_error,
+            #                     timeout=float(timeout_seconds))
+            #else:
+            #    r = requests.get(
+            #        url, verify=not camera_profile.webcam_settings.ignore_ssl_error, timeout=float(timeout_seconds))
             if r.status_code == requests.codes.ok:
                 if 'content-length' in r.headers and r.headers["content-length"] == 0:
                     message = "The request contained no data for the '{0}' camera profile.".format(camera_profile.name)
@@ -894,7 +923,8 @@ class CameraControl(object):
         username,
         password,
         ignore_ssl_error,
-        timeout_seconds=5):
+        retries=3,
+        backoff_factor=0.1):
 
         if server_type == MjpgStreamer.server_type:
 
@@ -906,7 +936,8 @@ class CameraControl(object):
                 username,
                 password,
                 ignore_ssl_error,
-                timeout_seconds=timeout_seconds
+                retries=retries,
+                backoff_factor=backoff_factor
             )
             if not success:
                 return False, errors
@@ -925,7 +956,8 @@ class CameraControl(object):
                 password=password,
                 ignore_ssl_error=ignore_ssl_error,
                 camera_name=camera_name,
-                timeout_seconds=timeout_seconds
+                retries=retries,
+                backoff_factor=backoff_factor
             )
             thread.daemon = True
             thread.start()
@@ -948,7 +980,8 @@ class MjpgStreamerThread(Thread):
         password=None,
         ignore_ssl_error=False,
         camera_name=None,
-        timeout_seconds=4
+        retries=3,
+        backoff_factor=0.1
     ):
         super(MjpgStreamerThread, self).__init__()
         if profile:
@@ -956,18 +989,17 @@ class MjpgStreamerThread(Thread):
             self.username = profile.webcam_settings.username
             self.password = profile.webcam_settings.password
             self.ignore_ssl_error = profile.webcam_settings.ignore_ssl_error
-            self.timeout_seconds = timeout_seconds
             self.camera_name = profile.name
         else:
             self.address = address
             self.username = username
             self.password = password
             self.ignore_ssl_error = ignore_ssl_error
-            self.timeout_seconds = timeout_seconds
             self.camera_name = camera_name
         if isinstance(self.address, six.string_types):
             self.address = self.address.strip()
-
+        self.retries = retries
+        self.backoff_factor=backoff_factor
         self.errors = []
         self.success = False
 
@@ -981,7 +1013,8 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
         password=None,
         ignore_ssl_error=False,
         camera_name=None,
-        timeout_seconds=4
+        retries=3,
+        backoff_factor=0.1
     ):
         super(MjpgStreamerControlThread, self).__init__(
             profile=profile,
@@ -990,7 +1023,8 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
             password=password,
             ignore_ssl_error=ignore_ssl_error,
             camera_name=camera_name,
-            timeout_seconds=timeout_seconds
+            retries=retries,
+            backoff_factor=backoff_factor
         )
         self.controls = None
 
@@ -1018,12 +1052,19 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
 
         url = "{camera_address}{file_name}".format(camera_address=self.address, file_name=file_name)
         try:
+            s = requests.Session()
+            s.verify = not self.ignore_ssl_error
             if len(self.username) > 0:
-                r = requests.get(url, auth=HTTPBasicAuth(self.username, self.password),
-                                 verify=not self.ignore_ssl_error, timeout=float(self.timeout_seconds))
-            else:
-                r = requests.get(url, verify=not self.ignore_ssl_error,
-                                 timeout=float(self.timeout_seconds))
+                s.auth = (self.username, self.password)
+
+            r = utility.requests_retry_session(session=s, retries=self.retries,
+                                               backoff_factor=self.backoff_factor).request("GET", url)
+            #if len(self.username) > 0:
+            #    r = requests.get(url, auth=HTTPBasicAuth(self.username, self.password),
+            #                     verify=not self.ignore_ssl_error, timeout=float(self.timeout_seconds))
+            #else:
+            #    r = requests.get(url, verify=not self.ignore_ssl_error,
+            #                     timeout=float(self.timeout_seconds))
         except SSLError as e:
             message = (
                 "An SSL error was raised while retrieving the {0} file for the '{1}' camera profile."
@@ -1075,7 +1116,8 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
         password=None,
         ignore_ssl_error=False,
         camera_name=None,
-        timeout_seconds=4
+        retries=3,
+        backoff_factor=0.1
     ):
         super(MjpgStreamerSettingsThread, self).__init__(
             profile=profile,
@@ -1084,7 +1126,8 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
             password=password,
             ignore_ssl_error=ignore_ssl_error,
             camera_name=camera_name,
-            timeout_seconds=timeout_seconds
+            retries=retries,
+            backoff_factor=backoff_factor
         )
         if profile:
             mjpg_streamer = profile.webcam_settings.mjpg_streamer.clone()
@@ -1125,7 +1168,8 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
                 self.password,
                 self.ignore_ssl_error,
                 self.camera_name,
-                timeout_seconds=self.timeout_seconds
+                retries=self.retries,
+                backoff_factor=self.backoff_factor
             )
             thread.daemon = True
             threads.append(thread)
@@ -1142,6 +1186,7 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
             if not self.success:
                 for error in errors:
                     self.errors.append(error)
+                break  # Do not continue applying settings if one fails.
         self.success = len(self.errors) == 0
 
 
@@ -1154,7 +1199,8 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
         password,
         ignore_ssl_error,
         camera_name,
-        timeout_seconds=4
+        retries=3,
+        backoff_factor=0.1
      ):
         super(MjpgStreamerSettingThread, self).__init__(
             address=address,
@@ -1162,7 +1208,8 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
             password=password,
             ignore_ssl_error=ignore_ssl_error,
             camera_name=camera_name,
-            timeout_seconds=timeout_seconds
+            retries=retries,
+            backoff_factor=backoff_factor
         )
         self.control = control
 
@@ -1204,12 +1251,20 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
         )
         logger.debug("Changing %s to %s for %s.  Request: %s", name, str(value), self.camera_name, url)
         try:
+            # old version without session
+            #if len(self.username) > 0:
+            #    r = requests.get(url, auth=HTTPBasicAuth(self.username, self.password),
+            #                     verify=not self.ignore_ssl_error, timeout=float(self.timeout_seconds))
+            #else:
+            #    r = requests.get(url, verify=not self.ignore_ssl_error,
+            #                     timeout=float(self.timeout_seconds))
+
+            s = requests.Session()
+            s.verify = not self.ignore_ssl_error
             if len(self.username) > 0:
-                r = requests.get(url, auth=HTTPBasicAuth(self.username, self.password),
-                                 verify=not self.ignore_ssl_error, timeout=float(self.timeout_seconds))
-            else:
-                r = requests.get(url, verify=not self.ignore_ssl_error,
-                                 timeout=float(self.timeout_seconds))
+                s.auth = (self.username, self.password)
+
+            r = utility.requests_retry_session(session=s, retries=self.retries, backoff_factor=self.backoff_factor).request("GET", url)
 
             webcam_server_type = CameraControl.get_webcam_server_type_from_request(r)
             if webcam_server_type != "mjpg-streamer":
