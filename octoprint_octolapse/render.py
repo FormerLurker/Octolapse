@@ -268,6 +268,7 @@ class RenderJobInfo(object):
                    "gif": "gif",
                    # "h264": "h264",
                    "h264": "libx264",
+                   "h265": "libx265",
                    "mp4": "mpeg4",
                    "mpeg": "mpeg2video",
                    "vob": "mpeg2video"}
@@ -278,6 +279,7 @@ class RenderJobInfo(object):
         EXTENSIONS = {"avi": "avi",
                       "flv": "flv",
                       "h264": "mp4",
+                      "h265": "mp4",
                       "vob": "vob",
                       "mp4": "mp4",
                       "mpeg": "mpeg",
@@ -289,6 +291,7 @@ class RenderJobInfo(object):
         EXTENSIONS = {"avi": "avi",
                       "flv": "flv",
                       "h264": "mp4",
+                      "h265": "mp4",
                       "vob": "vob",
                       "mp4": "mp4",
                       "mpeg": "mpeg",
@@ -2221,10 +2224,20 @@ class TimelapseRenderJob(threading.Thread):
             '-threads', "{}".format(self._threads),
             '-r', "{}".format(self._fps),
             '-y',
-            '-b', "{}".format(self._render_job_info.rendering.bitrate),
             '-vcodec', v_codec,
             '-f', RenderJobInfo.get_ffmpeg_format_from_output_format(self._render_job_info.rendering_output_format)]
         )
+
+        # special parameters from h265
+        if self._render_job_info.rendering.output_format == "h265":
+            command.extend([
+                "-tag:v", "hvc1",
+                "-crf", "{}".format(self._render_job_info.rendering.constant_rate_factor),
+            ])
+        else:
+            command.extend([
+                "-b:v", "{}".format(self._render_job_info.rendering.bitrate),
+            ])
 
         filter_string = self._create_filter_string(watermark=watermark, pix_fmt=pix_fmt)
 

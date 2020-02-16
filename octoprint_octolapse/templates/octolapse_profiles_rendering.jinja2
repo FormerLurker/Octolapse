@@ -200,7 +200,7 @@
                         <span class="help-inline">Copies the last frame of the timelapse so that it shows for the number of seconds entered.</span>
                     </div>
                 </div>
-                <div class="control-group">
+                <div class="control-group" data-bind="visible: output_format() !== 'h265'">
                     <label class="control-label">Bitrate</label>
                     <div class="controls">
                         <span class="input-append">
@@ -214,6 +214,18 @@
                         <a class="octolapse_help" data-help-url="profiles.rendering.bitrate.md" data-help-title="Bitrate" />
                         <div class="error_label_container text-error" data-error-for="octolapse_rendering_bitrate"></div>
                         <span class="help-inline">Higher bitrates mean better quality but yield a larger file.  The bitrate can be in kBit/s or MBit/s.  Examples:  8000K, 64M</span>
+                    </div>
+                </div>
+                <div class="control-group" data-bind="visible: output_format() === 'h265'">
+                    <label class="control-label">Constant Rate Factor</label>
+                    <div class="controls">
+                        <input id="octolapse_rendering_constant_rate_factor" name="octolapse_rendering_constant_rate_factor"
+                                   class="input-small ignore_hidden_errors"
+                                   data-bind="value: constant_rate_factor"
+                                   type="number" min="0" max="51" step="1" required="true" />
+                        <a class="octolapse_help" data-help-url="profiles.rendering.constant_rate_factor.md" data-help-title="Constant Rate Factor" />
+                        <div class="error_label_container text-error" data-error-for="octolapse_rendering_constant_rate_factor"></div>
+                        <span class="help-inline">Constant rate factor (CRF) values can range from 0-51.  LOWER numbers mean HIGHER quality.  The default is 28</span>
                     </div>
                 </div>
             </div>

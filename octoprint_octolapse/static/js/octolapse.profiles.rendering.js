@@ -61,6 +61,7 @@ $(function() {
         self.min_fps = ko.observable(values.min_fps);
         self.output_format = ko.observable(values.output_format);
         self.bitrate = ko.observable(values.bitrate);
+        self.constant_rate_factor = ko.observable(values.constant_rate_factor);
         self.post_roll_seconds = ko.observable(values.post_roll_seconds);
         self.pre_roll_seconds = ko.observable(values.pre_roll_seconds);
         self.output_template = ko.observable(values.output_template);
@@ -372,6 +373,9 @@ $(function() {
             self.min_fps(values.min_fps);
             self.output_format(values.output_format);
             self.bitrate(values.bitrate);
+            // Might not be included in server profiles.  Make sure it is.
+            if (typeof values.constant_rate_factor !== 'undefined')
+                self.constant_rate_factor(values.constant_rate_factor);
             self.post_roll_seconds(values.post_roll_seconds);
             self.pre_roll_seconds(values.pre_roll_seconds);
             self.output_template(values.output_template);

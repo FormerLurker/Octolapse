@@ -1141,6 +1141,7 @@ class RenderingProfile(AutomaticConfigurationProfile):
         self.output_format = 'mp4'
         self.sync_with_timelapse = True
         self.bitrate = "8000K"
+        self.constant_rate_factor = 28
         self.post_roll_seconds = 0
         self.pre_roll_seconds = 0
         self.output_template = RenderingProfile.default_output_template
@@ -1260,7 +1261,8 @@ class RenderingProfile(AutomaticConfigurationProfile):
                 dict(value='avi', name='AVI'),
                 dict(value='flv', name='FLV'),
                 dict(value='gif', name='GIF'),
-                dict(value='h264', name='H.264/MPEG-4 AVC'),
+                dict(value='h264', name='H.264/MPEG-4 AVC (up to 4096x2048)'),
+                dict(value='h265', name='H.265/MPEG-4 HEVC (up to 8192×4320)'),
                 dict(value='mp4', name='MP4 (libxvid)'),
                 dict(value='mpeg', name='MPEG'),
                 dict(value='vob', name='VOB'),
