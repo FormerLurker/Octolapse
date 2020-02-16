@@ -592,7 +592,7 @@ class RenderingProcessor(threading.Thread):
                     # see if the current item is a directory
                     if not fileinfo.filename.endswith(os.sep):
                         parts = utility.split_all(fileinfo.filename)
-                        name = os.path.basename(fileinfo.filename).lower()
+                        name = os.path.basename(fileinfo.filename)
                         name_without_extension = utility.get_filename_from_full_path(name)
                         extension = utility.get_extension_from_filename(name).lower()
                         item = {
