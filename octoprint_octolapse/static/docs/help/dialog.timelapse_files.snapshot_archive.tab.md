@@ -1,4 +1,9 @@
-If you have enabled **Archive Snapshots After Rendering** within the **Files and Performance** heading of your **Rendering** profile, archives of your timelapse images and settings will appear within the file browser located on this tab after rendering has completed successfully.  You can download, delete, or render any archives, or you can import new archive files (see the **Import Snapshot Archive (.zip)** help icon for more details about importing archives).
+Octolapse can save a .zip file containing all of your snapshots and settings.  Archiving can be enabled in two ways:
+
+1.  If rendering is disabled, an archive will always be produced.
+2.  If rendering is enabled, Octolapse will produce an archive if the **Files and Performance** heading of your **Rendering** profile.  It is disabled by default, since it takes a lot of space.
+
+Archives will appear within this tab after rendering has completed successfully.  You can download, delete, or render any archives, or you can import new archive files (see the **Import Snapshot Archive (.zip)** help icon for more details about importing archives).
 
 ### Downloading Archives
 Simply click the <i class="fa fa-download" title="Download Icon"></i> icon to download an archive.

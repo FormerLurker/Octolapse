@@ -1,5 +1,10 @@
 Octolapse supports importing a zip archive containing images.  These files can come from the download option within the **Saved Snapshot** tab, or you can create them yourself.  Currently, Octolapse only supports images with a ```jpg``` extension.  After you import the archive, Octolapse will add it to the **Saved Snapshots** tab within the **Videos and Images** dialog.  From there you can download, delete, or add the archive to the list of unfinished renderings.
 
+Archive file generation can be enabled in two ways:
+
+1.  If rendering is disabled, an archive will always be produced.
+2.  If rendering is enabled, Octolapse will produce an archive if the **Archive Snapshots After Rendering** setting is enabled within your rendering settings.  It is disabled by default, since it takes a lot of space.
+
 Octolapse supports two kinds of file structures:
 
 1.  Everything in the root of the zip archive.  This means all images are located right inside of the archive, and are not in any subfolders.  All subfolders will be ignored.
