@@ -2231,7 +2231,7 @@ class TimelapseRenderJob(threading.Thread):
         # special parameters from h265
         if self._render_job_info.rendering.output_format == "h265":
             command.extend([
-                "-tag:v", "hvc1",
+                ## "-tag:v", "hvc1",  Doesn't seem to work on octopi even with the latest version of ffmpeg
                 "-crf", "{}".format(self._render_job_info.rendering.constant_rate_factor),
             ])
         else:
