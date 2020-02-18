@@ -31,7 +31,6 @@ $(function () {
         self.description = ko.observable(values.description);
         self.trigger_type = ko.observable(values.trigger_type);
         // Pre-calculated trigger options
-        self.snap_to_print_disable_z_lift = ko.observable(values.snap_to_print_disable_z_lift);
         self.smart_layer_trigger_type = ko.observable(values.smart_layer_trigger_type);
         self.smart_layer_snap_to_print_high_quality = ko.observable(values.smart_layer_snap_to_print_high_quality);
         self.smart_layer_snap_to_print_smooth = ko.observable(values.smart_layer_snap_to_print_smooth);
@@ -150,7 +149,6 @@ $(function () {
             self.name(values.name);
             self.description(values.description);
             self.trigger_type(values.trigger_type);
-            self.snap_to_print_disable_z_lift(values.snap_to_print_disable_z_lift);
             self.smart_layer_snap_to_print_high_quality(values.smart_layer_snap_to_print_high_quality);
             self.smart_layer_snap_to_print_smooth(values.smart_layer_snap_to_print_smooth);
             self.smart_layer_trigger_type(values.smart_layer_trigger_type);

@@ -418,15 +418,6 @@ $(function () {
                 return hasConfigIssues;
             },this);
 
-            self.onTabChange = function (current, previous) {
-                if (current != null && current === "#tab_plugin_octolapse") {
-                    //self.updateLatestSnapshotThumbnail(true, true);
-                }
-                else if (previous != null && previous === "#tab_plugin_octolapse") {
-                    //console.log("Octolapse Tab is not showing");
-                    //self.IsTabShowing = false;
-                }
-            };
             /*
                 Snapshot client animation preview functions
             */

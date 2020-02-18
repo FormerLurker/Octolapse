@@ -1015,10 +1015,6 @@ class TriggerProfile(AutomaticConfigurationProfile):
         self.trigger_on_deretracted = TriggerProfile.EXTRUDER_TRIGGER_FORBIDDEN_VALUE
 
     def get_snapshot_plan_options(self):
-        if self.trigger_type == TriggerProfile.SMART_TRIGGER_TYPE_SNAP_TO_PRINT:
-            return {
-                'disable_z_lift': self.snap_to_print_disable_z_lift,
-            }
         if (
             self.trigger_type == TriggerProfile.TRIGGER_TYPE_SMART and
             self.smart_layer_trigger_type == TriggerProfile.SMART_TRIGGER_TYPE_SNAP_TO_PRINT
