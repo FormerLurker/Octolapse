@@ -21,8 +21,9 @@ def get_version(settings_dict):
 
 
 settings_version_translation = [
-    '0.4.0rc1.dev2',  # the version here is ambigious, but this is only used for file migrations
-    '0.4.0rc1.dev3'
+    '0.4.0rc1.dev2',  # the version here is ambiguous, but this is only used for file migrations
+    '0.4.0rc1.dev3',
+    '0.4.0rc1.dev4',
 ]
 
 
@@ -90,6 +91,10 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
     if LooseVersion(version) < LooseVersion("0.4.0rc1.dev3"):
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev3.json'))
+
+    if LooseVersion(version) < LooseVersion("0.4.0rc1.dev4"):
+        has_updated = True
+        settings_dict = migrate_pre_0_4_0_rc1_dev4(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev4.json'))
 
     # If we've updated the settings, save a backup of the old settings and update the version
     if has_updated:
@@ -639,6 +644,10 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
     settings_dict["main_settings"]["version"] = "0.4.0rc1.dev3"
     return settings_dict
 
+
+def migrate_pre_0_4_0_rc1_dev4(current_version, settings_dict, default_settings_path):
+    settings_dict["main_settings"]["version"] = "0.4.0rc1.dev4"
+    return settings_dict
 
 def get_default_settings(default_settings_path):
     with open(default_settings_path) as defaultSettingsJson:
