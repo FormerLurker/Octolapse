@@ -6,7 +6,7 @@ from distutils.unixccompiler import UnixCCompiler
 from distutils.msvccompiler import MSVCCompiler
 from distutils.bcppcompiler import BCPPCompiler
 from distutils.cygwinccompiler import CygwinCCompiler
-
+from distutils.version import LooseVersion
 import sys
 import sysconfig
 
@@ -38,6 +38,10 @@ plugin_license = "AGPLv3"
 # Any additional requirements besides OctoPrint should be listed here
 plugin_requires = ["pillow >=6.2.0<7.0.0", "sarge", "six", "OctoPrint>1.3.8", "psutil", "file_read_backwards",
                    "setuptools>=6.0", "awesome-slugify>=1.6.5,<1.7"]
+
+import octoprint.server
+if LooseVersion(octoprint.server.VERSION) < LooseVersion("1.4"):
+    plugin_requires.extend(["flask_principal>=0.4,<1.0"])
 
 # enable faulthandler for python 3.
 if (3, 0) < sys.version_info < (3, 3):

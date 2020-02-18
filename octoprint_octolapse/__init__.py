@@ -41,7 +41,7 @@ import base64
 import json
 import os
 from flask import request, send_file, jsonify, Response, stream_with_context, send_from_directory, current_app, Flask
-from flask_principal import Permission, RoleNeed
+
 import threading
 import uuid
 import six
@@ -122,7 +122,8 @@ class OctolapsePlugin(
         import octoprint.access.permissions as permissions
         admin_permission = permissions.Permissions.ADMIN
     else:
-        admin_permission = Permission(RoleNeed('admin'))
+        import flask_principal
+        admin_permission = flask_principal.Permission(flask_principal.RoleNeed('admin'))
 
     def __init__(self):
         super(OctolapsePlugin, self).__init__()
@@ -2059,7 +2060,8 @@ class OctolapsePlugin(
         return dict(version=self._plugin_version, load=None, restore_default_settings=None)
 
     def get_settings_version(self):
-        return 1
+        # This needs to be incremented for each file migration.  What a pain.  Currently set for V0.4.0rc1.dev4
+        return 2
 
     def on_settings_migrate(self, target, current):
             # If we don't have a current version, look at the current settings file for the most recent version.
@@ -3645,7 +3647,7 @@ class OctolapsePlugin(
         if LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4"):
             permission_validator = util.flask.permission_validator
             admin_validation_chain = [
-                util.tornado.access_validation_factory(app,permission_validator,self.admin_permission),
+                util.tornado.access_validation_factory(app, permission_validator, self.admin_permission),
             ]
         else:
             # the concept of granular permissions does not exist in this version of Octoprint.  Fallback to the
@@ -3655,7 +3657,7 @@ class OctolapsePlugin(
                 if user is None or not user.is_authenticated() or not user.is_admin():
                     raise tornado.web.HTTPError(403)
             permission_validator = admin_permission_validator
-            admin_validation_chain = [util.tornado.access_validation_factory(app,permission_validator), ]
+            admin_validation_chain = [util.tornado.access_validation_factory(app, permission_validator), ]
 
 
         return [
