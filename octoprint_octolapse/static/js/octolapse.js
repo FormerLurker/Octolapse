@@ -185,6 +185,10 @@ $(function () {
         self.$progress = null;
         self.$progressText = null;
         self.initial_text = initial_text;
+        self.popup_margin = 15;
+        self.popup_width_with_margin = 400;
+        self.popup_width = self.popup_width_with_margin - self.popup_margin*2;
+
         self.close = function () {
             if (self.loader != null)
                 self.loader.remove();
@@ -204,7 +208,8 @@ $(function () {
                 self.loader.remove();
                 return null
             }
-            self.$progress.width(percent_complete + "%").attr("aria-valuenow", percent_complete).find("span").html(percent_complete + "%");
+            var percent_complete_text = percent_complete.toFixed(1);
+            self.$progress.width(percent_complete_text + "%").attr("aria-valuenow", percent_complete_text).find("span").html(percent_complete_text + "%");
             self.$progressText.text(progress_text);
             return self;
         };
@@ -216,6 +221,7 @@ $(function () {
       <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0"></div>\
     </div><div><span class="progress-text"></span></div>',
             icon: 'fa fa-cog fa-spin',
+            width: self.popup_width.toString() + "px",
             confirm: {
                 confirm: Octolapse.Globals.is_admin(),
                 buttons: [{
@@ -1601,7 +1607,7 @@ $(function () {
                     //console.log("Octolapse received pre-processing update processing message.");
 
                     // TODO: CHANGE THIS TO A PROGRESS INDICATOR
-                    var percent_finished = data.percent_progress.toFixed(1);
+                    var percent_finished = data.percent_progress;
                     var seconds_elapsed = data.seconds_elapsed;
                     var seconds_to_complete = data.seconds_to_complete;
                     var gcodes_processed = data.gcodes_processed;
@@ -1615,8 +1621,8 @@ $(function () {
                     if (self.pre_processing_progress != null) {
                         var progress_text =
                             "Remaining:" + Octolapse.ToTimer(seconds_to_complete)
-                            + " Elapsed:" + Octolapse.ToTimer(seconds_elapsed)
-                            + " Line:" + lines_processed.toString();
+                            + "  Elapsed:" + Octolapse.ToTimer(seconds_elapsed)
+                            + "  Line:" + lines_processed.toString();
                         //console.log("Receiving Progress - Percent Complete:" + percent_finished + " " + progress_text);
                         self.pre_processing_progress = self.pre_processing_progress.update(
                             percent_finished, progress_text
