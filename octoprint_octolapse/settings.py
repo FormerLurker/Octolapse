@@ -2672,7 +2672,7 @@ class CuraExtruder(SlicerExtruder):
         self.retraction_prime_speed = None
         self.speed_travel = None
 
-    def get_extruder(self, slicer_settings):
+    def get_extruder(self, slicer_settings, slicer_type):
         extruder = OctolapseExtruderGcodeSettings()
         extruder.retract_before_move = self.get_retract_before_move()
         extruder.retraction_length = self.get_retraction_amount()
@@ -2682,7 +2682,7 @@ class CuraExtruder(SlicerExtruder):
         extruder.z_lift_height = self.get_retraction_hop()
         extruder.x_y_travel_speed = self.get_speed_travel()
         extruder.first_layer_travel_speed = self.get_speed_travel()
-        extruder.z_lift_speed = self.get_speed_travel_z()
+        extruder.z_lift_speed = self.get_speed_travel_z(slicer_type)
         return extruder
 
     def get_retract_before_move(self):
@@ -2727,7 +2727,7 @@ class CuraExtruder(SlicerExtruder):
         if slicer_type == "cura_4_2" or (
             self.version and
             self.version != 'unknown' and
-            LooseVersion(self.version) >= LooseVersion("4.2.0")
+            self.speed_z_hop is not None
         ):
             return CuraSettings.get_speed_mm_min(self.speed_z_hop)
 
@@ -2770,10 +2770,10 @@ class CuraSettings(SlicerSettings):
         self.magic_mesh_surface_mode = None
         self.machine_extruder_count = 1
 
-    def get_extruders(self):
+    def get_extruders(self, slicer_type):
         extruders = []
         for extruder in self.extruders:
-            extruders.append(extruder.get_extruder(self))
+            extruders.append(extruder.get_extruder(self, slicer_type))
         return extruders
 
     def get_speed_tolerance(self):
@@ -2784,7 +2784,7 @@ class CuraSettings(SlicerSettings):
         settings.layer_height = self.layer_height
         settings.vase_mode = self.smooth_spiralized_contours and self.magic_mesh_surface_mode == "surface"
         # Get All Extruder Settings
-        settings.extruders = self.get_extruders()
+        settings.extruders = self.get_extruders(slicer_type)
         return settings
 
     @staticmethod
