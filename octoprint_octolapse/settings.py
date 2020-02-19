@@ -2726,7 +2726,6 @@ class CuraExtruder(SlicerExtruder):
     def get_speed_travel_z(self, slicer_type=None):
         if slicer_type == "cura_4_2" or (
             self.version and
-            self.version != 'unknown' and
             self.speed_z_hop is not None
         ):
             return CuraSettings.get_speed_mm_min(self.speed_z_hop)
