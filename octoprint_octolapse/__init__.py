@@ -52,7 +52,7 @@ from distutils.version import LooseVersion
 from io import BytesIO
 import octoprint.plugin
 import octoprint.filemanager
-from octoprint.events import Events, eventManager
+from octoprint.events import Events
 from octoprint.server.util.flask import restricted_access
 import octoprint_octolapse.stabilization_preprocessing
 import octoprint_octolapse.camera as camera
@@ -3453,12 +3453,6 @@ class OctolapsePlugin(
             # This timelapse won't be moved into the octoprint timelapse plugin folder.
             message = "Octolapse has completed rendering a timelapse for camera '{0}'.  Your video can be found by  " \
                       "clicking 'Videos and Images' within the Octolapse tab.".format(payload.CameraName)
-            # Call Movie Done
-            eventManager().fire(Events.MOVIE_DONE, {
-                'gcode': payload.gcode_filename,
-                'movie': payload.rendering_path,
-                'movie_basename': payload.rendering_filename
-            })
 
             if payload.ArchivePath and os.path.isfile(payload.ArchivePath):
                 message += "  An archive of your snapshots can be found within the 'Saved Snapshots' tab of the " \
@@ -3507,6 +3501,7 @@ class OctolapsePlugin(
             movie_basename=movie_basename
         )
         self._event_bus.fire(event, payload=custom_payload)
+        self._event_bus.fire(Events.MOVIE_DONE, payload=custom_payload)
 
     def on_render_error(self, payload, error, job):
         """Called after all rendering is complete."""

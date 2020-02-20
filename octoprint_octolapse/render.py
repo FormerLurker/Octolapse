@@ -2379,20 +2379,8 @@ class RenderingCallbackArgs(object):
         self.GcodeFileExtension = gcode_file_extension
         self.RenderingEnabled = rendering_enabled
 
-    @property
-    def gcode_filename(self):
-        return '{0}.{1}'.format(self.GcodeFilename, self.GcodeFileExtension)
-
-    @property
-    def rendering_filename(self):
+    def get_rendering_filename(self):
         return "{0}.{1}".format(self.RenderingFilename, self.RenderingExtension)
 
-    @property
-    def rendering_path(self):
-        return os.path.join(self.RenderingDirectory, self.get_rendering_filename())
-
-    def get_rendering_filename(self):
-        return self.rendering_filename
-
     def get_rendering_path(self):
-        return self.rendering_path
+        return os.path.join(self.RenderingDirectory, self.get_rendering_filename())
