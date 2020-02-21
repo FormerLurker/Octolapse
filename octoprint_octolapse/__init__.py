@@ -3464,11 +3464,11 @@ class OctolapsePlugin(
             )
         self.send_render_success_message(message, job)
 
-        # fire custom event for movie done
         output_file_name = "{0}.{1}".format(payload.RenderingFilename, payload.RenderingExtension)
         gcode_filename = "{0}.{1}".format(payload.GcodeFilename, payload.GcodeFileExtension)
         output_file_path = payload.get_rendering_path()
-        # Notify the plugin that a timelapse has been added
+
+        # Notify the plugin that a timelapse has been added, if it exists
         if os.path.isfile(output_file_path):
             file_info = utility.get_file_info(output_file_path)
             file_info["type"] = utility.FILE_TYPE_TIMELAPSE_OCTOLAPSE
@@ -3477,7 +3477,11 @@ class OctolapsePlugin(
                 'added',
                 None
             )
+            # Notify anyone who cares that Octolapse has finished rendering a movie
+            self.send_movie_done_event(gcode_filename, output_file_path, output_file_name)
+
         archive_path = payload.ArchivePath
+        # we need to make sure the archive path exists again, since some plugin might have deleted it.
         if archive_path and os.path.isfile(archive_path):
             # Notify the plugin that an archive was created
             file_info = utility.get_file_info(archive_path)
@@ -3487,7 +3491,8 @@ class OctolapsePlugin(
                 'added',
                 None
             )
-        self.send_movie_done_event(gcode_filename, output_file_path, output_file_name)
+            # Notify anyone who cares that Octolapse has finished creating a snapshot archive
+            self.send_snapshot_archive_done_event(gcode_filename, archive_path, os.path.basename(archive_path))
 
     def on_render_progress(self, payload, job):
         self.send_render_progress_message(payload, job)
@@ -3498,6 +3503,15 @@ class OctolapsePlugin(
             gcode=gcode_filename,
             movie=movie_path,
             movie_basename=movie_basename
+        )
+        self._event_bus.fire(event, payload=custom_payload)
+
+    def send_snapshot_archive_done_event(self, gcode_filename, archive_path, archive_basename):
+        event = Events.PLUGIN_OCTOLAPSE_SNAPSHOT_ARCHIVE_DONE
+        custom_payload = dict(
+            gcode=gcode_filename,
+            archive=archive_path,
+            archive_basename=archive_basename
         )
         # decide what to do here :(
         #self._event_bus.fire(Events.MOVIE_DONE, payload=custom_payload)
@@ -3642,7 +3656,7 @@ class OctolapsePlugin(
         ]
 
     def register_custom_events(*args, **kwargs):
-        return ["movie_done"]
+        return ["movie_done", "snapshot_archive_done"]
 
     def register_custom_routes(self, server_routes, *args, **kwargs):
         # version specific permission validator
