@@ -3513,8 +3513,6 @@ class OctolapsePlugin(
             archive=archive_path,
             archive_basename=archive_basename
         )
-        # decide what to do here :(
-        #self._event_bus.fire(Events.MOVIE_DONE, payload=custom_payload)
         self._event_bus.fire(event, payload=custom_payload)
 
     def on_render_error(self, payload, error, job):
