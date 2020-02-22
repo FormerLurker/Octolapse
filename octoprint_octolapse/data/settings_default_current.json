@@ -12,7 +12,7 @@
     "show_snapshot_plan_information": true,
     "cancel_print_on_startup_error": true,
     "platform": "unknown",
-    "version": "0.4.0rc1.dev3",
+    "version": "0.4.0rc1.dev4",
     "preview_snapshot_plans": true,
     "preview_snapshot_plan_autoclose": false,
     "preview_snapshot_plan_seconds": 30,
