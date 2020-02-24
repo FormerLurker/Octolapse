@@ -129,7 +129,7 @@ $(function () {
         self.converter.setFlavor('github');
 
         self.showHelpForLink = function (doc, title, custom_not_found_message){
-            url = "/plugin/octolapse/static/docs/help/" + doc + "?nonce=" + Date.now().toString();
+            url = "./plugin/octolapse/static/docs/help/" + doc + "?nonce=" + Date.now().toString();
             $.ajax({
                 url: url,
                 type: "GET",

@@ -31,7 +31,7 @@ $(function () {
         self.date_formatted = Octolapse.toLocalDateTimeString(values.date);
         self.get_download_url = function(list_item){
             var parent = list_item.data.parent;
-            return '/plugin/octolapse/downloadFile?type=' + parent.file_type + '&name=' + list_item.id;
+            return './plugin/octolapse/downloadFile?type=' + parent.file_type + '&name=' + list_item.id;
         }
     };
 
