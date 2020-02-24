@@ -73,7 +73,7 @@ $(function () {
         };
 
         self.get_download_url = function(){
-            return '/plugin/octolapse/downloadFile?type=failed_rendering&job_guid=' + self.job_guid
+            return './plugin/octolapse/downloadFile?type=failed_rendering&job_guid=' + self.job_guid
                 + '&camera_guid=' + self.camera_guid;
         }
     };
