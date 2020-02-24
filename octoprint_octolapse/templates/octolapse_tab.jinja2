@@ -165,7 +165,7 @@
             </div>
             <div class="span6 text-right" data-bind="visible: Octolapse.Globals.is_admin">
                 <div class="row-fluid margin-bottom-small" data-bind="visible: dialog_rendering_unfinished.count() > 0">
-                    <button type="button" class="span12 btn btn-danger input-block-level" data-bind="click: dialog_rendering_unfinished.open" title="View Unfinished Renderings"> <span data-bind="text: dialog_rendering_unfinished.count"></span> Unfinished Rendering<span data-bind="visible: dialog_rendering_unfinished.count() > 1">s&hellip;</span></button>
+                    <button type="button" class="span12 btn btn-danger input-block-level" data-bind="click: dialog_rendering_unfinished.open" title="View Unfinished Renderings"> <span data-bind="text: dialog_rendering_unfinished.count"></span> Unfinished Rendering<span data-bind="visible: dialog_rendering_unfinished.count() > 1">s</span>&hellip;</button>
                 </div>
                 <div class="row-fluid margin-bottom-small" data-bind="visible: dialog_rendering_in_process.count() > 0">
                     <button type="button" class="span12 btn btn-primary input-block-level" data-bind="click: dialog_rendering_in_process.open" title="View Rendering Progress"> <span data-bind="text: dialog_rendering_in_process.count"></span> Video<span data-bind="visible: dialog_rendering_in_process.count() > 1">s</span>  Rendering&nbsp;<i class="fa fa-spinner fa-spin"></i></button>
