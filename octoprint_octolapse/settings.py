@@ -2781,7 +2781,9 @@ class CuraSettings(SlicerSettings):
     def get_gcode_generation_settings(self, slicer_type="cura"):
         settings = OctolapseGcodeSettings()
         settings.layer_height = self.layer_height
-        settings.vase_mode = self.smooth_spiralized_contours and self.magic_mesh_surface_mode == "surface"
+        settings.vase_mode = False
+        if self.smooth_spiralized_contours is not None and self.magic_mesh_surface_mode is not None:
+            settings.vase_mode = self.smooth_spiralized_contours and self.magic_mesh_surface_mode == "surface"
         # Get All Extruder Settings
         settings.extruders = self.get_extruders(slicer_type)
         return settings
