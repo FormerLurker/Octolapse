@@ -2168,7 +2168,10 @@ class TimelapseRenderJob(threading.Thread):
         """Returns the number of files within the temporary rendering directory.
            This is useful for cleanup progress messages
         """
-        return len(os.listdir(self._temp_rendering_dir))
+        num_files = 0
+        if os.path.isdir(self._temp_rendering_dir):
+            num_files = len(os.listdir(self._temp_rendering_dir))
+        return num_files
 
     def _clear_temporary_files(
         self, progress_key='deleting_temp_files', progress_current_step=None, progress_total_steps=None,
