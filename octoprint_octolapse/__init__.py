@@ -1427,24 +1427,15 @@ class OctolapsePlugin(
             request_values = request.get_json()
             preprocessing_job_guid = request_values["preprocessing_job_guid"]
             if (
-                preprocessing_job_guid is None or
-                str(self.preprocessing_job_guid) != preprocessing_job_guid or
-                self._printer.get_state_id() != 'STARTING'
+                preprocessing_job_guid is not None and
+                str(self.preprocessing_job_guid) == preprocessing_job_guid
             ):
-                if self._printer.is_printing():
-                    self._printer.cancel_print(tags={'startup-failed'})
-                # return without doing anything, this job is already over
-                message = "Unable to accept the snapshot plan. Either the printer not operational, is currently printing, " \
-                          "or this plan has been deleted. "
+                self.accept_snapshot_plan_preview(preprocessing_job_guid)
                 return jsonify({
-                    'success': False,
-                    'error': message
+                    'success': True
                 })
-
-            self.accept_snapshot_plan_preview(preprocessing_job_guid)
-
             return jsonify({
-                'success': True
+                'success': False
             })
 
     @octoprint.plugin.BlueprintPlugin.route("/toggleCamera", methods=["POST"])
@@ -2323,10 +2314,8 @@ class OctolapsePlugin(
     def on_event(self, event, payload):
         try:
             # If we haven't loaded our settings yet, return.
-            if self._octolapse_settings is None or self._timelapse is None:
+            if self._octolapse_settings is None or self._timelapse is None or self._timelapse.get_current_state() == TimelapseState.Idle:
                 return
-
-            logger.verbose("Printer event received:%s.", event)
 
             if event == Events.PRINT_STARTED:
                 # warn and cancel print if not printing locally
@@ -2343,9 +2332,9 @@ class OctolapsePlugin(
                     return
             if event == Events.PRINTER_STATE_CHANGED:
                 self.send_state_changed_message({"status": self.get_status_dict()})
-            if event == Events.CONNECTIVITY_CHANGED:
+            elif event == Events.CONNECTIVITY_CHANGED:
                 self.send_state_changed_message({"status": self.get_status_dict()})
-            if event == Events.CLIENT_OPENED:
+            elif event == Events.CLIENT_OPENED:
                 self.send_state_changed_message({"status": self.get_status_dict()})
             elif event == Events.DISCONNECTING:
                 self.on_printer_disconnecting()
@@ -2393,13 +2382,16 @@ class OctolapsePlugin(
             results = self.test_timelapse_config()
             if not results["success"]:
                 self.on_print_start_failed(results["error"])
-                return True
+                return
 
             # get all of the settings we need
             timelapse_settings = self.get_timelapse_settings()
             if not timelapse_settings["success"]:
-                self.on_print_start_failed(timelapse_settings["errors"])
-                return True
+                errors = timelapse_settings["errors"]
+                if len(errors) == 0:
+                    errors = timelapse_settings["warnings"]
+                self.on_print_start_failed(errors)
+                return
 
             if len(timelapse_settings["warnings"]) > 0:
                 self.send_plugin_errors("warning", timelapse_settings["warnings"])
@@ -2412,15 +2404,14 @@ class OctolapsePlugin(
                 self.pre_process_stabilization(
                     timelapse_settings, parsed_command
                 )
-                # return false so the print job lock isn't released
-                return False
-
-            return self.start_timelapse(timelapse_settings)
+                # exit and allow the timelapse pre-processing routine to complete.
+                return
+            if self.start_timelapse(timelapse_settings):
+                self._timelapse.release_job_on_hold_lock()
         except Exception as e:
             error = error_messages.get_error(["init", "timelapse_start_exception"])
             logger.exception("Unable to start the timelapse.")
             self.on_print_start_failed([error])
-            return True
 
     def test_timelapse_config(self):
         if not self._octolapse_settings.main_settings.is_octolapse_enabled:
@@ -2771,8 +2762,8 @@ class OctolapsePlugin(
     def on_print_start_failed(self, errors):
         if not isinstance(errors, list):
             errors = [errors]
-        # see if there is a job lock, if you find one release it
-        self._timelapse.release_job_on_hold_lock()
+        # see if there is a job lock, if you find one release it, and don't wait for signals.
+        self._timelapse.release_job_on_hold_lock(True)
 
         if self._octolapse_settings.main_settings.cancel_print_on_startup_error:
             self._printer.cancel_print(tags={'startup-failed'})
@@ -3350,11 +3341,7 @@ class OctolapsePlugin(
     # noinspection PyUnusedLocal
     def on_gcode_queuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         try:
-            # only handle commands sent while printing
-            #if self._timelapse is not None and self._octolapse_settings.profiles.current_printer() is not None:
             if self._timelapse is not None:
-                # needed to handle non utf-8 characters
-                #cmd = cmd.encode('ascii', 'ignore')
                 return self._timelapse.on_gcode_queuing(cmd, cmd_type, gcode, kwargs["tags"])
         except Exception as e:
             logger.exception("on_gcode_queuing failed..")
@@ -3362,8 +3349,7 @@ class OctolapsePlugin(
     # noinspection PyUnusedLocal
     def on_gcode_sending(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         try:
-            if self._timelapse is not None and self._octolapse_settings.profiles.current_printer() is not None:
-                # we always want to send this event, else we may get stuck waiting for a position request!
+            if self._timelapse is not None:
                 self._timelapse.on_gcode_sending(cmd, kwargs["tags"])
         except Exception as e:
             logger.exception("on_gcode_sending failed.")
@@ -3371,7 +3357,7 @@ class OctolapsePlugin(
     # noinspection PyUnusedLocal
     def on_gcode_sent(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         try:
-            if self._timelapse is not None and self._timelapse.is_timelapse_active():
+            if self._timelapse is not None:
                 self._timelapse.on_gcode_sent(cmd, cmd_type, gcode, kwargs["tags"])
         except Exception as e:
             logger.exception("on_gcode_sent failed.")
@@ -3379,7 +3365,7 @@ class OctolapsePlugin(
     # noinspection PyUnusedLocal
     def on_gcode_received(self, comm, line, *args, **kwargs):
         try:
-            if self._timelapse is not None and self._timelapse.is_timelapse_active():
+            if self._timelapse is not None:
                 self._timelapse.on_gcode_received(line)
         except Exception as e:
             logger.exception("on_gcode_received failed.")

@@ -212,21 +212,20 @@ class Timelapse(object):
             self._settings.profiles.current_trigger(), self.overridable_printer_profile_settings
         )
 
-        self._state = TimelapseState.WaitingForTrigger
         self._test_mode_enabled = self._settings.main_settings.test_mode_enabled
         self._triggers = Triggers(self._settings)
         self._triggers.create()
 
         # take a snapshot of the current settings for use in the Octolapse Tab
         self._current_profiles = self._settings.profiles.get_profiles_dict()
-
         # test the position request
         if not self._test_position_request():
-            raise TimelapseStartException(
-                "Your printer does not support M114, and is incompatible with Octolapse.",
-                'm114_not_supported'
-            )
-
+            message = "Your printer does not support M114, and is incompatible with Octolapse."
+            if not self._settings.main_settings.cancel_print_on_startup_error:
+                message += " Continue on failure is enabled so your print will continue, but the timelapse has been " \
+                           "aborted."
+            raise TimelapseStartException(message, 'm114_not_supported')
+        self._state = TimelapseState.WaitingForTrigger
         self.was_started = True
 
     _stabilization_gcode_tags = {
@@ -257,6 +256,7 @@ class Timelapse(object):
             self.send_snapshot_gcode_array(gcode_array, tags=tags)
 
     def _test_position_request(self):
+        logger.info("Testing M114 Support.")
         if self.get_position_async(timeout=self._position_timeout_short, no_wait=True):
             return True
         return False
@@ -566,11 +566,12 @@ class Timelapse(object):
             timelapse_stopped_callback_thread.start()
         return True
 
-    def release_job_on_hold_lock(self):
-        if self.job_on_hold and self._stabilization_signal.is_set() and self._position_signal.is_set():
-            logger.debug("Releasing job-on-hold lock.")
-            self._octoprint_printer.set_job_on_hold(False)
-            self.job_on_hold = False
+    def release_job_on_hold_lock(self, force=False):
+        if self.job_on_hold:
+            if force or ( self._stabilization_signal.is_set() and self._position_signal.is_set()):
+                logger.debug("Releasing job-on-hold lock.")
+                self._octoprint_printer.set_job_on_hold(False)
+                self.job_on_hold = False
 
     def on_print_failed(self):
         if self._state != TimelapseState.Idle:
@@ -910,19 +911,19 @@ class Timelapse(object):
                 except Exception as e:
                     logger.exception("An unexpected exception occurred while trying to parse the command string.")
                     # TODO:  REMOVE THIS BECAUSE IT'S TOO BROAD!
-                    # if we don't return NONE here, we will have problems with the print!
                     raise e
 
-                # call the synchronous callback on_print_start
-                if self.on_print_start(parsed_command):
-                    if self._state == TimelapseState.WaitingForTrigger:
-                        # set the current line to 0 so that the plugin checks for line 1 below after startup.
-                        self._current_file_line = 0
-                    self._octoprint_printer.set_job_on_hold(False)
-                    logger.debug("Releasing job-on-hold lock.")
-                    self.job_on_hold = False
-                else:
-                    return None,
+                # start a thread to start the timelapse
+
+                def run_on_print_start_callback(parsed_command):
+                    self.on_print_start(parsed_command)
+
+                thread = threading.Thread(
+                    target=run_on_print_start_callback, args=[parsed_command]
+                )
+                thread.daemon = True
+                thread.start()
+                return None,
             else:
                 self.on_print_start_failed(
                     error_messages['timelapse']['cannot_aquire_job_lock']
@@ -1113,6 +1114,8 @@ class Timelapse(object):
         if cmd == "M114" and 'plugin:octolapse' in tags:
             logger.debug("The position request is being sent")
             self._position_request_sent = True
+        elif self._state == TimelapseState.Idle:
+            return
         elif not (
             tags is not None
             and "plugin:octolapse" in tags
@@ -1121,6 +1124,8 @@ class Timelapse(object):
             logger.verbose("Sending: %s", cmd)
 
     def on_gcode_sent(self, cmd, cmd_type, gcode, tags={}):
+        if self._state == TimelapseState.Idle:
+            return
         if not (
             tags is not None
             and "plugin:octolapse" in tags
@@ -1129,11 +1134,12 @@ class Timelapse(object):
             logger.debug("Sent: %s", cmd)
 
     def on_gcode_received(self, line):
-        logger.verbose("Received: %s", line)
         if self._position_request_sent:
             payload = Response.check_for_position_request(line)
             if payload:
                 self.on_position_received(payload)
+        elif self._state != TimelapseState.Idle:
+            logger.verbose("Received: %s", line)
         return line
 
     def log_octolapse_gcode(self, logf, msg, cmd, tags):

@@ -1759,6 +1759,23 @@ $(function () {
                     Octolapse.Help.showPopupForErrors(printStartPopupoptions, "print-start-error", ["print-start-error"], data["errors"]);
                     break;
                 }
+                case "print-start-warning": {
+                    //console.log('octolapse.js - print-start-error');
+                    self.updateState(data);
+                    self.preprocessing_job_guid = null;
+                    var printStartPopupoptions = {
+                        title: 'Octolapse Cannot Start',
+                        text: data.msg,
+                        type: 'warning',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.Help.showPopupForErrors(printStartPopupoptions, "print-start-error", ["print-start-error"], data["errors"]);
+                    break;
+                }
                 case "timelapse-start": {
                     //console.log('octolapse.js - timelapse-start');
                     // Erase any previous images
