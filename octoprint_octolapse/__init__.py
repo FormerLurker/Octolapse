@@ -3647,7 +3647,7 @@ class OctolapsePlugin(
         if LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4"):
             permission_validator = util.flask.permission_validator
             admin_validation_chain = [
-                util.tornado.access_validation_factory(app, permission_validator, self.admin_permission),
+                util.tornado.access_validation_factory(app, permission_validator, OctolapsePlugin.admin_permission),
             ]
         else:
             # the concept of granular permissions does not exist in this version of Octoprint.  Fallback to the
