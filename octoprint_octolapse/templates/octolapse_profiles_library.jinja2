@@ -35,6 +35,16 @@
                 </div>
             </div>
             <div class="control-group">
+                <div class="controls">
+                    <div data-bind="slideVisible: automatic_changed_to_custom">
+                        <span class="label label-important">Attention</span>&nbsp;This profile is now a custom profile, which will not be updated automatically from the server, and may behave differently than the name suggests!
+                    </div>
+                    <div data-bind="slideVisible: !automatic_changed_to_custom() && is_custom()">
+                        <span class="label label-important">Attention</span>&nbsp;This profile a custom profile, which will not be updated automatically from the server, and may behave differently than the name suggests!
+                    </div>
+                </div>
+            </div>
+            <div class="control-group">
                 <label class="control-label" for="library_profile_is_custom">Customize Profile</label>
                 <div class="controls">
                     <label class="checkbox">
@@ -46,14 +56,6 @@
                     </span>
                 </div>
             </div>
-
-        </div>
-
-        <div data-bind="slideVisible: automatic_changed_to_custom">
-            <p><span class="label label-important">Attention</span>&nbsp;This profile is now a custom profile, which will not be updated automatically from the server.</p>
-        </div>
-        <div data-bind="slideVisible: !automatic_changed_to_custom() && is_custom()">
-            <p><span class="label label-important">Attention</span>&nbsp;This profile a custom profile, which will not be updated automatically from the server.</p>
         </div>
     </div>
 </script>

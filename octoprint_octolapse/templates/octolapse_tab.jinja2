@@ -114,17 +114,17 @@
                                 </i>
                             </span>
                             <a class="refresh"
-                               data-bind="click: function() { refreshLatestImage('octolapse_snapshot_thumbnail_container',true); },css: {'fade-out': Octolapse.Globals.main_settings.auto_reload_latest_snapshot()}">
+                               data-bind="click: function() { refreshLatestImage('octolapse_snapshot_thumbnail_container',true); },css: {'fade-out': Octolapse.Globals.main_settings.auto_reload_latest_snapshot}, visible: !Octolapse.Globals.main_settings.auto_reload_latest_snapshot()">
                                 <i class="fa-stack">
                                     <i class="fa fa-refresh fa-stack-2x fa-inverse outline"></i>
                                     <i class="fa fa-refresh fa-stack-2x"></i>
                                 </i>
                             </a>
-                            <a title="View a larger version of the preview image." class="fullscreen"
+                            <a title="View a larger version of the preview image." class="octolapse-fullscreen"
                                data-bind="click: showLatestSnapshotDialog">
                                 <i class="fa-stack">
-                                    <i class="fa fa-expand fa-stack-2x fa-inverse outline"></i>
-                                    <i class="fa fa-expand fa-stack-2x"></i>
+                                    <i class="fa icon-fullscreen fa-stack-2x fa-inverse outline"></i>
+                                    <i class="fa icon-fullscreen fa-stack-2x"></i>
                                 </i>
                             </a>
                         </div>

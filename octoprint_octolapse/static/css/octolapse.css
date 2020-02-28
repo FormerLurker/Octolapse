@@ -123,9 +123,7 @@ a.ol-button:not(.disable):active i:nth-child(2){
 }
 
 .ol-hover-button a:not(.disable):hover:not(:active) i,
-a.ol-button:hover:not(:active) span.fs-stack:nth-child(2),
-.fa-slider:hover:not(:active)
-/*,.ol-hover-button .fa-square*/
+a.ol-button:hover:not(:active) span.fs-stack:nth-child(2)
 {
     -webkit-transition: color 0.250s 0s ease-in;
     -moz-transition: color 0.250s 0s ease-in;
@@ -140,7 +138,7 @@ a.ol-button:hover:not(:active) span.fs-stack:nth-child(2),
 .ol-button i.fa-stop:hover {
     color:red;
 }
-.ol-button i.fa-gear:hover, .fa-slider:hover i{
+.ol-button i.fa-gear:hover{
     color:green;
 }
 a.unclickable:hover {
@@ -755,12 +753,12 @@ input.error {
     font-weight: 400;
 }
 
-#octolapse_tab i.fa, #octolapse_tab span.fa-slider {
+#octolapse_tab i.fa {
     border: 1px solid #000000;
 }
 
 #octolapse_tab i.fa, #octolapse_tab span.fa,
-#octolapse_tab i.fa, #octolapse_tab span.fa-slider i{
+#octolapse_tab i.fa{
     border: none;
 }
 a.ol-button i {
@@ -865,7 +863,7 @@ fieldset.octolapse legend
 .snapshot-container:hover .octolapse-snapshot-button-overlay a.play{
     opacity:1;
 }
-.octolapse-snapshot-button-overlay a.fullscreen{
+.octolapse-snapshot-button-overlay a.octolapse-fullscreen{
     right:0;
     bottom:0;
 }
@@ -874,7 +872,7 @@ fieldset.octolapse legend
 }
 
 /* The slider itself */
-.slider {
+.octolapse-slider {
   width: 100%; /* Full-width */
   height: 25px; /* Specified height */
   opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
@@ -883,7 +881,7 @@ fieldset.octolapse legend
 }
 
 /* Mouse-over effects */
-.slider:hover {
+.octolapse-slider:hover {
   opacity: 1; /* Fully shown on mouse-over */
 }
 

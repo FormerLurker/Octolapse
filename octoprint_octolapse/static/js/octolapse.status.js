@@ -554,7 +554,7 @@ $(function () {
                 // Get the latest image
                 var $latestSnapshotContainer = $target.find('.latest-snapshot');
                 var $latestSnapshot = $latestSnapshotContainer.find('img');
-                var $fullscreenControl = $target.find("a.fullscreen");
+                var $fullscreenControl = $target.find("a.octolapse-fullscreen");
 
                 if (Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
                     // Get the previous snapshot container
