@@ -341,6 +341,16 @@ _octolapse_errors = {
                     "name": "No Files Were Found",
                     "description": "No files were found within the archive.",
                     "help_link": "error_help_rendering_archive_import_no_files_found.md"
+                },
+                'zip_file_too_large': {
+                    "name": "The Archive is Too Large",
+                    "description": "The zip archive is too large to import.",
+                    "help_link": "error_help_rendering_archive_import_zip_file_too_large.md"
+                },
+                'zip_file_corrupt': {
+                    "name": "The Archive is Corrupt",
+                    "description": "The zip archive is too large to import.",
+                    "help_link": "error_help_rendering_archive_import_zip_file_corrupt.md"
                 }
             }
         }

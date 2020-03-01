@@ -31,7 +31,7 @@ from six import string_types, iteritems
 import time
 import json
 import copy
-from zipfile import ZipFile
+import zipfile as zipfile
 from csv import DictReader
 # sarge was added to the additional requirements for the plugin
 import datetime
@@ -520,46 +520,48 @@ class RenderingProcessor(threading.Thread):
                     os.makedirs(target_directory)
                 except OSError:
                     pass
+            try:
+                with zipfile.ZipFile(target_path, mode='w', allowZip64=True) as snapshot_archive:
+                    # add the job info
+                    timelapse_info_path = os.path.join(job_directory,
+                                                       utility.TimelapseJobInfo.timelapse_info_file_name)
 
-            with ZipFile(target_path, 'w') as snapshot_archive:
-                # add the job info
-                timelapse_info_path = os.path.join(job_directory,
-                                                   utility.TimelapseJobInfo.timelapse_info_file_name)
+                    snapshot_files = os.listdir(camera_directory)
+                    if not progress_total_steps:
+                        progress_total_steps = len(snapshot_files)
 
-                snapshot_files = os.listdir(camera_directory)
-                if not progress_total_steps:
-                    progress_total_steps = len(snapshot_files)
-
-                if os.path.exists(timelapse_info_path):
-                    snapshot_archive.write(
-                        os.path.join(job_directory,
-                                     utility.TimelapseJobInfo.timelapse_info_file_name),
-                        os.path.join(job_guid, utility.TimelapseJobInfo.timelapse_info_file_name)
-                    )
-
-                progress_current_step += 1
-                if progress_callback:
-                    progress_callback(progress_key, progress_current_step, progress_total_steps)
-
-                for name in snapshot_files:
-                    file_path = os.path.join(camera_directory, name)
-                    # ensure that all files we add to the archive were created by Octolapse, and are useful
-                    # for rendering.
-                    if os.path.isfile(file_path) and (
-                        utility.is_valid_snapshot_extension(utility.get_extension_from_filename(name)) or
-                        CameraInfo.is_camera_info_file(name) or
-                        SnapshotMetadata.is_metadata_file(name) or
-                        OctolapseSettings.is_camera_settings_file(name) or
-                        OctolapseSettings.is_rendering_settings_file(name)
-                    ):
+                    if os.path.exists(timelapse_info_path):
                         snapshot_archive.write(
-                            file_path,
-                            os.path.join(job_guid, camera_guid, name)
+                            os.path.join(job_directory,
+                                         utility.TimelapseJobInfo.timelapse_info_file_name),
+                            os.path.join(job_guid, utility.TimelapseJobInfo.timelapse_info_file_name)
                         )
+
                     progress_current_step += 1
                     if progress_callback:
                         progress_callback(progress_key, progress_current_step, progress_total_steps)
 
+                    for name in snapshot_files:
+                        file_path = os.path.join(camera_directory, name)
+                        # ensure that all files we add to the archive were created by Octolapse, and are useful
+                        # for rendering.
+                        if os.path.isfile(file_path) and (
+                            utility.is_valid_snapshot_extension(utility.get_extension_from_filename(name)) or
+                            CameraInfo.is_camera_info_file(name) or
+                            SnapshotMetadata.is_metadata_file(name) or
+                            OctolapseSettings.is_camera_settings_file(name) or
+                            OctolapseSettings.is_rendering_settings_file(name)
+                        ):
+                            snapshot_archive.write(
+                                file_path,
+                                os.path.join(job_guid, camera_guid, name)
+                            )
+                        progress_current_step += 1
+                        if progress_callback:
+                            progress_callback(progress_key, progress_current_step, progress_total_steps)
+            except zipfile.LargeZipFile as e:
+                logger.exception("The zip file is too large to open.")
+                raise e
         if is_download:
             metadata = self._get_metadata_for_rendering_files(job_guid, camera_guid, temporary_directory)
             target_extension = utility.get_extension_from_full_path(target_path)
@@ -584,95 +586,106 @@ class RenderingProcessor(threading.Thread):
                 }
             root_job_guid = "{0}".format(uuid.uuid4())
             root_camera_guid = "{0}".format(uuid.uuid4())
-
-            with ZipFile(snapshot_archive_path) as zip_file:
-                archive_files_temp_dict = {}  # a temporary dict to hold values while we construct the jobs
-                fileinfos = [x for x in zip_file.infolist() if not x.filename.startswith("__MACOSX") ]
-                for fileinfo in fileinfos:
-                    # see if the current item is a directory
-                    if not fileinfo.filename.endswith(os.sep):
-                        parts = utility.split_all(fileinfo.filename)
-                        name = os.path.basename(fileinfo.filename)
-                        name_without_extension = utility.get_filename_from_full_path(name)
-                        extension = utility.get_extension_from_filename(name).lower()
-                        item = {
-                            "name": name,
-                            "fileinfo": fileinfo
-                        }
-                        location_type = None
-                        job_guid = None
-                        camera_guid = None
-                        file_type = None
-                        if len(parts) == 1:
-                            job_guid = root_job_guid
-                            camera_guid = root_camera_guid
-                        elif len(parts) == 2 and _is_valid_uuid(parts[0]):
-                            job_guid = parts[0].lower()
-                        elif len(parts) == 3 and _is_valid_uuid(parts[0]) and _is_valid_uuid(parts[1]):
-                            job_guid = parts[0].lower()
-                            camera_guid = parts[1].lower()
-                        else:
-                            continue
-
-                        if job_guid not in archive_files_temp_dict:
-                            archive_files_temp_dict[job_guid] = {
-                                'cameras': {},
-                                'file': None
+            try:
+                with zipfile.ZipFile(snapshot_archive_path, mode="r", allowZip64=True) as zip_file:
+                    archive_files_temp_dict = {}  # a temporary dict to hold values while we construct the jobs
+                    fileinfos = [x for x in zip_file.infolist() if not x.filename.startswith("__MACOSX") ]
+                    for fileinfo in fileinfos:
+                        # see if the current item is a directory
+                        if not fileinfo.filename.endswith(os.sep):
+                            parts = utility.split_all(fileinfo.filename)
+                            name = os.path.basename(fileinfo.filename)
+                            name_without_extension = utility.get_filename_from_full_path(name)
+                            extension = utility.get_extension_from_filename(name).lower()
+                            item = {
+                                "name": name,
+                                "fileinfo": fileinfo
                             }
-                        if camera_guid and camera_guid not in archive_files_temp_dict[job_guid]["cameras"]:
-                            archive_files_temp_dict[job_guid]['cameras'][camera_guid] = []
-
-                        # this file is in the root.  See what kind of file this is
-                        if utility.TimelapseJobInfo.is_timelapse_info_file(name):
-                            item["name"] = utility.TimelapseJobInfo.timelapse_info_file_name
-                            # preserve case of the name, but keep the extension lower case
-                            archive_files_temp_dict[job_guid]["file"] = item
-                        else:
-                            if utility.is_valid_snapshot_extension(extension):
-                                # preserve case of the name, but keep the extension lower case
-                                file_name = "{0}.{1}".format(name_without_extension, extension)
-                            elif CameraInfo.is_camera_info_file(name):
-                                file_name = CameraInfo.camera_info_filename
-                            elif SnapshotMetadata.is_metadata_file(name):
-                                file_name = SnapshotMetadata.METADATA_FILE_NAME
-                            elif OctolapseSettings.is_camera_settings_file(name):
-                                file_name = OctolapseSettings.camera_settings_file_name
-                            elif OctolapseSettings.is_rendering_settings_file(name):
-                                file_name = OctolapseSettings.rendering_settings_file_name
+                            location_type = None
+                            job_guid = None
+                            camera_guid = None
+                            file_type = None
+                            if len(parts) == 1:
+                                job_guid = root_job_guid
+                                camera_guid = root_camera_guid
+                            elif len(parts) == 2 and _is_valid_uuid(parts[0]):
+                                job_guid = parts[0].lower()
+                            elif len(parts) == 3 and _is_valid_uuid(parts[0]) and _is_valid_uuid(parts[1]):
+                                job_guid = parts[0].lower()
+                                camera_guid = parts[1].lower()
                             else:
                                 continue
-                            item["name"] = file_name
-                            archive_files_temp_dict[job_guid]['cameras'][camera_guid].append(item)
 
-                # now replace all of the job guids with  new ones to prevent conflicts with existing unfinished
-                # rendering jobs.
-                for key in archive_files_temp_dict.keys():
-                    archive_files_dict["{0}".format(uuid.uuid4())] = archive_files_temp_dict[key]
-                archive_files_temp_dict = {}
+                            if job_guid not in archive_files_temp_dict:
+                                archive_files_temp_dict[job_guid] = {
+                                    'cameras': {},
+                                    'file': None
+                                }
+                            if camera_guid and camera_guid not in archive_files_temp_dict[job_guid]["cameras"]:
+                                archive_files_temp_dict[job_guid]['cameras'][camera_guid] = []
 
-                # now create the directories and files and place them in the temp snapshot directory
-                for job_guid, job in iteritems(archive_files_dict):
-                    job_path = utility.get_temporary_snapshot_job_path(temporary_directory, job_guid)
-                    if not os.path.isdir(job_path):
-                        os.makedirs(job_path)
-                    job_info_file = job["file"]
-                    if job_info_file:
-                        file_path = os.path.join(job_path, job_info_file["name"])
-                        with zip_file.open(job_info_file["fileinfo"]) as info_file:
-                            with open(file_path, 'wb') as target_file:
-                                target_file.write(info_file.read())
-                    for camera_guid, camera in iteritems(job["cameras"]):
-                        camera_path = utility.get_temporary_snapshot_job_camera_path(
-                            temporary_directory, job_guid, camera_guid
-                        )
-                        if not os.path.isdir(camera_path):
-                            os.makedirs(camera_path)
-                        for camera_fileinfo in camera:
-                            file_path = os.path.join(camera_path, camera_fileinfo["name"])
-                            with zip_file.open(camera_fileinfo["fileinfo"]) as camera_file:
+                            # this file is in the root.  See what kind of file this is
+                            if utility.TimelapseJobInfo.is_timelapse_info_file(name):
+                                item["name"] = utility.TimelapseJobInfo.timelapse_info_file_name
+                                # preserve case of the name, but keep the extension lower case
+                                archive_files_temp_dict[job_guid]["file"] = item
+                            else:
+                                if utility.is_valid_snapshot_extension(extension):
+                                    # preserve case of the name, but keep the extension lower case
+                                    file_name = "{0}.{1}".format(name_without_extension, extension)
+                                elif CameraInfo.is_camera_info_file(name):
+                                    file_name = CameraInfo.camera_info_filename
+                                elif SnapshotMetadata.is_metadata_file(name):
+                                    file_name = SnapshotMetadata.METADATA_FILE_NAME
+                                elif OctolapseSettings.is_camera_settings_file(name):
+                                    file_name = OctolapseSettings.camera_settings_file_name
+                                elif OctolapseSettings.is_rendering_settings_file(name):
+                                    file_name = OctolapseSettings.rendering_settings_file_name
+                                else:
+                                    continue
+                                item["name"] = file_name
+                                archive_files_temp_dict[job_guid]['cameras'][camera_guid].append(item)
+
+                    # now replace all of the job guids with  new ones to prevent conflicts with existing unfinished
+                    # rendering jobs.
+                    for key in archive_files_temp_dict.keys():
+                        archive_files_dict["{0}".format(uuid.uuid4())] = archive_files_temp_dict[key]
+                    archive_files_temp_dict = {}
+
+                    # now create the directories and files and place them in the temp snapshot directory
+                    for job_guid, job in iteritems(archive_files_dict):
+                        job_path = utility.get_temporary_snapshot_job_path(temporary_directory, job_guid)
+                        if not os.path.isdir(job_path):
+                            os.makedirs(job_path)
+                        job_info_file = job["file"]
+                        if job_info_file:
+                            file_path = os.path.join(job_path, job_info_file["name"])
+                            with zip_file.open(job_info_file["fileinfo"]) as info_file:
                                 with open(file_path, 'wb') as target_file:
-                                    target_file.write(camera_file.read())
-
+                                    target_file.write(info_file.read())
+                        for camera_guid, camera in iteritems(job["cameras"]):
+                            camera_path = utility.get_temporary_snapshot_job_camera_path(
+                                temporary_directory, job_guid, camera_guid
+                            )
+                            if not os.path.isdir(camera_path):
+                                os.makedirs(camera_path)
+                            for camera_fileinfo in camera:
+                                file_path = os.path.join(camera_path, camera_fileinfo["name"])
+                                with zip_file.open(camera_fileinfo["fileinfo"]) as camera_file:
+                                    with open(file_path, 'wb') as target_file:
+                                        target_file.write(camera_file.read())
+            except zipfile.LargeZipFile:
+                logger.exception("The zip file at '%s' is too large to open.", snapshot_archive_path)
+                return {
+                    'success': False,
+                    'error_keys': ['rendering', 'archive', 'import', 'zip_file_too_large']
+                }
+            except zipfile.BadZipfile:
+                logger.exception("The zip file at '%s' appears to be corrupt.", snapshot_archive_path)
+                return {
+                    'success': False,
+                    'error_keys': ['rendering', 'archive', 'import', 'zip_file_corrupt']
+                }
         # now we should have extracted all of the items, add the job to the queue for these cameras
         has_created_jobs = False
         for job_guid, job in iteritems(archive_files_dict):
