@@ -347,7 +347,10 @@ $(function() {
             self.apply_settings_before_print(values.apply_settings_before_print);
             self.apply_settings_at_startup(values.apply_settings_at_startup);
             self.snapshot_transpose(values.snapshot_transpose);
-
+            if (typeof values.apply_settings_when_disabled != 'undefined')
+            {
+                self.apply_settings_when_disabled(values.apply_settings_when_disabled);
+            }
             //self.on_print_start_script(values.on_print_start_script);
             //self.on_before_snapshot_script(values.on_before_snapshot_script);
             //self.external_camera_snapshot_script = ko.observable(values.external_camera_snapshot_script);
