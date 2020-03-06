@@ -1960,9 +1960,9 @@ $(function () {
                     break;
                 case "render-complete":
                     self.updateState(data);
+                    self.OctoprintTimelapse.requestData();
                     //console.log('octolapse.js - render-complete');
                     /*
-                    //self.OctoprintTimelapse.requestData();
                     var options = {
                         title: 'Octolapse Rendering Complete',
                         text: data.msg,
