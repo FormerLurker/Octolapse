@@ -96,6 +96,13 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev4(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev4.json'))
 
+    # Add other migrations here in the future...
+
+    # Make sure the current version always gets updated!
+    if LooseVersion(version) < LooseVersion(current_version):
+        # no migration necessary, just flag has_update = true
+        has_updated = True
+
     # If we've updated the settings, save a backup of the old settings and update the version
     if has_updated:
         with open(get_settings_backup_name(version, data_directory), "w+") as f:
