@@ -1526,7 +1526,7 @@ class CameraProfile(AutomaticConfigurationProfile):
     @staticmethod
     def format_url(url):
         if url[0] == "/":
-            url = "http://172.0.0.1" + url
+            url = "http://127.0.0.1" + url
         return url
 
     @staticmethod
