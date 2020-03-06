@@ -381,6 +381,12 @@ $(function() {
             self.output_template(values.output_template);
             self.archive_snapshots(values.archive_snapshots);
             self.thread_count(values.thread_count);
+            // Clear any settings that we don't want to update, unless they aren't important.
+            self.overlay_text_template("");
+            self.selected_watermark("");
+            self.self.enable_watermark(false);
+            self.self.overlay_font_path("");
+
         };
 
         self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(

@@ -351,13 +351,14 @@ $(function() {
             {
                 self.apply_settings_when_disabled(values.apply_settings_when_disabled);
             }
-            //self.on_print_start_script(values.on_print_start_script);
-            //self.on_before_snapshot_script(values.on_before_snapshot_script);
-            //self.external_camera_snapshot_script = ko.observable(values.external_camera_snapshot_script);
-            //self.on_after_snapshot_script = ko.observable(values.on_after_snapshot_script);
-            //self.on_before_render_script = ko.observable(values.on_before_render_script);
-            //self.on_after_render_script = ko.observable(values.on_after_render_script);
-
+            // Clear any settings that we don't want to update, unless they aren't important.
+            self.on_print_start_script("");
+            self.on_before_snapshot_script("");
+            self.external_camera_snapshot_script("");
+            self.on_after_snapshot_script("");
+            self.on_before_render_script("");
+            self.on_after_render_script("");
+            self.on_print_end_script("");
             self.webcam_settings.updateWebcamSettings(values);
         };
 
