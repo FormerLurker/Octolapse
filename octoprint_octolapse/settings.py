@@ -1903,25 +1903,18 @@ class Profiles(Settings):
                 _startup_cameras.append(_current_camera)
         return _startup_cameras
 
-    def before_print_start_cameras(self):
+    def before_print_start_webcameras(self):
         _startup_cameras = []
         for key in self.cameras:
             _current_camera = self.cameras[key]
-            is_print_start_camera = (
-                (_current_camera.enabled or _current_camera.apply_settings_when_disabled) and
-                _current_camera.apply_settings_at_startup and (
-                    (
-                        _current_camera.camera_type == CameraProfile.camera_type_webcam and
-                        _current_camera.apply_settings_before_print
-                    ) or
-                    (
-                        _current_camera.camera_type == CameraProfile.camera_type_script and
-                        _current_camera.on_print_start_script
-                    )
-                )
-            )
-            if is_print_start_camera:
-                _startup_cameras.append(_current_camera)
+            if not _current_camera.camera_type == CameraProfile.camera_type_webcam:
+                continue
+            if not _current_camera.enabled or _current_camera.apply_settings_when_disabled:
+                continue
+            if not _current_camera.apply_settings_at_startup:
+                continue
+
+            _startup_cameras.append(_current_camera)
 
         return _startup_cameras
 

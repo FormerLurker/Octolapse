@@ -192,6 +192,11 @@ _octolapse_errors = {
                            "script. Details: {error}",
             'help_link': "error_help_init_camera_settings_apply_failed.md"
         },
+        'before_print_start_camera_script_apply_failed': {
+            "name": "Before Print Start Camera Script Failed",
+            "description": "There were errors running on print start camera scripts. Details: {error}",
+            'help_link': "error_help_init_before_print_start_camera_script_apply_failed.md"
+        },
         'incorrect_octoprint_version': {
             "name": "Please Upgrade Octoprint",
             "description": "Octolapse requires Octoprint v1.3.9 rc3 or above, but version v{installed_version} is "

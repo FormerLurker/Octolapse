@@ -2495,12 +2495,22 @@ class OctolapsePlugin(
             return {"success": False, "error": error}
 
         success, camera_settings_apply_errors = camera.CameraControl.apply_camera_settings(
-            self._octolapse_settings.profiles.before_print_start_cameras()
+            self._octolapse_settings.profiles.before_print_start_webcameras()
         )
         if not success:
             error = error_messages.get_error(
                 ["init", "camera_settings_apply_failed"],
                 error=camera_settings_apply_errors)
+            return {"success": False, "error": error}
+
+        # run before print start camera scripts
+        success, before_print_start_camera_script_errors = camera.CameraControl.run_on_print_start_script(
+            self._octolapse_settings.profiles.cameras
+        )
+        if not success:
+            error = error_messages.get_error(
+                ["init", "before_print_start_camera_script_apply_failed"],
+                error=before_print_start_camera_script_errors)
             return {"success": False, "error": error}
 
         # check for version 1.3.8 min
