@@ -384,8 +384,8 @@ $(function() {
             // Clear any settings that we don't want to update, unless they aren't important.
             self.overlay_text_template("");
             self.selected_watermark("");
-            self.self.enable_watermark(false);
-            self.self.overlay_font_path("");
+            self.enable_watermark(false);
+            self.overlay_font_path("");
 
         };
 
