@@ -188,7 +188,6 @@ $(function() {
 
         self.showWebcamSettingsForProfile = function(profile, on_preferences_changed) {
             // First update the current webcam_settings based on the current profile
-
             self.webcam_settings.updateWebcamSettings(profile);
             self.webcam_settings.getMjpgStreamerControls(false, function (results) {
                 // Update the current settings that we just received
@@ -205,7 +204,6 @@ $(function() {
                     hide: false,
                     addclass: "octolapse"
                 };
-
                 Octolapse.displayPopupForKey(options, "webcam_settings_error",["webcam_settings_error"]);
             });
         };

@@ -444,6 +444,18 @@
                             </label>
                         </div>
                     </div>
+
+                    <div data-bind="visible: enable_custom_image_preferences() || apply_settings_before_print() ">
+                        <div class="control-group">
+                            <label class="control-label">Enabled</label>
+                            <div class="controls">
+                                <input id="camera_profile_apply_settings_when_disabled" name="camera_profile_apply_settings_when_disabled"
+                                           data-bind="checked: apply_settings_when_disabled"
+                                           type="checkbox" />Apply Preferences When Camera is Disabled
+                                    <a class="octolapse_help" data-help-url="profiles.camera.apply_settings_when_disabled.md" data-help-title="Apply Webcam Preferences When Camera is Disabled" />
+                            </div>
+                        </div>
+                    </div>
                     <div class="control-group">
                         <div class="controls">
                             <button class="btn btn-default cancel input-block-level" data-bind="click: showWebcamSettings">Edit Camera Image Preferences&hellip;</button>

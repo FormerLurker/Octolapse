@@ -47,6 +47,7 @@ $(function() {
         self.enable_custom_image_preferences = ko.observable(values.enable_custom_image_preferences);
         self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
         self.apply_settings_at_startup = ko.observable(values.apply_settings_at_startup);
+        self.apply_settings_when_disabled = ko.observable(values.apply_settings_when_disabled);
         self.snapshot_transpose = ko.observable(values.snapshot_transpose);
         self.webcam_settings = new Octolapse.WebcamSettingsViewModel();
         self.webcam_settings_popup = new Octolapse.WebcamSettingsPopupViewModel("octolapse_camera_image_preferences_popup");

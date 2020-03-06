@@ -1515,6 +1515,7 @@ class CameraProfile(AutomaticConfigurationProfile):
         self.enable_custom_image_preferences = False
         self.apply_settings_before_print = True
         self.apply_settings_at_startup = True
+        self.apply_settings_when_disabled = True
 
     def format_snapshot_request_template(self):
         return self.snapshot_request_template.format(camera_address=self.address)
@@ -1527,36 +1528,6 @@ class CameraProfile(AutomaticConfigurationProfile):
         if url[0] == "/":
             url = "http://172.0.0.1" + url
         return url
-
-    def get_image_preferences(self):
-        return {
-            'guid': self.guid,
-            'name': self.name,
-            'stream_template': self.format_stream_template(),
-            'address': self.address,
-            'address': self.address,
-            'brightness': self.brightness,
-            'contrast': self.contrast,
-            'saturation': self.saturation,
-            'white_balance_auto': self.white_balance_auto,
-            'gain': self.gain,
-            'powerline_frequency': self.powerline_frequency,
-            'white_balance_temperature':  self.white_balance_temperature,
-            'sharpness': self.sharpness,
-            'backlight_compensation_enabled': self.backlight_compensation_enabled,
-            'exposure_type': self.exposure_type,
-            'exposure': self.exposure,
-            'exposure_auto_priority_enabled': self.exposure_auto_priority_enabled,
-            'pan': self.pan,
-            'tilt': self.tilt,
-            'autofocus_enabled': self.autofocus_enabled,
-            'focus': self.focus,
-            'zoom': self.zoom,
-            'led1_mode': self.led1_mode,
-            'led1_frequency': self.led1_frequency,
-            'jpeg_quality': self.jpeg_quality,
-            'options': self.get_options()
-        }
 
     @staticmethod
     def get_options():
@@ -1923,13 +1894,12 @@ class Profiles(Settings):
         _startup_cameras = []
         for key in self.cameras:
             _current_camera = self.cameras[key]
-            if (
-                _current_camera.enabled  and
-                _current_camera.camera_type in [
-                    CameraProfile.camera_type_webcam
-                ] and
+            is_startup_camera = (
+                (_current_camera.enabled or _current_camera.apply_settings_when_disabled) and
+                _current_camera.camera_type in [CameraProfile.camera_type_webcam] and
                 _current_camera.apply_settings_at_startup
-            ):
+            )
+            if is_startup_camera:
                 _startup_cameras.append(_current_camera)
         return _startup_cameras
 
@@ -1937,8 +1907,9 @@ class Profiles(Settings):
         _startup_cameras = []
         for key in self.cameras:
             _current_camera = self.cameras[key]
-            if (
-                _current_camera.enabled and (
+            is_print_start_camera = (
+                (_current_camera.enabled or _current_camera.apply_settings_when_disabled) and
+                _current_camera.apply_settings_at_startup and (
                     (
                         _current_camera.camera_type == CameraProfile.camera_type_webcam and
                         _current_camera.apply_settings_before_print
@@ -1948,7 +1919,8 @@ class Profiles(Settings):
                         _current_camera.on_print_start_script
                     )
                 )
-            ):
+            )
+            if is_print_start_camera:
                 _startup_cameras.append(_current_camera)
 
         return _startup_cameras
