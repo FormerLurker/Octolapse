@@ -25,7 +25,9 @@
     <div class="row-fluid">
         <div class="span12">
             <a data-bind="css: {'muted': !hasConfigIssues(), 'text-error': hasConfigIssues()}, octolapseToggle: { class_showing: 'fa-caret-down', class_hiding: 'fa-caret-right', container: '#octolapse_status_settings_current_panel', toggle_observable: current_settings_showing }">
-                <i data-bind="visible: hasConfigIssues" class="fa fa-exclamation"> </i>Current Run Configuration&nbsp;<i class="fa fa-no-shadow fa-caret-down"></i>
+                <span data-bind="css: {'text-error': hasConfigIssues()}">
+                    <i data-bind="visible: hasConfigIssues" class="fa fa-exclamation"></i>&nbsp;Current Run Configuration&nbsp;<i class="fa fa-no-shadow fa-caret-down"></i>
+                </span>
             </a>
         </div>
     </div>
