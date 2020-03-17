@@ -44,7 +44,7 @@ def get_config():
     cfg.tag_prefix = ""
     cfg.parentdir_prefix = ""
     cfg.versionfile_source = "octoprint_octolapse/_version.py"
-    cfg.verbose = True
+    cfg.verbose = False
     return cfg
 
 

@@ -19,8 +19,17 @@ plugin_package = "octoprint_octolapse"
 # The plugin's human readable name. Can be overwritten within OctoPrint's internal data via __plugin_name__ in the
 # plugin module
 plugin_name = "Octolapse"
-# The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
+# The plugin's fallback version, in case versioneer can't extract the version from _version.py.
+# This can happen if the user installs from one of the .zip links in github, not generated with git archive
+fallback_version = "0.4.0rc1.dev5"
 plugin_version = versioneer.get_version()
+if plugin_version == "0+unknown":
+    plugin_version = fallback_version
+    try:
+        plugin_version += "+" + versioneer.get_versions()['full-revisionid']
+    except:
+        pass
+
 plugin_cmdclass = versioneer.get_cmdclass()
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module

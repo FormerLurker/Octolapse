@@ -3710,9 +3710,6 @@ class OctolapsePlugin(
 from ._version import get_versions
 __version__ = get_versions()['version']
 __git_version__ = get_versions()['full-revisionid']
-# work around if zip is downloaded from github and current version does not have a tag.
-if __version__ == '0+unknown':
-    __version__ = __git_version__
 del get_versions
 
 __plugin_name__ = "Octolapse"
@@ -3784,3 +3781,7 @@ class OctolapseLargeResponseHandler(LargeResponseHandler):
                 self._after_request_callback()
 
 
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
