@@ -184,6 +184,11 @@ div#octolapse-current-camera{
     text-align: center;
     width: 100%;
     height:400px;
+    position: unset;
+	top: unset;
+	left: unset;
+	transform: unset;
+
 }
 .octolapse-pnotify-container .alert
 {

@@ -587,6 +587,23 @@ class OctolapsePlugin(
             }
             return jsonify(data)
 
+    @octoprint.plugin.BlueprintPlugin.route("/setPreviewSnapshotPlans", methods=["POST"])
+    @restricted_access
+    def set_preview_snapshot_plans_request(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            client_id = request_values["client_id"]
+            preview_snapshot_plans_enabled = request_values["preview_snapshot_plans_enabled"]
+            # save the updated settings to a file.
+            self._octolapse_settings.main_settings.preview_snapshot_plans = preview_snapshot_plans_enabled
+            self.save_settings()
+            self.send_state_changed_message(None, client_id)
+            data = {
+                'success': True,
+                'enabled': preview_snapshot_plans_enabled
+            }
+            return jsonify(data)
+
     @octoprint.plugin.BlueprintPlugin.route("/toggleInfoPanel", methods=["POST"])
     @restricted_access
     def toggle_info_panel(self):

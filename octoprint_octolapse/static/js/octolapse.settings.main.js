@@ -154,6 +154,43 @@ $(function () {
             return true;
         };
 
+        self.toggleSnapshotPlanPreview = function(){
+
+            var newValue = !self.preview_snapshot_plans();
+            var data = {
+                "preview_snapshot_plans_enabled": newValue,
+                "client_id": Octolapse.Globals.client_id
+            };
+            //console.log("Toggling test mode.")
+            $.ajax({
+                url: "./plugin/octolapse/setPreviewSnapshotPlans",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    // update the global value and the local value
+                    self.preview_snapshot_plans(newValue);
+                    Octolapse.Globals.main_settings.preview_snapshot_plans(newValue);
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    var message = "Unable to enable/disable preview snapshot plans.  Status: " + textStatus + ".  Error: " + errorThrown;
+                    var options = {
+                        title: 'Enable/Disable Preview Snapshot Plans Error',
+                        text: message,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse",
+                        desktop: {
+                            desktop: true
+                        }
+                    };
+                    Octolapse.displayPopup(options);
+                }
+            });
+            return true;
+        };
+
         self.testDirectory = function(type, directory){
 
             var data = {

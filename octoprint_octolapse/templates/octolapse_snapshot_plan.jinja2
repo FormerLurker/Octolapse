@@ -141,8 +141,9 @@
         <p data-bind="visible: SnapshotPlanState.autoclose()">
             This popup will auto-close, and your print will automatically start in <span data-bind="text:SnapshotPlanState.autoclose_seconds"></span> seconds.
         </p>
-        <p>
-            You can enable or disable the snapshot plan preview and configure auto-close within the <a title="Open Octolapse Main Settings" data-bind="click: function() {openOctolapseSettings('main-settings');}">main settings</a>.
-        </p>
+
+        <div class="alert alert-info">
+            You can enable or disable the snapshot plan preview and configure auto-close within the <a title="Open Octolapse Main Settings" data-bind="click: function() {openOctolapseSettings('main-settings');}"><strong>main settings</strong></a>.
+        </div>
     </div>
 </script>
