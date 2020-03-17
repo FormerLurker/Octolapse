@@ -69,7 +69,10 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
     # note that the version moved from settings.version to settings.main_settings.version
     version = get_version(settings_dict)
     if version == 'unknown':
-        raise Exception("Could not find the settings version.")
+        raise Exception("Could not find version information within the settings json, cannot perform migration.")
+
+    if version == "0+unknown":
+        raise Exception("An unknown settings version was detected, cannot perform migration.")
 
     # create a copy of the settings
     original_settings_copy = copy.deepcopy(settings_dict)
