@@ -24,6 +24,7 @@ settings_version_translation = [
     '0.4.0rc1.dev2',  # the version here is ambiguous, but this is only used for file migrations
     '0.4.0rc1.dev3',
     '0.4.0rc1.dev4',
+    '0.4.0rc1.dev5',
 ]
 
 
