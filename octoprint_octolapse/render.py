@@ -374,12 +374,13 @@ class RenderingProcessor(threading.Thread):
        one at a time for each rendering job.  Notify the calling thread of the number of jobs in the queue on demand."""
 
     def __init__(
-        self, rendering_task_queue, data_directory, plugin_version, default_settings_folder,
+        self, rendering_task_queue, data_directory, plugin_version, git_version, default_settings_folder,
         octoprint_settings, get_current_settings_callback, on_start, on_success, on_render_progress, on_error, on_end,
         on_unfinished_renderings_changed, on_in_process_renderings_changed, on_unfinished_renderings_loaded
     ):
         super(RenderingProcessor, self).__init__()
         self._plugin_version = plugin_version
+        self._git_version = git_version
         self._default_settings_folder = default_settings_folder
         self._octoprint_settings = octoprint_settings
         self._get_current_settings_callback = get_current_settings_callback
@@ -1268,7 +1269,7 @@ class RenderingProcessor(threading.Thread):
 
     def _get_job_settings(self, job_guid, camera_guid, rendering_profile, camera_profile, temporary_directory):
         """Attempt to load all job settings from the snapshot path"""
-        settings = OctolapseSettings(self._plugin_version)
+        settings = OctolapseSettings(self._plugin_version, self._git_version)
         settings.profiles.cameras = {}
         settings.profiles.renderings = {}
 

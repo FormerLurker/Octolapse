@@ -47,12 +47,27 @@ $(function () {
         self.test_mode_enabled = ko.observable();
         // rename this so that it never gets updated when saved
         self.octolapse_version = ko.observable("unknown");
+        self.octolapse_git_version = ko.observable(null);
         // Computed Observables
         self.preview_snapshot_plan_seconds_text = ko.pureComputed(function(){
             if (!self.preview_snapshot_plan_seconds())
                 return "unknown";
             return self.preview_snapshot_plan_seconds().toString();
         });
+
+        self.github_link = ko.pureComputed(function(){
+            var git_version = self.octolapse_git_version();
+            if (!git_version)
+                return null;
+            // If this is a commit, link to the commit
+            if (self.octolapse_version().includes("+"))
+            {
+                return  'https://github.com/FormerLurker/Octolapse/commit/' + Octolapse.Globals.main_settings.octolapse_git_version();
+            }
+            // This is a release, link to the tag
+            return 'https://github.com/FormerLurker/Octolapse/releases/tag/v' + self.octolapse_version();
+        });
+
         self.update = function (settings, defaults) {
             //console.log("Updating Main Settings")
             self.is_octolapse_enabled(settings.is_octolapse_enabled);
@@ -76,6 +91,10 @@ $(function () {
             self.temporary_directory(settings.temporary_directory);
             self.octolapse_version(settings.version);
             self.test_mode_enabled(settings.test_mode_enabled);
+            if (settings.git_version !== undefined)
+            {
+                self.octolapse_git_version(settings.git_version);
+            }
             if (defaults)
                 self.defaults = settings.defaults
         };

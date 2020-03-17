@@ -26,7 +26,7 @@ plugin_version = versioneer.get_version()
 if plugin_version == "0+unknown":
     plugin_version = fallback_version
     try:
-        plugin_version += "+" + versioneer.get_versions()['full-revisionid']
+        plugin_version += "+" + versioneer.get_versions()['full-revisionid'][0:7]
     except:
         pass
 

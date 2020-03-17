@@ -20,11 +20,12 @@ def get_version(settings_dict):
     return version
 
 
+# when adding a file migration, the version number in __init__.py.get_settings_version needs to be incremented
+# and the current version needs to be set.  Only do this if you add a file migration!
 settings_version_translation = [
     '0.4.0rc1.dev2',  # the version here is ambiguous, but this is only used for file migrations
     '0.4.0rc1.dev3',
-    '0.4.0rc1.dev4',
-    '0.4.0rc1.dev5',
+    '0.4.0rc1.dev4'  # <-- the current file migration version is set to 2, which is THIS version index.
 ]
 
 
@@ -102,16 +103,13 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
 
     # Add other migrations here in the future...
 
-    # Make sure the current version always gets updated!
-    if LooseVersion(version) != LooseVersion(current_version):
-        # no migration necessary, just flag has_update = true
-        has_updated = True
-
-    # If we've updated the settings, save a backup of the old settings and update the version
+    # if we have updated, create a backup of the current settings
     if has_updated:
         with open(get_settings_backup_name(version, data_directory), "w+") as f:
             json.dump(original_settings_copy, f)
-        settings_dict["main_settings"]["version"] = current_version
+
+    # Ensure that the version in the settings.json file is up to date
+    settings_dict["main_settings"]["version"] = current_version
 
     return settings_dict
 

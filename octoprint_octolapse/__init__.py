@@ -932,6 +932,7 @@ class OctolapsePlugin(
                 self._octolapse_settings = self._octolapse_settings.import_settings_from_file(
                     settings_path,
                     self._plugin_version,
+                    __git_version__,
                     self.get_default_settings_folder(),
                     self.get_plugin_data_folder(),
                     self.available_profiles
@@ -943,6 +944,7 @@ class OctolapsePlugin(
                 self._octolapse_settings = self._octolapse_settings.import_settings_from_text(
                     import_text,
                     self._plugin_version,
+                    __git_version__,
                     self.get_default_settings_folder(),
                     self.get_plugin_data_folder(),
                     self.available_profiles
@@ -1966,6 +1968,7 @@ class OctolapsePlugin(
             new_settings, defaults_loaded = OctolapseSettings.load(
                 settings_file_path,
                 self._plugin_version,
+                __git_version__,
                 self.get_default_settings_folder(),
                 self.get_default_settings_filename(),
                 self.get_plugin_data_folder(),
@@ -2047,6 +2050,8 @@ class OctolapsePlugin(
     def save_settings(self):
         # Save setting from file
         try:
+            # set the git-version
+            self._octolapse_settings.main_settings.git_version = __git_version__
             self._octolapse_settings.save(self.get_settings_file_path())
             self.configure_loggers()
         except Exception as e:
@@ -2303,6 +2308,7 @@ class OctolapsePlugin(
                 self._rendering_task_queue,
                 self._data_folder,
                 self._octolapse_settings.main_settings.version,
+                __git_version__,
                 self.get_default_settings_folder(),
                 self._settings,
                 self.get_current_octolapse_settings,
@@ -3783,4 +3789,5 @@ class OctolapseLargeResponseHandler(LargeResponseHandler):
 
 from ._version import get_versions
 __version__ = get_versions()['version']
+__git_version__ = get_versions()['full-revisionid']
 del get_versions

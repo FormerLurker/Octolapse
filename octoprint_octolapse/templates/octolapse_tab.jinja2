@@ -229,9 +229,15 @@
             </div>
 
             <div class="span5 text-right muted">
-                <small>
-                    Octolapse&nbsp;<i data-bind="text:Octolapse.Globals.version_text"></i>
-                </small>
+                <a target="_blank" data-bind="visible: Octolapse.Globals.main_settings.github_link() != null, attr: { href: Octolapse.Globals.main_settings.github_link}">
+                     Octolapse&nbsp;<i data-bind="text:Octolapse.Globals.version_text"></i>
+                </a>
+                <span data-bind="visible: !Octolapse.Globals.main_settings.github_link() == null" >
+                    <small>
+                        Octolapse&nbsp;<i data-bind="text:Octolapse.Globals.version_text"></i>
+                    </small>
+                </span>
+
             </div>
 
         </div>
