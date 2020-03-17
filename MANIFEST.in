@@ -6,3 +6,5 @@ recursive-include octoprint_octolapse/data *
 recursive-include octoprint_octolapse/data/images *
 recursive-include octoprint_octolapse/data/lib/c *
 
+include versioneer.py
+include octoprint_octolapse/_version.py

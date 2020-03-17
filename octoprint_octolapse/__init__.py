@@ -3707,9 +3707,13 @@ class OctolapsePlugin(
             )
         ]
 
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
+
 __plugin_name__ = "Octolapse"
 __plugin_pythoncompat__ = ">=2.7,<4"
-
+__plugin_version__ = __version__
 
 def __plugin_load__():
     global __plugin_implementation__
@@ -3774,3 +3778,5 @@ class OctolapseLargeResponseHandler(LargeResponseHandler):
 
             if self._after_request_callback:
                 self._after_request_callback()
+
+

@@ -12,3 +12,4 @@ README.md export-ignore
 # all files within the Extras folder
 Extras export-ignore
 
+octoprint_octolapse/_version.py export-subst

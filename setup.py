@@ -9,8 +9,8 @@ from distutils.cygwinccompiler import CygwinCCompiler
 from distutils.version import LooseVersion
 import sys
 import sysconfig
-
 import os
+import versioneer
 ########################################################################################################################
 # The plugin's identifier, has to be unique
 plugin_identifier = "octolapse"
@@ -20,7 +20,8 @@ plugin_package = "octoprint_octolapse"
 # plugin module
 plugin_name = "Octolapse"
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "0.4.0rc1.dev5"
+plugin_version = versioneer.get_version()
+plugin_cmdclass = versioneer.get_cmdclass()
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
 plugin_description = """Create stabilized timelapses of your 3d prints.  Highly customizable, loads of presets, lots of fun."""
@@ -216,7 +217,7 @@ setup_parameters = octoprint_setuptools.create_plugin_setup_parameters(
     additional_packages=plugin_additional_packages,
     ignored_packages=plugin_ignored_packages,
     additional_data=plugin_additional_data,
-
+    cmdclass=plugin_cmdclass
 )
 
 if len(additional_setup_parameters):
