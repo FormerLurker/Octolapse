@@ -100,7 +100,7 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
     # Add other migrations here in the future...
 
     # Make sure the current version always gets updated!
-    if LooseVersion(version) < LooseVersion(current_version):
+    if LooseVersion(version) != LooseVersion(current_version):
         # no migration necessary, just flag has_update = true
         has_updated = True
 

@@ -3714,7 +3714,6 @@ del get_versions
 
 __plugin_name__ = "Octolapse"
 __plugin_pythoncompat__ = ">=2.7,<4"
-__plugin_version__ = __version__
 
 def __plugin_load__():
     global __plugin_implementation__
