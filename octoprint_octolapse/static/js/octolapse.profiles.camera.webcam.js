@@ -64,12 +64,16 @@ $(function() {
 
         self.openWebcamSettingsDialog = function(on_closed){
             self.dialog = {};
-
+            self.on_closed_callback = on_closed;
             // Set close callback
-            self.dialog.on_closed = function() {
-                if (on_closed)
+            self.dialog.on_closed = function(send_settings) {
+                if (self.on_closed_callback)
                 {
-                    on_closed(ko.toJS(self.webcam_settings));
+                    var settings = null;
+                    if (send_settings) {
+                        settings = ko.toJS(self.webcam_settings);
+                    }
+                    self.on_closed_callback(settings);
                 }
                 self.closeWebcamSettingsDialog();
             };
@@ -96,8 +100,8 @@ $(function() {
             // Called when the user clicks the cancel button in any add/update dialog
             self.dialog.$saveButton.bind("click", function () {
                 // Save the settings.
-                if (on_closed) {
-                    self.dialog.on_closed(ko.toJS(self.webcam_settings));
+                if (self.on_closed_callback) {
+                    self.dialog.on_closed(true);
                 }
                 else
                 {
@@ -189,9 +193,14 @@ $(function() {
         self.showWebcamSettingsForProfile = function(profile, on_preferences_changed) {
             // First update the current webcam_settings based on the current profile
             self.webcam_settings.updateWebcamSettings(profile);
+
             self.webcam_settings.getMjpgStreamerControls(false, function (results) {
                 // Update the current settings that we just received
-                self.webcam_settings.updateWebcamSettings(results.settings);
+                if (results.settings.new_preferences_available)
+                {
+                    self.webcam_settings.updateWebcamSettings(results.settings);
+                }
+
                 self.openWebcamSettingsDialog(on_preferences_changed);
             }, function(results){
                  var message = "There was a problem retrieving webcam settings from the server.";
@@ -553,8 +562,8 @@ $(function() {
         // I found this awesome binding handler created by Michael Rouse, available at https://codepen.io/mwrouse/pen/wWwvmN
 
         self.cancelWebcamChanges = function(on_closed_callback){
-            if (on_closed_callback && (self.guid() == null || self.guid() == ""))
-                on_closed_callback(ko.toJS(self));
+            //if (on_closed_callback && (self.guid() == null || self.guid() == ""))
+            //    on_closed_callback(ko.toJS(self));
             //console.log("Undoing webcam changes.");
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
 
@@ -582,7 +591,7 @@ $(function() {
                         Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
                     }
                     if (on_closed_callback)
-                        on_closed_callback(ko.toJS(self));
+                        on_closed_callback(false);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     var options = {
@@ -594,7 +603,7 @@ $(function() {
                     };
                     Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
                     if (on_closed_callback)
-                        on_closed_callback(ko.toJS(self));
+                        on_closed_callback(true);
                 }
             });
         };

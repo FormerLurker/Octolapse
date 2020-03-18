@@ -425,6 +425,13 @@
                 <div data-bind="visible: enable_custom_image_preferences">
                     <div class="control-group">
                         <div class="controls">
+                            <div class="alert alert-primary octolapse">
+                                <span>You can edit the camera image from the Octolapse tab by selecting your webcam from the dropdown box, and then clicking on the edit to the right of the drop down.  Click on the help icon for more details.</span>&nbsp;<a class="octolapse_help right" data-help-url="profiles.camera.edit_cutsom_image_preferences.md" data-help-title="Editing Custom Image Preferences"><span class="fa fa-question-circle fa-lg"></span></a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls">
                             <label class="checkbox">
                                 <input id="octolapse_camera_apply_settings_at_startup" name="octolapse_camera_apply_settings_at_startup"
                                        data-bind="checked: apply_settings_at_startup"
@@ -454,12 +461,6 @@
                                     <a class="octolapse_help" data-help-url="profiles.camera.apply_settings_when_disabled.md" data-help-title="Apply Webcam Preferences When Camera is Disabled" />
                                 </label>
                             </div>
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <div class="controls">
-                            <button class="btn btn-default cancel input-block-level" data-bind="click: showWebcamSettings">Edit Camera Image Preferences&hellip;</button>
-                            <span class="help-inline">You can also edit the camera image preferences directly from the Octolapse tab by clicking the edit pen on the upper right hand corner of the snapshot preview.</span>
                         </div>
                     </div>
                 </div>
