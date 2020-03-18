@@ -207,6 +207,10 @@ div#octolapse-current-camera{
     display: table-cell;
     vertical-align: middle;
     font-size: large;
+    position: unset;
+	top: unset;
+	left: unset;
+	transform: unset;
 }
 
 .no-min-height{
@@ -407,6 +411,11 @@ div.webcam_settings_preview img{
 div.webcam_settings_preview .loading, div.webcam_settings_preview .error{
     display:table-cell;
     vertical-align:middle;
+    position: unset;
+	top: unset;
+	left: unset;
+	transform: unset;
+    font-size: unset;
 }
 
 
