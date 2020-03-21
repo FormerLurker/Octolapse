@@ -1,4 +1,4 @@
-from octoprint_octolapse.octolapse_setuptools import NumberedVersion
+from octoprint_octolapse_setuptools import NumberedVersion
 
 import json
 import sys

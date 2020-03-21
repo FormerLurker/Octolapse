@@ -21,7 +21,7 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from __future__ import unicode_literals
-from octoprint_octolapse.octolapse_setuptools import NumberedVersion
+from octoprint_octolapse_setuptools import NumberedVersion
 import requests
 import uuid
 import json

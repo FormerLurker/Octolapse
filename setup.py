@@ -7,7 +7,7 @@ from distutils.msvccompiler import MSVCCompiler
 from distutils.bcppcompiler import BCPPCompiler
 from distutils.cygwinccompiler import CygwinCCompiler
 from distutils.version import LooseVersion
-from octoprint_octolapse.octolapse_setuptools import NumberedVersion
+from octoprint_octolapse_setuptools import NumberedVersion
 import sys
 import versioneer
 ########################################################################################################################
@@ -83,7 +83,7 @@ plugin_additional_data = [
     'data/fonts/*'
 ]
 # Any additional python packages you need to install with your plugin that are not contained in <plugin_package>.*
-plugin_additional_packages = []
+plugin_additional_packages = ['octoprint_octolapse_setuptools']
 
 # Any python packages within <plugin_package>.* you do NOT want to install with your plugin
 plugin_ignored_packages = []
