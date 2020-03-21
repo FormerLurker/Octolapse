@@ -19,7 +19,7 @@ class TestOctolapsePlugin(unittest.TestCase):
         # 0.4.0rc2... > 0.4.0rc1...
 
         # test stripping off commit level version info
-        test_version = NumberedVersion('0.4.0rc1+10.g3ffd305.dirty')
+        test_version = NumberedVersion('0.4.0rc1+u.dec65f5')
 
         # make sure that rc is always greater than rcX.devX
         assert (
@@ -128,10 +128,10 @@ class TestOctolapsePlugin(unittest.TestCase):
 
         # When there is not development info within the version, the comparison is ambiguous.  Make them equal
         assert (
-            NumberedVersion('v0.4.0rc1.dev5+?.g3ffd305') == NumberedVersion("v0.4.0rc1.dev5+10.g3ffd305")
+            NumberedVersion('v0.4.0rc1.dev5+u.g3ffd305') == NumberedVersion("v0.4.0rc1.dev5+10.g3ffd305")
         )
         assert (
-            NumberedVersion("v0.4.0rc1.dev5+10.g3ffd305") == NumberedVersion('v0.4.0rc1.dev5+?.g3ffd305')
+            NumberedVersion("v0.4.0rc1.dev5+10.g3ffd305") == NumberedVersion('v0.4.0rc1.dev5+u.g3ffd305')
         )
 
         # when there is full tag information (i.e. installed from a release), it is older

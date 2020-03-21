@@ -90,7 +90,7 @@ class NumberedVersion(version.LooseVersion):
             prel_segments = self.commit_version_string.split('.')
             # get num commits ahead
             if len(prel_segments) > 0:
-                if prel_segments[0] != '?':
+                if prel_segments[0] != 'u':
                     try:
                         self.commits_ahead = int(prel_segments[0])
                     except ValueError:
@@ -113,7 +113,7 @@ class NumberedVersion(version.LooseVersion):
             # Add the commit info separator (+)
             self._commit_version.append("+")
             # next, add the number of commits we are ahead
-            self._commit_version.append("?" if self.commits_ahead is None else self.commits_ahead)
+            self._commit_version.append("u" if self.commits_ahead is None else self.commits_ahead)
             # next add the guid
             self._commit_version.append(self.commit_guid)
             # if the version is dirty, add that segment

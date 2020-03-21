@@ -27,7 +27,7 @@ if plugin_version == "0+unknown" or NumberedVersion(plugin_version) < NumberedVe
     try:
         # This generates version in the following form:
         #   0.4.0rc1+?.GUID_GOES_HERE
-        plugin_version += "+?." + versioneer.get_versions()['full-revisionid'][0:7]
+        plugin_version += "+u." + versioneer.get_versions()['full-revisionid'][0:7]
     except:
         pass
 
