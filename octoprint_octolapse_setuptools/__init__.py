@@ -31,6 +31,9 @@ class NumberedVersion(version.LooseVersion):
         exists.
     '''
     def __init__(self, vstring=None, pre_release_tags=['rc'], development_tags=['dev']):
+        # trim vstring
+        if vstring != None:
+            vstring = vstring.strip()
         self.pre_release_tags = pre_release_tags
         self.development_tags = development_tags
         self.original_string = vstring
@@ -46,7 +49,11 @@ class NumberedVersion(version.LooseVersion):
         self.commit_guid = ''
         self.is_dirty = False
 
-        # First, find any pluses that contain commit level info
+        # strip off any leading V or v
+        if len(vstring) > 0 and vstring[0].upper() == "V":
+            vstring = vstring[1:]
+
+        # find any pluses that contain commit level info
         if '+' in vstring:
             index = vstring.find('+')
             # make sure there is info after the '+'

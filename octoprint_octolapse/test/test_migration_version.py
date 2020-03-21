@@ -20,6 +20,15 @@ class TestOctolapsePlugin(unittest.TestCase):
 
         # test stripping off commit level version info
         test_version = NumberedVersion('0.4.0rc1+u.dec65f5')
+        # make sure identical version numbers are considered to be equal
+        assert (
+            NumberedVersion('0.4.0rc1') == NumberedVersion('0.4.0rc1')
+        )
+
+        # make sure V prefixes are ignored version numbers are considered to be equal
+        assert (
+            NumberedVersion('v0.4.0rc1') == NumberedVersion('0.4.0rc1')
+        )
 
         # make sure that rc is always greater than rcX.devX
         assert (
