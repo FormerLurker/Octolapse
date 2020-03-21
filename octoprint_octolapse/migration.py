@@ -1,4 +1,5 @@
-from distutils.version import LooseVersion
+from octoprint_octolapse.migration_version import NumberedVersion
+
 import json
 import sys
 import os
@@ -25,7 +26,8 @@ def get_version(settings_dict):
 settings_version_translation = [
     '0.4.0rc1.dev2',  # the version here is ambiguous, but this is only used for file migrations
     '0.4.0rc1.dev3',
-    '0.4.0rc1.dev4'  # <-- the current file migration version is set to 2, which is THIS version index.
+    '0.4.0rc1.dev4',
+    '0.4.0rc1'  # <-- the current file migration version is set to 3, which is THIS version index.
 ]
 
 
@@ -40,7 +42,7 @@ def migrate_files(current_version, target_version, data_directory):
     has_updated = False
     if current_version is None:
         return False
-    if LooseVersion(current_version) < LooseVersion("0.4.0rc1.dev3"):
+    if NumberedVersion(current_version) < NumberedVersion("0.4.0rc1.dev3"):
         if migrate_files_pre_0_4_0_rc1_dev3(current_version, data_directory):
             has_updated = True
     return has_updated
@@ -81,23 +83,23 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
     # create a flag to indicate that we've updated settings
     has_updated = False
 
-    if LooseVersion(version) <= LooseVersion("0.3.3rc3.dev0"):
+    if NumberedVersion(version) <= NumberedVersion("0.3.3rc3.dev0"):
         has_updated = True
         settings_dict = migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.3.3rc3.dev0.json'))
 
-    if LooseVersion(version) < LooseVersion("0.4.0rc1.dev0"):
+    if NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev0"):
         has_updated = True
         settings_dict = migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev0.json'))
 
-    if LooseVersion(version) < LooseVersion("0.4.0rc1.dev2"):
+    if NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev2"):
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev2(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev2.json'))
 
-    if LooseVersion(version) < LooseVersion("0.4.0rc1.dev3"):
+    if NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev3"):
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev3.json'))
 
-    if LooseVersion(version) < LooseVersion("0.4.0rc1.dev4"):
+    if NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev4"):
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev4(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev4.json'))
 

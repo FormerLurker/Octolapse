@@ -30,7 +30,7 @@ import tempfile
 import sys
 import re
 import errno
-from distutils.version import LooseVersion
+from octoprint_octolapse.migration_version import NumberedVersion
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.log as log
 import math
@@ -224,7 +224,7 @@ class AutomaticConfiguration(Settings):
         }
 
     def suppress_updates(self, available_profile):
-        if LooseVersion(self.version) < LooseVersion(available_profile["version"]):
+        if NumberedVersion(self.version) < NumberedVersion(available_profile["version"]):
             self.suppress_update_notification_version = available_profile["version"]
 
     def try_convert_value(cls, destination, value, key):

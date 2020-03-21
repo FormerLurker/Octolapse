@@ -21,7 +21,7 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from __future__ import unicode_literals
-from distutils.version import LooseVersion
+from octoprint_octolapse.migration_version import NumberedVersion
 import requests
 import uuid
 import json
@@ -154,13 +154,13 @@ class ExternalSettings(object):
                     if (
                         updatable_profile["version"] is None or
                         (
-                            LooseVersion(str(available_profile["version"])) > LooseVersion(str(updatable_profile["version"])) and
+                            NumberedVersion(str(available_profile["version"])) > NumberedVersion(str(updatable_profile["version"])) and
                             (
                                 not updatable_profile["suppress_update_notification_version"] or
                                 (
                                     force_updates or ignore_suppression or
-                                    LooseVersion(str(available_profile["version"])) >
-                                    LooseVersion(str(updatable_profile["suppress_update_notification_version"]))
+                                    NumberedVersion(str(available_profile["version"])) >
+                                    NumberedVersion(str(updatable_profile["suppress_update_notification_version"]))
                                 )
                             )
                         )
@@ -219,11 +219,11 @@ class ExternalSettings(object):
         versions = ExternalSettings._get_versions()["versions"]
         if not versions:
             return None
-        versions.sort(key=LooseVersion)
+        versions.sort(key=NumberedVersion)
 
         settings_version = None
         for version in versions:
-            if LooseVersion(str(version)) >= LooseVersion(str(current_version)):
+            if NumberedVersion(str(version)) >= NumberedVersion(str(current_version)):
                 settings_version = version
                 break
 
