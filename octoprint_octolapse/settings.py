@@ -30,7 +30,7 @@ import tempfile
 import sys
 import re
 import errno
-from octoprint_octolapse.migration_version import NumberedVersion
+from octoprint_octolapse.octolapse_setuptools import NumberedVersion
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.log as log
 import math

@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from octoprint_octolapse.migration_version import NumberedVersion
+from octoprint_octolapse.octolapse_setuptools import NumberedVersion
 
 __metaclass__ = type
 

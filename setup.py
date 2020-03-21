@@ -7,10 +7,8 @@ from distutils.msvccompiler import MSVCCompiler
 from distutils.bcppcompiler import BCPPCompiler
 from distutils.cygwinccompiler import CygwinCCompiler
 from distutils.version import LooseVersion
-from octoprint_octolapse.migration_version import NumberedVersion
+from octoprint_octolapse.octolapse_setuptools import NumberedVersion
 import sys
-import sysconfig
-import os
 import versioneer
 ########################################################################################################################
 # The plugin's identifier, has to be unique
