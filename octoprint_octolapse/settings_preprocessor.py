@@ -1,7 +1,7 @@
 # coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2020  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -262,7 +262,7 @@ class GcodeSettingsProcessor(GcodeProcessor):
 
     def get_regex_definitions(self):
         raise NotImplementedError(u'You must override get_regex_definitions')
-    
+
     @staticmethod
     def get_settings_dictionary():
         raise NotImplementedError(u'You must override get_settings_dictionary')
