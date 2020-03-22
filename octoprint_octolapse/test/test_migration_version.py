@@ -29,6 +29,18 @@ class TestOctolapsePlugin(unittest.TestCase):
         assert (
             NumberedVersion('v0.4.0rc1') == NumberedVersion('0.4.0rc1')
         )
+        assert (
+            NumberedVersion('V0.4.0rc1') == NumberedVersion('0.4.0rc1')
+        )
+        assert (
+            NumberedVersion('0.4.0rc1') == NumberedVersion('v0.4.0rc1')
+        )
+        assert (
+            NumberedVersion('0.4.0rc1') == NumberedVersion('V0.4.0rc1')
+        )
+        assert not (
+            NumberedVersion('v0.4.0rc1') < NumberedVersion('0.4.0rc1')
+        )
 
         # make sure that rc is always greater than rcX.devX
         assert (
