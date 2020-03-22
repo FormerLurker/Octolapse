@@ -2321,7 +2321,7 @@ class OctolapsePlugin(
                 self.send_in_process_renderings_changed_message,
                 self.send_unfinished_renderings_loaded_message
             )
-
+            self._rendering_processor.daemon = True
             self._rendering_processor.start()
 
             # log the loaded state
