@@ -2481,10 +2481,10 @@ class OctolapseSettings(Settings):
         settings = json.loads(settings_text)
         # see if this is a structured import
         if "type" in settings:
-            if settings["version"] != plugin_version:
+            if NumberedVersion(settings["version"]).vstring != NumberedVersion(plugin_version).vstring:
                 raise Exception(
                     "Cannot import settings from an old version of Octolapse.  Current Version:{0}, Settings "
-                    "Version:{1} ".format(settings.version, plugin_version)
+                    "Version:{1} ".format(settings["version"], plugin_version)
                 )
             else:
                 self.profiles.import_profile(settings["type"], settings["profile"], update_existing=update_existing)
