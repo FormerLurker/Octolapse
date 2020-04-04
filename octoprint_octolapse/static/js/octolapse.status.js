@@ -604,7 +604,7 @@ $(function () {
                 self.current_camera_state_text("");
                 $fullscreenControl.hide();
                 // Set the error handler
-                var error_message = "No snapshots have been taken with with the current camera.  A preview of your" +
+                var error_message = "No snapshots have been taken with the current camera.  A preview of your" +
                     " timelapse will start to appear here as snapshots are taken by Octolapse.";
                 var on_snapshot_load_error = function(){
                     //console.error("An error occurred loading the newest image, reverting to previous image.");
