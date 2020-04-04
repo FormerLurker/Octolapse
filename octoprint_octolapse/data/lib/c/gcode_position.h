@@ -68,6 +68,7 @@ struct gcode_position_args {
 		default_extruder = 0;
 		zero_based_extruder = true;
 		std::vector<std::string> location_detection_commands; // Final list of location detection commands
+		set_num_extruders(num_extruders);
 	}
 	gcode_position_args(const gcode_position_args &pos); // Copy Constructor
 	~gcode_position_args()

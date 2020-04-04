@@ -120,10 +120,10 @@ gcode_position_args& gcode_position_args::operator=(const gcode_position_args& p
 	default_extruder = pos_args.default_extruder;
 	zero_based_extruder = pos_args.zero_based_extruder;
 	num_extruders = pos_args.num_extruders;
-	retraction_lengths = NULL;
-	z_lift_heights = NULL;
-	x_firmware_offsets = NULL;
-	y_firmware_offsets = NULL;
+	delete_retraction_lengths();
+	delete_x_firmware_offsets();
+	delete_y_firmware_offsets();
+	delete_z_lift_heights();
 	set_num_extruders(pos_args.num_extruders);
 	// copy extruder specific members
 	for(int index=0; index < pos_args.num_extruders; index++)
@@ -873,12 +873,44 @@ void gcode_position::process_g0_g1(position* pos, parsed_command& cmd)
 
 void gcode_position::process_g2(position* pos, parsed_command& cmd)
 {
-	// ToDo:  Fix G2
+	bool update_x = false;
+	bool update_y = false;
+	bool update_e = false;
+	bool update_f = false;
+	double x = 0;
+	double y = 0;
+	double e = 0;
+	double f = 0;
+	for (unsigned int index = 0; index < cmd.parameters.size(); index++)
+	{
+		const parsed_command_parameter p_cur_param = cmd.parameters[index];
+		if (p_cur_param.name == "X")
+		{
+			update_x = true;
+			x = p_cur_param.double_value;
+		}
+		else if (p_cur_param.name == "Y")
+		{
+			update_y = true;
+			y = p_cur_param.double_value;
+		}
+		else if (p_cur_param.name == "E")
+		{
+			update_e = true;
+			e = p_cur_param.double_value;
+		}
+		else if (p_cur_param.name == "F")
+		{
+			update_f = true;
+			f = p_cur_param.double_value;
+		}
+	}
+	update_position(pos, x, update_x, y, update_y, 0, false, e, update_e, f, update_f, false, true);
 }
 
 void gcode_position::process_g3(position* pos, parsed_command& cmd)
 {
-	// Todo: Fix G3
+	return process_g2(pos, cmd);
 }
 
 void gcode_position::process_g10(position* pos, parsed_command& cmd)
