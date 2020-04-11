@@ -1,5 +1,5 @@
 # coding=utf-8
-from distutils.core import Extension
+from setuptools import setup, Extension
 from distutils.command.build_ext import build_ext
 from distutils.ccompiler import CCompiler
 from distutils.unixccompiler import UnixCCompiler
@@ -201,9 +201,6 @@ additional_setup_parameters = {
 }
 
 ########################################################################################################################
-
-from setuptools import setup
-
 try:
     import octoprint_setuptools
 except:
