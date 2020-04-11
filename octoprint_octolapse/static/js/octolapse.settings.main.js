@@ -89,12 +89,11 @@ $(function () {
             self.snapshot_archive_directory(settings.snapshot_archive_directory);
             self.timelapse_directory(settings.timelapse_directory);
             self.temporary_directory(settings.temporary_directory);
-            self.octolapse_version(settings.version);
+
             self.test_mode_enabled(settings.test_mode_enabled);
-            if (settings.git_version !== undefined)
-            {
-                self.octolapse_git_version(settings.git_version);
-            }
+            self.octolapse_version(settings.version || settings.octolapse_version || null);
+            self.octolapse_git_version(settings.git_version || settings.octolapse_git_version || null);
+
             if (defaults)
                 self.defaults = settings.defaults
         };

@@ -495,7 +495,7 @@ class OctolapsePlugin(
             client_id = request_values["client_id"]
 
             # make sure to test the provided directories first
-            main_settings_test = MainSettings(None)
+            main_settings_test = MainSettings(__version__, __git_version__)
             main_settings_test.update(request_values)
             success, results = main_settings_test.test_directories(
                 self.get_plugin_data_folder(),
