@@ -75,7 +75,7 @@ $(function () {
                             hide: true,
                             addclass: "octolapse",
                             desktop: {
-                                desktop: true
+                                desktop: false
                             }
                         };
                         Octolapse.displayPopup(options);
@@ -91,7 +91,7 @@ $(function () {
                             hide: false,
                             addclass: "octolapse",
                             desktop: {
-                                desktop: true
+                                desktop: false
                             }
                         };
                         Octolapse.displayPopup(options);
@@ -166,7 +166,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopup(options);

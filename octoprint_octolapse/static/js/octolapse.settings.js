@@ -290,7 +290,7 @@ $(function () {
                                 hide: true,
                                 addclass: "octolapse",
                                 desktop: {
-                                    desktop: true
+                                    desktop: false
                                 }
                             };
                             Octolapse.displayPopup(options);
@@ -305,7 +305,7 @@ $(function () {
                                 hide: false,
                                 addclass: "octolapse",
                                 desktop: {
-                                    desktop: true
+                                    desktop: false
                                 }
                             };
                             Octolapse.displayPopup(options);
@@ -350,7 +350,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopup(options);
@@ -424,7 +424,7 @@ $(function () {
                             hide: true,
                             addclass: "octolapse",
                             desktop: {
-                                desktop: true
+                                desktop: false
                             }
                         };
                         Octolapse.displayPopupForKey(options, 'update-profile-from-server','update-profile-from-server');
@@ -444,7 +444,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopupForKey(options, 'update-profile-from-server','update-profile-from-server');
@@ -468,7 +468,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopupForKey(options, 'update-profile-from-server','update-profile-from-server');
@@ -510,7 +510,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     if (num_updated > 0) {
@@ -541,7 +541,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopupForKey(options, 'update-profile-from-server','update-profile-from-server');
@@ -581,7 +581,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopupForKey(options, 'updates-suppressed','updates-suppressed');
@@ -597,7 +597,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopupForKey(options, 'updates-suppressed','updates-suppressed');
@@ -636,7 +636,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopup(options);

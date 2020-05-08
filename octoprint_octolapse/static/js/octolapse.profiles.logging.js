@@ -148,7 +148,7 @@ $(function () {
                                 hide: true,
                                 addclass: "octolapse",
                                 desktop: {
-                                    desktop: true
+                                    desktop: false
                                 }
                             };
                             Octolapse.displayPopupForKey(options, "log_file_cleared", "log_file_cleared");
@@ -162,7 +162,7 @@ $(function () {
                                 hide: false,
                                 addclass: "octolapse",
                                 desktop: {
-                                    desktop: true
+                                    desktop: false
                                 }
                             };
                             Octolapse.displayPopupForKey(options, "log_file_cleared", "log_file_cleared");

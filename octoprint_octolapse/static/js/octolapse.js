@@ -727,7 +727,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopup(options);
@@ -1521,7 +1521,7 @@ $(function () {
                             hide: false,
                             addclass: "octolapse",
                             desktop: {
-                                desktop: true
+                                desktop: false
                             }
                         };
                         Octolapse.displayPopup(options);
@@ -1536,7 +1536,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopup(options);
@@ -1570,7 +1570,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopup(options);
@@ -1642,7 +1642,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.Help.showPopupForErrors(
@@ -1667,7 +1667,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopupForKey(msg_options, "new-profiles-available", "new-profiles-available");
@@ -1720,7 +1720,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopup(popup_options);
@@ -1736,7 +1736,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopup(popupErrorOptions);
@@ -1753,7 +1753,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.Help.showPopupForErrors(printStartPopupoptions, "print-start-error", ["print-start-error"], data["errors"]);
@@ -1770,7 +1770,7 @@ $(function () {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.Help.showPopupForErrors(printStartPopupoptions, "print-start-error", ["print-start-error"], data["errors"]);
@@ -1916,7 +1916,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopupForKey(options,"render_message", ["render_message"]);*/
@@ -1932,7 +1932,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopup(renderFailedPopupOptions);
@@ -1948,7 +1948,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopup(postRenderFailedPopupOptions);
@@ -1970,7 +1970,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopupForKey(options,"render_complete",["render_complete", "render_message"]);*/
@@ -1990,7 +1990,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopup(timelapseStoppingPopupOptions);
@@ -2007,7 +2007,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopup(timelapseStoppedPopupOptions);
@@ -2021,7 +2021,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopupForKey(disabledButRunningPopupOptions, "settings-change-not-applied", ["settings-change-not-applied"]);
@@ -2035,7 +2035,7 @@ $(function () {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopupForKey(testModeChangedWhileRunningPopupOptions, "settings-change-not-applied", ["settings-change-not-applied"]);

@@ -196,7 +196,7 @@ $(function () {
                             hide: false,
                             addclass: "octolapse",
                             desktop: {
-                                desktop: true
+                                desktop: false
                             }
                         };
                         Octolapse.Help.showPopupForErrors(

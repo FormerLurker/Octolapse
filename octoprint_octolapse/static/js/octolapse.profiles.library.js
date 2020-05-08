@@ -470,7 +470,7 @@ $(function() {
                             hide: false,
                             addclass: "octolapse",
                             desktop: {
-                                desktop: true
+                                desktop: false
                             }
                         };
                         Octolapse.displayPopupForKey(
@@ -503,7 +503,7 @@ $(function() {
                         hide: true,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopupForKey(
@@ -523,7 +523,7 @@ $(function() {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopupForKey(
