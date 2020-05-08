@@ -566,12 +566,19 @@ class Timelapse(object):
             timelapse_stopped_callback_thread.start()
         return True
 
-    def release_job_on_hold_lock(self, force=False):
+    def release_job_on_hold_lock(self, force=False, reset=False, parsed_command=None):
+        if parsed_command is not None:
+            self._octoprint_printer.commands([parsed_command.gcode], tags={"before_release_job_lock"})
+
         if self.job_on_hold:
             if force or ( self._stabilization_signal.is_set() and self._position_signal.is_set()):
                 logger.debug("Releasing job-on-hold lock.")
                 self._octoprint_printer.set_job_on_hold(False)
                 self.job_on_hold = False
+        if reset:
+            self._reset()
+
+
 
     def on_print_failed(self):
         if self._state != TimelapseState.Idle:
@@ -657,7 +664,7 @@ class Timelapse(object):
         return self._snapshot_task_queue.qsize() > 0
 
     def on_print_start(self, parsed_command):
-        return self._print_start_callback(parsed_command)
+        self._print_start_callback(parsed_command)
 
     def on_print_start_failed(self, message):
         self._print_start_failed_callback(message)
@@ -896,6 +903,14 @@ class Timelapse(object):
                 ) or {'script:beforePrintStarted', 'trigger:comm.send_gcode_script'} <= tags
             ) and self._octoprint_printer.is_printing()
         ):
+            if command_string.startswith("M23"):
+                # SD print, can't do anything about it.  Send a warning
+                error = error_messages.get_error(["init", "cant_print_from_sd"])
+                logger.info(error["description"])
+                self.on_print_start_failed([error])
+                # continue with the print since we can't stop it
+                return None
+
             if self._octoprint_printer.set_job_on_hold(True):
                 logger.debug("Setting job-on-hold lock.")
                 self.job_on_hold = True

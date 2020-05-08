@@ -2339,20 +2339,6 @@ class OctolapsePlugin(
             # If we haven't loaded our settings yet, return.
             if self._octolapse_settings is None or self._timelapse is None or self._timelapse.get_current_state() == TimelapseState.Idle:
                 return
-
-            if event == Events.PRINT_STARTED:
-                # warn and cancel print if not printing locally
-                if not self._octolapse_settings.main_settings.is_octolapse_enabled:
-                    return
-
-                if (
-                    payload["origin"] != "local"
-                ):
-                    self._timelapse.end_timelapse("FAILED")
-                    error = error_messages.get_error(["init", "cant_print_from_sd"])
-                    logger.info(error["description"])
-                    self.on_print_start_failed([error])
-                    return
             if event == Events.PRINTER_STATE_CHANGED:
                 self.send_state_changed_message({"status": self.get_status_dict()})
             elif event == Events.CONNECTIVITY_CHANGED:
@@ -2396,7 +2382,6 @@ class OctolapsePlugin(
         self._timelapse.on_print_paused()
 
     def on_print_start(self, parsed_command):
-        """Return True in order to release the printer job lock, False keeps it locked."""
         logger.info(
             "Print start detected, attempting to start timelapse."
         )
@@ -2404,7 +2389,7 @@ class OctolapsePlugin(
         try:
             results = self.test_timelapse_config()
             if not results["success"]:
-                self.on_print_start_failed(results["error"])
+                self.on_print_start_failed(results["error"], parsed_command=parsed_command)
                 return
 
             # get all of the settings we need
@@ -2413,11 +2398,11 @@ class OctolapsePlugin(
                 errors = timelapse_settings["errors"]
                 if len(errors) == 0:
                     errors = timelapse_settings["warnings"]
-                self.on_print_start_failed(errors)
+                self.on_print_start_failed(errors, parsed_command=parsed_command)
                 return
 
             if len(timelapse_settings["warnings"]) > 0:
-                self.send_plugin_errors("warning", timelapse_settings["warnings"])
+                self.send_plugin_errors("warning", timelapse_settings["warnings"], parsed_command=parsed_command)
 
             settings_clone = timelapse_settings["settings"]
             current_trigger_clone = settings_clone.profiles.current_trigger()
@@ -2428,13 +2413,15 @@ class OctolapsePlugin(
                     timelapse_settings, parsed_command
                 )
                 # exit and allow the timelapse pre-processing routine to complete.
-                return
-            if self.start_timelapse(timelapse_settings):
-                self._timelapse.release_job_on_hold_lock()
+            elif self.start_timelapse(timelapse_settings):
+                self._timelapse.release_job_on_hold_lock(parsed_command=parsed_command)
+
         except Exception as e:
             error = error_messages.get_error(["init", "timelapse_start_exception"])
             logger.exception("Unable to start the timelapse.")
-            self.on_print_start_failed([error])
+            self.on_print_start_failed([error], parsed_command=parsed_command)
+
+
 
     def test_timelapse_config(self):
         if not self._octolapse_settings.main_settings.is_octolapse_enabled:
@@ -2792,18 +2779,34 @@ class OctolapsePlugin(
         self.on_timelapse_start()
         return True
 
-    def on_print_start_failed(self, errors):
+    def on_print_start_failed(self, errors, parsed_command=None):
         if not isinstance(errors, list):
             errors = [errors]
 
-        if self._octolapse_settings.main_settings.cancel_print_on_startup_error:
+        cancel_print = self._octolapse_settings.main_settings.cancel_print_on_startup_error
+        is_warning = not cancel_print
+
+        if len(errors) == 1:
+            error = errors[0]
+            if "options" in error:
+                options = error["options"]
+                if "is_warning" in options:
+                    is_warning = options["is_warning"]
+                if "cancel_print" in options:
+                    cancel_print = options["cancel_print"]
+
+        if cancel_print:
+            parsed_command = None  # don't send any commands, we've cancelled.
             self._printer.cancel_print(tags={'octolapse-startup-failed'})
-            self.send_plugin_errors("print-start-error", errors=errors)
-        else:
+
+        if is_warning:
             self.send_plugin_errors("print-start-warning", errors=errors)
+        else:
+            self.send_plugin_errors("print-start-error", errors=errors)
 
         # see if there is a job lock, if you find one release it, and don't wait for signals.
-        self._timelapse.release_job_on_hold_lock(True)
+        self._timelapse.release_job_on_hold_lock(force=True, reset=True, parsed_command=parsed_command)
+
 
     def on_preprocessing_failed(self, errors):
         message_type = "gcode-preprocessing-failed"
@@ -2856,6 +2859,7 @@ class OctolapsePlugin(
             self.snapshot_plan_preview_close_time = 0
             self.saved_preprocessing_quality_issues = ""
             self.saved_missed_snapshots = 0
+            self._timelapse.release_job_on_hold_lock(reset=True)
 
     def pre_processing_cancelled(self):
         # signal complete to the UI (will close the progress popup
@@ -2870,7 +2874,7 @@ class OctolapsePlugin(
                 errors=preprocessing_issues
             )
         # cancel the print
-        self._printer.cancel_print(tags={'octolapse-preprocessing-cancelled'})
+        self._printer.cancel_print(tags={'preprocessing-cancelled'})
         # inform the timelapse object that preprocessing has failed
         self._timelapse.preprocessing_finished(None)
         # close the UI progress popup

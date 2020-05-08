@@ -137,9 +137,13 @@ _octolapse_errors = {
         },
         'cant_print_from_sd': {
             "name": "Can't start from SD",
-            "description": "Octolapse cannot be used when printing from the SD card.  Disable Octolapse to print from "
-                           "SD.",
-            'help_link': "error_help_init_cant_print_from_sd.md"
+            "description": "Octolapse cannot be used when printing from the SD card.  Your print will continue.  "
+                           "Disable the plugin from within the Octolapse tab to prevent this message from displaying.",
+            'help_link': "error_help_init_cant_print_from_sd.md",
+            'options': {
+                'is_warning': True,
+                'cancel_print': False
+            }
         },
         'octolapse_is_disabled': {
             "name": "Octolapse is Disabled",
