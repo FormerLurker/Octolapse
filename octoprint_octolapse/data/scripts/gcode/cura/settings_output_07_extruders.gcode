@@ -5,7 +5,6 @@
 ; --- Global Settings
 ; layer_height = {layer_height}
 ; smooth_spiralized_contours = {smooth_spiralized_contours}
-; magic_mesh_surface_mode = {magic_mesh_surface_mode}
 ; machine_extruder_count = {machine_extruder_count}
 ; --- Single Extruder Settings
 ; max_feedrate_z_override = {max_feedrate_z_override}

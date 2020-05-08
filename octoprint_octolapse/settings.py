@@ -602,11 +602,6 @@ class PrinterProfile(AutomaticConfigurationProfile):
                 dict(value='inches', name='Inches'),
                 dict(value='millimeters', name='Millimeters')
             ],
-            'cura_surface_mode_options': [
-                dict(value="normal", name='Normal'),
-                dict(value="surface", name='Surface'),
-                dict(value="both", name='Both'),
-            ],
             'cura_combing_mode_options': [
                 dict(value="off", name='Off'),
                 dict(value="all", name='All'),
@@ -2739,7 +2734,6 @@ class CuraSettings(SlicerSettings):
         self.axis_speed_display_settings = 'mm-sec'
         self.layer_height = None
         self.smooth_spiralized_contours = False
-        self.magic_mesh_surface_mode = None
         self.machine_extruder_count = 1
 
     def get_extruders(self, slicer_type):
@@ -2755,8 +2749,9 @@ class CuraSettings(SlicerSettings):
         settings = OctolapseGcodeSettings()
         settings.layer_height = self.layer_height
         settings.vase_mode = False
-        if self.smooth_spiralized_contours is not None and self.magic_mesh_surface_mode is not None:
-            settings.vase_mode = self.smooth_spiralized_contours and self.magic_mesh_surface_mode == "surface"
+        if self.smooth_spiralized_contours is not None:
+            # we might not need to include a check for surface mode
+            settings.vase_mode = self.smooth_spiralized_contours
         # Get All Extruder Settings
         settings.extruders = self.get_extruders(slicer_type)
         return settings

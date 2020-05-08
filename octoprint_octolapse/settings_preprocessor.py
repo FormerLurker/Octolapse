@@ -1257,7 +1257,6 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             u'version': SettingsDefinition(u'version', CuraParsingFunctions.strip_string, [u'octolapse_setting']),
             u'layer_height': SettingsDefinition(u'layer_height', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
             u'smooth_spiralized_contours': SettingsDefinition(u'smooth_spiralized_contours', CuraParsingFunctions.parse_bool, [u'octolapse_setting']),
-            u'magic_mesh_surface_mode': SettingsDefinition(u'magic_mesh_surface_mode', CuraParsingFunctions.strip_string, [u'octolapse_setting']),
             u'machine_extruder_count': SettingsDefinition(u'machine_extruder_count', CuraParsingFunctions.parse_int, [u'octolapse_setting']),
             # Extruder Specific Settings
             # speed_z_hop - Cura 5.1-
@@ -1352,6 +1351,8 @@ class CuraSettingsProcessor(GcodeSettingsProcessor):
             u'speed_travel_7': SettingsDefinition(u'speed_travel_7', CuraParsingFunctions.parse_float, [u'octolapse_setting']),
 
             # End Octolapse Settings - The rest is included in case it is ever helpful for Octolapse or for other projects!
+            u'magic_mesh_surface_mode': SettingsDefinition(u'magic_mesh_surface_mode',
+                                                           CuraParsingFunctions.strip_string, [u'misc']),
             u'speed_infill': SettingsDefinition(u'speed_infill', CuraParsingFunctions.parse_float, [u'misc']),
             u'skirt_brim_speed': SettingsDefinition(u'skirt_brim_speed', CuraParsingFunctions.parse_float, [u'misc']),
 
