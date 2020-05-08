@@ -887,8 +887,13 @@ class Timelapse(object):
             self._state == TimelapseState.Idle and
             self.get_current_octolapse_settings().main_settings.is_octolapse_enabled and
             (
-                {'trigger:comm.start_print', 'trigger:comm.reset_line_numbers'} <= tags or
-                {'script:beforePrintStarted', 'trigger:comm.send_gcode_script'} <= tags
+                (
+                    'trigger:comm.start_print' in tags and
+                    (
+                        'trigger:comm.reset_line_numbers' in tags or
+                        command_string.startswith("M23")
+                    )
+                ) or {'script:beforePrintStarted', 'trigger:comm.send_gcode_script'} <= tags
             ) and self._octoprint_printer.is_printing()
         ):
             if self._octoprint_printer.set_job_on_hold(True):
@@ -905,10 +910,12 @@ class Timelapse(object):
                 try:
                     parsed_command = GcodeProcessor.parse(command_string)
                 except ValueError as e:
+                    self._state = TimelapseState.Idle
                     logger.exception("Unable to parse the command string.")
                     # if we don't return NONE here, we will have problems with the print!
                     return None
                 except Exception as e:
+                    self._state = TimelapseState.Idle
                     logger.exception("An unexpected exception occurred while trying to parse the command string.")
                     # TODO:  REMOVE THIS BECAUSE IT'S TOO BROAD!
                     raise e

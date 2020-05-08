@@ -1433,7 +1433,7 @@ class OctolapsePlugin(
             self.preprocessing_job_guid = None
             self.cancel_preprocessing()
             if self._printer.is_printing():
-                self._printer.cancel_print(tags={'startup-failed'})
+                self._printer.cancel_print(tags={'octolapse-startup-failed'})
             self.send_snapshot_preview_complete_message()
             return jsonify({
                 'success': True
@@ -2004,7 +2004,7 @@ class OctolapsePlugin(
                     snapshot_action = urlparse(snapshot_url).query
                     snapshot_request_template = "{camera_address}?" + snapshot_action
                     logger.info("Setting octolapse camera snapshot template to %s.",
-                                snapshot_request_template.replace('{', '{{').replace('}', '}}'))
+                                snapshot_request_template.replace('{', '{{').replace('}', '}}'))  # but why???
                     self._octolapse_settings.profiles.defaults.camera.webcam_settings.address = camera_address
                     self._octolapse_settings.profiles.defaults.camera.webcam_settings.snapshot_request_template = snapshot_request_template
                     if apply_to_current_profile:
@@ -2795,14 +2795,15 @@ class OctolapsePlugin(
     def on_print_start_failed(self, errors):
         if not isinstance(errors, list):
             errors = [errors]
-        # see if there is a job lock, if you find one release it, and don't wait for signals.
-        self._timelapse.release_job_on_hold_lock(True)
 
         if self._octolapse_settings.main_settings.cancel_print_on_startup_error:
-            self._printer.cancel_print(tags={'startup-failed'})
+            self._printer.cancel_print(tags={'octolapse-startup-failed'})
             self.send_plugin_errors("print-start-error", errors=errors)
         else:
             self.send_plugin_errors("print-start-warning", errors=errors)
+
+        # see if there is a job lock, if you find one release it, and don't wait for signals.
+        self._timelapse.release_job_on_hold_lock(True)
 
     def on_preprocessing_failed(self, errors):
         message_type = "gcode-preprocessing-failed"
@@ -3712,11 +3713,6 @@ class OctolapsePlugin(
                 )
             )
         ]
-
-from ._version import get_versions
-__version__ = get_versions()['version']
-__git_version__ = get_versions()['full-revisionid']
-del get_versions
 
 __plugin_name__ = "Octolapse"
 __plugin_pythoncompat__ = ">=2.7,<4"
