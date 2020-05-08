@@ -73,6 +73,8 @@ from octoprint_octolapse.stabilization_preprocessing import StabilizationPreproc
 from octoprint_octolapse.messenger_worker import MessengerWorker, PluginMessage
 from octoprint_octolapse.settings_external import ExternalSettings, ExternalSettingsError
 from octoprint_octolapse.render import RenderError, RenderingProcessor, RenderingCallbackArgs, RenderJobInfo
+#import octoprint_octolapse_setuptools as octoprint_octolapse_setuptools
+#import octoprint_octolapse_setuptools.github_release as github_release
 
 try:
     # noinspection PyCompatibility
@@ -3606,8 +3608,32 @@ class OctolapsePlugin(
             less=["less/octolapse.less"]
         )
 
-    # ~~ software update hook
-    def get_update_information(self):
+    octolapse_update_info = dict(
+        displayName="Octolapse",
+        # version check: github repository
+        type="github_release",
+        #type="python_checker",
+        user="FormerLurker",
+        repo="Octolapse",
+        pip="https://github.com/FormerLurker/Octolapse/archive/{target_version}.zip",
+
+        stable_branch=dict(branch="master", commitish=["master"], name="Stable"),
+        release_compare='custom',
+        prerelease_branches=[
+            dict(
+                branch="rc/maintenance",
+                commitish=["master", "rc/maintenance"],  # maintenance RCs
+                name="Maintenance RCs"
+            ),
+            dict(
+                branch="rc/devel",
+                commitish=["master", "rc/maintenance", "rc/devel"],  # devel & maintenance RCs
+                name="Devel RCs"
+            )
+        ],
+    )
+
+    def get_release_info(self):
         # get the checkout type from the software updater
         prerelease_channel = None
         is_prerelease = False
@@ -3615,7 +3641,7 @@ class OctolapsePlugin(
         # is the software update set to prerelease?
 
         if self._settings.global_get(["plugins", "softwareupdate", "checks", "octoprint", "prerelease"]):
-            # If it's a prerelease, look at the channel and configure the proper branch for Octolapse
+            # If it's a prerelease, look at the channel and configure the proper branch for Arc Welder
             prerelease_channel = self._settings.global_get(
                 ["plugins", "softwareupdate", "checks", "octoprint", "prerelease_channel"]
             )
@@ -3625,39 +3651,36 @@ class OctolapsePlugin(
             elif prerelease_channel == "rc/devel":
                 is_prerelease = True
                 prerelease_channel = "rc/devel"
+        OctolapsePlugin.octolapse_update_info["displayVersion"] = self._plugin_version
+        OctolapsePlugin.octolapse_update_info["current"] = self._plugin_version
 
-        octolapse_info = dict(
-            displayName="Octolapse",
-            displayVersion=self._plugin_version,
-            # version check: github repository
-            type="github_release",
-            user="FormerLurker",
-            repo="Octolapse",
-            current=self._plugin_version,
-            prerelease=is_prerelease,
-            pip="https://github.com/FormerLurker/Octolapse/archive/{target_version}.zip",
-            stable_branch=dict(branch="master", commitish=["master"], name="Stable"),
-            release_compare='semantic_version',
-            prerelease_branches=[
-                dict(
-                    branch="rc/maintenance",
-                    commitish=["rc/maintenance"],  # maintenance RCs
-                    name="Maintenance RCs"
-                ),
-                dict(
-                    branch="rc/devel",
-                    commitish=["rc/maintenance", "rc/devel"],  # devel & maintenance RCs
-                    name="Devel RCs"
-                )
-            ],
-        )
-
+        OctolapsePlugin.octolapse_update_info["prerelease"] = is_prerelease
+        #OctolapsePlugin.octolapse_update_info["python_checker"] = self
         if prerelease_channel is not None:
-            octolapse_info["prerelease_channel"] = prerelease_channel
-        # return the update config
+            OctolapsePlugin.octolapse_update_info["prerelease_channel"] = prerelease_channel
+
         return dict(
-            octolapse=octolapse_info
+            octolapse=OctolapsePlugin.octolapse_update_info
         )
+
+    # ~~ software update hook
+    def get_update_information(self):
+        return self.get_release_info()
+
+    # def get_latest(self, target, *args, **kwargs):
+    #     # Custom software update 'get_latest' function.  Builds the check data based on the
+    #     # current software update plugin settings and then calls the github_release version checker
+    #     # that implements a custom compare function.
+    #     online = False
+    #     if "online" in kwargs:
+    #         online = kwargs["online"]
+    #     latest = github_release.get_latest(
+    #         target,
+    #         self.get_release_info()["octolapse"],
+    #         custom_compare=octoprint_octolapse_setuptools.custom_version_compare,
+    #         online=online
+    #     )
+    #     return latest
 
     # noinspection PyUnusedLocal
     def get_timelapse_extensions(self, *args, **kwargs):

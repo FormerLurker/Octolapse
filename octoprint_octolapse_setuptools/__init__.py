@@ -255,3 +255,7 @@ class NumberedVersion(version.LooseVersion):
         if self.is_dirty and not other.is_dirty:
             return True
         return False
+
+
+def custom_version_compare(a,b):
+    return NumberedVersion(a) >= NumberedVersion(b)
