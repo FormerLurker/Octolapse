@@ -32,12 +32,19 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.plan_count = ko.observable(null);
             self.lines_remaining = ko.observable(null);
             self.lines_total = ko.observable(null);
-            self.x_initial = ko.observable(null).extend({numeric: 2});
-            self.y_initial = ko.observable(null).extend({numeric: 2});
-            self.z_initial = ko.observable(null).extend({numeric: 2});
-            self.x_return = ko.observable(null).extend({numeric: 2});
-            self.y_return = ko.observable(null).extend({numeric: 2});
-            self.z_return = ko.observable(null).extend({numeric: 2});
+            self.x_initial = ko.observable(null);
+            self.y_initial = ko.observable(null);
+            self.z_initial = ko.observable(null);
+            self.x_return = ko.observable(null);
+            self.y_return = ko.observable(null);
+            self.z_return = ko.observable(null);
+
+            self.format_coordinates = function(val)
+            {
+                if (val) return val.toFixed(2);
+                return "";
+            };
+
             self.multi_extruder = ko.observable(false);
             self.current_tool = ko.observable(0);
             self.progress_percent = ko.observable(null).extend({numeric: 2});
@@ -644,20 +651,28 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 return (max - min) - coord;
             };
 
-            self.normalize_coordinate = function(coord, min)
+            self.normalize_coordinate = function(coord, min, max)
             {
-                return coord - min;
+                if (self.printer_volume.origin_type == 'center')
+                {
+                    return coord + (max - min) / 2.0;
+                }
+                else
+                {
+                    return coord - min;
+                }
+
             };
 
             self.to_canvas_x = function(x)
             {
-                x = self.normalize_coordinate(x, self.printer_volume.min_x);
+                x = self.normalize_coordinate(x, self.printer_volume.min_x, self.printer_volume.max_x);
                 return x *self.x_canvas_scale + self.canvas_border_size[0];
             };
 
             self.to_canvas_y = function(y)
             {
-                y = self.normalize_coordinate(y, self.printer_volume.min_y);
+                y = self.normalize_coordinate(y, self.printer_volume.min_y, self.printer_volume.max_y);
                 // Y coordinates are flipped on the camera when compared to the standard 3d printer
                 // coordinates, so invert the coordinate
                 y = self.invert_coordinate(y, self.printer_volume.min_y, self.printer_volume.max_y);
@@ -667,7 +682,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
 
             self.to_canvas_z = function(z)
             {
-                z = self.normalize_coordinate(z, self.printer_volume.min_z);
+                // This isn't right, z coordinates always start at 0!
+                z = self.normalize_coordinate(z, 0, 0);
                 return z *self.z_canvas_scale + self.canvas_border_size[2];
             };
 

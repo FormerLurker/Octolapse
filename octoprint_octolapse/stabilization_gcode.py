@@ -469,32 +469,39 @@ class SnapshotGcodeGenerator(object):
 
     def get_bed_relative_coordinate(self, axis, coord):
         rel_coordinate = None
+        volume = self.overridable_printer_profile_settings["volume"]
         if axis == "x":
-            rel_coordinate = self.get_bed_relative_x(coord)
+            rel_coordinate = self.get_bed_relative_x(coord, volume)
         elif axis == "y":
-            rel_coordinate = self.get_bed_relative_y(coord)
+            rel_coordinate = self.get_bed_relative_y(coord, volume)
         elif axis == "Z":
-            rel_coordinate = self.get_bed_relative_z(coord)
+            rel_coordinate = self.get_bed_relative_z(coord, volume)
 
         return rel_coordinate
 
-    def get_bed_relative_x(self, percent):
-        min_value = self.overridable_printer_profile_settings["volume"]["min_x"]
-        max_value = self.overridable_printer_profile_settings["volume"]["max_x"]
-        return self.get_relative_coordinate(percent, min_value, max_value)
+    def get_bed_relative_x(self, percent, volume):
+        min_value = volume["min_x"]
+        max_value = volume["max_x"]
+        origin_type = volume["origin_type"]
+        return self.get_relative_coordinate(percent, min_value, max_value, origin_type)
 
-    def get_bed_relative_y(self, percent):
-        min_value = self.overridable_printer_profile_settings["volume"]["min_y"]
-        max_value = self.overridable_printer_profile_settings["volume"]["max_y"]
-        return self.get_relative_coordinate(percent, min_value, max_value)
+    def get_bed_relative_y(self, percent, volume):
+        min_value = volume["min_y"]
+        max_value = volume["max_y"]
+        origin_type = volume["origin_type"]
+        return self.get_relative_coordinate(percent, min_value, max_value, origin_type)
 
-    def get_bed_relative_z(self, percent):
-        min_value = self.overridable_printer_profile_settings["volume"]["min_z"]
-        max_value = self.overridable_printer_profile_settings["volume"]["max_z"]
-        return self.get_relative_coordinate(percent, min_value, max_value)
+    def get_bed_relative_z(self, percent, volume):
+        min_value = volume["min_z"]
+        max_value = volume["max_z"]
+        origin_type = volume["origin_type"]
+        return self.get_relative_coordinate(percent, min_value, max_value, origin_type)
 
     @staticmethod
-    def get_relative_coordinate(percent, min_value, max_value):
+    def get_relative_coordinate(percent, min_value, max_value, origin_type):
+        if origin_type == PrinterProfile.origin_type_center:
+            return ((float(max_value) - float(min_value)) * (percent / 100.0)) - \
+                   (float(max_value) - float(min_value))/2.0
         return ((float(max_value) - float(min_value)) * (percent / 100.0)) + float(min_value)
 
     def set_e_to_relative(self, gcode_type):

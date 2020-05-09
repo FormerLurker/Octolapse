@@ -83,7 +83,7 @@
                     Initial:&nbsp;
                 </div>
                 <div class="span9 text-left no-min-height">
-                    <strong>X</strong><span data-bind="text: SnapshotPlanState.x_initial" />,&nbsp;<strong>Y</strong><span data-bind="text: SnapshotPlanState.y_initial" />,&nbsp;<strong>Z</strong><span data-bind="text: SnapshotPlanState.z_initial" />
+                    <strong>X</strong><span data-bind="text: SnapshotPlanState.format_coordinates(SnapshotPlanState.x_initial())" />,&nbsp;<strong>Y</strong><span data-bind="text: SnapshotPlanState.format_coordinates(SnapshotPlanState.y_initial())" />,&nbsp;<strong>Z</strong><span data-bind="text: SnapshotPlanState.format_coordinates(SnapshotPlanState.z_initial())" />
                 </div>
             </div>
             <div class="ol-compact-row">
@@ -101,7 +101,7 @@
                     Return:&nbsp;
                 </div>
                 <div class="span9 text-left no-min-height">
-                    <strong>X</strong><span data-bind="text: SnapshotPlanState.x_return" />,&nbsp;<strong>Y</strong><span data-bind="text: SnapshotPlanState.y_return" />,&nbsp;<strong>Z</strong><span data-bind="text: SnapshotPlanState.z_return" />
+                    <strong>X</strong><span data-bind="text: SnapshotPlanState.format_coordinates(SnapshotPlanState.x_return())" />,&nbsp;<strong>Y</strong><span data-bind="text: SnapshotPlanState.format_coordinates(SnapshotPlanState.y_return())" />,&nbsp;<strong>Z</strong><span data-bind="text: SnapshotPlanState.format_coordinates(SnapshotPlanState.z_return())" />
                 </div>
             </div>
             <div class="ol-compact-row" data-bind="visible: SnapshotPlanState.multi_extruder">

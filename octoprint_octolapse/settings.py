@@ -441,6 +441,7 @@ class PrinterProfile(AutomaticConfigurationProfile):
         settings_dict = {}
         volume_dict = {}
         volume_dict["bed_type"] = self.bed_type
+        volume_dict["origin_type"] = self.origin_type
         if self.custom_bounding_box:
             # set the bounds to the custom box
             volume_dict["min_x"] = float(self.min_x)
@@ -501,6 +502,8 @@ class PrinterProfile(AutomaticConfigurationProfile):
             volume_dict["bed_type"] = "circular"
         else:
             volume_dict["bed_type"] = "rectangular"
+
+        volume_dict["origin_type"] = volume["origin"]
 
         if custom_box:
             # set the bounds to the custom box
