@@ -235,10 +235,10 @@
                         <span data-bind="attr: {title: (!Octolapse.Globals.main_settings.show_printer_state_changes() ? 'Enable the info panel' : (!is_timelapse_active() ? 'The info panel will display when a timelapse is active.' : 'Disable the info panel') )}">
                             <input type="checkbox" id="octolapse_show_printer_state_changes" data-bind="checked: Octolapse.Globals.main_settings.show_printer_state_changes(), click: function() {toggleInfoPanel(Octolapse.Globals.main_settings.show_printer_state_changes, 'show_printer_state_changes');}" style="display:none;">
                             <label for="octolapse_show_printer_state_changes">
-                                <span>Position State</span><br />
+                                <span>Printer State</span><br />
                                 <i class="fa fa-lg fa-toggle-off" data-bind="css: {'fa-toggle-on': Octolapse.Globals.main_settings.show_printer_state_changes, 'fa-toggle-off': !Octolapse.Globals.main_settings.show_printer_state_changes()}"></i>
                                 <span data-bind="text: (Octolapse.Globals.main_settings.show_printer_state_changes() ? 'Enabled' : 'Disabled')"></span>
-                                <a class="octolapse_help" data-help-url="main_settings.show_printer_state_changes.md" data-help-title="Show Position State Changes" />
+                                <a class="octolapse_help" data-help-url="main_settings.show_printer_state_changes.md" data-help-title="Show Printer State Changes" />
                             </label>
                         </span>
                     </div>

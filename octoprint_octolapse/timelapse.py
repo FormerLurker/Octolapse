@@ -571,14 +571,16 @@ class Timelapse(object):
             self._octoprint_printer.commands([parsed_command.gcode], tags={"before_release_job_lock"})
 
         if self.job_on_hold:
-            if force or ( self._stabilization_signal.is_set() and self._position_signal.is_set()):
+            if force or (self._stabilization_signal.is_set() and self._position_signal.is_set()):
                 logger.debug("Releasing job-on-hold lock.")
-                self._octoprint_printer.set_job_on_hold(False)
+                if self._octoprint_printer.is_operational():
+                    try:
+                         self._octoprint_printer.set_job_on_hold(False)
+                    except RuntimeError as e:
+                        logger.exception("Unable to release job lock.  It's likely that the printer was disconnected.")
                 self.job_on_hold = False
         if reset:
             self._reset()
-
-
 
     def on_print_failed(self):
         if self._state != TimelapseState.Idle:
@@ -594,7 +596,6 @@ class Timelapse(object):
 
     def on_print_cancelling(self):
         self._state = TimelapseState.Cancelling
-        self.release_job_on_hold_lock()
 
     def on_print_canceled(self):
         if self._state != TimelapseState.Idle:
@@ -610,18 +611,12 @@ class Timelapse(object):
     def end_timelapse(self, print_status):
         self._print_end_status = print_status
         try:
-            if self._current_job_info is None or self._current_job_info.PrintStartTime is None:
-                self._reset()
-            elif self._state in [
-                TimelapseState.WaitingForTrigger, TimelapseState.WaitingToRender, TimelapseState.WaitingToEndTimelapse,
-                TimelapseState.Cancelling
-            ]:
-                self._render_timelapse(self._print_end_status)
-                self._reset()
-
             if self._state != TimelapseState.Idle:
-                self._state = TimelapseState.WaitingToEndTimelapse
-
+                # See if there are enough snapshots to start renderings
+                snapshot_count, error_count = self.get_snapshot_count()
+                if snapshot_count > 1:
+                    self._render_timelapse(self._print_end_status)
+                self._reset()
         except Exception as e:
             logger.exception("Failed to end the timelapse")
 
@@ -955,7 +950,7 @@ class Timelapse(object):
     def preprocessing_finished(self, parsed_command):
         if parsed_command is not None:
             self.send_snapshot_gcode_array([parsed_command.gcode], {'pre-processing-end'})
-        self._octoprint_printer.set_job_on_hold(False)
+        self.release_job_on_hold_lock()
         logger.debug("Releasing job-on-hold lock.")
         self.job_on_hold = False
 

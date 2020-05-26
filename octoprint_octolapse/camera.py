@@ -451,7 +451,7 @@ class CameraControl(object):
                 raise CameraError("mjpg_streamer_control_error", message)
             if r.status_code != requests.codes.ok:
                 message = "Status code received ({0}) was not OK.  Double check your webcam 'Base Addresss' address and " \
-                          "your 'Snapshot Address Template'.  Or, disable the 'Enable And Apply Preferences at Startup' " \
+                          "your 'Snapshot Address'.  Or, disable the 'Enable And Apply Preferences at Startup' " \
                           "and 'Enable And Apply Preferences Before Print' options for the {1} camera " \
                           "profile and try again.".format(r.status_code, camera_profile.name)
                 logger.error(message)
@@ -518,7 +518,7 @@ class CameraControl(object):
             raise CameraError('ssl-error', message, cause=e)
         except requests.ConnectionError as e:
             message = "Unable to connect to '{0}' for the '{1}' camera profile.  Please double check your 'Base Address' " \
-                      "and 'Snapshot Address Template' settings.".format(url, camera_profile.name)
+                      "and 'Snapshot Address' settings.".format(url, camera_profile.name)
             logger.exception(message)
             raise CameraError('connection-error', message, cause=e)
         except Exception as e:
@@ -1286,7 +1286,7 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
             if r.status_code != requests.codes.ok:
                 message = (
                     "Recived a status code of ({0}) while applying the {1} settings to the {2} camera profile.  "
-                    "Double check your 'Base Address' and 'Snapshot Address Template' within your camera profile "
+                    "Double check your 'Base Address' and 'Snapshot Address' within your camera profile "
                     "settings.  Or disable 'Custom Image Preferences' for this profile and try again.".format(
                         r.status_code, name, self.camera_name
                     )

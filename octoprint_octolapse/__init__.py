@@ -1380,7 +1380,7 @@ class OctolapsePlugin(
             request_values = request.get_json()
             directory_type = request_values["type"]
             directory = request_values["directory"].strip()
-            test_profile = MainSettings(None)
+            test_profile = MainSettings(self._plugin_version, __git_version__,)
 
             success = False
             errors = "An unknown directory type was requested for testing."
@@ -1432,8 +1432,8 @@ class OctolapsePlugin(
 
             logger.info("Cancelling Preprocessing for /cancelPreprocessing.")
             # todo:  Check the current printing session and make sure it matches before canceling the print!
-            self.preprocessing_job_guid = None
-            self.cancel_preprocessing()
+            self.reset_preprocessing()
+            self._timelapse.release_job_on_hold_lock(reset=True)
             if self._printer.is_printing():
                 self._printer.cancel_print(tags={'octolapse-startup-failed'})
             self.send_snapshot_preview_complete_message()
@@ -2423,8 +2423,6 @@ class OctolapsePlugin(
             logger.exception("Unable to start the timelapse.")
             self.on_print_start_failed([error], parsed_command=parsed_command)
 
-
-
     def test_timelapse_config(self):
         if not self._octolapse_settings.main_settings.is_octolapse_enabled:
             error = error_messages.get_error(["init","octolapse_is_disabled"])
@@ -2809,7 +2807,6 @@ class OctolapsePlugin(
         # see if there is a job lock, if you find one release it, and don't wait for signals.
         self._timelapse.release_job_on_hold_lock(force=True, reset=True, parsed_command=parsed_command)
 
-
     def on_preprocessing_failed(self, errors):
         message_type = "gcode-preprocessing-failed"
         self.send_plugin_errors(message_type, errors)
@@ -2851,9 +2848,10 @@ class OctolapsePlugin(
                 )
         # complete, exit loop
 
-    def cancel_preprocessing(self):
-        if self._preprocessing_cancel_event.is_set():
+    def reset_preprocessing(self):
+        if self.preprocessing_job_guid is not None:
             self._preprocessing_cancel_event.clear()
+            self.preprocessing_job_guid = None
             self.saved_timelapse_settings = None
             self.saved_snapshot_plans = None
             self.saved_parsed_command = None
@@ -3011,7 +3009,8 @@ class OctolapsePlugin(
             self.saved_parsed_command is None
         ):
             logger.error("Unable to start the preprocessed timelapse, some required items could not be found.")
-            self.cancel_preprocessing()
+            self.reset_preprocessing()
+            self._timelapse.release_job_on_hold_lock(reset=True)
             return
         if not self.start_timelapse(self.saved_timelapse_settings, self.saved_snapshot_plans):
             return False
@@ -3326,23 +3325,32 @@ class OctolapsePlugin(
         logger.info("Print failed.")
 
     def on_printer_disconnecting(self):
+        self.reset_preprocessing()
+        # stop any preprocessing scripts if they are called
+        self._timelapse.release_job_on_hold_lock()
+        # tell the timelapse object that we are cancelling
         self._timelapse.on_print_disconnecting()
         logger.info("Printer disconnecting.")
 
     def on_printer_disconnected(self):
         self._timelapse.on_print_disconnected()
+        self._timelapse.release_job_on_hold_lock(reset=True)
         logger.info("Printer disconnected.")
 
     def on_print_cancelling(self):
         logger.info("Print cancelling.")
+
+        self.reset_preprocessing()
         # stop any preprocessing scripts if they are called
-        self.cancel_preprocessing()
+        self._timelapse.release_job_on_hold_lock()
         # tell the timelapse object that we are cancelling
         self._timelapse.on_print_cancelling()
+
 
     def on_print_canceled(self):
         logger.info("Print cancelled.")
         self._timelapse.on_print_canceled()
+        self._timelapse.release_job_on_hold_lock(reset=True)
 
     def on_print_completed(self):
         self._timelapse.on_print_completed()

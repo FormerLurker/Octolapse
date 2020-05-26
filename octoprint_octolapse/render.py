@@ -1047,7 +1047,11 @@ class RenderingProcessor(threading.Thread):
 
     def run(self):
         # initialize
-        self._on_unfinished_renderings_loaded_callback()
+        try:
+            self._on_unfinished_renderings_loaded_callback()
+        except  Exception as e:
+            logger.exception("An unexpected exception occurred while running the unfinished renderings loaded callback")
+
         # loop forever, always watching for new tasks to appear in the queue
         while True:
             try:
@@ -1085,61 +1089,66 @@ class RenderingProcessor(threading.Thread):
                 self.rendering_task_queue.task_done()
             except queue.Empty:
                 pass
+            except Exception as e:
+                logger.exception("An unexpected exception occurred while fetching the next item in the rendering task queue.")
 
-            # see if we've finished a task, if so, handle it.
-            if not self._is_thread_running() and self._is_processing:
-                with self.r_lock:
-                    # join the thread and retrieve the finished job
-                    finished_job = self._rendering_job_thread.join()
-                    # we are done with the thread.
-                    self._rendering_job_thread = None
-                    # we don't consider a job to be failed for insufficient images.
-                    # failed jobs get added to the unfinished renderings list.
-                    failed = (
-                        finished_job.rendering_error is not None and not
-                    (
-                        isinstance(finished_job.rendering_error, RenderError)
-                        and finished_job.rendering_error.type == "insufficient-images"
-                    )
-                    )
-                    # remove the job from the _pending_rendering_jobs dict
-                    self._remove_pending_job(
-                        finished_job.job_guid,
-                        finished_job.camera_guid,
-                        failed=failed)
-                    # set our is_processing flag
-                    self._is_processing = False
-                    self._on_render_end(finished_job.temporary_directory)
-                    # see if there are any other jobs remaining
-                if not self._has_pending_jobs():
-                    # no more jobs, signal rendering completion
-                    self._on_all_renderings_ended()
-
-            with self.r_lock:
-                if not self._has_pending_jobs() or self._is_processing:
-                    continue
-
-            # see if there are any jobs to process.  If there are, process them
-            job_info = self._get_next_job_info()
-            next_job_job_guid = job_info["job_guid"]
-            next_job_camera_guid = job_info["camera_guid"]
-            rendering_profile = job_info["rendering_profile"]
-            camera_profile = job_info["camera_profile"]
-            temporary_directory = job_info["temporary_directory"]
-
-            if next_job_job_guid and next_job_camera_guid:
-                if not self._start_job(
-                    next_job_job_guid, next_job_camera_guid, rendering_profile, camera_profile, temporary_directory
-                ):
-                    # the job never started.  Remove it and send an error message.
+            try:
+                # see if we've finished a task, if so, handle it.
+                if not self._is_thread_running() and self._is_processing:
                     with self.r_lock:
-                        self._is_processing = False
-                        self._on_render_error(
-                            None,
-                            "Octolapse was unable to start one of the rendering jobs.  See plugin_octolapse.log for more "
-                            "details."
+                        # join the thread and retrieve the finished job
+                        finished_job = self._rendering_job_thread.join()
+                        # we are done with the thread.
+                        self._rendering_job_thread = None
+                        # we don't consider a job to be failed for insufficient images.
+                        # failed jobs get added to the unfinished renderings list.
+                        failed = (
+                            finished_job.rendering_error is not None and not
+                        (
+                            isinstance(finished_job.rendering_error, RenderError)
+                            and finished_job.rendering_error.type == "insufficient-images"
                         )
-                        self._remove_pending_job(next_job_job_guid, next_job_camera_guid, failed=True)
+                        )
+                        # remove the job from the _pending_rendering_jobs dict
+                        self._remove_pending_job(
+                            finished_job.job_guid,
+                            finished_job.camera_guid,
+                            failed=failed)
+                        # set our is_processing flag
+                        self._is_processing = False
+                        self._on_render_end(finished_job.temporary_directory)
+                        # see if there are any other jobs remaining
+                    if not self._has_pending_jobs():
+                        # no more jobs, signal rendering completion
+                        self._on_all_renderings_ended()
+
+                with self.r_lock:
+                    if not self._has_pending_jobs() or self._is_processing:
+                        continue
+
+                # see if there are any jobs to process.  If there are, process them
+                job_info = self._get_next_job_info()
+                next_job_job_guid = job_info["job_guid"]
+                next_job_camera_guid = job_info["camera_guid"]
+                rendering_profile = job_info["rendering_profile"]
+                camera_profile = job_info["camera_profile"]
+                temporary_directory = job_info["temporary_directory"]
+
+                if next_job_job_guid and next_job_camera_guid:
+                    if not self._start_job(
+                        next_job_job_guid, next_job_camera_guid, rendering_profile, camera_profile, temporary_directory
+                    ):
+                        # the job never started.  Remove it and send an error message.
+                        with self.r_lock:
+                            self._is_processing = False
+                            self._on_render_error(
+                                None,
+                                "Octolapse was unable to start one of the rendering jobs.  See plugin_octolapse.log for more "
+                                "details."
+                            )
+                            self._remove_pending_job(next_job_job_guid, next_job_camera_guid, failed=True)
+            except Exception as e:
+                logger.exception("An unexpected exception occurred while processing a queue item.")
 
     def _add_job(self, job_guid, camera_guid, rendering_profile, camera_profile, temporary_directory):
         """Returns true if the job was added, false if it does not exist"""
