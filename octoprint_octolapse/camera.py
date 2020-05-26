@@ -443,8 +443,7 @@ class CameraControl(object):
                 raise CameraError('unknown-server-type', message)
             if r.status_code == 501:
                 message = "The server denied access to the mjpg-streamer control.htm for the '{0}' camera profile.  <a " \
-                          "href=\"https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting#why-cant-i-change" \
-                          "-contrast-zoom-focus-etc\" target = \"_blank\">Please see this link to correct this " \
+                          "href=\"https://github.com/FormerLurker/Octolapse/wiki/V0.4---Enabling-Camera-Controls\" target = \"_blank\">Please see this link to correct this " \
                           "error.</a>, or disable the 'Enable And Apply Preferences at Startup' and " \
                           "'Enable And Apply Preferences Before Print' options.".format(camera_profile.name)
                 logger.error(message)
@@ -1276,8 +1275,7 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
             if r.status_code == 501:
                 message = "Access was denied to the mjpg-streamer control.html while applying the {0} setting to the '{" \
                           "1}' camera profile.  <a " \
-                          "href=\"https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting#why-cant-i-change" \
-                          "-contrast-zoom-focus-etc\" target = \"_blank\">Please see this link to correct this " \
+                          "href=\"https://github.com/FormerLurker/Octolapse/wiki/V0.4---Enabling-Camera-Controls\" target = \"_blank\">Please see this link to correct this " \
                           "error.</a>, disable the 'Enable And Apply Preferences at Startup' " \
                           "and 'Enable And Apply Preferences Before Print' options '.".format(name,
                                                                                               self.camera_name)

@@ -1,4 +1,4 @@
-Enabling custom image preferences will allow you to edit many of your webcam settings (if they are supported) like contrast, zoom, focus, etc. 
+Enabling custom image preferences will allow you to edit many of your webcam settings (if they are supported) like contrast, zoom, focus, etc.
 
 As of Octolapse V0.3.4, Custom Image Preferences are only supported if you are using a webcam stream with mjpg_streamer.
 
@@ -6,7 +6,7 @@ As of Octolapse V0.3.4, Custom Image Preferences are only supported if you are u
 
 _**these changes are required in order to use the custom image preferences**_
 
-In recent versions of Octopi, the default mjpegstreamer control.htm page is disabled. In order to automatically adjust camera settings, Octolapse needs access to control.htm. 
+In recent versions of Octopi, the default mjpegstreamer control.htm page is disabled. In order to automatically adjust camera settings, Octolapse needs access to control.htm.
 
 To enable access you must connect to a terminal to access your raspberry pi.  Then enter the following command to edit your octopi.txt file:
 ```
@@ -44,7 +44,7 @@ camera_http_options=""
 
 ### Required etc/modules and boot/octopi.txt changes for Raspberry Pi Camera Module
 
-A detailed guide for configuring the raspberry pi camera can be found [here](https://github.com/FormerLurker/Octolapse/wiki/Configuring-a-Raspberry-Pi-Camera).  Brief instructions can be found below.  
+A detailed guide for configuring the raspberry pi camera can be found [here](https://github.com/FormerLurker/Octolapse/wiki/V0.4---Configuring-a-Raspberry-Pi-Camera).  Brief instructions can be found below.
 
 The first step is to update your raspberry pi.  If you skip this step, the camera driver may not work properly.
 
@@ -120,7 +120,7 @@ camera="usb"
 ```
 Make sure the line that says ```camera=usb``` is NOT commented out.  It must not start with a #!
 
-Next find the section that looks similar to this 
+Next find the section that looks similar to this
 ```
 ### Additional options to supply to MJPG Streamer for the USB camera
 #

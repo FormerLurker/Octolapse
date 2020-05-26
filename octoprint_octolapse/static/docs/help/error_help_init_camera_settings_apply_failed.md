@@ -4,11 +4,11 @@ Octolapse was unable to apply your custom camera preferences.  Custom image pref
 
 #### I'm Using a Raspberry Pi Camera
 
-If you've received this error, it's likely that Octolapse can connect to your camera, but some additional steps might be required in order to apply custom image preferences.  [See this detailed guide](https://github.com/FormerLurker/Octolapse/wiki/Configuring-a-Raspberry-Pi-Camera) for step by step instructions for enabling custom camera preferences
+If you've received this error, it's likely that Octolapse can connect to your camera, but some additional steps might be required in order to apply custom image preferences.  [See this detailed guide](https://github.com/FormerLurker/Octolapse/wiki/V0.4---Configuring-a-Raspberry-Pi-Camera) for step by step instructions for enabling custom camera preferences
 
 #### I'm using a USB camera
 
-If you've received this error, it's likely that Octolapse can connect to your camera, but some additional steps might be required in order to apply custom image preferences.  [This guide](https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting#why-cant-i-change-contrast-zoom-focus-etc) explains how to enable access to mjpgstreamer's control.htm page, which is used to control the camera settings.
+If you've received this error, it's likely that Octolapse can connect to your camera, but some additional steps might be required in order to apply custom image preferences.  [This guide](https://github.com/FormerLurker/Octolapse/wiki/V0.4---Enabling-Camera-Controls) explains how to enable access to mjpgstreamer's control.htm page, which is used to control the camera settings.
 
 #### I'm Stuck, and Just Want to Print
 

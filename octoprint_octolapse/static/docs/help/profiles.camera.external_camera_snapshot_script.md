@@ -10,4 +10,4 @@ Snapshot File Name - The expected file name of the snapshot after it has been ta
 Snapshot Full Path - the full path and filename of the expected snapshot.  If this file exists after the script has returned, Octolapse will treat it like any other snapshot, and will apply transposition, record metadata (for rendering overlays), and will generate a thumbnail that will be sent to the client.
 ```
 
-[See this beta guide](https://github.com/FormerLurker/Octolapse/wiki/Configuring-an-External-Camera) for setting up a DSLR camera on Linux using [gPhoto2](http://gphoto.org/).  I have also gotten this to work on Windows using [digiCamControl](http://digicamcontrol.com/), but have not finished up the guide for that part yet.
+[See this beta guide](https://github.com/FormerLurker/Octolapse/wiki/V0.4---Configuring-an-External-Camera) for setting up a DSLR camera on Linux using [gPhoto2](http://gphoto.org/).  I have also gotten this to work on Windows using [digiCamControl](http://digicamcontrol.com/), but have not finished up the guide for that part yet.
