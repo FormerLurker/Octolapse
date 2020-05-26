@@ -70,7 +70,7 @@ Octolapse.OtherSlicerViewModel = function (values, num_extruders_observable) {
     });
 
     // get the time component of the axis speed units (min/mm)
-    self.getAxisSpeedTimeUnit = ko.pureComputed(function () {
+    self.getAxisSpeedTimeUnit = ko.computed(function () {
         if (self.axis_speed_display_units() === "mm-min")
             return 'min';
         if (self.axis_speed_display_units() === "mm-sec")
@@ -104,6 +104,7 @@ Octolapse.OtherSlicerViewModel = function (values, num_extruders_observable) {
                     extruder.z_travel_speed(Octolapse.convertAxisSpeedUnit(extruder.z_travel_speed(), newUnit, previousUnit, self.round_to_increment_mm_min, previousUnit));
                     // Optional values
                 }
+                self.axis_speed_display_units(newUnit);
                 return true;
             }
         }
