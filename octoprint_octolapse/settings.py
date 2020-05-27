@@ -84,6 +84,7 @@ class StaticSettings(object):
 
 
 class Settings(object):
+
     def clone(self):
         return copy.deepcopy(self)
 
@@ -113,7 +114,11 @@ class Settings(object):
         item_to_iterate = iterable
 
         if not isinstance(iterable, collections.Iterable):
-            item_to_iterate = iterable.__dict__
+            to_dict = getattr(iterable, "to_dict", None)
+            if callable(to_dict):
+                item_to_iterate = iterable.to_dict()
+            else:
+                item_to_iterate = iterable.__dict__
 
         for key, value in item_to_iterate.items():
             try:
@@ -715,7 +720,6 @@ class PrinterProfile(AutomaticConfigurationProfile):
                 extruder_offset.update(offset)
                 result.append(extruder_offset)
             return result
-
         return super(PrinterProfile, cls).try_convert_value(destination, value, key)
 
     def get_position_args(self, overridable_profile_settings):

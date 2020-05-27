@@ -77,7 +77,6 @@ class ExternalSettings(object):
                 except ValueError as e:
                     raise ExternalSettingsError('Error loading available profiles from json path.', cause=e)
 
-
     @staticmethod
     def _get_profiles_from_server(current_octolapse_version):
         # get the best settings version, or raise an error if we can't get one
@@ -118,7 +117,6 @@ class ExternalSettings(object):
                     else:
                         profiles = profile["values"]
         return None
-
 
     @staticmethod
     def check_for_updates(available_profiles, updatable_profiles, force_updates, ignore_suppression):
@@ -202,7 +200,6 @@ class ExternalSettings(object):
             del json_value["guid"]
 
         return json_value
-
 
     @staticmethod
     def _get_url_for_profile(settings_version, profile_type, key_values):
