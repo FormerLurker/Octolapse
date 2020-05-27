@@ -4,9 +4,9 @@ When using either the **Gcode Trigger** or the **Smart Gcode Trigger**, Octolaps
 
 **Why would I not just use default snapshot command ```@OCTOLAPSE TAKE-SNAPSHOT``` to initiate a snapshot?**
 
-Great question!  Though the default command will always work when printing from OctoPrint, and will NEVER be sent to your printer by OctoPrint, some printers with misbehaving firmware will not handle unknown gcodes when printing direct from the printer (via internal SD reader).  For this reason some people choose to use other gocdes to trigger a snapshot, like ```G4 P0```.  That command would  normally would tell the printer to wait for 0 Milliseconds, so it effectively does nothing, and will not alter the print in any way, even if you're printing straight off of your printer's SD card.
+Great question!  Though the default command will always work when printing from OctoPrint, and will NEVER be sent to your printer by OctoPrint, some printers with misbehaving firmware will not handle unknown gcodes when printing direct from the printer (via internal SD reader).  For this reason some people choose to use other gocdes to trigger a snapshot, like ```G4 P1```.  That command would  normally would tell the printer to wait for 0 Milliseconds, so it effectively does nothing, and will not alter the print in any way, even if you're printing straight off of your printer's SD card.
 
-However, in my experience it is pretty unusual that a printer would malfunction when encountering the default snapshot command (```@OCTOLAPSE TAKE-SNAPSHOT```).  If you have a printer that misbehaves, consider using ```G4 P0``` as your alternative snapshot command.  Better yet, just upgrade your firmware with one that is a bit more tolerant.
+However, in my experience it is pretty unusual that a printer would malfunction when encountering the default snapshot command (```@OCTOLAPSE TAKE-SNAPSHOT```).  If you have a printer that misbehaves, consider using ```G4 P1``` as your alternative snapshot command.  Better yet, just upgrade your firmware with one that is a bit more tolerant.
 
 **A note about comments and case:**
 

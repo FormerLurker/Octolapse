@@ -6,11 +6,11 @@ To fix this command, open your Octolapse printer profile and look at the **Snaps
 
 Snapshot commands are NOT case sensitive in Octolapse V0.4+, so upper case and lower case should both work in either the snapshot command or in your gcode file.  Please note that all comments are stripped from the alternative snapshot command while Octolapse is running.  For example, if you use
 
-```G4 p0 ; THIS IS A SNAPSHOT```
+```G4 p1 ; THIS IS A SNAPSHOT```
 
 as your snapshot command, Octolapse will strip the comment and will trigger on any occurrence of
 
-```G4 P0```
+```G4 P1```
 
 Since comments are ignored in OctoPrint, Octolapse would also trigger if the following line appears within your gcode file:
 
