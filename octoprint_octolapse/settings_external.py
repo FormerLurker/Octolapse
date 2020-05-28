@@ -220,9 +220,9 @@ class ExternalSettings(object):
 
         settings_version = None
         for version in versions:
-            if NumberedVersion(str(version)) >= NumberedVersion(str(current_version)):
-                settings_version = version
+            if NumberedVersion(str(version)) > NumberedVersion(str(current_version)):
                 break
+            settings_version = version
 
         if settings_version is None and len(versions) > 0:
             settings_version = versions[len(versions)-1]
