@@ -1825,12 +1825,26 @@ class TimelapseRenderJob(threading.Thread):
             # Let's not throw an error and just render without the metadata
             pass
 
+    def _count_snapshot_files(self, path):
+        num_images = 0
+        # loop through each file in the snapshot directory
+        snapshot_files = []
+        for name in os.listdir(path):
+            path = os.path.join(self._render_job_info.snapshot_directory, name)
+            # skip non-files and non jpgs
+            extension = utility.get_extension_from_full_path(path)
+            if not os.path.isfile(path) or not utility.is_valid_snapshot_extension(extension):
+                continue
+            num_images += 1
+        return num_images
+
     def _pre_render_script(self):
         """Run any pre-rendering scripts that are configured within the camera profile."""
         script_path = self._render_job_info.camera.on_before_render_script.strip()
         if not script_path:
             return
         self.on_render_progress('pre_render_script')
+
         # Todo:  add the original snapshot directory and template path
         logger.debug("Executing the pre-rendering script.")
         cmd = script.CameraScriptBeforeRender(
@@ -1850,6 +1864,11 @@ class TimelapseRenderJob(threading.Thread):
                 "A script occurred while executing executing the before-render script.  Check "
                 "plugin_octolapse.log for details. "
             )
+            return
+
+        # adjust the number of images in the temp rendering directory, this number may have changed
+        self._image_count = self._count_snapshot_files(self._temp_rendering_dir)
+
 
     def _check_image_count(self):
         """Make sure we have enough images to generate a timelapse.  If not, raise an exception."""
