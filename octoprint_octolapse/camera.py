@@ -769,6 +769,7 @@ class CameraControl(object):
 
     @staticmethod
     def _test_print_script(camera_profile, script_type, base_folder):
+        timeout_seconds = camera_profile.timeout_ms / 1000.0
         # build the arg list
         if script_type == "before-print":
             script_path = camera_profile.on_print_start_script.strip()
@@ -779,20 +780,20 @@ class CameraControl(object):
             cmd = script.CameraScriptBeforePrint(
                 script_path,
                 camera_profile.name,
-                timeout_seconds=10
+                timeout_seconds=timeout_seconds
             )
         else:
             cmd = script.CameraScriptAfterPrint(
                 script_path,
                 camera_profile.name,
-                timeout_seconds=10
+                timeout_seconds=timeout_seconds
             )
         cmd.run()
         return cmd.success(), cmd.error_message
 
     @staticmethod
     def _test_before_render_script(camera_profile, script_type, base_folder):
-
+        timeout_seconds = camera_profile.timeout_ms / 1000.0
         # create a temp folder for the rendered file and the snapshots
         temp_directory = mkdtemp()
 
@@ -826,10 +827,10 @@ class CameraControl(object):
             script_path = camera_profile.on_before_render_script.strip()
 
             if script_path is None or len(script_path) == 0:
-                return False, "No script path was provided.  Please enter a script path and try again.", ""
+                return False, "No script path was provided.  Please enter a script path and try again."
 
-            if not os.path.exists(script_path):
-                return False, "The script path '{0}' does not exist.  Please enter a valid script path and try again.".format(script_path), ""
+            if not os.path.isfile(script_path):
+                return False, "The script path '{0}' does not exist.  Please enter a valid script path and try again.".format(script_path)
 
             console_output = ""
             error_message = ""
@@ -840,7 +841,7 @@ class CameraControl(object):
                 snapshot_directory,
                 snapshot_filename_format,
                 os.path.join(snapshot_directory, snapshot_filename_format),
-                timeout_seconds=10
+                timeout_seconds=timeout_seconds
             )
             cmd.run()
             return cmd.success(), cmd.error_message
@@ -852,7 +853,7 @@ class CameraControl(object):
 
         # create a temp folder for the rendered file and the snapshots
         temp_directory = mkdtemp()
-
+        timeout_seconds = camera_profile.timeout_ms / 1000.0
         try:
             # create 10 snapshots
             test_image_path = os.path.join(base_folder, "data", "Images", "test-snapshot-image.jpg")
@@ -891,11 +892,11 @@ class CameraControl(object):
             output_extension = utility.get_extension_from_full_path(rendering_path)
 
             if script_path is None or len(script_path) == 0:
-                return False, "No script path was provided.  Please enter a script path and try again.", ""
+                return False, "No script path was provided.  Please enter a script path and try again."
 
             if not os.path.exists(script_path):
                 return False, "The script path '{0}' does not exist.  Please enter a valid script path and try again.".format(
-                    script_path), ""
+                    script_path)
 
             cmd = script.CameraScriptAfterRender(
                 script_path,
@@ -907,7 +908,7 @@ class CameraControl(object):
                 output_filename,
                 output_extension,
                 rendering_path,
-                timeout_seconds=10
+                timeout_seconds=timeout_seconds
             )
             cmd.run()
             return cmd.success(), cmd.error_message

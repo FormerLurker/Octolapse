@@ -196,6 +196,17 @@ $(function() {
         {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             //console.log("Running camera request.");
+            var message = "Testing the " + script_type + " script with " + (self.timeout_ms() / 1000.0).toFixed(2) + " second timeout.  Please do not attempt" +
+                " to run any further tests until this script has finished.  If your script times out, try increasing your 'Snapshot Timeout'.";
+            var testing_popup = {
+                title: "Testing Camera Script",
+                text: message,
+                type: "info",
+                hide: false,
+                addclass: "octolapse"
+            };
+            Octolapse.displayPopupForKey(testing_popup, "camera_script_test", ["camera_script_test"]);
+
             var data = { 'profile': self.toJS(self), 'script_type': script_type };
             $.ajax({
                 url: "./plugin/octolapse/testCameraScript",
@@ -222,8 +233,6 @@ $(function() {
                                  hide = false;
                             }
                         }
-
-
                         var success_options = {
                             title: title,
                             text: message,
