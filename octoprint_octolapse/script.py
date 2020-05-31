@@ -189,7 +189,7 @@ class POpenWithTimeout(object):
             if timeout_seconds:
                 timeout_seconds_string = "a {0} second".format(timeout_seconds)
             else:
-                timeout_seconds_string = "No Timeout"
+                timeout_seconds_string = "no"
             logger.debug(
                 "Executing %s with %s timeout: %s", self.name, timeout_seconds_string, script_text)
 
