@@ -1362,11 +1362,18 @@ class OctolapsePlugin(
     @restricted_access
     def test_camera_script_request(self):
         with OctolapsePlugin.admin_permission.require(http_exception=403):
-            request_values = request.get_json()
-            profile = request_values["profile"]
-            script_type = request_values["script_type"]
-            camera_profile = CameraProfile.create_from(profile)
-            success, errors, snapshot_created = camera.CameraControl.test_script(camera_profile, script_type, self._basefolder)
+            success = False
+            errors = None
+            snapshot_created = False
+            try:
+                request_values = request.get_json()
+                profile = request_values["profile"]
+                script_type = request_values["script_type"]
+                camera_profile = CameraProfile.create_from(profile)
+                success, errors, snapshot_created = camera.CameraControl.test_script(camera_profile, script_type, self._basefolder)
+            except Exception as e:
+                logger.exception("An unexpected error occurred while executing the {0} script.".format(script_type))
+                raise e
             return jsonify({
                 'success': success,
                 'error': errors,
