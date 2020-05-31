@@ -798,7 +798,7 @@ class CameraControl(object):
 
         try:
             # create 10 snapshots
-            test_image_path = os.path.join(base_folder, "data", "images", "test-snapshot-image.jpg")
+            test_image_path = os.path.join(base_folder, "data", "Images", "test-snapshot-image.jpg")
             snapshot_directory = os.path.join(
                 temp_directory, "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
             )
