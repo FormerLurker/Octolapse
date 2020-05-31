@@ -1830,7 +1830,7 @@ class TimelapseRenderJob(threading.Thread):
         # loop through each file in the snapshot directory
         snapshot_files = []
         for name in os.listdir(path):
-            path = os.path.join(self._render_job_info.snapshot_directory, name)
+            path = os.path.join(path, name)
             # skip non-files and non jpgs
             extension = utility.get_extension_from_full_path(path)
             if not os.path.isfile(path) or not utility.is_valid_snapshot_extension(extension):
