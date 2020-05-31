@@ -1499,6 +1499,10 @@ class TimelapseRenderJob(threading.Thread):
             if self._render_job_info.rendering.enabled:
                 logger.info("Rendering is enabled for camera %s.", self._render_job_info.camera_guid)
 
+                # Run any prerender script configured in the camera profile.  This routine reports a progress
+                # phase change, but does not send completed percentage
+                self._pre_render_script()
+
                 # Create and copy images to the temporary rendering directory, converting them to jpg if necessary
                 # this routine reports progress
                 self._convert_and_copy_snapshot_images()
@@ -1506,10 +1510,6 @@ class TimelapseRenderJob(threading.Thread):
                 # read any metadata produced by the timelapse process
                 # this is used to create text overlays
                 self._read_snapshot_metadata()
-
-                # Run any prerender script configured in the camera profile.  This routine reports a progress
-                # phase change, but does not send completed percentage
-                self._pre_render_script()
 
                 # Verify that we have at least two images.  We can't generate a timelapse with a single frame
                 self._check_image_count()
@@ -1825,18 +1825,18 @@ class TimelapseRenderJob(threading.Thread):
             # Let's not throw an error and just render without the metadata
             pass
 
-    def _count_snapshot_files(self, path):
-        num_images = 0
-        # loop through each file in the snapshot directory
-        snapshot_files = []
-        for name in os.listdir(path):
-            path = os.path.join(path, name)
-            # skip non-files and non jpgs
-            extension = utility.get_extension_from_full_path(path)
-            if not os.path.isfile(path) or not utility.is_valid_snapshot_extension(extension):
-                continue
-            num_images += 1
-        return num_images
+    # def _count_snapshot_files(self, path):
+    #     num_images = 0
+    #     # loop through each file in the snapshot directory
+    #     snapshot_files = []
+    #     for name in os.listdir(path):
+    #         path = os.path.join(path, name)
+    #         # skip non-files and non jpgs
+    #         extension = utility.get_extension_from_full_path(path)
+    #         if not os.path.isfile(path) or not utility.is_valid_snapshot_extension(extension):
+    #             continue
+    #         num_images += 1
+    #     return num_images
 
     def _pre_render_script(self):
         """Run any pre-rendering scripts that are configured within the camera profile."""
@@ -1850,10 +1850,10 @@ class TimelapseRenderJob(threading.Thread):
         cmd = script.CameraScriptBeforeRender(
             script_path,
             self._render_job_info.camera.name,
-            self._temp_rendering_dir,
+            self._render_job_info.snapshot_directory,
             self._render_job_info.snapshot_filename_format,
             os.path.join(
-                self._temp_rendering_dir,
+                self._render_job_info.snapshot_directory,
                 self._render_job_info.snapshot_filename_format
             )
         )
@@ -1865,10 +1865,8 @@ class TimelapseRenderJob(threading.Thread):
                 "plugin_octolapse.log for details. "
             )
             return
-
         # adjust the number of images in the temp rendering directory, this number may have changed
-        self._image_count = self._count_snapshot_files(self._temp_rendering_dir)
-
+        # self._image_count = self._count_snapshot_files(self._temp_rendering_dir)
 
     def _check_image_count(self):
         """Make sure we have enough images to generate a timelapse.  If not, raise an exception."""
