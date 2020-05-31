@@ -196,7 +196,7 @@ class POpenWithTimeout(object):
     def log_console_and_errors(self):
         # log
         if self.stdout:
-            logger.verbose(
+            logger.debug(
                 "Console output (stdout) for '%s':%s",
                 self.name,
                 # add a tab after all line breaks
