@@ -726,7 +726,7 @@ class CameraControl(object):
             elif script_type == 'after-snapshot':
                 script_path = camera_profile.on_after_snapshot_script
                 # we need to add an image to the temp folder, in case the script operates on the image
-                test_image_path = os.path.join(base_folder, "data", "images", "test-snapshot-image.jpg")
+                test_image_path = os.path.join(base_folder, "data", "Images", "test-snapshot-image.jpg")
                 target_directory = os.path.dirname(snapshot_full_path)
                 if not os.path.exists(target_directory):
                     try:
@@ -855,7 +855,7 @@ class CameraControl(object):
 
         try:
             # create 10 snapshots
-            test_image_path = os.path.join(base_folder, "data", "images", "test-snapshot-image.jpg")
+            test_image_path = os.path.join(base_folder, "data", "Images", "test-snapshot-image.jpg")
             snapshot_directory = os.path.join(
                 temp_directory, "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
             )
