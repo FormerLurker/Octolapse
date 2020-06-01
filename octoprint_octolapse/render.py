@@ -859,7 +859,7 @@ class RenderingProcessor(threading.Thread):
             if progress_callback:
                 progress_callback(progress_key, progress_current_step, progress_total_steps)
 
-    def _clean_temporary_directory(self, temporary_directory):
+    def _clean_temporary_directory(self, temporary_directory, current_camera_guid=None):
         with self.temp_files_lock:
             snapshot_folder = utility.get_temporary_snapshot_directory(temporary_directory)
 
@@ -888,6 +888,9 @@ class RenderingProcessor(threading.Thread):
                 # for every job, keep track of paths we want to delete
                 delete_paths = []
                 for camera_guid in utility.walk_directories(job_path):
+                    if current_camera_guid is not None and camera_guid != current_camera_guid:
+                        is_empty = False
+                        continue
                     path = os.path.join(job_path, camera_guid)
                     if (
                         RenderingProcessor._has_enough_images(path) and
@@ -1116,11 +1119,11 @@ class RenderingProcessor(threading.Thread):
                             failed=failed)
                         # set our is_processing flag
                         self._is_processing = False
-                        self._on_render_end(finished_job.temporary_directory)
+                        self._on_render_end(finished_job.temporary_directory, finished_job.camera_guid)
                         # see if there are any other jobs remaining
                     if not self._has_pending_jobs():
                         # no more jobs, signal rendering completion
-                        self._on_all_renderings_ended()
+                        self._on_all_renderings_ended(finished_job.temporary_directory)
 
                 with self.r_lock:
                     if not self._has_pending_jobs() or self._is_processing:
@@ -1394,10 +1397,11 @@ class RenderingProcessor(threading.Thread):
             self._previous_render_progress = progress
             self._last_progress_time_update = cur_time
 
-    def _on_render_end(self, temporary_directory):
-        self._clean_temporary_directory(temporary_directory)
+    def _on_render_end(self, temporary_directory, camera_guid):
+        self._clean_temporary_directory(temporary_directory, current_camera_guid=camera_guid)
 
-    def _on_all_renderings_ended(self):
+    def _on_all_renderings_ended(self, temporary_directory):
+        self._clean_temporary_directory(temporary_directory)
         logger.info("Sending render end message")
         self._on_end_callback()
 
