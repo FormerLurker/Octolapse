@@ -269,9 +269,4 @@ class NumberedVersion(version.LooseVersion):
         return version
 
 
-def custom_version_compare(a,b):
-    return NumberedVersion(a) >= NumberedVersion(b)
-
-
-
 

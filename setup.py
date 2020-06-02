@@ -22,7 +22,7 @@ plugin_name = "Octolapse"
 # This can happen if the user installs from one of the .zip links in github, not generated with git archive
 fallback_version = NumberedVersion.clean_version("0.4.0rc3")
 # Get the cleaned version number from versioneer
-plugin_version = NumberedVersion.clean_version(versioneer.get_version())
+plugin_version = NumberedVersion.clean_version(versioneer.get_versions(verbose=True)["version"])
 
 # Depending on the installation method, versioneer might not know the current version
 # if plugin_version == "0+unknown" or NumberedVersion(plugin_version) < NumberedVersion(fallback_version):
