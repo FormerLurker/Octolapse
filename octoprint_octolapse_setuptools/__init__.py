@@ -256,6 +256,22 @@ class NumberedVersion(version.LooseVersion):
             return True
         return False
 
+    @staticmethod
+    def clean_version(version):
+        if version is None or len(version) == 0:
+            return "0+unknown"
+
+        version = version.lower()
+
+        if version[0] == "v":
+            version = version[1:]
+
+        return version
+
 
 def custom_version_compare(a,b):
     return NumberedVersion(a) >= NumberedVersion(b)
+
+
+
+
