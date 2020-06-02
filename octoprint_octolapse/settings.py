@@ -2381,7 +2381,7 @@ class OctolapseSettings(Settings):
                     if original_version != plugin_version:
                         new_settings.upgrade_info = {
                             "was_upgraded": True,
-                            "previous_version": None
+                            "previous_version": original_version
                         }
                     else:
                         new_settings.upgrade_info = {
@@ -2416,13 +2416,9 @@ class OctolapseSettings(Settings):
             # update the profile options within the octolapse settings
             new_settings.profiles.options.update_server_options(available_profiles)
 
-        # update the settings object with the loaded settings so that we will have all of our static settings
-        # Note that this will not contain any static settings that
-        #settings.update(new_settings)
-
-        # set the git version (always use the passed in values
+        # set the current and git version (always use the passed in values)
         new_settings.main_settings.git_version = git_version
-
+        new_settings.main_settings.version = plugin_version
         return new_settings, load_defualt_settings
 
     def get_profile_export_json(self, profile_type, guid):

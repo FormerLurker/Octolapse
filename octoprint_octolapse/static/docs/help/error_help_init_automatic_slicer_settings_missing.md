@@ -8,7 +8,7 @@ You are using **Automatic Slicer Settings**, and Octolapse was unable to detect 
 See the sections below for more detailed help
 
 #### I'm using Cura
-Cura does not output slicer settings by default.  <a href="https://github.com/FormerLurker/Octolapse/wiki/V0.4---Automaitc-Slicer-Configuration#install-the-cura-settings-script" title="View the cura automatic slicer settings guide in a new window" target="_blank">See this guide</a> for enabling automatic slicer settings when using Cura.  If you continue to have a problem, see the [Report an Issue](#report-an-issue) section below.
+Cura does not output slicer settings by default.  <a href="https://github.com/FormerLurker/Octolapse/wiki/V0.4---Automatic-Slicer-Configuration#install-the-cura-settings-script" title="View the cura automatic slicer settings guide in a new window" target="_blank">See this guide</a> for enabling automatic slicer settings when using Cura.  If you continue to have a problem, see the [Report an Issue](#report-an-issue) section below.
 
 #### I'm using a multi-material or multi-extruder printer
 Support for multi-extruder and multi-material printers is beta.  Do not use Octolapse on these printers unless you are comfortable using a beta feature.  There are likely still some issues extracting settings, and could be other undiscovered issues.  Please use caution, as bugs in the software my exist and cause damage and/or failed prints.

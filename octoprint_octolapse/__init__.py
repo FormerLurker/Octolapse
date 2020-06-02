@@ -3627,7 +3627,6 @@ class OctolapsePlugin(
         displayName="Octolapse",
         # version check: github repository
         type="github_release",
-        #type="python_checker",
         user="FormerLurker",
         repo="Octolapse",
         pip="https://github.com/FormerLurker/Octolapse/archive/{target_version}.zip",
@@ -3681,21 +3680,6 @@ class OctolapsePlugin(
     # ~~ software update hook
     def get_update_information(self):
         return self.get_release_info()
-
-    # def get_latest(self, target, *args, **kwargs):
-    #     # Custom software update 'get_latest' function.  Builds the check data based on the
-    #     # current software update plugin settings and then calls the github_release version checker
-    #     # that implements a custom compare function.
-    #     online = False
-    #     if "online" in kwargs:
-    #         online = kwargs["online"]
-    #     latest = github_release.get_latest(
-    #         target,
-    #         self.get_release_info()["octolapse"],
-    #         custom_compare=octoprint_octolapse_setuptools.custom_version_compare,
-    #         online=online
-    #     )
-    #     return latest
 
     # noinspection PyUnusedLocal
     def get_timelapse_extensions(self, *args, **kwargs):

@@ -8,7 +8,7 @@ The easiest way to fix this issue is to enable **Automatic Slicer Configuration*
 If you are using Cura, Slic3r, Slic3r PE, PrusaSlicer or Simplify 3D, Octolapse can extract your slicer settings automatically.  If you are using a different slicer, see the **I'm using another slicer** section below.
 
 #### Cura
-Cura does not output slicer settings by default.  <a href="https://github.com/FormerLurker/Octolapse/wiki/V0.4---Automaitc-Slicer-Configuration#if-you-are-using-cura-follow-these-steps" title="View the cura automatic slicer settings guide in a new window" target="_blank">See this guide</a> for enabling automatic slicer settings when using Cura.
+Cura does not output slicer settings by default.  <a href="https://github.com/FormerLurker/Octolapse/wiki/V0.4---Automatic-Slicer-Configuration#if-you-are-using-cura-follow-these-steps" title="View the cura automatic slicer settings guide in a new window" target="_blank">See this guide</a> for enabling automatic slicer settings when using Cura.
 
 #### Slice3r, Slic3r PE, Prusa Slicer, or Simplify 3D
 Octolapse should work out of the box for these slicers.  Simply open your Octolapse printer profile and select **Automatic Configuration** from the **Slicer Type** dropdown box and save your changes.
