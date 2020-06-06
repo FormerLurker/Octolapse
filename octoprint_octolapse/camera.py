@@ -62,7 +62,7 @@ def test_web_camera(camera_profile, timeout_seconds=2):
             elif "image/jpeg" not in r.headers["content-type"].lower():
                 raise CameraError(
                     'not-an-image',
-                    "The returned daata was not an image for the '{0}' camera profile."
+                    "The returned data was not an image for the '{0}' camera profile."
                     .format(camera_profile.name)
                 )
             elif camera_profile.apply_settings_before_print:
