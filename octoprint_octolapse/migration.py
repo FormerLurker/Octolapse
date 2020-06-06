@@ -686,15 +686,15 @@ def migrate_pre_0_4_0(current_version, settings_dict, default_settings_path):
     settings_dict["profiles"]["current_stabilization_profile_guid"] = default_settings["profiles"][
         "current_stabilization_profile_guid"]
 
+    # reset renderings
+    settings_dict["profiles"]["renderings"] = default_settings["profiles"]["renderings"]
+    settings_dict["profiles"]["current_rendering_profile_guid"] = default_settings["profiles"][
+        "current_rendering_profile_guid"]
+
     # Add 'Smart - Gcode' trigger
     smart_gcode_trigger = default_settings["profiles"]["triggers"].get("b838fe36-1459-4867-8243-ab7604cf0e2d", None)
     if smart_gcode_trigger is not None:
         settings_dict["profiles"]["triggers"]["b838fe36-1459-4867-8243-ab7604cf0e2d"] = smart_gcode_trigger
-
-    # Add 'Disabled' rendering
-    disabled_rendering = default_settings["profiles"]["renderings"].get("35aababf-0ecf-46d5-b142-6290d38c8fea", None)
-    if smart_gcode_trigger is not None:
-        settings_dict["profiles"]["renderings"]["35aababf-0ecf-46d5-b142-6290d38c8fea"] = disabled_rendering
 
     # Add the script camera debug logging profile
     script_camera_debug_logging = default_settings["profiles"]["logging"].get(
