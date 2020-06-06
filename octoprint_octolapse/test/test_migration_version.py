@@ -174,3 +174,18 @@ class TestOctolapsePlugin(unittest.TestCase):
         assert not (
             NumberedVersion("v0.4.0rc1.dev5+10.g3ffd305") == NumberedVersion('v0.4.0rc1.dev5')
         )
+
+        assert (
+            NumberedVersion("v0.4.0rc1.dev2") < NumberedVersion('v0.4.0rc1.dev3')
+        )
+
+        assert (
+            NumberedVersion('v0.4.0rc1.dev3') > NumberedVersion("v0.4.0rc1.dev2")
+        )
+
+        assert (
+            NumberedVersion('v0.4.0') > NumberedVersion("v0.4.0rc1.dev2")
+        )
+        assert (
+             NumberedVersion("v0.4.0rc1.dev2") < NumberedVersion('v0.4.0')
+        )

@@ -39,20 +39,20 @@ $(function () {
         self.$importFileUploadElement = null;
         self.$progressBar = null;
         self.current_upload_data = null;
-        self.initialize = function() {
+        self.initialize = function () {
             self.initSettingsFileUpload();
         };
 
-        self.update = function(settings) {
+        self.update = function (settings) {
             self.options.import_methods(settings.global_options.import_options.settings_import_methods);
         };
 
-        self.importSettings = function(){
+        self.importSettings = function () {
             if (self.import_method() == 'text') {
                 //console.log("Importing Settings from Text");
                 var data = {
                     'import_method': self.import_method(),
-                    'import_text' : self.import_text(),
+                    'import_text': self.import_text(),
                     'client_id': Octolapse.Globals.client_id
                 };
                 $.ajax({
@@ -62,9 +62,24 @@ $(function () {
                     contentType: "application/json",
                     dataType: "json",
                     success: function (data) {
+                        var message = data.msg;
+                        if (!data.success) {
+                            var options = {
+                                title: 'Unable To Import Settings',
+                                text: message,
+                                type: 'error',
+                                hide: false,
+                                addclass: "octolapse",
+                                desktop: {
+                                    desktop: false
+                                }
+                            };
+                            Octolapse.displayPopupForKey(options, "settings_import_error", ["settings_import_error"]);
+                            return;
+                        }
                         self.import_text("");
                         var settings = JSON.parse(data.settings);
-                        var message = data.msg;
+
                         Octolapse.Settings.updateSettings(settings);
                         Octolapse.Globals.main_settings.update(settings.main_settings);
                         // maybe add a success popup?
@@ -97,9 +112,7 @@ $(function () {
                         Octolapse.displayPopup(options);
                     }
                 });
-            }
-            else
-            {
+            } else {
                 //console.log("Importing Settings from File");
                 if (self.current_upload_data != null) {
                     self.current_upload_data.submit();
@@ -109,16 +122,16 @@ $(function () {
         };
 
         self.submitFileData = null;
-        self.hasImportSettingsFile = function(){
+        self.hasImportSettingsFile = function () {
             return self.current_upload_data != null;
         };
 
-        self.initSettingsFileUpload = function(){
+        self.initSettingsFileUpload = function () {
             // Set up the file upload button.
-             self.$importFileUploadElement = $('#octolapse_settings_import_path_upload');
-             var $progressBarContainer = $('#octolapse_upload_settings_progress');
-             self.$progressBar = $progressBarContainer.find('.progress-bar');
-             self.$importFileUploadElement.fileupload({
+            self.$importFileUploadElement = $('#octolapse_settings_import_path_upload');
+            var $progressBarContainer = $('#octolapse_upload_settings_progress');
+            self.$progressBar = $progressBarContainer.find('.progress-bar');
+            self.$importFileUploadElement.fileupload({
                 dataType: "json",
                 maxNumberOfFiles: 1,
                 autoUpload: false,
@@ -129,10 +142,10 @@ $(function () {
                 // maxChunkSize: 100000,
                 formData: {client_id: Octolapse.Globals.client_id},
                 dropZone: "#octolapse_settings_import_dialog .octolapse_dropzone",
-                add: function(e, data) {
+                add: function (e, data) {
                     //console.log("Adding file");
                     self.$progressBar.text("");
-                    self.$progressBar.removeClass('failed').animate({'width': '0%'}, {'queue':false});
+                    self.$progressBar.removeClass('failed').animate({'width': '0%'}, {'queue': false});
                     self.current_upload_data = data;
                     self.$dialog.validator.form();
                     self.import_file_path(data.files[0].name);
@@ -146,17 +159,32 @@ $(function () {
                     //console.log("Uploading Progress");
                     var progress = parseInt(data.loaded / data.total * 100, 10);
                     self.$progressBar.text(progress + "%");
-                    self.$progressBar.animate({'width': progress + '%'}, {'queue':false});
+                    self.$progressBar.animate({'width': progress + '%'}, {'queue': false});
                 },
 
-                done: function(e, data) {
+                done: function (e, data) {
                     //console.log("Upload Done");
-                    var settings = JSON.parse(data.result.settings);
                     var message = data.result.msg;
+                    if (!data.result.success) {
+                        var options = {
+                            title: 'Unable To Import Settings',
+                            text: message,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse",
+                            desktop: {
+                                desktop: false
+                            }
+                        };
+                        Octolapse.displayPopupForKey(options, "settings_import_error", ["settings_import_error"]);
+                        return;
+                    }
+                    var settings = JSON.parse(data.result.settings);
+
                     Octolapse.Settings.updateSettings(settings);
                     Octolapse.Globals.main_settings.update(settings.main_settings);
                     self.$progressBar.text("");
-                    self.$progressBar.animate({'width': '0%'}, {'queue':false});
+                    self.$progressBar.animate({'width': '0%'}, {'queue': false});
                     self.closeSettingsImportPopup();
                     // maybe add a success popup?
                     var options = {
@@ -172,16 +200,16 @@ $(function () {
                     Octolapse.displayPopup(options);
                     Octolapse.Settings.checkForProfileUpdates();
                 },
-                fail: function(e, data) {
+                fail: function (e, data) {
                     //console.log("Upload Failed");
                     self.$progressBar.text("Failed...").addClass('failed');
-                    self.$progressBar.animate({'width': '100%'}, {'queue':false});
+                    self.$progressBar.animate({'width': '100%'}, {'queue': false});
                 },
-                complete: function(e){
+                complete: function (e) {
                     //console.log("Upload Complete");
                     self.import_file_path("");
                 }
-             });
+            });
         };
 
         self.showSettingsImportPopup = function () {
@@ -235,21 +263,20 @@ $(function () {
                     $(label).parent().parent().parent().removeClass('error');
                 },
                 onfocusout: function (element, event) {
-                    setTimeout(function() {
-                        if(self.$dialog.validator)
-                        {
+                    setTimeout(function () {
+                        if (self.$dialog.validator) {
                             self.$dialog.validator.form();
                         }
                     }, 250);
                 },
                 onclick: function (element, event) {
-                    setTimeout(function() {
+                    setTimeout(function () {
                         self.$dialog.validator.form();
                         self.resize();
                     }, 250);
                 }
             };
-            self.resize = function(){
+            self.resize = function () {
                 /*self.$dialog.$editDialog.css("top","0px").css(
                     'margin-top',
                     Math.max(0 - self.$dialog.$editDialog.height() / 2, 0)
@@ -293,8 +320,7 @@ $(function () {
                         //console.log("Importing Settings.");
                         // the form is valid, add or update the profile
                         self.importSettings();
-                    }
-                    else {
+                    } else {
                         // Search for any hidden elements that are invalid
                         //console.log("Checking ofr hidden field error");
                         var $fieldErrors = self.$dialog.$editForm.find('.error_label_container.error');
@@ -306,7 +332,7 @@ $(function () {
                                 //console.log("Hidden error found, showing");
                                 var $collapsableContainer = $errorContainer.parents(".collapsible");
                                 if ($collapsableContainer.length > 0)
-                                // The containers may be nested, show each
+                                    // The containers may be nested, show each
                                     $collapsableContainer.each(function (index, container) {
                                         //console.log("Showing the collapsed container");
                                         $(container).show();
@@ -326,8 +352,7 @@ $(function () {
                 });
 
                 // see if the current viewmodel has an on_opened function
-                if (typeof self.on_opened === 'function')
-                {
+                if (typeof self.on_opened === 'function') {
                     // call the function
                     self.on_opened();
                 }
@@ -337,40 +362,38 @@ $(function () {
 
                     maxHeight: function () {
                         return Math.max(
-                          window.innerHeight -
+                            window.innerHeight -
                             self.$dialog.$modalHeader.outerHeight() -
                             self.$dialog.$modalFooter.outerHeight() - 66,
-                          200
+                            200
                         );
                     }
                 }
             );
         };
         self.can_hide = false;
-        self.closeSettingsImportPopup = function() {
+        self.closeSettingsImportPopup = function () {
             if (self.$dialog != null) {
                 self.can_hide = true;
                 self.$dialog.$editDialog.modal("hide");
             }
         };
 
-        self.on_opened = function(){
+        self.on_opened = function () {
             //console.log("Opening settings import dialog.")
-            if(self.$importFileUploadElement === null)
+            if (self.$importFileUploadElement === null)
                 return;
             self.$importFileUploadElement.empty();
             self.import_file_path("");
             self.$progressBar.text("");
-            self.$progressBar.animate({'width': '0%'}, {'queue':false});
+            self.$progressBar.animate({'width': '0%'}, {'queue': false});
         };
 
         Octolapse.SettingsImportValidationRules = {
             rules: {
-                octolapse_settings_import_path_upload: { uploadFileRequired: [self.hasImportSettingsFile]},
+                octolapse_settings_import_path_upload: {uploadFileRequired: [self.hasImportSettingsFile]},
             },
-            messages: {
-
-            }
+            messages: {}
         };
 
 

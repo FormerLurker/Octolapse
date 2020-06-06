@@ -212,15 +212,17 @@ class ExternalSettings(object):
 
     @staticmethod
     def _get_best_settings_version(current_version):
-        # load the available versions
+        # load the available versions for the current settings version.  This number will be incremented as the
+        # settings change enough to not be backwards compatible
         versions = ExternalSettings._get_versions()["versions"]
         if not versions:
             return None
+
         versions.sort(key=NumberedVersion)
 
         settings_version = None
         for version in versions:
-            if NumberedVersion(str(version)) > NumberedVersion(str(current_version)):
+            if NumberedVersion(str(version)) > NumberedVersion(str(NumberedVersion.CurrentSettingsVersion)):
                 break
             settings_version = version
 

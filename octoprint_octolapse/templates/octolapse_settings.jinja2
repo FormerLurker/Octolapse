@@ -97,12 +97,21 @@
                     </div>
                     <div id="octolapse_about_tab" class="panel panel-default tab-pane">
                         <div class="panel-heading ol-heading">
-                            <a target="_blank" data-bind="visible: Octolapse.Globals.main_settings.github_link() != null, attr: { href: Octolapse.Globals.main_settings.github_link}">
-                                Octolapse <i data-bind="text:Octolapse.Globals.main_settings.octolapse_version"></i>
-                            </a>
-                            <h4 data-bind="visible: !Octolapse.Globals.main_settings.github_link() == null" >
-                                Octolapse <i data-bind="text:Octolapse.Globals.main_settings.octolapse_version"></i>
-                            </h4>
+                            <div class="row-fluid">
+                                <div class="span6">
+                                    <a target="_blank" data-bind="visible: Octolapse.Globals.main_settings.github_link() != null, attr: { href: Octolapse.Globals.main_settings.github_link}">
+                                        Octolapse <i data-bind="text:Octolapse.Globals.main_settings.octolapse_version"></i>
+                                    </a>
+                                    <h4 data-bind="visible: !Octolapse.Globals.main_settings.github_link() == null" >
+                                        Octolapse <i data-bind="text:Octolapse.Globals.main_settings.octolapse_version"></i>
+                                    </h4>
+                                </div>
+                                <div class="span6 text-right">
+                                    Settings Version: <span data-bind="text: Octolapse.Globals.main_settings.settings_version"></span>
+                                </div>
+
+                            </div>
+
                         </div>
 
                         <div class="panel-body">

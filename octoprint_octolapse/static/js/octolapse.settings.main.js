@@ -47,6 +47,7 @@ $(function () {
         self.test_mode_enabled = ko.observable();
         // rename this so that it never gets updated when saved
         self.octolapse_version = ko.observable("unknown");
+        self.settings_version = ko.observable("unknown");
         self.octolapse_git_version = ko.observable(null);
         // Computed Observables
         self.preview_snapshot_plan_seconds_text = ko.pureComputed(function(){
@@ -89,7 +90,7 @@ $(function () {
             self.snapshot_archive_directory(settings.snapshot_archive_directory);
             self.timelapse_directory(settings.timelapse_directory);
             self.temporary_directory(settings.temporary_directory);
-
+            self.settings_version(settings.settings_version);
             self.test_mode_enabled(settings.test_mode_enabled);
             self.octolapse_version(settings.version || settings.octolapse_version || null);
             self.octolapse_git_version(settings.git_version || settings.octolapse_git_version || null);

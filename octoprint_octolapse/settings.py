@@ -1629,6 +1629,7 @@ class MainSettings(Settings):
         self.cancel_print_on_startup_error = True
         self.platform = sys.platform
         self.version = plugin_version
+        self.settings_version = NumberedVersion.CurrentSettingsVersion
         self.git_version = git_version
         self.preview_snapshot_plans = True
         self.preview_snapshot_plan_autoclose = False
@@ -2332,7 +2333,7 @@ class OctolapseSettings(Settings):
         )
 
     @classmethod
-    def get_settings_version(cls, file_path):
+    def get_plugin_version_from_file(cls, file_path):
         with open(file_path, 'r') as settings_file:
             try:
                 data = json.load(settings_file)
@@ -2416,19 +2417,33 @@ class OctolapseSettings(Settings):
             # update the profile options within the octolapse settings
             new_settings.profiles.options.update_server_options(available_profiles)
 
-        # set the current and git version (always use the passed in values)
+        # set the current and git versions (always use the passed in values)
         new_settings.main_settings.git_version = git_version
         new_settings.main_settings.version = plugin_version
+        # set the settings version (always use NumberedVersion.CurrentSettingsVersion)
+        new_settings.main_settings.settings_version = NumberedVersion.CurrentSettingsVersion
+
         return new_settings, load_defualt_settings
+
+    @classmethod
+    def get_settings_version_from_dict(cls, settings):
+        if "type" in settings:
+            return settings.get("settings_version", "unknown")
+        main_settings = settings.get("main_settings", {})
+        return main_settings.get("settings_version", "unknown")
 
     def get_profile_export_json(self, profile_type, guid):
         profile = self.profiles.get_profile(profile_type, guid)
         export_dict = {
             'version': self.main_settings.version,
+            'settings_version': NumberedVersion.CurrentSettingsVersion,
             'type': profile_type,
             'profile': profile
         }
         return json.dumps(export_dict, cls=SettingsJsonEncoder)
+
+    class IncorrectSettingsVersionException(Exception):
+        pass
 
     def import_settings_from_file(
         self,
@@ -2440,30 +2455,12 @@ class OctolapseSettings(Settings):
         available_server_profiles,
         update_existing=False
     ):
-        with open(settings_path, 'r') as settings_file:
-            settings = json.load(settings_file)
-
-        # see if this is a structured import
-        if "type" in settings:
-            if settings["version"] != plugin_version:
-                raise Exception(
-                    "Cannot import settings from an old version of Octolapse.  Current Version:{0}, Settings "
-                    "Version:{1} ".format(settings["version"], plugin_version)
-                )
-            else:
-                self.profiles.import_profile(settings["type"], settings["profile"], update_existing=update_existing)
-                settings = self
-        else:
-            # this is a regular settings file.  Try to migrate
-            migrated_settings = migration.migrate_settings(
-                plugin_version, settings, default_settings_folder, data_directory
-            )
-            new_settings = OctolapseSettings(plugin_version, git_version)
-            new_settings.update(migrated_settings)
-            settings = new_settings
-
-        settings.profiles.options.update_server_options(available_server_profiles)
-        return settings
+        with open(settings_path, mode='r') as settings_file:
+            settings_text = settings_file.read()
+        return self.import_settings_from_text(
+            settings_text, plugin_version, git_version, default_settings_folder, data_directory,
+            available_server_profiles, update_existing=update_existing
+        )
 
     def import_settings_from_text(
         self,
@@ -2477,17 +2474,26 @@ class OctolapseSettings(Settings):
     ):
         logger.info("Importing python settings object.  Checking settings version.")
         settings = json.loads(settings_text)
+        settings_version = OctolapseSettings.get_settings_version_from_dict(settings)
         # see if this is a structured import
         if "type" in settings:
-            if NumberedVersion(settings["version"]).vstring != NumberedVersion(plugin_version).vstring:
-                raise Exception(
-                    "Cannot import settings from an old version of Octolapse.  Current Version:{0}, Settings "
-                    "Version:{1} ".format(settings["version"], plugin_version)
+            if settings_version != NumberedVersion.CurrentSettingsVersion:
+                raise OctolapseSettings.IncorrectSettingsVersionException(
+                    "Cannot import profiles exported from an incompatible version of Octolapse ({0}).  Was expecting settings version: {1} ".format(
+                        settings_version, NumberedVersion.CurrentSettingsVersion
+                    )
                 )
             else:
                 self.profiles.import_profile(settings["type"], settings["profile"], update_existing=update_existing)
                 settings = self
         else:
+            # Make sure the settings version is not greater than the current version
+            if settings_version != "unknown" and NumberedVersion(NumberedVersion.CurrentSettingsVersion) < NumberedVersion(settings_version):
+                raise OctolapseSettings.IncorrectSettingsVersionException(
+                    "Cannot import settings exported from a newer and incompatible version of Octolapse ({0}).  Was expecting settings version: {1} ".format(
+                        settings_version, NumberedVersion.CurrentSettingsVersion
+                    )
+                )
             # this is a regular settings file.  Try to migrate
             migrated_settings = migration.migrate_settings(
                 plugin_version, settings, default_settings_folder, data_directory

@@ -20,7 +20,7 @@ plugin_package = "octoprint_octolapse"
 plugin_name = "Octolapse"
 # The plugin's fallback version, in case versioneer can't extract the version from _version.py.
 # This can happen if the user installs from one of the .zip links in github, not generated with git archive
-fallback_version = NumberedVersion.clean_version("0.4.0rc3")
+fallback_version = NumberedVersion.clean_version(NumberedVersion.CurrentVersion)
 # Get the cleaned version number from versioneer
 plugin_version = NumberedVersion.clean_version(versioneer.get_versions(verbose=True)["version"])
 

@@ -21,6 +21,13 @@ def get_version(settings_dict):
     return version
 
 
+def get_settings_version(settings_dict):
+    settings_version = None
+    if 'main_settings' in settings_dict and 'settings_version' in settings_dict["main_settings"]:
+        settings_version = settings_dict["main_settings"]["settings_version"]
+    return settings_version
+
+
 # when adding a file migration, the version number in __init__.py.get_settings_version needs to be incremented
 # and the current version needs to be set.  Only do this if you add a file migration!
 settings_version_translation = [
@@ -67,10 +74,13 @@ def migrate_files_pre_0_4_0_rc1_dev3(current_version, data_directory):
     shutil.rmtree(src)
     return True
 
+
 def migrate_settings(current_version, settings_dict, default_settings_directory, data_directory):
     # extract the settings version
     # note that the version moved from settings.version to settings.main_settings.version
     version = get_version(settings_dict)
+    settings_version = get_settings_version(settings_dict)
+
     if version == 'unknown':
         raise Exception("Could not find version information within the settings json, cannot perform migration.")
 
@@ -83,25 +93,31 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
     # create a flag to indicate that we've updated settings
     has_updated = False
 
-    if NumberedVersion(version) <= NumberedVersion("0.3.3rc3.dev0"):
+    if settings_version is None and NumberedVersion(version) <= NumberedVersion("0.3.3rc3.dev0"):
         has_updated = True
         settings_dict = migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.3.3rc3.dev0.json'))
 
-    if NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev0"):
+    if settings_version is None and NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev0"):
         has_updated = True
         settings_dict = migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev0.json'))
 
-    if NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev2"):
+    if settings_version is None and NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev2"):
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev2(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev2.json'))
 
-    if NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev3"):
+    if settings_version is None and NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev3"):
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev3.json'))
 
-    if NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev4"):
+    if settings_version is None and NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev4"):
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev4(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev4.json'))
+
+    # Start using main_settings.settings_version for migrations
+    # this value will start off as None
+    if settings_version is None:  # None < 0.4.0
+        has_updated = True
+        settings_dict = migrate_pre_0_4_0(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0.json'))
 
     # Add other migrations here in the future...
 
@@ -110,8 +126,9 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
         with open(get_settings_backup_name(version, data_directory), "w+") as f:
             json.dump(original_settings_copy, f)
 
-    # Ensure that the version in the settings.json file is up to date
+    # Ensure that the version and settings_version within the settings.json file is up to date
     settings_dict["main_settings"]["version"] = current_version
+    settings_dict["main_settings"]["settings_version"] = NumberedVersion.CurrentSettingsVersion
 
     return settings_dict
 
@@ -659,6 +676,35 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
 def migrate_pre_0_4_0_rc1_dev4(current_version, settings_dict, default_settings_path):
     settings_dict["main_settings"]["version"] = "0.4.0rc1.dev4"
     return settings_dict
+
+def migrate_pre_0_4_0(current_version, settings_dict, default_settings_path):
+    # Switch to Settings Version for migration starting at "0.4.0"
+    default_settings = get_default_settings(default_settings_path)
+
+    # reset stabilizations
+    settings_dict["profiles"]["stabilizations"] = default_settings["profiles"]["stabilizations"]
+    settings_dict["profiles"]["current_stabilization_profile_guid"] = default_settings["profiles"][
+        "current_stabilization_profile_guid"]
+
+    # Add 'Smart - Gcode' trigger
+    smart_gcode_trigger = default_settings["profiles"]["triggers"].get("b838fe36-1459-4867-8243-ab7604cf0e2d", None)
+    if smart_gcode_trigger is not None:
+        settings_dict["profiles"]["triggers"]["b838fe36-1459-4867-8243-ab7604cf0e2d"] = smart_gcode_trigger
+
+    # Add 'Disabled' rendering
+    disabled_rendering = default_settings["profiles"]["renderings"].get("35aababf-0ecf-46d5-b142-6290d38c8fea", None)
+    if smart_gcode_trigger is not None:
+        settings_dict["profiles"]["renderings"]["35aababf-0ecf-46d5-b142-6290d38c8fea"] = disabled_rendering
+
+    # Add the script camera debug logging profile
+    script_camera_debug_logging = default_settings["profiles"]["logging"].get(
+        "fa759ab9-bc02-4fd0-8d12-a7c5c89591c1", None
+    )
+    if smart_gcode_trigger is not None:
+        settings_dict["profiles"]["logging"]["fa759ab9-bc02-4fd0-8d12-a7c5c89591c1"] = script_camera_debug_logging
+
+    return settings_dict
+
 
 def get_default_settings(default_settings_path):
     with open(default_settings_path) as defaultSettingsJson:

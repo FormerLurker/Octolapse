@@ -24,8 +24,14 @@
 from distutils import version
 import functools
 
+
 @functools.total_ordering
 class NumberedVersion(version.LooseVersion):
+    # This is the current plugin version, not including any versioneer info,
+    # which could be earlier or later
+    CurrentVersion = "0.4.0"
+    # This is the CurrentVersion last time the settings were migrated.
+    CurrentSettingsVersion = "0.4.0"
     '''
         Prerelease tags will ALWAYS compare as less than a version with the same initial tags if the prerelease tag
         exists.
@@ -83,10 +89,11 @@ class NumberedVersion(version.LooseVersion):
             seg = self.version[i]
             if seg in self.development_tags:
                 self.is_development = True
+                index += 1 # skip the dev bit
                 break
             self._pre_release_version.append(seg)
         # determine development version
-        for i in range(index + 1, tag_length):
+        for i in range(index, tag_length):
             index = i
             seg = self.version[i]
             self._development_version.append(seg)
@@ -172,8 +179,9 @@ class NumberedVersion(version.LooseVersion):
             # other is a development, but the current version is not.
             return False
         # Both versions are development, compare dev versions
-        cur_version = self.development_tags
-        other_version = other.development_tags
+
+        cur_version = self._development_version
+        other_version = other._development_version
         if cur_version < other_version:
             return True
         if cur_version > other_version:
@@ -234,8 +242,8 @@ class NumberedVersion(version.LooseVersion):
             # other is a development, but the current version is not.
             return True
         # Both versions are development, compare dev versions
-        cur_version = self.development_tags
-        other_version = other.development_tags
+        cur_version = self._development_version
+        other_version = other._development_version
         if cur_version > other_version:
             return True
         if cur_version < other_version:

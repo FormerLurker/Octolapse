@@ -926,32 +926,48 @@ class OctolapsePlugin(
                 import_method = request_values["import_method"]
                 import_text = request_values["import_text"]
                 client_id = request_values["client_id"]
-            if import_method == "file":
-                logger.debug("Importing settings from file.")
-                # Parse the request.
-                settings_path = request.values['octolapse_settings_import_path_upload.path']
-                client_id = request.values['client_id']
-                self._octolapse_settings = self._octolapse_settings.import_settings_from_file(
-                    settings_path,
-                    self._plugin_version,
-                    __git_version__,
-                    self.get_default_settings_folder(),
-                    self.get_plugin_data_folder(),
-                    self.available_profiles
+
+            try:
+                if import_method == "file":
+                    logger.debug("Importing settings from file.")
+                    # Parse the request.
+                    settings_path = request.values['octolapse_settings_import_path_upload.path']
+                    client_id = request.values['client_id']
+                    self._octolapse_settings = self._octolapse_settings.import_settings_from_file(
+                        settings_path,
+                        self._plugin_version,
+                        __git_version__,
+                        self.get_default_settings_folder(),
+                        self.get_plugin_data_folder(),
+                        self.available_profiles
+                    )
+                    message = "Your settings have been updated from the supplied file."
+                elif import_method == "text":
+                    logger.debug("Importing settings from text.")
+                    # convert the settings json to a python object
+                    self._octolapse_settings = self._octolapse_settings.import_settings_from_text(
+                        import_text,
+                        self._plugin_version,
+                        __git_version__,
+                        self.get_default_settings_folder(),
+                        self.get_plugin_data_folder(),
+                        self.available_profiles
+                    )
+                    message = "Your settings have been updated from the uploaded text."
+                else:
+                    raise Exception("Unknown Import Method")
+            except Exception as e:
+                logger.exception("An error occurred in import_settings_request.")
+                message = "Unable to import the provided settings, see plugin_octolapse.log for more information."
+                if type(e) is OctolapseSettings.IncorrectSettingsVersionException:
+                    message = e.message
+
+                return jsonify(
+                    {
+                        "success": False,
+                        "msg": message
+                    }
                 )
-                message = "Your settings have been updated from the supplied file."
-            elif import_method == "text":
-                logger.debug("Importing settings from text.")
-                # convert the settings json to a python object
-                self._octolapse_settings = self._octolapse_settings.import_settings_from_text(
-                    import_text,
-                    self._plugin_version,
-                    __git_version__,
-                    self.get_default_settings_folder(),
-                    self.get_plugin_data_folder(),
-                    self.available_profiles
-                )
-                message = "Your settings have been updated from the uploaded text."
 
             # if we're this far we need to save the settings.
             self.save_settings()
@@ -961,7 +977,9 @@ class OctolapsePlugin(
 
             return jsonify(
                 {
-                    "settings": self._octolapse_settings.to_json(), "msg": message
+                    "success": True,
+                    "settings": self._octolapse_settings.to_json(),
+                    "msg": message
                 }
             )
 
@@ -2090,7 +2108,7 @@ class OctolapsePlugin(
         if current is None:
             current_version = 'unknown'
             if os.path.isfile(self.get_settings_file_path()):
-                current_version = OctolapseSettings.get_settings_version(
+                current_version = OctolapseSettings.get_plugin_version_from_file(
                     self.get_settings_file_path()
                 )
             if current_version == 'unknown':
