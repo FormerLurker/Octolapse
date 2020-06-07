@@ -1,15 +1,14 @@
 # Octolapse
 
-<figure style="text-align:center">
+<div style="text-align:center">
     <a href="https://github.com/FormerLurker/Octolapse/wiki/V0.4---Octolapse-Tab" title="Get more information about this feature from the Octolapse Wiki">
         <img src="https://raw.githubusercontent.com/wiki/FormerLurker/Octolapse/version/0.4/assets/images/tab/octolapse_tab_mini.png" alt="The Octolapse Tab" />
+    </a><br/>
+    <a href="https://github.com/FormerLurker/Octolapse/wiki/V0.4---Octolapse-Tab">
+        The New and Improved Octolapse Tab
     </a>
-  <figcaption style="text-align:center">
-        <a href="https://github.com/FormerLurker/Octolapse/wiki/V0.4---Octolapse-Tab">
-            The New and Improved Octolapse Tab
-        </a>
-    </figcaption>
-</figure>
+
+</div>
 
 ***Octolapse is provided without warranties of any kind.  By installing Octolapse you agree to accept all liability for any damage caused directly or indirectly by Octolapse.  Use caution and never leave your printer unattended.***
 
