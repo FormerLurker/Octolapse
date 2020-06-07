@@ -33,10 +33,10 @@ Octolapse moves the print bed and extruder into position before taking each snap
 Be sure to [read the getting started guide](https://github.com/FormerLurker/Octolapse/wiki/V0.4---Getting-Started) on the [Octolapse Wiki](https://github.com/FormerLurker/Octolapse/wiki).  This will save you a lot of hassle and allow you to unlock some of the best features of Octolapse.
 
 <div align="center">
-    <a href="https://www.youtube.com/watch?v=41wmVbZvcUI" target="_blank">
-        <img src="https://img.youtube.com/vi/41wmVbZvcUI/maxresdefault.jpg" alt="View the Getting Started Guide Companion Video on Youtube" title="Watch on Youtube"/>
+    <a href="https://www.youtube.com/watch?v=vP6KQ1hBK1g" target="_blank">
+        <img src="https://img.youtube.com/vi/vP6KQ1hBK1g/maxresdefault.jpg" alt="View the Getting Started Guide Companion Video on Youtube" title="Watch on Youtube"/>
     </a><br/>
-    <a href="https://www.youtube.com/watch?v=41wmVbZvcUI" target="_blank">
+    <a href="https://www.youtube.com/watch?v=vP6KQ1hBK1g" target="_blank">
         View the Getting Started Guide Companion Video
     </a>
 </div>
