@@ -166,8 +166,9 @@ Octolapse now provides documentation for every single setting, and it's all buil
 
 <div align="center">
     <img src="https://github.com/FormerLurker/octolapse/wiki/version/0.4/assets/images/tab/test_mode_snapshot_plan_get_help.png"  alt="Integrated Help Links in the Octolapse Tab" title="Integrated Help Links in the Octolapse Tab"/><br/>
+    Integrated Help Links on the Octolapse Tab<br/>
     <img src="https://github.com/FormerLurker/octolapse/wiki/version/0.4/assets/images/settings/profiles/printer/get_help.png" alt="Integrated Help Links Within the Octolapse Profiles" title="Integrated Help Links Within the Octolapse Profiles"/><br/>
-    Integrated Help Links
+    Integrated Help Links Within Each Profile
 </div>
 
 ### Improved Camera Scripts and Tests
@@ -216,7 +217,7 @@ Please consider supporting my work by becoming a [patron](https://www.patreon.co
         A user generated compilation created by WildRose Builds.  Support this channel and please subscribe!
     </a>
 </div>
-
+<hr/>
 <div align="center">
     <a href="https://www.youtube.com/watch?v=dYbWfBCLNbI" target="_blank" title="Watch on Youtube">
         <img src="https://img.youtube.com/vi/dYbWfBCLNbI/maxresdefault.jpg" alt="A timelapse of The The 'Fillenium Malcon'"/>
@@ -225,7 +226,7 @@ Please consider supporting my work by becoming a [patron](https://www.patreon.co
             The 'Fillenium Malcon'
     </a>
 </div>
-
+<hr/>
 <div align="center">
     <a href="https://www.youtube.com/watch?v=4kEHbRrp2Jk" target="_blank" title="Watch on Youtube">
         <img src="https://img.youtube.com/vi/4kEHbRrp2Jk/maxresdefault.jpg" alt="A timelapse of The Moon"/>
@@ -234,7 +235,7 @@ Please consider supporting my work by becoming a [patron](https://www.patreon.co
         The Moon - Animated Stabilization
     </a>
 </div>
-
+<hr/>
 <div align="center">
     <a href="https://www.youtube.com/watch?v=Ra5Jjq-nJfA" target="_blank" title="Watch on Youtube">
         <img src="https://img.youtube.com/vi/Ra5Jjq-nJfA/maxresdefault.jpg" alt="A Timelapse of Benchy"/>
