@@ -17,7 +17,7 @@ Octolapse is designed to make stabilized timelapses of your prints with as littl
 
 <div align="center">
     <a href="https://www.youtube.com/watch?v=er0VCYen1MY" target="_blank">
-        <img src="https://img.youtube.com/vi/er0VCYen1MY/maxresdefault.jpg" alt="Double Spiral Vase Timelapse Taken with Octolapse" title="Watch on Youtube"/>
+        <img src="https://img.youtube.com/vi/er0VCYen1MY/hqdefault.jpg" alt="Double Spiral Vase Timelapse Taken with Octolapse" title="Watch on Youtube"/>
     </a><br/>
     <a href="https://www.thingiverse.com/thing:570288" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
             A Timelapse of a Double Spiral Vase Made with Octolapse
@@ -34,7 +34,7 @@ Be sure to [read the getting started guide](https://github.com/FormerLurker/Octo
 
 <div align="center">
     <a href="https://www.youtube.com/watch?v=vP6KQ1hBK1g" target="_blank">
-        <img src="https://img.youtube.com/vi/vP6KQ1hBK1g/maxresdefault.jpg" alt="View the Getting Started Guide Companion Video on Youtube" title="Watch on Youtube"/>
+        <img src="https://img.youtube.com/vi/vP6KQ1hBK1g/hqdefault.jpg" alt="View the Getting Started Guide Companion Video on Youtube" title="Watch on Youtube"/>
     </a><br/>
     <a href="https://www.youtube.com/watch?v=vP6KQ1hBK1g" target="_blank">
         View the Getting Started Guide Companion Video
@@ -211,7 +211,7 @@ Please consider supporting my work by becoming a [patron](https://www.patreon.co
 
 <div align="center">
     <a href="https://www.youtube.com/watch?v=uBeVbDJKHw0" target="_blank" title="Watch on Youtube">
-        <img src="https://img.youtube.com/vi/uBeVbDJKHw0/maxresdefault.jpg" alt="A user generated compilation created by WildRose Builds"/>
+        <img src="https://img.youtube.com/vi/uBeVbDJKHw0/hqdefault.jpg" alt="A user generated compilation created by WildRose Builds"/>
     </a><br/>
     <a href="https://www.youtube.com/watch?v=uBeVbDJKHw0" title="Watch on Youtube" target="_blank">
         A user-generated compilation created by WildRose Builds.  Support this channel, and please subscribe!
@@ -220,7 +220,7 @@ Please consider supporting my work by becoming a [patron](https://www.patreon.co
 <hr/>
 <div align="center">
     <a href="https://www.youtube.com/watch?v=dYbWfBCLNbI" target="_blank" title="Watch on Youtube">
-        <img src="https://img.youtube.com/vi/dYbWfBCLNbI/maxresdefault.jpg" alt="A timelapse of The The 'Fillenium Malcon'"/>
+        <img src="https://img.youtube.com/vi/dYbWfBCLNbI/hqdefault.jpg" alt="A timelapse of The The 'Fillenium Malcon'"/>
     </a><br/>
     <a href="https://www.thingiverse.com/thing:919475" alt="Link to the model from this video" title="view model on thingiverse" target="_blank">
             The 'Fillenium Malcon'
@@ -229,7 +229,7 @@ Please consider supporting my work by becoming a [patron](https://www.patreon.co
 <hr/>
 <div align="center">
     <a href="https://www.youtube.com/watch?v=4kEHbRrp2Jk" target="_blank" title="Watch on Youtube">
-        <img src="https://img.youtube.com/vi/4kEHbRrp2Jk/maxresdefault.jpg" alt="A Timelapse of the Moon"/>
+        <img src="https://img.youtube.com/vi/4kEHbRrp2Jk/hqdefault.jpg" alt="A Timelapse of the Moon"/>
     </a><br/>
     <a href="https://www.thingiverse.com/thing:2531838" title="view model on thingiverse" target="_blank">
         The Moon - Animated Stabilization
@@ -238,7 +238,7 @@ Please consider supporting my work by becoming a [patron](https://www.patreon.co
 <hr/>
 <div align="center">
     <a href="https://www.youtube.com/watch?v=Ra5Jjq-nJfA" target="_blank" title="Watch on Youtube">
-        <img src="https://img.youtube.com/vi/Ra5Jjq-nJfA/maxresdefault.jpg" alt="A Timelapse of Benchy"/>
+        <img src="https://img.youtube.com/vi/Ra5Jjq-nJfA/hqdefault.jpg" alt="A Timelapse of Benchy"/>
     </a><br/>
     <a href="https://www.thingiverse.com/thing:763622" title="view model on thingiverse" target="_blank">
             The Obligatory Benchy
