@@ -580,7 +580,7 @@ class CameraControl(object):
                     raise CameraError('request-contained-no-data', message)
                 elif "image/jpeg" not in r.headers["content-type"].lower():
                     message = (
-                        "The returned daata was not an image for the '{0}' camera profile.".format(camera_profile.name)
+                        "The returned data was not an image for the '{0}' camera profile.".format(camera_profile.name)
                     )
                     logger.error(message)
                     raise CameraError('not-an-image', message)
