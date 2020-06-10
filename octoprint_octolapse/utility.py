@@ -38,7 +38,10 @@ import errno
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-from slugify import Slugify
+try:
+    from slugify import Slugify
+except ImportError:
+    import octoprint.verndor.awesome_slugify as Slugify
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
