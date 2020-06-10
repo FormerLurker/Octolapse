@@ -760,21 +760,25 @@ class OctolapsePlugin(
     @restricted_access
     def load_settings_and_state_request(self):
         with OctolapsePlugin.admin_permission.require(http_exception=403):
-            if self._octolapse_settings is None:
-                message = "Unable to load values from Octolapse.Settings, it hasn't been initialized yet.  Please " \
-                          "wait a few minutes and try again.  If the problem persists, please check " \
-                          "plugin_octolapse.log for exceptions. "
-                logger.error(message)
-                return jsonify({"error": True, "error_message": message}), 500
-            # TODO:  add a timer to wait for the timelapse to be initialized
-            if self._timelapse is None:
-                message = "Unable to load values from Octolapse.Timelapse, it hasn't been initialized yet.  Please " \
-                          "wait a few minutes and try again.  If the problem persists, please check " \
-                          "plugin_octolapse.log for exceptions. "
-                return jsonify({"error": True, "error_message": message}), 500
-            data = self.get_state_request_dict()
-            data["settings"] = self._octolapse_settings
-            return json.dumps(data, cls=SettingsJsonEncoder), 200, {'ContentType': 'application/json'}
+            try:
+                if self._octolapse_settings is None:
+                    message = "Unable to load values from Octolapse.Settings, it hasn't been initialized yet. Please " \
+                              "wait a few minutes and try again.  If the problem persists, please check " \
+                              "plugin_octolapse.log for exceptions. "
+                    logger.error(message)
+                    return jsonify({"error": True, "error_message": message}), 500
+                # TODO:  add a timer to wait for the timelapse to be initialized
+                if self._timelapse is None:
+                    message = "Unable to load values from Octolapse.Timelapse, it hasn't been initialized yet. Please" \
+                              " wait a few minutes and try again.  If the problem persists, please check " \
+                              "plugin_octolapse.log for exceptions. "
+                    return jsonify({"error": True, "error_message": message}), 500
+                data = self.get_state_request_dict()
+                data["settings"] = self._octolapse_settings
+                return json.dumps(data, cls=SettingsJsonEncoder), 200, {'ContentType': 'application/json'}
+            except Exception as e:
+                logger.exception("An unexpected exception occurred while loading the settings and state.")
+                raise e
 
     @octoprint.plugin.BlueprintPlugin.route("/updateProfileFromServer", methods=["POST"])
     @restricted_access
