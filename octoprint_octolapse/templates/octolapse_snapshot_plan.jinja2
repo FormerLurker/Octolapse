@@ -92,7 +92,7 @@
                 </div>
                 <div class="span9 text-left no-min-height">
                     <div data-bind="foreach: SnapshotPlanState.snapshot_positions">
-                        <strong>X</strong><span data-bind="text: $data.x.toFixed(2)" />,&nbsp;<strong>Y</strong><span data-bind="text: $data.y.toFixed(2)" />,&nbsp;<strong>Z</strong><span data-bind="text: $data.z.toFixed(2)" />
+                        <strong>X</strong><span data-bind="text: $parent.SnapshotPlanState.format_coordinates($data.x)" />,&nbsp;<strong>Y</strong><span data-bind="text:  $parent.SnapshotPlanState.format_coordinates($data.y)" />,&nbsp;<strong>Z</strong><span data-bind="text:  $parent.SnapshotPlanState.format_coordinates($data.z)" />
                     </div>
                 </div>
             </div>
