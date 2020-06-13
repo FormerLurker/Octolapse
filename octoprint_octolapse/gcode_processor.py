@@ -30,7 +30,7 @@ logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 
 
-class Extruder(object):
+class Extruder(utility.JsonSerializable):
     __slots__ = [
         "x_firmware_offset",
         "y_firmware_offset",
@@ -152,7 +152,7 @@ class Extruder(object):
         }
 
 
-class Pos(object):
+class Pos(utility.JsonSerializable):
     # Add slots for faster copy and init
     __slots__ = [
         "x",
@@ -557,7 +557,7 @@ class Pos(object):
         return e - extruder.e_offset
 
 
-class ParsedCommand(object):
+class ParsedCommand(utility.JsonSerializable):
     # define slots for faster creation
     __slots__ = ['cmd', 'parameters', 'gcode', 'comment']
 

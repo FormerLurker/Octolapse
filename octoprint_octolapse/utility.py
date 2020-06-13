@@ -999,3 +999,21 @@ def requests_retry_session(
     session.mount('http://', adapter)
     session.mount('https://', adapter)
     return session
+
+
+class JsonSerializable(object):
+
+    def __str__(self):
+        return json.dumps(self, default=JsonSerializable.json_dumper,
+                          sort_keys=True)
+
+    @staticmethod
+    def json_dumper(obj):
+        to_json = getattr(obj, "to_json", None)
+        if callable(to_json):
+            return obj.to_json()
+        to_dict = getattr(obj, "to_dict", None)
+        if callable(to_dict):
+            return obj.to_dict()
+        return obj.__dict__
+

@@ -27,6 +27,7 @@ from octoprint_octolapse.settings import *
 from octoprint_octolapse.trigger import Triggers
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
+import json
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 
@@ -105,7 +106,7 @@ class SnapshotGcode(object):
         return '\r\n\t'.join(gcode_strings)
 
 
-class SnapshotPlanStep(object):
+class SnapshotPlanStep(utility.JsonSerializable):
     def __init__(self, action, x=None, y=None, z=None, e=None, f=None):
         self.x = x
         self.y = y
@@ -125,7 +126,7 @@ class SnapshotPlanStep(object):
         }
 
 
-class SnapshotPlan(object):
+class SnapshotPlan(utility.JsonSerializable):
     TRAVEL_ACTION = "travel"
 
     def __init__(self,
@@ -211,6 +212,7 @@ class SnapshotPlan(object):
     def create_from_cpp_snapshot_plans(cls, cpp_snapshot_plans):
         # turn the snapshot plans into a class
         snapshot_plans = []
+        plan_number = 1
         try:
             for cpp_plan in cpp_snapshot_plans:
                 # extract the arguments
@@ -250,10 +252,13 @@ class SnapshotPlan(object):
                     return_position,
                     end_command)
                 snapshot_plans.append(snapshot_plan)
+                logger.verbose("Plan %d: %s", plan_number, snapshot_plan)
+                plan_number += 1
         except Exception as e:
             logger.exception("Failed to create snapshot plans")
             raise e
         return snapshot_plans
+
 
 
 class SnapshotGcodeGenerator(object):
