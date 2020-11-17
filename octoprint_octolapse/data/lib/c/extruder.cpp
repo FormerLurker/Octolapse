@@ -49,16 +49,16 @@ PyObject* extruder::to_py_tuple() const
 		retraction_length, // 8
 		deretraction_length, // 9
 		// Bool (represented as an integer)
-		is_extruding_start, // 10
-		is_extruding, // 11
-		is_primed, // 12
-		is_retracting_start, // 13
-		is_retracting, // 14
-		is_retracted, // 15
-		is_partially_retracted, // 16
-		is_deretracting_start, // 17
-		is_deretracting, // 18
-		is_deretracted // 19
+    (long int)(is_extruding_start ? 1 : 0), // 10
+    (long int)(is_extruding ? 1 : 0), // 11
+    (long int)(is_primed ? 1 : 0), // 12
+    (long int)(is_retracting_start ? 1 : 0), // 13
+    (long int)(is_retracting ? 1 : 0), // 14
+    (long int)(is_retracted ? 1 : 0), // 15
+    (long int)(is_partially_retracted ? 1 : 0), // 16
+    (long int)(is_deretracting_start ? 1 : 0), // 17
+    (long int)(is_deretracting ? 1 : 0), // 18
+    (long int)(is_deretracted ? 1 : 0) // 19
 	);
 	if (py_extruder == NULL)
 	{
@@ -97,27 +97,27 @@ PyObject* extruder::to_py_dict() const
 		retraction_length,
 		"deretraction_length",
 		deretraction_length,
-		// Bool (represented as an integer)
-		"is_extruding_start",
-		is_extruding_start,
-		"is_extruding",
-		is_extruding,
-		"is_primed",
-		is_primed,
-		"is_retracting_start",
-		is_retracting_start,
-		"is_retracting",
-		is_retracting,
-		"is_retracted",
-		is_retracted,
-		"is_partially_retracted",
-		is_partially_retracted,
-		"is_deretracting_start",
-		is_deretracting_start,
-		"is_deretracting",
-		is_deretracting,
-		"is_deretracted",
-		is_deretracted
+    // Bool (represented as an integer)
+    "is_extruding_start",
+    (long int)(is_extruding_start ? 1 : 0),
+    "is_extruding",
+    (long int)(is_extruding ? 1 : 0),
+    "is_primed",
+    (long int)(is_primed ? 1 : 0),
+    "is_retracting_start",
+    (long int)(is_retracting_start ? 1 : 0),
+    "is_retracting",
+    (long int)(is_retracting ? 1 : 0),
+    "is_retracted",
+    (long int)(is_retracted ? 1 : 0),
+    "is_partially_retracted",
+    (long int)(is_partially_retracted ? 1 : 0),
+    "is_deretracting_start",
+    (long int)(is_deretracting_start ? 1 : 0),
+    "is_deretracting",
+    (long int)(is_deretracting ? 1 : 0),
+    "is_deretracted",
+    (long int)(is_deretracted ? 1 : 0)
 	);
 	if (p_extruder == NULL)
 	{

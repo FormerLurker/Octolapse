@@ -3652,7 +3652,6 @@ class OctolapsePlugin(
         user="FormerLurker",
         repo="Octolapse",
         pip="https://github.com/FormerLurker/Octolapse/archive/{target_version}.zip",
-
         stable_branch=dict(branch="master", commitish=["master"], name="Stable"),
         release_compare='custom',
         prerelease_branches=[
