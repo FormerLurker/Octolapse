@@ -658,7 +658,9 @@ def get_system_fonts(base_directory):
 
     if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
         # Linux and OS X.
-        linux_font_paths = subprocess.check_output("fc-list --format %{file}\\n".split()).split('\n')
+        # linux_font_paths = subprocess.check_output("fc-list --format %{file}\\n".split()).split('\n')
+        linux_font_paths = str(subprocess.check_output(["fc-list", "--format", "%{file}\n"]), 'UTF-8').split('\n')
+        linux_font_paths = list(filter(None, linux_font_paths))
         for f in linux_font_paths:
             font_name = os.path.basename(f)
             if not font_name in font_names:
@@ -678,8 +680,6 @@ def get_system_fonts(base_directory):
     # sort the fonts
     font_paths.sort(key=(lambda b: os.path.basename(b).lower()))
     return font_paths
-
-
 
 
 def get_directory_size(root, recurse=False):
