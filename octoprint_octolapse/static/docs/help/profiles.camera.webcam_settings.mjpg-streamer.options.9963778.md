@@ -1,1 +1,1 @@
-Adjust the sharpness of the webcam image.  Lower values have less sharpness, higher values have more.
+Adjust the saturation of the webcam image.  Lower values have less saturation, higher values have more.
