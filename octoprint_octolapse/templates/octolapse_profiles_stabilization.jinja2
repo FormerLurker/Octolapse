@@ -23,9 +23,10 @@
 -->
 <script type="text/html" id="stabilization-template">
     <input type="hidden" data-bind="value : guid" />
+
     <div>
         <div>
-            <h4>Profile</h4>
+            <h4>stabilization Profile</h4>
         </div>
         <div class="control-group">
             <label class="control-label">Name</label>
@@ -40,15 +41,19 @@
         </div>
         <div class="control-group">
             <label class="control-label">Description</label>
+
             <div class="controls">
                 <textarea id="octolapse_stabilization_description" name="octolapse_stabilization_description"
                           class="input-block-level"
-                          data-bind="value: description"
-                          type="text" maxlength="1024" />
+                          data-bind="textInput: description"
+                          type="text" maxlength="1024"></textarea>
                 <div class="error_label_container text-error" data-error-for="octolapse_stabilization_description"></div>
             </div>
+
         </div>
+
     </div>
+
     <div data-bind="template: {name:'octolapse-profile-library-test-template', data: automatic_configuration}"></div>
     <div data-bind="slideVisible: !automatic_configuration.updating_from_server()">
         <hr/>
@@ -66,7 +71,7 @@
                                        optionsText: 'name',
                                        optionsValue: 'value',
                                        value: x_type"></select>
-                    <a class="octolapse_help" data-help-url="profiles.stabilization.x_type.md" data-help-title="X Stabilization Type"/>
+                    <a class="octolapse_help" data-help-url="profiles.stabilization.x_type.md" data-help-title="X Stabilization Type"></a>
                     <div class="error_label_container text-error" data-error-for="octolapse_stabilization_x_type"></div>
                 </div>
             </div>
@@ -77,10 +82,9 @@
                         <input id="octolapse_stabilization_x_fixed_coordinate" name="octolapse_stabilization_x_fixed_coordinate"
                                class="input-small ignore_hidden_errors"
                                data-bind="value: x_fixed_coordinate"
-                               type="text"
-                        />
+                               type="text"/>
                         <span class="add-on">mm</span>
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_fixed_coordinate.md" data-help-title="X Fixed Coordinate"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_fixed_coordinate.md" data-help-title="X Fixed Coordinate"></a>
                     </div>
                     <div class="error_label_container text-error" data-error-for="octolapse_stabilization_x_fixed_coordinate"></div>
                 </div>
@@ -96,7 +100,7 @@
                         />
                         <span class="add-on">mm</span>
                         <span class="add-on">csv</span>
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_fixed_path.md" data-help-title="X Fixed Path"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_fixed_path.md" data-help-title="X Fixed Path"></a>
                     </div>
                     <div class="error_label_container text-error" data-error-for="octolapse_stabilization_x_fixed_path"></div>
                     <span class="help-inline">Provide a list of fixed coordinates separated by commas</span>
@@ -110,7 +114,7 @@
                                type="checkbox"
                                data-bind="checked: x_fixed_path_loop"
                         />Enabled
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_fixed_path_loop.md" data-help-title="X Fixed Path Loop"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_fixed_path_loop.md" data-help-title="X Fixed Path Loop"></a>
                     </label>
                 </div>
             </div>
@@ -122,7 +126,7 @@
                                data-bind="checked: x_fixed_path_invert_loop"
                                type="checkbox"
                         />Enabled
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_fixed_path_invert_loop.md" data-help-title="X Fixed Path Invert Loop"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_fixed_path_invert_loop.md" data-help-title="X Fixed Path Invert Loop"></a>
                     </label>
                 </div>
             </div>
@@ -136,7 +140,7 @@
                                type="text"
                         />
                         <span class="add-on">%</span>
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_relative.md" data-help-title="X Relative Coordinate"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_relative.md" data-help-title="X Relative Coordinate"></a>
                     </div>
                     <div class="error_label_container text-error" data-error-for="octolapse_stabilization_x_relative"></div>
                 </div>
@@ -152,7 +156,7 @@
                         />
                         <span class="add-on">%</span>
                         <span class="add-on">csv</span>
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_relative_path.md" data-help-title="X Relative Path"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_relative_path.md" data-help-title="X Relative Path"></a>
                     </div>
                     <div class="error_label_container text-error" data-error-for="octolapse_stabilization_x_relative_path"></div>
                     <span class="help-inline">Provide a list of relative coordinates separated by commas</span>
@@ -166,7 +170,7 @@
                                data-bind="checked: x_relative_path_loop"
                                type="checkbox"
                         />Enabled
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_relative_path_loop.md" data-help-title="X Relative Path Loop"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_relative_path_loop.md" data-help-title="X Relative Path Loop"></a>
                     </label>
                 </div>
             </div>
@@ -178,7 +182,7 @@
                                data-bind="checked: x_relative_path_invert_loop"
                                type="checkbox"
                         />Enabled
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_relative_path_invert_loop.md" data-help-title="X Relative Path Invert Loop"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.x_relative_path_invert_loop.md" data-help-title="X Relative Path Invert Loop"></a>
                     </label>
                 </div>
             </div>
@@ -197,7 +201,7 @@
                                        optionsText: 'name',
                                        optionsValue: 'value',
                                        value: y_type"></select>
-                    <a class="octolapse_help" data-help-url="profiles.stabilization.y_type.md" data-help-title="Y Stabilization Type"/>
+                    <a class="octolapse_help" data-help-url="profiles.stabilization.y_type.md" data-help-title="Y Stabilization Type"></a>
                     <div class="error_label_container text-error" data-error-for="octolapse_stabilization_y_type"></div>
                 </div>
             </div>
@@ -211,7 +215,7 @@
                                type="text"
                         />
                         <span class="add-on">mm</span>
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_fixed_coordinate.md" data-help-title="Y Fixed Coordinate"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_fixed_coordinate.md" data-help-title="Y Fixed Coordinate"></a>
                     </div>
                     <div class="error_label_container text-error" data-error-for="octolapse_stabilization_y_fixed_coordinate"></div>
                 </div>
@@ -227,7 +231,7 @@
                         />
                         <span class="add-on">mm</span>
                         <span class="add-on">csv</span>
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_fixed_path.md" data-help-title="Y Fixed Path"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_fixed_path.md" data-help-title="Y Fixed Path"></a>
                     </div>
                     <div class="error_label_container text-error" data-error-for="octolapse_stabilization_y_fixed_path"></div>
                     <span class="help-inline">Provide a list of fixed coordinates separated by commas</span>
@@ -238,7 +242,7 @@
                 <div class="controls">
                     <label class="checkbox">
                         <input id="octolapse_stabilization_y_fixed_path_loop" name="octolapse_stabilization_y_fixed_path_loop" type="checkbox" data-bind="checked: y_fixed_path_loop" />Enabled
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_fixed_path_loop.md" data-help-title="Y Fixed Path Loop"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_fixed_path_loop.md" data-help-title="Y Fixed Path Loop"></a>
                     </label>
                 </div>
             </div>
@@ -250,7 +254,7 @@
                                data-bind="checked: y_fixed_path_invert_loop"
                                type="checkbox"
                         />Enabled
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_fixed_path_invert_loop.md" data-help-title="Y Fixed Path Invert Loop"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_fixed_path_invert_loop.md" data-help-title="Y Fixed Path Invert Loop"></a>
                     </label>
                 </div>
             </div>
@@ -264,7 +268,7 @@
                                type="text"
                         />
                         <span class="add-on">%</span>
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_relative.md" data-help-title="Y Relative Coordinate"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_relative.md" data-help-title="Y Relative Coordinate"></a>
                     </div>
                     <div class="error_label_container text-error" data-error-for="octolapse_stabilization_y_relative"></div>
                 </div>
@@ -280,7 +284,7 @@
                         />
                         <span class="add-on">%</span>
                         <span class="add-on">csv</span>
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_relative_path.md" data-help-title="Y Relative Path"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_relative_path.md" data-help-title="Y Relative Path"></a>
                     </div>
                     <div class="error_label_container text-error" data-error-for="octolapse_stabilization_y_relative_path"></div>
                     <span class="help-inline">Provide a list of relative coordinates separated by commas</span>
@@ -294,7 +298,7 @@
                                data-bind="checked: y_relative_path_loop"
                                type="checkbox"
                         />Enabled
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_relative_path_loop.md" data-help-title="Y Relative Path Loop"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_relative_path_loop.md" data-help-title="Y Relative Path Loop"></a>
                     </label>
                 </div>
             </div>
@@ -306,7 +310,7 @@
                                data-bind="checked: y_relative_path_invert_loop"
                                type="checkbox"
                         />Enabled
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_relative_path_invert_loop.md" data-help-title="Y Relative Path Invert Loop"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.y_relative_path_invert_loop.md" data-help-title="Y Relative Path Invert Loop"></a>
                     </label>
                 </div>
             </div>
@@ -321,7 +325,7 @@
                                data-bind="checked: wait_for_moves_to_finish"
                                type="checkbox"
                         />Enabled
-                        <a class="octolapse_help" data-help-url="profiles.stabilization.wait_for_moves_to_finish.md" data-help-title="Wait For Moves To Finish"/>
+                        <a class="octolapse_help" data-help-url="profiles.stabilization.wait_for_moves_to_finish.md" data-help-title="Wait For Moves To Finish"></a>
                     </label>
                     <span class="help-inline">
                         <span class="label label-important">Important</span>&nbsp;This is a beta feature, use at your own risk!  Disabling this option will result in a destabilized timelapse, similar to the stock Octoprint timelapse.  Octolapse will not retract, lift, or travel to the stabilization point when this option is enabled.  Additionally, any before/after snapshot scripts will be executed asynchronously when this option is disabled.

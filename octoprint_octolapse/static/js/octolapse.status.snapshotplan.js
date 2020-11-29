@@ -60,7 +60,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.is_confirmation_popup = ko.observable(false);
             self.autoclose = ko.observable(false);
             self.autoclose_seconds = ko.observable(0);
-            self.quality_issues = ko.observable("");
+            self.quality_issues = ko.observableArray();
             self.missed_snapshots = ko.observable(0);
 
             setInterval(function() {

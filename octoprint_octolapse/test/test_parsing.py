@@ -44,6 +44,28 @@ class TestParsing(unittest.TestCase):
     def test_LocationResponse(self):
         line = 'ok X:150.0 Y:150.0 Z:0.7 E:0.0'
         parsed = Response.parse_position_line(line)
+        self.assertTrue(parsed)
+        if parsed:
+            # we don't know T or F when printing from SD since
+            # there's no way to query it from the firmware and
+            # no way to track it ourselves when not streaming
+            # the file - this all sucks sooo much
+
+            x = parsed.get("x")
+            y = parsed.get("y")
+            z = parsed.get("z")
+            e = None
+            if "e" in parsed:
+                e = parsed.get("e")
+            return {'x': x, 'y': y, 'z': z, 'e': e, }
+
+    def test_LocationResponse_E3D_ToolChanger(self):
+        # Note that C is between Z and E, which doesn't yet work
+        line = 'X:272.500 Y:140.000 Z:15.000 C:4.600 E:0.000 E0:0.0 Count 66000 21200 24000 7360 Machine 272.500 140.000 15.000 4.600 Bed comp 0.000'
+        # This adjusted format DOES work currently
+        #line = 'X:272.500 Y:140.000 Z:15.000 E:0.000 E0:0.0 C:4.600 Count 66000 21200 24000 7360 Machine 272.500 140.000 15.000 4.600 Bed comp 0.000'
+        parsed = Response.parse_position_line(line)
+        self.assertTrue(parsed)
         if parsed:
             # we don't know T or F when printing from SD since
             # there's no way to query it from the firmware and

@@ -36,7 +36,7 @@
         <div class="control-group">
             <label class="control-label">Description</label>
             <div class="controls">
-                <textarea id="logging_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024" />
+                <textarea id="logging_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024" ></textarea>
                 <div class="error_label_container text-error" data-error-for=""></div>
             </div>
         </div>
@@ -44,7 +44,7 @@
     <div data-bind="template: {name:'octolapse-profile-library-test-template', data: automatic_configuration}"></div>
     <hr/>
     <div>
-        <h4>Manage Log Files<a class="octolapse_help" data-help-url="profiles.logging.manage_log_files.md" data-help-title="Manage Log Files" /></h4>
+        <h4>Manage Log Files<a class="octolapse_help" data-help-url="profiles.logging.manage_log_files.md" data-help-title="Manage Log Files" ></a></h4>
          <div class="text-center">
                 <button type="button" class="btn btn-large" data-bind="click: function(){clearLog(false);}" title="Clear the most recent log."> <i class="icon-trash"></i>Clear Log&hellip;</button>
                 <button type="button" class="btn btn-large" data-bind="click: function(){clearLog(true);}" title="Clear the most recent log and deletes any log file backups (up to 3)."><i class="icon-trash"></i>Clear All Logs&hellip;</button>
@@ -70,7 +70,7 @@
             <div class="controls">
                 <label class="checkbox">
                     <input type="checkbox" data-bind="checked: enabled" title="Enable or disable enhanced logging" />Enabled
-                    <a class="octolapse_help" data-help-url="profiles.logging.enabled.md" data-help-title="Additional Logging" />
+                    <a class="octolapse_help" data-help-url="profiles.logging.enabled.md" data-help-title="Additional Logging"></a>
                 </label>
             </div>
         </div>
@@ -80,7 +80,7 @@
                 <div class="controls">
                     <label class="checkbox">
                         <input type="checkbox" data-bind="checked: log_to_console" title="Write all output to the console" />Enabled
-                        <a class="octolapse_help" data-help-url="profiles.logging.log_to_console.md" data-help-title="Write To Console" />
+                        <a class="octolapse_help" data-help-url="profiles.logging.log_to_console.md" data-help-title="Write To Console"></a>
                     </label>
                     <span class="help-inline">This is useful when running a debugger to view the log output in real time along with the Octoprint console output.   If you are not running Octolapse in a debugger, you do not need to enable this option.</span>
                 </div>
@@ -88,10 +88,10 @@
             <div class="container-fluid">
                 <div class="row-fluid">
                     <div class="span5">
-                        Module to Log <a class="octolapse_help" data-help-url="profiles.logging.modules_to_log.md" data-help-title="Modules to Log" />
+                        Module to Log <a class="octolapse_help" data-help-url="profiles.logging.modules_to_log.md" data-help-title="Modules to Log"></a>
                     </div>
                     <div class="span5">
-                        Logging Level<a class="octolapse_help" data-help-url="profiles.logging.logging_level.md" data-help-title="Logging Level" />
+                        Logging Level<a class="octolapse_help" data-help-url="profiles.logging.logging_level.md" data-help-title="Logging Level"></a>
                     </div>
                     <div class="span2">
                         &nbsp;

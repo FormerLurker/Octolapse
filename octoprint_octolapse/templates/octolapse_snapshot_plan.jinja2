@@ -26,13 +26,13 @@
     <div data-bind="visible: SnapshotPlanState.is_confirmation_popup()">
         <div class="alert alert-warning" data-bind="visible: SnapshotPlanState.missed_snapshots()  > 0">
             <p>
-                <span data-bind="text: SnapshotPlanState.missed_snapshots"></span> snapshots were missed!&nbsp;<a class="octolapse_help" data-help-url="snapshot_plan_missed_snapshots.md" data-help-title="Missed Snapshots" />
+                <span data-bind="text: SnapshotPlanState.missed_snapshots"></span> snapshots were missed!&nbsp;<a class="octolapse_help" data-help-url="snapshot_plan_missed_snapshots.md" data-help-title="Missed Snapshots" ></a>
             </p>
         </div>
         <div data-bind="visible: SnapshotPlanState.quality_issues().length > 0, foreach: SnapshotPlanState.quality_issues">
             <div class="alert alert-warning">
                 <p>
-                    <span data-bind="text: description"></span>&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':help_link, 'data-help-title':name}" />
+                    <span data-bind="text: description"></span>&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':help_link, 'data-help-title':name}"></a>
                 </p>
             </div>
         </div>
@@ -40,7 +40,7 @@
     <div class="row-fluid">
         <div class="span6"></div>
         <div class="span6 text-center">
-            Showing<span data-bind="visible: SnapshotPlanState.view_current_plan">&nbsp;Current</span>&nbsp;Plan <span data-bind="text: (SnapshotPlanState.plan_index() + 1)" /> of <span data-bind="text: SnapshotPlanState.plan_count" />
+            Showing<span data-bind="visible: SnapshotPlanState.view_current_plan">&nbsp;Current</span>&nbsp;Plan <span data-bind="text: (SnapshotPlanState.plan_index() + 1)"></span> of <span data-bind="text: SnapshotPlanState.plan_count"></span></a>
         </div>
     </div>
     <div class="row-fluid">

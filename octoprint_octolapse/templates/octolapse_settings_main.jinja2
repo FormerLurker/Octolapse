@@ -46,7 +46,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Enable or disable the plugin" data-bind="checked:main_settings.is_octolapse_enabled " />Enabled
-                                            <a class="octolapse_help" data-help-url="main_settings.enabled.md" data-help-title="Enable/Disable Octolapse" />
+                                            <a class="octolapse_help" data-help-url="main_settings.enabled.md" data-help-title="Enable/Disable Octolapse"></a>
                                         </label>
                                     </div>
                                 </div>
@@ -54,7 +54,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" data-bind="checked: main_settings.test_mode_enabled" title="Enable test mode" />Test Mode Enabled
-                                            <a class="octolapse_help" data-help-url="main_settings.is_test_mode.md" data-help-title="Test Mode - Prevent Extrusion and Warmup" />
+                                            <a class="octolapse_help" data-help-url="main_settings.is_test_mode.md" data-help-title="Test Mode - Prevent Extrusion and Warmup"></a>
                                             <span class="help-inline">
                                                 Prevents your printer from warming up your bed and extruder, enabing fans, or extruding filament.  This is very useful for quickly testing your Octolapse configuration without wasting filament or waiting for warm up.
                                             </span>
@@ -73,7 +73,7 @@
                                            title="Used to store rendered timelapse videos.  Defaults to the OctoPrint timelapse folder if empty."
                                            data-bind="value: main_settings.timelapse_directory"
                                            type="text" />
-                                    <a class="octolapse_help" data-help-url="main_settings.timelapse_directory.md" data-help-title="Timelapse Directory" />
+                                    <a class="octolapse_help" data-help-url="main_settings.timelapse_directory.md" data-help-title="Timelapse Directory"></a>
                                     <button class="btn btn-default" data-bind="click: function() {$parent.testDirectory('timelapse', main_settings.timelapse_directory());}">Test</button>
                                     <div class="error_label_container text-error"></div>
                                 </div>
@@ -86,7 +86,7 @@
                                        title="Used to store temporary snapshots and images used to render timelapses.  Defaults to the **tmp** directory in the Octolapse plugin data directory if left empty."
                                        data-bind="value: main_settings.temporary_directory"
                                        type="text" />
-                                <a class="octolapse_help" data-help-url="main_settings.temporary_directory.md" data-help-title="Temporary Directory" />
+                                <a class="octolapse_help" data-help-url="main_settings.temporary_directory.md" data-help-title="Temporary Directory"></a>
                                 <button class="btn btn-default" data-bind="click: function() {$parent.testDirectory('temporary', main_settings.temporary_directory());}">Test</button>
                                 <div class="error_label_container text-error"></div>
                             </div>
@@ -99,7 +99,7 @@
                                        title="Used to store a zipped copy of all rendered images, created after rendering is completed, or after the timelapse is finished if rendering is disabled.  Defaults to the **snapshot_archive** directory in the Octolapse plugin data directory if left empty."
                                        data-bind="value: main_settings.snapshot_archive_directory"
                                        type="text" />
-                                <a class="octolapse_help" data-help-url="main_settings.snapshot_archive_directory.md" data-help-title="Snapshot Archive Directory" />
+                                <a class="octolapse_help" data-help-url="main_settings.snapshot_archive_directory.md" data-help-title="Snapshot Archive Directory"></a>
                                 <button class="btn btn-default" data-bind="click: function() {$parent.testDirectory('snapshot-archive', main_settings.snapshot_archive_directory());}">Test</button>
                                 <div class="error_label_container text-error"></div>
 
@@ -114,7 +114,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Enable automatic updates." data-bind="checked:main_settings.automatic_updates_enabled" />Enabled
-                                            <a class="octolapse_help" data-help-url="main_settings.automatic_updates_enabled.md" data-help-title="Enable Automatic Updates" />
+                                            <a class="octolapse_help" data-help-url="main_settings.automatic_updates_enabled.md" data-help-title="Enable Automatic Updates"></a>
                                         </label>
                                     </div>
                                 </div>
@@ -130,7 +130,7 @@
                                             <span class="add-on">days</span>
                                         </span>
 
-                                        <a class="octolapse_help" data-help-url="main_settings.automatic_update_interval_days.md" data-help-title="Auto Reload Frames" />
+                                        <a class="octolapse_help" data-help-url="main_settings.automatic_update_interval_days.md" data-help-title="Auto Reload Frames"></a>
                                         <div class="error_label_container text-error"></div>
                                     </div>
                                 </div>
@@ -147,7 +147,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Cancel if startup errors are detected" data-bind="checked:main_settings.cancel_print_on_startup_error" />Enabled
-                                            <a class="octolapse_help" data-help-url="main_settings.cancel_print_on_startup_error.md" data-help-title="Cancel Print On Startup Error" />
+                                            <a class="octolapse_help" data-help-url="main_settings.cancel_print_on_startup_error.md" data-help-title="Cancel Print On Startup Error"></a>
                                         </label>
                                     </div>
                                 </div>
@@ -159,7 +159,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Preview Pre-Calculated Snapshot Plan Information Before Printing" data-bind="checked:main_settings.preview_snapshot_plans" />Enabled
-                                            <a class="octolapse_help" data-help-url="main_settings.preview_snapshot_plans.md" data-help-title="Preview Snapshot Plan" />
+                                            <a class="octolapse_help" data-help-url="main_settings.preview_snapshot_plans.md" data-help-title="Preview Snapshot Plan"></a>
                                         </label>
                                     </div>
                                 </div>
@@ -169,7 +169,7 @@
                                         <div class="controls">
                                             <label class="checkbox">
                                                 <input type="checkbox" title="Automatically close snapshot plan preview" data-bind="checked:main_settings.preview_snapshot_plan_autoclose" />Enabled
-                                                <a class="octolapse_help" data-help-url="main_settings.preview_snapshot_plan_autoclose.md" data-help-title="Auto-Close Snapshot Plan Preview" />
+                                                <a class="octolapse_help" data-help-url="main_settings.preview_snapshot_plan_autoclose.md" data-help-title="Auto-Close Snapshot Plan Preview"></a>
                                             </label>
                                         </div>
                                     </div>
@@ -177,7 +177,7 @@
                                         <label class="control-label">Auto-Close Snapshot Plan Preview Seconds</label>
                                         <div class="controls">
                                             <input name="auto_reload_frames" class="input-mini ignore_hidden_errors" title="The number of seconds to wait before automatically closing the snapshot plan preview." type="number" data-bind="value: main_settings.preview_snapshot_plan_seconds" min="1" step="1" required="true" />
-                                            <a class="octolapse_help" data-help-url="main_settings.preview_snapshot_plan_seconds.md" data-help-title="Auto-Close Snapshot Plan Preview Seconds" />
+                                            <a class="octolapse_help" data-help-url="main_settings.preview_snapshot_plan_seconds.md" data-help-title="Auto-Close Snapshot Plan Preview Seconds"></a>
                                             <div class="error_label_container text-error"></div>
                                         </div>
                                     </div>
@@ -192,7 +192,7 @@
                                 <div class="controls">
                                     <label class="checkbox">
                                         <input type="checkbox" title="Enable or disable navbar icon" data-bind="checked:main_settings.show_navbar_icon" />Enabled
-                                        <a class="octolapse_help" data-help-url="main_settings.show_navbar_icon.md" data-help-title="Show Navbar Icon" />
+                                        <a class="octolapse_help" data-help-url="main_settings.show_navbar_icon.md" data-help-title="Show Navbar Icon"></a>
                                     </label>
                                 </div>
                             </div>
@@ -201,7 +201,7 @@
                                 <div class="controls">
                                     <label class="checkbox">
                                         <input type="checkbox" title="Show the navbar when not printing" data-bind="checked:main_settings.show_navbar_when_not_printing" />Enabled
-                                        <a class="octolapse_help" data-help-url="main_settings.show_navbar_when_not_printing.md" data-help-title="Show Navbar When Not Printing" />
+                                        <a class="octolapse_help" data-help-url="main_settings.show_navbar_when_not_printing.md" data-help-title="Show Navbar When Not Printing"></a>
                                     </label>
                                 </div>
                             </div>
@@ -217,7 +217,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Auto-reload latest snapshot thumbnail and full size preview when a new snashot is taken" data-bind="checked:main_settings.auto_reload_latest_snapshot" />Enabled
-                                            <a class="octolapse_help" data-help-url="main_settings.auto_reload_latest_snapshot.md" data-help-title="Auto Reload Latest Snapshot" />
+                                            <a class="octolapse_help" data-help-url="main_settings.auto_reload_latest_snapshot.md" data-help-title="Auto Reload Latest Snapshot"></a>
                                         </label>
                                     </div>
                                 </div>
@@ -229,7 +229,7 @@
                                                title="The number of frames to animate during auto-reload"
                                                data-bind="value: main_settings.auto_reload_frames"
                                                type="number" min="1" max="256" step="1" required="true" />
-                                        <a class="octolapse_help" data-help-url="main_settings.auto_reload_frames.md" data-help-title="Auto Reload Frames" />
+                                        <a class="octolapse_help" data-help-url="main_settings.auto_reload_frames.md" data-help-title="Auto Reload Frames"></a>
                                         <div class="error_label_container text-error"></div>
                                     </div>
                                 </div>
@@ -243,7 +243,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Enable or disable state change display" data-bind="checked:main_settings.show_printer_state_changes" />Enabled
-                                            <a class="octolapse_help" data-help-url="main_settings.show_printer_state_changes.md" data-help-title="Show Printer State Changes" />
+                                            <a class="octolapse_help" data-help-url="main_settings.show_printer_state_changes.md" data-help-title="Show Printer State Changes"></a>
                                         </label>
                                     </div>
                                 </div>
@@ -252,7 +252,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Enable or disable state change display" data-bind="checked:main_settings.show_position_changes" />Enabled
-                                            <a class="octolapse_help" data-help-url="main_settings.show_position_changes.md" data-help-title="Show Position Changes" />
+                                            <a class="octolapse_help" data-help-url="main_settings.show_position_changes.md" data-help-title="Show Position Changes"></a>
                                             <br />
                                         </label>
                                     </div>
@@ -262,7 +262,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Enable or disable state change display" data-bind="checked:main_settings.show_extruder_state_changes" />Enabled
-                                            <a class="octolapse_help" data-help-url="main_settings.show_extruder_state_changes.md" data-help-title="Show Extruder State Changes" />
+                                            <a class="octolapse_help" data-help-url="main_settings.show_extruder_state_changes.md" data-help-title="Show Extruder State Changes"></a>
                                             <br />
                                         </label>
                                     </div>
@@ -272,7 +272,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Enable or disable state change display" data-bind="checked:main_settings.show_trigger_state_changes" />Enabled
-                                            <a class="octolapse_help" data-help-url="main_settings.show_trigger_state_changes.md" data-help-title="Show Trigger State Changes" />
+                                            <a class="octolapse_help" data-help-url="main_settings.show_trigger_state_changes.md" data-help-title="Show Trigger State Changes"></a>
                                             <br />
                                         </label>
                                     </div>
@@ -282,7 +282,7 @@
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" title="Enable or disable the snapshot plan informaiton display" data-bind="checked:main_settings.show_snapshot_plan_information" />Enabled
-                                            <a class="octolapse_help" data-help-url="main_settings.show_snapshot_plan_information.md" data-help-title="Show Snapshot Plan Information" />
+                                            <a class="octolapse_help" data-help-url="main_settings.show_snapshot_plan_information.md" data-help-title="Show Snapshot Plan Information"></a>
                                             <br />
                                         </label>
                                     </div>

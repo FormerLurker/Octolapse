@@ -8,7 +8,7 @@
 <!-- Default mjpg-streamer control templates -->
 <script type="text/html" id="mjpg-streamer-numeric-control-template">
     <div class="no-column-break">
-        <span data-bind="text: slider_label"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title':name, 'data-help-not-found': help_not_found}"/>
+        <span data-bind="text: slider_label"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title':name, 'data-help-not-found': help_not_found}"></a>
         <div class="row-fluid">
             <div class="span10">
                 <input type="range" class="octolapse-slider" data-bind="attr: {min: min, max: max, step: step }, octolapseSliderValue: value" />
@@ -26,7 +26,7 @@
             <div class="span12">
                 <label class="checkbox">
                     <input type="checkbox" data-bind="attr: {title: checkbox_title}, checked: checkbox_checked" /><span data-bind="text: name"></span>&nbsp;&nbsp;
-                    <a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title': name, 'data-help-not-found': help_not_found}" />
+                    <a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title': name, 'data-help-not-found': help_not_found}"></a>
                 </label>
             </div>
         </div>
@@ -42,7 +42,7 @@
 <script type="text/html" id="mjpg-streamer-dropdown-control-template">
     <div class="row-fluid">
         <div class="no-column-break">
-            <span data-bind="text: name"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title': name, 'data-help-not-found': help_not_found}" />
+            <span data-bind="text: name"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title': name, 'data-help-not-found': help_not_found}"></a>
             <div class="row-fluid">
                 <div class="span10">
                     <select class="full-width"

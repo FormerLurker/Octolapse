@@ -46,7 +46,7 @@
         <div id="octolapse_snapshot_archive_tab" class="tab-pane">
             <h3>Saved Snapshots (zip archives)</h3>
             <fieldset class="octolapse" data-bind="visible: Octolapse.Globals.is_admin">
-                <legend>Import Snapshot Archive (.zip)&nbsp;<a class="octolapse_help" style="font-size:16px;" data-help-url="dialog.timelapse_files.snapshot_archive.import.md" data-help-title="Import Snapshot Archive" /></legend>
+                <legend>Import Snapshot Archive (.zip)&nbsp;<a class="octolapse_help" style="font-size:16px;" data-help-url="dialog.timelapse_files.snapshot_archive.import.md" data-help-title="Import Snapshot Archive"></a></legend>
                 <div class="row-fluid">
                     <div class="span3">
                         <input id="octolapse_snapshot_upload" type="file" name="octolapse_snapshot_upload" accept=".zip" data-url="{{ url_for('plugin.octolapse.import_snapshots_request') }}">

@@ -184,17 +184,17 @@ $(function () {
         };
 
         self.bindHelpLinks = function(selector){
-            var default_selector = ".octolapse_help[data-help-url]";
+            var default_selector = "a.octolapse_help[data-help-url]";
             selector = selector + " " + default_selector;
 
-            //console.log("octolapse.help.js - Binding help links to " + selector);
-            $(selector).each(function(){
-               if (!$(this).attr('data-help-title'))
-                   $(this).attr('data-help-title',"Click for help with this");
-               if($(this).children().length == 0) {
-                   var icon = $('<span class="fa fa-question-circle fa-lg"></span>');
-                   $(this).append(icon);
+            console.log("octolapse.help.js - Binding help links to " + selector);
+            $(selector).each(function(index, value){
+               var $link = $(this);
+               if (!$link.attr('data-help-title')){
+                   $link.attr('data-help-title',"Click for help with this");
                }
+               $link.html($('<span class="fa fa-question-circle fa-lg"></span>'));
+
             });
             $(selector).unbind("click");
             $(selector).click( function(e) {
