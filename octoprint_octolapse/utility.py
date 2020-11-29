@@ -39,9 +39,11 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 try:
-    from slugify import Slugify as Slugify
+    from slugify import Slugify
 except ImportError:
-    import octoprint.vendor.awesome_slugify as Slugify
+    from octoprint.vendor.awesome_slugify import Slugify
+_SLUGIFY = Slugify()
+_SLUGIFY.safe_chars = "-_.()[] "
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -115,8 +117,7 @@ def is_sequence(arg):
             hasattr(arg, "__iter__"))
 
 
-_SLUGIFY = Slugify.Slugify()
-_SLUGIFY.safe_chars = "-_.()[] "
+
 
 
 def sanitize_filename(filename):
