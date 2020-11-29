@@ -253,7 +253,8 @@ class ExternalSettings(object):
         except (
             requests.exceptions.HTTPError,
             requests.exceptions.ConnectionError,
-            requests.exceptions.ConnectTimeout
+            requests.exceptions.ConnectTimeout,
+            requests.exceptions.ReadTimeout
         ) as e:
             message = "An error occurred while retrieving profiles from the server."
             raise ExternalSettingsError('profiles-retrieval-error', message, cause=e)
