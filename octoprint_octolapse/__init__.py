@@ -3669,31 +3669,30 @@ class OctolapsePlugin(
     )
 
     def get_release_info(self):
-        # get the checkout type from the software updater
-        prerelease_channel = None
-        is_prerelease = False
-        # get this for reference.  Eventually I'll have to use it!
-        # is the software update set to prerelease?
+        # Starting with V1.5.0 prerelease branches are supported!
+        if LooseVersion(octoprint.server.VERSION) < LooseVersion("1.5.0"):
+            # get the checkout type from the software updater
+            prerelease_channel = None
+            is_prerelease = False
+            # get this for reference.  Eventually I'll have to use it!
+            # is the software update set to prerelease?
+            if self._settings.global_get(["plugins", "softwareupdate", "checks", "octoprint", "prerelease"]):
+                # If it's a prerelease, look at the channel and configure the proper branch for Arc Welder
+                prerelease_channel = self._settings.global_get(
+                    ["plugins", "softwareupdate", "checks", "octoprint", "prerelease_channel"]
+                )
+                if prerelease_channel == "rc/maintenance":
+                    is_prerelease = True
+                    prerelease_channel = "rc/maintenance"
+                elif prerelease_channel == "rc/devel":
+                    is_prerelease = True
+                    prerelease_channel = "rc/devel"
+            OctolapsePlugin.octolapse_update_info["prerelease"] = is_prerelease
+            if prerelease_channel is not None:
+                OctolapsePlugin.octolapse_update_info["prerelease_channel"] = prerelease_channel
 
-        if self._settings.global_get(["plugins", "softwareupdate", "checks", "octoprint", "prerelease"]):
-            # If it's a prerelease, look at the channel and configure the proper branch for Arc Welder
-            prerelease_channel = self._settings.global_get(
-                ["plugins", "softwareupdate", "checks", "octoprint", "prerelease_channel"]
-            )
-            if prerelease_channel == "rc/maintenance":
-                is_prerelease = True
-                prerelease_channel = "rc/maintenance"
-            elif prerelease_channel == "rc/devel":
-                is_prerelease = True
-                prerelease_channel = "rc/devel"
         OctolapsePlugin.octolapse_update_info["displayVersion"] = self._plugin_version
         OctolapsePlugin.octolapse_update_info["current"] = self._plugin_version
-
-        OctolapsePlugin.octolapse_update_info["prerelease"] = is_prerelease
-        #OctolapsePlugin.octolapse_update_info["python_checker"] = self
-        if prerelease_channel is not None:
-            OctolapsePlugin.octolapse_update_info["prerelease_channel"] = prerelease_channel
-
         return dict(
             octolapse=OctolapsePlugin.octolapse_update_info
         )
