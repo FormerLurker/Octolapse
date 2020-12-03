@@ -29,7 +29,7 @@ import functools
 class NumberedVersion(version.LooseVersion):
     # This is the current plugin version, not including any versioneer info,
     # which could be earlier or later
-    CurrentVersion = "0.4.1rc1"
+    CurrentVersion = "0.4.1"
     # This is the CurrentVersion last time the settings were migrated.
     CurrentSettingsVersion = "0.4.0"
     '''
