@@ -214,9 +214,11 @@
         <div data-bind="template:'latest-snapshot-template'"></div>
         <br />
         <div class="row-fluid">
-            <div class="span7">
+            <div class="span9">
                 <small>
                     <a data-bind="click: function() {openOctolapseSettings('about');}" title="About Octolapse"><i class="fa fa-info-circle"></i>&nbsp;About</a>
+                    &nbsp;|&nbsp;
+                    <a href="https://github.com/FormerLurker/Octolapse/wiki" target="_blank" title="The Octolapse Wiki"><i class="fa fa-question-circle"></i>&nbsp;Wiki</a>
                     &nbsp;|&nbsp;
                     <a href="https://github.com/FormerLurker" target="_blank" title="FormerLurker&#146;s Github Page"><i class="fa fa-github">&nbsp;Github</i></a>
                     &nbsp;|&nbsp;
@@ -227,21 +229,17 @@
                     <a href="https://www.patreon.com/bePatron?u=9588101" target="_blank" title="Become a patron"><i class="fa fa-patreon"></i>&nbsp;Patreon</a>
                 </small>
             </div>
-
-            <div class="span5 text-right muted">
-                <a target="_blank" data-bind="visible: Octolapse.Globals.main_settings.github_link() != null, attr: { href: Octolapse.Globals.main_settings.github_link}">
-                     Octolapse&nbsp;<i data-bind="text:Octolapse.Globals.version_text"></i>
-                </a>
-                <span data-bind="visible: !Octolapse.Globals.main_settings.github_link() == null" >
-                    <small>
-                        Octolapse&nbsp;<i data-bind="text:Octolapse.Globals.version_text"></i>
-                    </small>
-                </span>
-
+            <div class="span3 test-right">
+                <small>
+                    <a target="_blank" data-bind="visible: Octolapse.Globals.main_settings.github_link() != null, attr: { href: Octolapse.Globals.main_settings.github_link}">
+                         <i data-bind="text:Octolapse.Globals.version_text"></i>
+                    </a>
+                    <span data-bind="visible: !Octolapse.Globals.main_settings.github_link() == null" >
+                        <i data-bind="text:Octolapse.Globals.version_text"></i>
+                    </span>
+                </small>
             </div>
-
         </div>
-
         <div data-bind="template:  { name: 'webcam-settings-popup-template', data: webcam_settings_popup}"></div>
         <div data-bind="template:'snapshot-plan-preview-template'"></div>
     </div>
