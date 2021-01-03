@@ -651,31 +651,48 @@ def get_system_fonts(base_directory):
     font_names = set()
     # first add all of our supplied fonts
     default_font_path = os.path.join(base_directory, "data", "fonts", "DejaVu")
+    logger.info("Searching for default fonts at: %s", default_font_path)
     for f in os.listdir(default_font_path):
         font_path = os.path.join(default_font_path, f)
+        logger.verbose("Checking for font at path: %s", f)
         if os.path.isfile(font_path) and f.endswith(".ttf"):
+            logger.debug("Found font at path: %s", f)
             font_names.add(f)
             font_paths.append(os.path.join(default_font_path, f))
 
     if sys.platform == "linux" or sys.platform == "linux2" or sys.platform == "darwin":
         # Linux and OS X.
+        # Try 1 - fails for some
         # linux_font_paths = subprocess.check_output("fc-list --format %{file}\\n".split()).split('\n')
-        linux_font_paths = str(subprocess.check_output(["fc-list", "--format", "%{file}\n"]), 'UTF-8').split('\n')
-        linux_font_paths = list(filter(None, linux_font_paths))
+        # Try 2 - fails for others....
+        # linux_font_paths = str(subprocess.check_output(["fc-list", "--format", "%{file}\n"]), 'UTF-8').split('\n')
+
+        fc_list_output = subprocess.check_output(["fc-list", "--format", "%{file}\n"], universal_newlines=True)
+        if isinstance(fc_list_output, bytes):
+            fc_list_output = fc_list_output.decode()
+
+        logger.verbose("Searching for fonts within:\n %s", fc_list_output)
+
+        linux_font_paths = list(filter(None, fc_list_output.split('\n')))
         for f in linux_font_paths:
+            logger.verbose("Checking for font at path: %s", f)
             font_name = os.path.basename(f)
             if not font_name in font_names:
+                logger.debug("Font found at path: %s", f)
                 font_names.add(font_name)
                 font_paths.append(f)
     elif sys.platform == "win32" or sys.platform == "cygwin":
         # Windows.
-        for f in os.listdir(os.path.join(os.environ['WINDIR'], "fonts")):
+        windows_font_path = os.path.join(os.environ['WINDIR'], "fonts")
+        logger.info("Searching for windows fonts at: %s", windows_font_path)
+        for f in os.listdir(windows_font_path):
             if f.endswith(".ttf"):
                 if not f in font_names:
+                    logger.debug("Font found at path: %s", f)
                     font_names.add(f)
                     font_paths.append(os.path.join(os.environ['WINDIR'], "fonts", f))
     else:
-        # I don't know how to find these for Mac OS  Maybe someone can help with this?
+        logger.info("Don't know how to search for fonts on a Mac, sorry.")
         pass
 
     # sort the fonts

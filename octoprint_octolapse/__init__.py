@@ -1547,7 +1547,12 @@ class OctolapsePlugin(
     @restricted_access
     def get_available_fonts(self):
         with OctolapsePlugin.admin_permission.require(http_exception=403):
-            font_list = utility.get_system_fonts(self._basefolder)
+            font_list = []
+            try:
+                font_list = utility.get_system_fonts(self._basefolder)
+            except Exception as e:
+                logger.exception("Unable to retrieve system fonts.")
+                raise e
             return jsonify({
                 "fonts": font_list
             })
