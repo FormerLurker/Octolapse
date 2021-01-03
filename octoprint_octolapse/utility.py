@@ -669,7 +669,7 @@ def get_system_fonts(base_directory):
 
         fc_list_output = subprocess.check_output(["fc-list", "--format", "%{file}\n"], universal_newlines=True)
         if isinstance(fc_list_output, bytes):
-            fc_list_output = fc_list_output.decode()
+            fc_list_output = fc_list_output.decode("UTF-8")
 
         logger.verbose("Searching for fonts within:\n %s", fc_list_output)
 
