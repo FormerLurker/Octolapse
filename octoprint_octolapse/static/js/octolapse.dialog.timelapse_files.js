@@ -89,7 +89,7 @@ $(function () {
             }
             else if (file_info.type === "timelapse_octolapse" || file_info.type === "timelapse_octoprint")
             {
-                self.timelapse_browser.files_changed(file_info, action)
+                self.timelapse_browser.files_changed(file_info, action);
             }
         };
 

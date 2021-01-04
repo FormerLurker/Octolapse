@@ -82,7 +82,7 @@ $(function() {
                     self.value("1");
                 else
                     self.value("0");
-            })
+            });
         }
 
         self.help_url = ko.pureComputed(function() {
@@ -99,7 +99,7 @@ $(function() {
 
         self.checkbox_title = ko.pureComputed(function() {
             return "Enable or disable " + self.name() + ".";
-        })
+        });
 
     };
 

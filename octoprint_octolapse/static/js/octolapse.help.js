@@ -77,14 +77,14 @@ $(function () {
                 });
                 //console.log("Adding resize handler.");
                 self.resize_handler(null, notice.elem);
-                window.addEventListener('resize', function() { self.resize_handler(this, notice.elem);})
+                window.addEventListener('resize', function() { self.resize_handler(this, notice.elem);});
             },
             after_close: function(notice){
                 var $overlay = $(notice.elem).parent().find(".octolapse-pnotify-overlay");
                 $overlay.remove();
                 Octolapse.removeKeyForClosedPopup('octolapse-help');
                 //console.log("Removing resize handler.");
-                window.removeEventListener('resize', self.resize_handler)
+                window.removeEventListener('resize', self.resize_handler);
             }
         };
 
@@ -115,7 +115,7 @@ $(function () {
 
                 $(elem).css("width", width)
                     .css("left", left)
-                    .css("top", "15px")
+                    .css("top", "15px");
 
             }
 
@@ -407,5 +407,5 @@ $(function () {
                 })
             );
         };
-    }
+    };
 });

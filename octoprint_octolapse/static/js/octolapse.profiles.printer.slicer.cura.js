@@ -36,7 +36,7 @@ Octolapse.CuraViewmodel = function (values, num_extruders_observable) {
     var extruders = [];
     for (var index = 0; index < self.num_extruders_observable(); index++)
     {
-        extruders.push(new Octolapse.CuraExtruderViewModel(values, index))
+        extruders.push(new Octolapse.CuraExtruderViewModel(values, index));
     }
     self.extruders = ko.observableArray(extruders);
     self.layer_height = ko.observable(values.layer_height);

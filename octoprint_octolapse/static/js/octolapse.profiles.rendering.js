@@ -128,7 +128,7 @@ $(function() {
                 rgba = JSON.parse(text_color);
             }
             // Build the correct string.
-            return 'rgba(' + rgba.join(', ') + ')'
+            return 'rgba(' + rgba.join(', ') + ')';
         };
 
         self.css_to_text_color = function(css){
@@ -167,7 +167,7 @@ $(function() {
         });
         self.overlay_preview_image_alt_text = ko.computed(function() {
             if (self.data.overlay_preview_image_error.length == 0) {
-                return 'A preview of the overlay text.'
+                return 'A preview of the overlay text.';
             }
             return 'Image could not be retrieved from server. The error returned was: ' + self.data.overlay_preview_image_error() + '.';
         });
@@ -267,7 +267,7 @@ $(function() {
                         //var matchingWatermarks = self.watermark_list().filter(w=>w.getFilename() == data.files[0].name);
                         if (matchingWatermarks.length == 0) {
                             //console.log("Error: No matching watermarks found!");
-                            return
+                            return;
                         }
                         if (matchingWatermarks > 1){
                             //console.log("Error: More than one matching watermark found! Selecting best guess.");

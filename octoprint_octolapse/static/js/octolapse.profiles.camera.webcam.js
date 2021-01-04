@@ -261,7 +261,7 @@ $(function() {
                 };
                 Octolapse.displayPopupForKey(options,"webcam_settings_error",["webcam_settings_error"]);
             });
-        }
+        };
     };
 
     Octolapse.WebcamSettingsViewModel = function (close_callback) {
@@ -491,7 +491,7 @@ $(function() {
             else
                 value = 'webcam-other-template';
 
-            return value
+            return value;
         });
 
         self.get_webcam_data = ko.pureComputed(function(){
@@ -852,5 +852,5 @@ $(function() {
             },null);
         };
 
-    }
+    };
 });

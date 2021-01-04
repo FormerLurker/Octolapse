@@ -24,7 +24,7 @@ Octolapse.Simplify3dViewModel = function (values, num_extruders_observable) {
     var extruders = [];
     for (var index = 0; index < self.num_extruders_observable(); index++)
     {
-        extruders.push(new Octolapse.Simplify3dExtruderViewModel(values, index))
+        extruders.push(new Octolapse.Simplify3dExtruderViewModel(values, index));
     }
     self.extruders = ko.observableArray(extruders);
     self.x_y_axis_movement_speed = ko.observable(values.x_y_axis_movement_speed);

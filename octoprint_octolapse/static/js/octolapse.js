@@ -41,7 +41,6 @@ $(function () {
             //console.log("Toggling element.");
             if (updateObservable) {
                 options.toggle_observable(!options.toggle_observable());
-                //console.log("Observable updated - " + options.toggle_observable())
             }
             if (options.toggle_observable()) {
                 if (options.class_showing) {
@@ -206,7 +205,7 @@ $(function () {
             if (percent_complete === 100) {
                 //console.log("Received 100% complete progress message, removing progress bar.");
                 self.loader.remove();
-                return null
+                return null;
             }
             var percent_complete_text = percent_complete.toFixed(1);
             self.$progress.width(percent_complete_text + "%").attr("aria-valuenow", percent_complete_text).find("span").html(percent_complete_text + "%");
@@ -257,11 +256,11 @@ $(function () {
     Octolapse.COOKIE_EXPIRE_DAYS = 30;
 
     Octolapse.setLocalStorage = function (name, value) {
-        localStorage.setItem("octolapse_" + name, value)
+        localStorage.setItem("octolapse_" + name, value);
     };
 
     Octolapse.getLocalStorage = function (name, value) {
-        return localStorage.getItem("octolapse_" + name)
+        return localStorage.getItem("octolapse_" + name);
     };
 
     Octolapse.replaceAll = function (str, find, replace) {
@@ -323,7 +322,7 @@ $(function () {
             numDecimals = 20;
         }
         // truncate value to numDecimals decimals
-        value = parseFloat(value.toFixed(numDecimals).toString())
+        value = parseFloat(value.toFixed(numDecimals).toString());
 
         return value;
     };
@@ -382,7 +381,7 @@ $(function () {
                     promptTrigger: true,
                     click: function (b, a) {
                         b.remove();
-                        b.get().trigger("pnotify.confirm", [b, a])
+                        b.get().trigger("pnotify.confirm", [b, a]);
                     }
                 },
                 {
@@ -391,7 +390,7 @@ $(function () {
                     promptTrigger: true,
                     click: function (b) {
                         b.remove();
-                        b.get().trigger("pnotify.cancel", b)
+                        b.get().trigger("pnotify.cancel", b);
                     }
                 }
             ];
@@ -443,7 +442,7 @@ $(function () {
                     promptTrigger: true,
                     click: function (b, a) {
                         b.remove();
-                        b.get().trigger("pnotify.confirm", [b, a])
+                        b.get().trigger("pnotify.confirm", [b, a]);
                     }
                 },
                 {
@@ -462,7 +461,7 @@ $(function () {
                     promptTrigger: true,
                     click: function (b) {
                         b.remove();
-                        b.get().trigger("pnotify.cancel", b)
+                        b.get().trigger("pnotify.cancel", b);
                     }
                 }
             ];
@@ -547,12 +546,12 @@ $(function () {
         if (!(value.length > 1 && value[value.length - 1] === "%"))
             return false;
         value = value.substr(0, value.length - 1);
-        return Octolapse.isFloat(value)
+        return Octolapse.isFloat(value);
     };
     Octolapse.isFloat = function (value) {
         if (!value)
             return false;
-        return !isNaN(value) && !isNaN(parseFloat(value))
+        return !isNaN(value) && !isNaN(parseFloat(value));
     };
 
     Octolapse.parseFloat = function (value) {
@@ -568,7 +567,7 @@ $(function () {
             value = value.substr(0, value.length - 1);
         else
             return null;
-        return Octolapse.parseFloat(value)
+        return Octolapse.parseFloat(value);
     };
 
     $.validator.addMethod('slic3rPEFloatOrPercent',
@@ -675,7 +674,7 @@ $(function () {
     $.validator.addMethod('ifOtherCheckedEnsureNonNull',
         function (value, element, param) {
             // see if the target is checked
-            var target_checked = $(param + ":checkbox:checked").length > 0
+            var target_checked = $(param + ":checkbox:checked").length > 0;
             if (target_checked)
                 return value != null && value !== '';
             return true;
@@ -794,7 +793,7 @@ $(function () {
         try {
             var round_to_increment = round_to_increment_mm_min;
             if (is_percent) {
-                round_to_increment = round_to_percent
+                round_to_increment = round_to_percent;
             } else if (current_units_observable() === 'mm-sec') {
                 round_to_increment = round_to_increment_mm_sec;
             }

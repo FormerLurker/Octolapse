@@ -128,7 +128,7 @@ $(function () {
             return Octolapse.toFileSizeString(self.in_process_renderings_size());
         });
         self.is_empty = ko.pureComputed(function(){
-            return self.in_process_renderings.list_items().length == 0
+            return self.in_process_renderings.list_items().length == 0;
         });
 
         // Configure list helper
@@ -205,7 +205,7 @@ $(function () {
                         var replaced = self.in_process_renderings.replace(in_process_rendering_change);
                         if (replaced) {
                             self.in_process_renderings_size(
-                                self.in_process_renderings_size() - replaced.value.file_size + in_process_rendering_change["file_size"])
+                                self.in_process_renderings_size() - replaced.value.file_size + in_process_rendering_change["file_size"]);
                         }
                     } else if (in_process_rendering_change_type === "progress") {
                         var progress_percent = in_process.progress_percent;

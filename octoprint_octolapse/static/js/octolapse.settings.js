@@ -254,7 +254,7 @@ $(function () {
                     var itemGuid = item.guid();
                     var matchFound = itemGuid === guid;
                     if (matchFound)
-                        return matchFound
+                        return matchFound;
                 }
             );
             if (index < 0) {
@@ -396,7 +396,7 @@ $(function () {
         self.checkForProfileUpdates = function(is_silent_test){
             //console.log("Updating Octolapse profiles from the server.");
             // is_silent_test is optional, make sure it is either true or false
-            is_silent_test = is_silent_test == true
+            is_silent_test = is_silent_test == true;
             var data = {
                 'is_silent_test': is_silent_test
             };

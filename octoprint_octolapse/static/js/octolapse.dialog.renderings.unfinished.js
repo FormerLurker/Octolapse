@@ -75,7 +75,7 @@ $(function () {
         self.get_download_url = function(){
             return './plugin/octolapse/downloadFile?type=failed_rendering&job_guid=' + self.job_guid
                 + '&camera_guid=' + self.camera_guid;
-        }
+        };
     };
 
    Octolapse.OctolapseDialogRenderingUnfinished = function () {
@@ -149,7 +149,7 @@ $(function () {
                     if (failed_rendering_change_type === "added")
                     {
                         self.failed_renderings.add(failed_rendering_change);
-                        self.failed_renderings_size(self.failed_renderings_size() + failed_rendering_change["file_size"])
+                        self.failed_renderings_size(self.failed_renderings_size() + failed_rendering_change["file_size"]);
                     }
                     else if (failed_rendering_change_type === "removed")
                     {
@@ -160,7 +160,7 @@ $(function () {
                         if (removed) {
                             self.failed_renderings_size(
                                 self.failed_renderings_size() - failed_rendering_change["file_size"]
-                            )
+                            );
                         }
                     }
                     else if (failed_rendering_change_type === "changed")
@@ -170,7 +170,7 @@ $(function () {
                             self.failed_renderings_size(
                                 self.failed_renderings_size() -
                                 replaced.failed_renderings.file_size +
-                                failed_rendering_change["file_size"])
+                                failed_rendering_change["file_size"]);
                         }
                     }
                 }
@@ -184,12 +184,12 @@ $(function () {
         self.failed_renderings_id = "octolapse-unfinished-renderings";
         self.failed_renderings_size = ko.observable(0);
         self.failed_renderings_size_formatted = ko.pureComputed(function () {
-            return Octolapse.toFileSizeString(self.failed_renderings_size())
+            return Octolapse.toFileSizeString(self.failed_renderings_size());
         });
         self.render_profile_override_guid = ko.observable(null);
         self.camera_profile_override_guid = ko.observable(null);
         self.is_empty = ko.pureComputed(function(){
-            return self.failed_renderings.list_items().length === 0
+            return self.failed_renderings.list_items().length === 0;
         });
 
         // Configure list helper
@@ -362,7 +362,7 @@ $(function () {
 
             var delete_item = function() {
                 var item = selected_files[current_index];
-                self._delete(item, delete_success, delete_failed)
+                self._delete(item, delete_success, delete_failed);
             };
 
             delete_item();
@@ -540,7 +540,7 @@ $(function () {
             var options = {
                 on_start: function(event, url){
                     $icon.attr('class', self._downloading_icon_class);
-                    $icon.attr('title', self._downloading_icon_title)
+                    $icon.attr('title', self._downloading_icon_title);
                 },
                 on_end: function(e, url){
                     if ($icon)
@@ -556,7 +556,7 @@ $(function () {
                 }
             };
             Octolapse.download(url, e, options);
-        }
+        };
     };
 
 });

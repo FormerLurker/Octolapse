@@ -351,6 +351,6 @@ $(function () {
 
         self.get_help_link_element = function(){
             return $(self.dialog_selector + " a.octolapse_dialog_help");
-        }
+        };
     };
 });

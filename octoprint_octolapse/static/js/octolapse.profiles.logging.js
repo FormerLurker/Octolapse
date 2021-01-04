@@ -71,7 +71,7 @@ $(function () {
                 });
         };
         self.available_loggers_sorted = ko.computed(function () {
-            return self.loggerNameSort(self.available_loggers)
+            return self.loggerNameSort(self.available_loggers);
         });
 
         self.removeLogger = function (logger) {

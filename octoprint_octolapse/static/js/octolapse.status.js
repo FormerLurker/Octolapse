@@ -45,7 +45,7 @@ $(function () {
             else if (type === "camera")
             {
                 self.enabled = ko.observable(values.enabled);
-                self.enable_custom_image_preferences = values.enable_custom_image_preferences
+                self.enable_custom_image_preferences = values.enable_custom_image_preferences;
             }
         };
 
@@ -142,11 +142,11 @@ $(function () {
             self.unfinished_renderings_changed = function(data){
                 if (data.failed)
                 {
-                    self.dialog_rendering_unfinished.update(data.failed)
+                    self.dialog_rendering_unfinished.update(data.failed);
                 }
                 if (data.in_process)
                 {
-                    self.dialog_rendering_in_process.update(data.in_process)
+                    self.dialog_rendering_in_process.update(data.in_process);
                 }
             };
 
@@ -215,7 +215,7 @@ $(function () {
             self.onAfterBinding = function () {
                 self.current_settings_showing.subscribe(function (newData) {
                     //console.log("Setting local storage (" + self.SETTINGS_VISIBLE_KEY + ") to " + newData);
-                    Octolapse.setLocalStorage(self.SETTINGS_VISIBLE_KEY, newData)
+                    Octolapse.setLocalStorage(self.SETTINGS_VISIBLE_KEY, newData);
                 });
                 self.dialog_rendering_in_process.on_after_binding();
                 self.dialog_rendering_unfinished.on_after_binding();
@@ -253,7 +253,7 @@ $(function () {
                 {
                     for (var index=0; index < values.length; index++)
                     {
-                        profiles.push(new Octolapse.CurrentSettingViewModel(type, values[index]))
+                        profiles.push(new Octolapse.CurrentSettingViewModel(type, values[index]));
                     }
                 }
                 return profiles;
@@ -371,7 +371,7 @@ $(function () {
                 {
                     if(self.profiles().cameras()[i].enabled())
                     {
-                        return true
+                        return true;
                     }
                 }
                 return false;
@@ -406,7 +406,7 @@ $(function () {
                 if (guid != null) {
                     for (var i = 0; i < profiles.length; i++) {
                         if (profiles[i].guid == guid) {
-                            return profiles[i]
+                            return profiles[i];
                         }
                     }
                 }
@@ -448,7 +448,7 @@ $(function () {
                                 if ($images.length > 0)
                                 {
                                     $current.css("opacity","0");
-                                    animate_snapshots($images, $current, $images.length-1, -1, 0, 25)
+                                    animate_snapshots($images, $current, $images.length-1, -1, 0, 25);
                                 }
                                 else
                                 {
@@ -465,7 +465,7 @@ $(function () {
                                     {
                                         setTimeout(function () {
                                             $images.eq(index).css("opacity",opacity.toString());
-                                            animate_snapshots($images, $current, index+step, step, opacity, delay)
+                                            animate_snapshots($images, $current, index+step, step, opacity, delay);
                                         }, delay);
                                     }
                                     else if(step > 0)
@@ -498,7 +498,7 @@ $(function () {
                 if (!force) {
                     if (!Octolapse.Globals.main_settings.auto_reload_latest_snapshot()) {
                         //console.log("Not updating the thumbnail, auto-reload is disabled.");
-                        return
+                        return;
                     }
                 }
 
@@ -672,7 +672,7 @@ $(function () {
                     });
                 }
                 // set the src and start to load
-                $newSnapshot.attr('src', newSnapshotAddress)
+                $newSnapshot.attr('src', newSnapshotAddress);
             };
 
             self.toggleInfoPanel = function (observable, panelType){
@@ -721,7 +721,7 @@ $(function () {
                     case "timer":
                         return "timer-trigger-status-template";
                     default:
-                        return "trigger-status-template"
+                        return "trigger-status-template";
                 }
             };
 
@@ -834,7 +834,7 @@ $(function () {
                 }
             };
             // Printer Profile Settings
-            self.printers_sorted = ko.computed(function() { return self.nameSort(self.profiles().printers) });
+            self.printers_sorted = ko.computed(function() { return self.nameSort(self.profiles().printers); });
 
             self.openCurrentPrinterProfile = function () {
                 //console.log("Opening current printer profile from tab.")
@@ -857,7 +857,7 @@ $(function () {
             };
 
             // Stabilization Profile Settings
-            self.stabilizations_sorted = ko.computed(function() { return self.nameSort(self.profiles().stabilizations) });
+            self.stabilizations_sorted = ko.computed(function() { return self.nameSort(self.profiles().stabilizations); });
             self.openCurrentStabilizationProfile = function () {
                 //console.log("Opening current stabilization profile from tab.")
                 Octolapse.Stabilizations.showAddEditDialog(self.current_stabilization_profile_guid(), false);
@@ -876,7 +876,7 @@ $(function () {
 
 
             // Trigger Profile Settings
-            self.triggers_sorted = ko.computed(function() { return self.nameSort(self.profiles().triggers) });
+            self.triggers_sorted = ko.computed(function() { return self.nameSort(self.profiles().triggers); });
             self.openCurrentTriggerProfile = function () {
                 //console.log("Opening current trigger profile from tab.")
                 Octolapse.Triggers.showAddEditDialog(self.current_trigger_profile_guid(), false);
@@ -894,7 +894,7 @@ $(function () {
             };
 
             // Rendering Profile Settings
-            self.renderings_sorted = ko.computed(function() { return self.nameSort(self.profiles().renderings) });
+            self.renderings_sorted = ko.computed(function() { return self.nameSort(self.profiles().renderings); });
             self.openCurrentRenderingProfile = function () {
                 //console.log("Opening current rendering profile from tab.")
                 Octolapse.Renderings.showAddEditDialog(self.current_rendering_profile_guid(), false);
@@ -912,7 +912,7 @@ $(function () {
             };
 
             // Camera Profile Settings
-            self.cameras_sorted = ko.computed(function() { return self.nameSort(self.profiles().cameras) });
+            self.cameras_sorted = ko.computed(function() { return self.nameSort(self.profiles().cameras); });
             self.openCameraProfile = function (guid) {
                 //console.log("Opening current camera profile from tab.")
                 Octolapse.Cameras.showAddEditDialog(guid, false);
@@ -959,7 +959,7 @@ $(function () {
             };
 
             // Logging Profile Settings
-            self.logging_profiles_sorted = ko.computed(function() { return self.nameSort(self.profiles().logging_profiles) });
+            self.logging_profiles_sorted = ko.computed(function() { return self.nameSort(self.profiles().logging_profiles); });
             self.openCurrentLoggingProfile = function () {
                 //console.log("Opening current logging profile from tab.")
                 Octolapse.LoggingProfiles.showAddEditDialog(self.current_logging_profile_guid(), false);
@@ -1509,7 +1509,7 @@ $(function () {
                 commands = ["@OCTOLAPSE TAKE-SNAPSHOT", "SNAP"];
                 if (self.snapshot_command().length > 0)
                 {
-                    commands.push(self.snapshot_command())
+                    commands.push(self.snapshot_command());
                 }
                 return commands;
             }, self);

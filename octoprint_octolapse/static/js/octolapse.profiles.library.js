@@ -234,7 +234,7 @@ $(function() {
             return {
                 "name": option.name,
                 "value": key
-            }
+            };
         };
 
         self.updateKeyValuesForIndexedKey = function(indexed_key) {
@@ -333,7 +333,7 @@ $(function() {
                 options.push(self.createIndexedOption(self.original_key[index],self.original_key[index], key_index));
             }
             options.sort(function(left, right) {
-                return left.name == right.name ? 0 : (left.name < right.name ? -1 : 1)
+                return left.name == right.name ? 0 : (left.name < right.name ? -1 : 1);
             });
             options.unshift(self.createIndexedOption(self.options_caption,"null", key_index));
             self.ignore_key_change = false;

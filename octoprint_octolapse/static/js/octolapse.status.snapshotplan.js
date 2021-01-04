@@ -140,7 +140,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.lines_remaining(lines_remaining);
                 var previous_line = 0;
                 if (self.current_plan_index() - 1 > 0)
-                    previous_plan = self.snapshot_plans()[self.current_plan_index() - 1]
+                    previous_plan = self.snapshot_plans()[self.current_plan_index() - 1];
                 if (previous_plan != null)
                     previous_line = previous_plan.file_gcode_number;
                 var lines_total = current_plan.file_gcode_number - previous_line;
@@ -493,7 +493,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     "Y",
                     self.canvas_border_size[0] * 0.5 - text_width.width/2 - 1,
                     self.canvas_printer_size[1] - self.axis_line_length + self.canvas_border_size[1] * 1.5 - 2
-                )
+                );
 
                 // *** draw the X arrow
                 // draw the horizontal line
@@ -537,7 +537,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     "X",
                     self.canvas_border_size[0] * 0.5 + self.axis_line_length,
                     self.canvas_printer_size[1] + self.canvas_border_size[1] * 1.5 + 4.5
-                )
+                );
 
             };
 

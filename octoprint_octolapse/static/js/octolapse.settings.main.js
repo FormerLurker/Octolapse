@@ -96,7 +96,7 @@ $(function () {
             self.octolapse_git_version(settings.git_version || settings.octolapse_git_version || null);
 
             if (defaults)
-                self.defaults = settings.defaults
+                self.defaults = settings.defaults;
         };
 
         self.toggleOctolapse = function(){

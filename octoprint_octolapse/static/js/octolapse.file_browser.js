@@ -32,7 +32,7 @@ $(function () {
         self.get_download_url = function(list_item){
             var parent = list_item.data.parent;
             return './plugin/octolapse/downloadFile?type=' + parent.file_type + '&name=' + list_item.id;
-        }
+        };
     };
 
     Octolapse.OctolapseFileBrowser = function (id, parent, options) {
@@ -269,7 +269,7 @@ $(function () {
             };
 
             var delete_file = function() {
-                self._delete_file(selected_files[current_index], delete_success, delete_failed)
+                self._delete_file(selected_files[current_index], delete_success, delete_failed);
             };
 
             delete_file();
@@ -307,7 +307,7 @@ $(function () {
             var options = {
                 on_start: function(event, url){
                     $icon.attr('class', self._downloading_icon_class);
-                    $icon.attr('title', self._downloading_icon_title)
+                    $icon.attr('title', self._downloading_icon_title);
                 },
                 on_end: function(e, url){
                     if ($icon)
@@ -323,7 +323,7 @@ $(function () {
                 }
             };
             Octolapse.download(url, e, options);
-        }
+        };
 
     };
 });

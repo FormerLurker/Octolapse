@@ -63,7 +63,7 @@ $(function() {
         });
 
         // Created a sorted observable
-        self.profiles_sorted = ko.computed(function() { return Octolapse.observableNameSort(self.profiles) });
+        self.profiles_sorted = ko.computed(function() { return Octolapse.observableNameSort(self.profiles); });
 
         /*
             Octoprint Viewmodel Events
@@ -131,7 +131,7 @@ $(function() {
         };
         //Remove an existing profile from the server settings, then if successful remove it from the observable array.
         self.removeProfile = function (guid) {
-            var currentProfile = self.getProfileByGuid(guid)
+            var currentProfile = self.getProfileByGuid(guid);
             if (confirm("Are you sure you want to permanently erase the profile:'" + currentProfile.name() + "'?")) {
                 var data = { "client_id": Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName() };
                 $.ajax({
@@ -233,7 +233,7 @@ $(function() {
                 newProfile = new self.profileViewModelCreate(ko.toJS(self.default_profile())); // Create our profile viewmodel
             }
             else {
-                var current_profile = ko.toJS(self.getProfileByGuid(guid))
+                var current_profile = ko.toJS(self.getProfileByGuid(guid));
                 if(current_profile == null)
                     return null;
 
@@ -247,7 +247,7 @@ $(function() {
             var index = Octolapse.arrayFirstIndexOf(self.profiles(),
                 function(item) {
                     var itemGuid = item.guid();
-                    return itemGuid === guid
+                    return itemGuid === guid;
                 }
             );
             if (index < 0) {
@@ -275,7 +275,7 @@ $(function() {
                     var itemGuid = item.guid();
                     var matchFound = itemGuid === guid;
                     if (matchFound)
-                        return matchFound
+                        return matchFound;
                 }
             );
             if (index < 0) {

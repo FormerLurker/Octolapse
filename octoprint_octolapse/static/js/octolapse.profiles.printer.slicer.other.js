@@ -36,7 +36,7 @@ Octolapse.OtherSlicerViewModel = function (values, num_extruders_observable) {
     var extruders = [];
     for (var index = 0; index < self.num_extruders_observable(); index++)
     {
-        extruders.push(new Octolapse.OtherSlicerExtruderViewModel(values, index))
+        extruders.push(new Octolapse.OtherSlicerExtruderViewModel(values, index));
     }
     self.extruders = ko.observableArray(extruders);
     self.speed_tolerance = ko.observable(values.speed_tolerance);

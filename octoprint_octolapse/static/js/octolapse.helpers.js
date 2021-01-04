@@ -56,7 +56,7 @@ $(function () {
                 column: column,
                 value: value
             };
-        }
+        };
     };
 
     Octolapse.ListViewModel = function (parent, id, options){
@@ -189,7 +189,7 @@ $(function () {
             //console.log("octolapse.helpers.js - num pages changed");
             if (self.list_items().length === 0)
                 return 0;
-            return Math.ceil(self.list_items().length / self.page_size())
+            return Math.ceil(self.list_items().length / self.page_size());
         });
 
         self.pager = ko.pureComputed(function(){
@@ -457,7 +457,7 @@ $(function () {
             if (page_index < 0)
                 page_index = 0;
 
-            self.current_page_index(page_index)
+            self.current_page_index(page_index);
         };
 
         self.selected_count = ko.pureComputed(function(){
