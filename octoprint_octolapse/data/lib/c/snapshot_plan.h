@@ -27,26 +27,27 @@
 #include "trigger_position.h"
 #include <vector>
 #include <map>
+
 struct snapshot_plan
 {
-	snapshot_plan();
-	PyObject * to_py_object();
-	static PyObject * build_py_object(std::vector<snapshot_plan> &plans);
-	long file_line;
-	long file_gcode_number;
-	long file_position;
-	position_type triggering_command_type;
-	feature_type triggering_command_feature_type;
-	parsed_command triggering_command;
-	parsed_command start_command;
-	position initial_position;
-	bool has_initial_position;
-	std::vector<snapshot_plan_step> steps;
-	position return_position;
-	parsed_command end_command;
-	double distance_from_stabilization_point;
-	double total_travel_distance;
-	double saved_travel_distance;
+  snapshot_plan();
+  PyObject* to_py_object();
+  static PyObject* build_py_object(std::vector<snapshot_plan>& plans);
+  long file_line;
+  long file_gcode_number;
+  long file_position;
+  position_type triggering_command_type;
+  feature_type triggering_command_feature_type;
+  parsed_command triggering_command;
+  parsed_command start_command;
+  position initial_position;
+  bool has_initial_position;
+  std::vector<snapshot_plan_step> steps;
+  position return_position;
+  parsed_command end_command;
+  double distance_from_stabilization_point;
+  double total_travel_distance;
+  double saved_travel_distance;
 };
 
 #endif

@@ -36,16 +36,15 @@
 struct parsed_command
 {
 public:
-	parsed_command();
-	std::string command;
-	std::string gcode;
-	std::string comment;
-	bool is_empty;
-	bool is_known_command;
-	std::vector<parsed_command_parameter> parameters;
-	PyObject * to_py_object();
-	void clear();
-	
+  parsed_command();
+  std::string command;
+  std::string gcode;
+  std::string comment;
+  bool is_empty;
+  bool is_known_command;
+  std::vector<parsed_command_parameter> parameters;
+  PyObject* to_py_object();
+  void clear();
 };
 
 #endif
