@@ -16,6 +16,7 @@ public:
 	static std::string rtrim(const std::string& s);
 	static std::string trim(const std::string& s);
 	static std::istream& safe_get_line(std::istream& is, std::string& t);
+  static bool is_in_caseless_trim(const std::string& lhs, const char** rhs);
 protected:
 	static const std::string WHITESPACE_;
 private:

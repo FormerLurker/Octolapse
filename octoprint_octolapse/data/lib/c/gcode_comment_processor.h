@@ -1,6 +1,8 @@
 #pragma once
 #include "position.h"
+#include "utilities.h"
 #define NUM_FEATURE_TYPES 11
+
 static const std::string feature_type_name[NUM_FEATURE_TYPES] = {
 		 "unknown_feature", "bridge_feature", "outer_perimeter_feature", "unknown_perimeter_feature", "inner_perimeter_feature", "skirt_feature", "gap_fill_feature", "solid_infill_feature", "ooze_shield_feature", "infill_feature", "prime_pillar_feature"
 };
@@ -40,6 +42,17 @@ enum section_type
 	section_type_prime_pillar_section
 };
 
+// Static strings for slicer comment extraction
+// Note these must all be lower case, no beginning or trailing whitespace, and the arrays must be null terminated.
+static const char* SLICER_PE_OUTER_PERIMETER_COMMENTS[] = { "external perimeter", "overhang perimeter", "move to first external perimeter point", NULL };
+static const char* SLICER_PE_INNER_PERIMETER_COMMENTS[] = { "internal perimeter", "move to first internal perimeter point", NULL };
+static const char* SLICER_PE_UNKNOWN_PERIMETER_COMMENTS[] = { "perimeter", "move to first perimeter point", NULL };
+static const char* SLICER_PE_INFILL_COMMENTS[] = { "infill", "move to first infill point", NULL };
+static const char* SLICER_PE_SOLID_INFILL_COMMENTS[] = { "solid infill", "move to first solid infill point", "top solid infill", "move to first top solid infill point", NULL };
+static const char* SLICER_PE_GAP_FILL_COMMENTS[] = { "gap fill", "move to first gap fill point", NULL };
+static const char* SLICER_PE_BRIDGE_COMMENTS[] = { "infill(bridge)", "move to first infill(bridge) point", "internal bridge infill", "move to first internal bridge infill point", NULL };
+static const char* SLICER_PE_SKIRT_COMMENTS[] = { "skirt", "move to first skirt point", NULL };
+
 class gcode_comment_processor
 {
 	
@@ -65,5 +78,7 @@ private:
 	bool update_cura_section(std::string &comment);
 	bool update_simplify_3d_section(std::string &comment);
 	bool update_slic3r_pe_section(std::string &comment);
+
+
 };
 

@@ -2,6 +2,7 @@
 #include <math.h>
 #include <sstream>
 #include <iostream>
+#include <cctype>
 
 // Had to increase the zero tolerance because prusa slicer doesn't always retract enough while wiping.
 const double ZERO_TOLERANCE = 0.00005;
@@ -106,4 +107,51 @@ std::istream& utilities::safe_get_line(std::istream& is, std::string& t)
 			t += static_cast<char>(c);
 		}
 	}
+}
+
+/// <summary>
+/// Checks to see if the lhs is in the rhs.
+/// </summary>
+/// <param name="lhs">The string to search for in the array.  Case will be ignored, as will beginning and ending whitespace</param>
+/// <param name="rhs">A null terminated LOWERCASE array of const char * that is already trimmed.</param>
+/// <returns></returns>
+bool utilities::is_in_caseless_trim(const std::string& lhs, const char** rhs)
+{
+  unsigned int lhend = lhs.find_last_not_of(WHITESPACE_);
+  unsigned int lhstart = lhs.find_first_not_of(WHITESPACE_);
+  unsigned int size = lhend - lhstart + 1;
+  int index = 0;
+
+  while (rhs[index] != NULL)
+  {
+    const char* rhString = rhs[index++];
+    if (rhString == NULL)
+    {
+      break;
+    }
+    // If the sizes minus the whitespace doesn't match, the strings can't match
+    if (size != strlen(rhString))
+    {
+      continue;
+    }
+
+    // The sizes match, loop through and compare
+    bool failed = false;
+    for (unsigned int i = 0; i < size; ++i)
+    {
+      if (std::tolower(lhs[i + lhstart]) != rhString[i])
+      {
+        // Something didn't match, return false
+        failed = true;
+        break;
+      }
+    }
+    if (!failed)
+    {
+      return true;
+    }
+  }
+
+  // If we are here, this string does not appear
+  return false;
 }

@@ -4,6 +4,8 @@ gcode_comment_processor::gcode_comment_processor()
 {
 	current_section_ = section_type_no_section;
 	processing_type_ = comment_process_type_unknown;
+
+  
 }
 
 gcode_comment_processor::~gcode_comment_processor()
@@ -36,22 +38,52 @@ void gcode_comment_processor::update(position& pos)
 
 bool gcode_comment_processor::update_feature_for_slic3r_pe_comment(position& pos, std::string &comment) const
 {
-	if (comment == "perimeter" || comment == "move to first perimeter point")
+  // External Perimeter - SuperSlicer
+  // Also, adding overhang perimeter here too.
+  if (utilities::is_in_caseless_trim(comment, SLICER_PE_OUTER_PERIMETER_COMMENTS))
+  {
+    pos.feature_type_tag = feature_type_outer_perimeter_feature;
+    return true;
+  }
+  // Internal Perimeter - SuperSlicer
+  if (utilities::is_in_caseless_trim(comment, SLICER_PE_INNER_PERIMETER_COMMENTS))
+  {
+    pos.feature_type_tag = feature_type_inner_perimeter_feature;
+    return true;
+  }
+  if (utilities::is_in_caseless_trim(comment, SLICER_PE_UNKNOWN_PERIMETER_COMMENTS))
 	{
 		pos.feature_type_tag = feature_type_unknown_perimeter_feature;
 		return true;
 	}
-	if (comment == "infill" || comment == "move to first infill point")
+  
+  if (utilities::is_in_caseless_trim(comment, SLICER_PE_INFILL_COMMENTS))
 	{
 		pos.feature_type_tag = feature_type_infill_feature;
 		return true;
 	}
-	if (comment == "infill(bridge)" || comment == "move to first infill(bridge) point")
-	{
+  // Solid Infill/Top Solid Infill - SuperSlicer
+  if (utilities::is_in_caseless_trim(comment, SLICER_PE_SOLID_INFILL_COMMENTS))
+  {
+    pos.feature_type_tag = feature_type_solid_infill_feature;
+      return true;
+  }
+  
+  // Gap Fill - SuperSlicer
+  if (utilities::is_in_caseless_trim(comment, SLICER_PE_GAP_FILL_COMMENTS))
+  {
+    pos.feature_type_tag = feature_type_gap_fill_feature;
+      return true;
+  }  
+
+  // bridge infill - SuperSlicer
+  if (utilities::is_in_caseless_trim(comment, SLICER_PE_BRIDGE_COMMENTS)) 
+  {
 		pos.feature_type_tag = feature_type_bridge_feature;
 		return true;
 	}
-	if (comment == "skirt" || comment == "move to first skirt point")
+
+  if (utilities::is_in_caseless_trim(comment, SLICER_PE_SKIRT_COMMENTS))
 	{
 		pos.feature_type_tag = feature_type_skirt_feature;
 		return true;
