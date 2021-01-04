@@ -1,8 +1,9 @@
 #include "utilities.h"
-#include <math.h>
+#include <cmath>
 #include <sstream>
 #include <iostream>
 #include <cctype>
+#include <cstring>
 
 // Had to increase the zero tolerance because prusa slicer doesn't always retract enough while wiping.
 const double ZERO_TOLERANCE = 0.00005;
@@ -15,7 +16,7 @@ int utilities::round_up_to_int(double x)
 
 bool utilities::is_equal(double x, double y)
 {
-  double abs_difference = fabs(x - y);
+  double abs_difference = std::fabs(x - y);
   return abs_difference < ZERO_TOLERANCE;
 }
 
@@ -41,7 +42,7 @@ bool utilities::less_than_or_equal(double x, double y)
 
 bool utilities::is_zero(double x)
 {
-  return fabs(x) < ZERO_TOLERANCE;
+  return std::fabs(x) < ZERO_TOLERANCE;
 }
 
 double utilities::get_cartesian_distance(double x1, double y1, double x2, double y2)
