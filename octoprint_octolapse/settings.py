@@ -1234,7 +1234,11 @@ class RenderingProfile(AutomaticConfigurationProfile):
                 "e",
                 "f",
                 "x_snapshot",
-                "y_snapshot"
+                "y_snapshot",
+                "gcode_file",
+                "gcode_file_name",
+                "gcode_file_extension",
+                "print_end_state"
             ],
             'overlay_text_alignment_options': [
                 "left",
