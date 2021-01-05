@@ -90,7 +90,7 @@ def is_overlay_text_template_valid(template, options):
     # this must be in milliseconds, use a value of 5 days 5 hours 5 minute 5 seconds and 123 MS
     option_dict["time_elapsed"] = (5 * 24 * 60 * 60 + 5 * 60 * 60 + 5 * 60 + 5.123)
     # first try to replace any date tokens, else these will cause errors in further checks
-    success, template = format_overlay_date_templates(template)
+    success, template = format_overlay_date_templates(template, datetime.datetime.now().timestamp())
     if not success:
         # in this case, the template will contain the errors
         return False, template
@@ -119,10 +119,10 @@ OVERLAY_DATE_FORMAT_EXTRACT_REGEX = re.compile(r"{current_time:\"([^\"]*)\"}", r
 OVERLAY_DATE_TOKEN_MATCH_REGEX = re.compile(r"({current_time:\"[^\"]*\"})", re.IGNORECASE)
 
 
-def format_overlay_date_templates(template):
+def format_overlay_date_templates(template, epoch_time):
+    date_value = datetime.datetime.fromtimestamp(epoch_time)
     # find our templates via regex
     matches = OVERLAY_DATE_TOKEN_MATCH_REGEX.findall(template)
-    now = datetime.datetime.now()
     for match in matches:
         # extract the date format string and test it
         date_format_match = OVERLAY_DATE_FORMAT_EXTRACT_REGEX.match(match)
@@ -131,7 +131,7 @@ def format_overlay_date_templates(template):
         date_format_string = date_format_match.group(1)
 
         try:
-            date_string = now.strftime(date_format_string)
+            date_string = date_value.strftime(date_format_string)
         except ValueError as e:
             return False, "Incorrect date format string '{0}'".format(date_format_string)
         # Replace this token with the date
@@ -141,7 +141,7 @@ def format_overlay_date_templates(template):
 
 OVERLAY_TIMEDELTA_FORMAT_EXTRACT_REGEX = re.compile(r"{time_elapsed:\"([^\"]*)\"}", re.IGNORECASE)
 OVERLAY_TIMEDELTA_TOKEN_MATCH_REGEX = re.compile(r"({time_elapsed:\"[^\"]*\"})", re.IGNORECASE)
-OVERLAY_TIMEDELTA_INNER_TOKEN_MATCH_REGEX = re.compile(r"(%[DdHhMmSsFf][:]?[0-9]?)")
+OVERLAY_TIMEDELTA_INNER_TOKEN_MATCH_REGEX = re.compile(r"(%[DdHhMmSsFf](?:(?::[0-9]+.[0-9]+)|(?::.[0-9]+)|(?::[0-9]+))?)")
 # time format tokens:
 # %D = total days
 # %d = day component
@@ -163,7 +163,7 @@ def format_overlay_timedelta_templates(template, time_elapsed_seconds):
     total_seconds = total_milliseconds / 1000.0
     total_minutes = total_seconds / 60.0
     total_hours = total_minutes / 60
-    total_days =  total_hours / 24.0
+    total_days = total_hours / 24.0
     # now get components
     seconds, milliseconds = divmod(time_elapsed_seconds * 1000, 1000)
     minutes, seconds = divmod(seconds, 60)
@@ -213,11 +213,34 @@ def format_overlay_timedelta_templates(template, time_elapsed_seconds):
             # get the decimal format of the number
             inner_token_format = "{0:0.0f}"
             if len(token) > 3 and token[2] == ":":
+                # Extract the format
                 try:
-                    num_decimals = float(token[3:])
-                    inner_token_format = "{0:0" + str(round(num_decimals, 1)) + "f}"
+                    search_string = token[3:]
+                    decimal_index = search_string.find(".")
+                    right = None
+                    left = None
+                    if decimal_index > -1 and len(search_string) > decimal_index + 1:
+                        right = int(search_string[decimal_index+1:])
+                        if decimal_index > 0:
+                            left = int(search_string[0:decimal_index])
+                    else:
+                        left = int(search_string)
+
+                    inner_token_format = "{0:0"
+                    if left is not None:
+                        inner_token_format += str(left)
+
+                    inner_token_format += "."
+
+                    if right is not None:
+                        inner_token_format += str(right)
+                    else:
+                        inner_token_format += "0"
+
+                    inner_token_format += "f}"
                 except ValueError as e:
                     return False, "Unable to convert time delta parameter to int: {0}".format(token)
+
 
             # format the number
             inner_token_value = inner_token_format.format(value)
@@ -2096,7 +2119,7 @@ class TimelapseRenderJob(threading.Thread):
 
             format_vars['snapshot_number'] = snapshot_number = int(data['snapshot_number']) + 1
             format_vars['file_name'] = data['file_name']
-            format_vars['time_taken_s'] = time_taken = float(data['time_taken'])
+            format_vars['time_taken'] = time_taken = float(data['time_taken'])
 
             layer = None if "layer" not in data or data["layer"] is None or data["layer"] == "None" else int(data["layer"])
             height = None if "height" not in data or data["height"] is None or data["height"] == "None" else float(data["height"])
@@ -2167,7 +2190,7 @@ class TimelapseRenderJob(threading.Thread):
         if not text_template:
             return image
 
-        success, text_template = format_overlay_date_templates(text_template)
+        success, text_template = format_overlay_date_templates(text_template, format_vars["time_taken"])
         if not success:
             # this should not happen, but just in case
             # note, text will contain the error if this fails.
@@ -2177,11 +2200,10 @@ class TimelapseRenderJob(threading.Thread):
             success, text_template = format_overlay_timedelta_templates(text_template, format_vars["time_elapsed"])
             if not success:
                 raise RenderError('overlay-text', text_template)
-
-        # replace time_elapsed with a formatted string, in case format strings are omitted
-        format_vars['time_elapsed'] = format_vars['time_elapsed_formatted']
-        del format_vars['time_elapsed_formatted']
-        text = text_template.format(**format_vars)
+            # replace time_elapsed with a formatted string, in case format strings are omitted
+            format_vars['time_elapsed'] = format_vars['time_elapsed_formatted']
+            del format_vars['time_elapsed_formatted']
+            text = text_template.format(**format_vars)
 
         # No font selected
         if not font_path or not os.path.isfile(font_path):

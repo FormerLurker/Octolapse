@@ -30,19 +30,29 @@ Here are some examples if we assume the elapsed time is 5 days, 5 hours, 5 minut
 
 You can also specify the number of decimals to display, and/or pad the string with leading zeros. This formatting style is taken from python's format function, and behaves pretty much the same.  here is the format
 
-%{token_name}:{minimum_non_decimal_digits}.{number_of_decimal_places}
+%{token_name}:{minimum_total_characters}.{number_of_decimal_places}
 
-If *minimum_non_decimal_digits* is less than the actual number of digits, the number will be padded with 0s.  If there are more non-decimal digits than are specified, all are shown.
+or
 
-If you set number_of_decimal_places=0, the decimal will be truncated and shown as 0.  For example, 1.1 will become 1.0.  This is odd, but it's the way it is.
+%{token_name}:.{number_of_decimal_places} (this is equivelant to %{token_name}:0.{number_of_decimal_places})
+
+or
+
+%{token_name}:{minimum_total_characters}
+
+If *minimum_total_characters* is less than the actual number of total characters (including the decimal point), the number will be padded with 0s on the left.  If there are more characters than are specified, all are shown.
 
 See the following examples assuming total minutes = 55.5555:
 
 * {time_elapsed:"%M:0.1"} - shows the total minutes with 1 decimal place : 55.6
-* {time_elapsed:"%M:0.0"} - shows the total minutes with 1 decimal place, but the decimal will always be 0 unfortunately (.0 is the same as .1 unfortunately): 55.6
-* {time_elapsed:"%M:1.1"} - the same as M:0.0, : 55.6
+* {time_elapsed:"%M:0.0"} - Shows 56 (rounds up from 55.5555)
+* {time_elapsed:"%M:1.1"} - 55.6
 * {time_elapsed:"%M:0.2"} - 2 decimal places : 55.56
-* {time_elapsed:"%M:4.1"} - 4 non-decimal digits, 2 decimal places : 0055.56
+* {time_elapsed:"%M:4.1"} - 55.6
+* {time_elapsed:"%M:5.1"} - 055.6
+* {time_elapsed:"%M:5.2"} - 55.56
+* {time_elapsed:"%M:5"} - 00055
+* {time_elapsed:"%M:.5"} - 55.55550
 
 You can mix and match tokens and add your own text:
 
