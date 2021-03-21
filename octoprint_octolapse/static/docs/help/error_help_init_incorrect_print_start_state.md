@@ -1,0 +1,3 @@
+Octolapse expects the printer to be in the **Initializing** state while preparing to start a timelapse.  If it is in any other state, this indicates some kind of error.  It's possible that your printer has disconnected or that the print has been cancelled.  Try disconnecting and reconnecting your printer.  That will usually fix this issue.  If that fails, try powering down your printer, then powering down your Pi (or PC if you are not using a Pi) via the OctoPrint interface.  Then turn your printer back on, followed by your Pi
+ 
+ Note:  **NEVER unplug your pi to turn it off!  This can lead to SD card corruption, which requires a reinstall to fix!**

@@ -1,0 +1,3 @@
+Octolapse cannot be used when printing from your 3D printer's built-in memory or SD card.  Octolapse must be able to access the GCode stream, which can only be done when printing locally via Octoprint.  Try uploading your gcode to OctoPrint, and print the file locally instead.
+
+If you are confused which files are being stored on your printer, and which ones are being stored by OctoPrint, find the OctoPrint file manager (left hand side), and click the wrench/spanner icon above the **search** box.  Then select **Only show files stored locally**.  This will remove any gcode files stored on your printer's SD card from the file list.

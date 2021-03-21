@@ -28,7 +28,7 @@
 #include "gcode_position.h"
 #include "snapshot_plan.h"
 #include "stabilization_results.h"
-
+#include <vector>
 #ifdef _DEBUG
 #undef _DEBUG
 #include <Python.h>
@@ -36,7 +36,7 @@
 #else
 #include <Python.h>
 #endif
-#include <vector>
+
 static const char* travel_action = "travel";
 static const char* snapshot_action = "snapshot";
 static const char* send_parsed_command_first = "first";
@@ -47,13 +47,9 @@ class stabilization_args {
 public:
 	stabilization_args()
 	{
-		stabilization_type = "";
 		height_increment = 0.0;
 		notification_period_seconds = 0.25;
 		file_path = "";
-		py_get_snapshot_position_callback = NULL;
-		py_gcode_generator = NULL;
-		py_on_progress_received = NULL;
 		x_coordinate = 0;
 		y_coordinate = 0;
 		x_stabilization_disabled = false;
@@ -61,17 +57,9 @@ public:
 	}
 	~stabilization_args()
 	{
-		if (py_get_snapshot_position_callback != NULL)
-			Py_XDECREF(py_get_snapshot_position_callback);
-		if (py_gcode_generator != NULL)
-			Py_XDECREF(py_gcode_generator);
-		if (py_on_progress_received != NULL)
-			Py_XDECREF(py_on_progress_received);
+		
 	}
-	PyObject* py_on_progress_received;
-	PyObject * py_get_snapshot_position_callback;
-	PyObject * py_gcode_generator;
-	std::string stabilization_type;
+	
 	std::string file_path;
 	double height_increment;
 	double notification_period_seconds;
@@ -89,8 +77,8 @@ public:
 	double y_coordinate;
 };
 typedef bool(*progressCallback)(double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
-typedef bool(*pythonProgressCallback)(PyObject* python_progress_callback, double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, long gcodesProcessed, long linesProcessed);
-typedef bool(*pythonGetCoordinatesCallback)(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double* x_result, double* y_result);
+typedef bool(*pythonProgressCallback)(PyObject* python_progress_callback, double percentComplete, double seconds_elapsed, double estimatedSecondsRemaining, int gcodesProcessed, int linesProcessed);
+typedef bool(*pythonGetCoordinatesCallback)(PyObject* py_get_snapshot_position_callback, double x_initial, double y_initial, double& x_result, double& y_result);
 
 class stabilization
 {
@@ -98,11 +86,11 @@ public:
 
 	stabilization();
 	// constructor for use when running natively
-	stabilization(gcode_position_args* position_args, stabilization_args* args, progressCallback progress);
+	stabilization(gcode_position_args position_args, stabilization_args args, progressCallback progress);
 	// constructor for use when being called from python
-	stabilization(gcode_position_args* position_args, stabilization_args* args, pythonGetCoordinatesCallback get_coordinates, pythonProgressCallback progress);
+	stabilization(gcode_position_args position_args, stabilization_args args, pythonGetCoordinatesCallback get_coordinates, PyObject* py_get_coordinates_callback, pythonProgressCallback progress, PyObject* py_progress_callback);
 	virtual ~stabilization();
-	void process_file(stabilization_results* results);
+	stabilization_results process_file();
 	
 private:
 	stabilization(const stabilization &source); // don't copy me!
@@ -112,34 +100,45 @@ private:
 	// False if return < 0, else true
 	pythonGetCoordinatesCallback _get_coordinates_callback;
 	void notify_progress(double percent_progress, double seconds_elapsed, double seconds_to_complete,
-		long gcodes_processed, long lines_processed);
-	gcode_position_args* p_args_;
+		int gcodes_processed, int lines_processed);
+	
 	// current stabilization point
 
 	double stabilization_x_;
 	double stabilization_y_;
+
+	PyObject* py_on_progress_received;
+	PyObject* py_get_snapshot_position_callback;
+	
 protected:
 	/**
 	 * \brief Gets the next xy stabilization point
 	 * \param x The current x stabilization point, will be replaced with the next x point.
 	 * \param y The current y stabilization point, will be replaced with the next y point
 	 */
-	void get_next_xy_coordinates(double *x, double *y);
-	virtual void process_pos(position* p_current_pos, position* p_previous_pos);
+	void delete_gcode_parser();
+	void delete_gcode_position();
+	void get_next_xy_coordinates(double &x, double &y) const;
+	virtual void process_pos(position* p_current_pos, position* p_previous_pos, bool found_command);
+	virtual void on_processing_start();
 	virtual void on_processing_complete();
-	std::vector<snapshot_plan*>* p_snapshot_plans_;
+	virtual std::vector<stabilization_processing_issue> get_internal_processing_issues();
+	virtual std::vector<stabilization_quality_issue> get_quality_issues();
+	virtual std::vector<stabilization_processing_issue> get_processing_issues();
+	std::vector<snapshot_plan> p_snapshot_plans_;
 	bool is_running_;
-	std::string errors_;
-	stabilization_args* p_stabilization_args_;
+	gcode_position_args gcode_position_args_;
+	stabilization_args stabilization_args_;
 	progressCallback native_progress_callback_;
 	pythonProgressCallback progress_callback_;
 	gcode_position* gcode_position_;
 	gcode_parser* gcode_parser_;
 	long get_file_size(const std::string& file_path);
 	long file_size_;
-	long lines_processed_;
-	long gcodes_processed_;
-
-	
+	int lines_processed_;
+	int gcodes_processed_;
+	long file_position_;
+	int missed_snapshots_;
+	bool snapshots_enabled_;
 };
 #endif

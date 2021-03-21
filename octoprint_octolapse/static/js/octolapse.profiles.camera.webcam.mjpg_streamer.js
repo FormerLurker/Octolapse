@@ -1,7 +1,7 @@
 /*
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2019  Brad Hochgesang
+# Copyright (C) 2020  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -130,7 +130,7 @@ $(function() {
         self.update = function(values, type, use_custom_webcam_settings_page) {
             if (!values)
                 return;
-            self.controls([]);
+            var controls = [];
             self.data.controls_dict = {};
             // return if we have no controls
             if (!values.controls)
@@ -147,10 +147,10 @@ $(function() {
                 var control = new Octolapse.MjpgStreamerControlViewModel(sortedControls[index]);
                 if ("id" in control) {
                     self.data.controls_dict[control.id()] = control;
-                    self.controls.push(control);
+                    controls.push(control);
                 }
             }
-
+            self.controls(controls);
             self.bind_viewmodel_for_camera_type();
         };
 

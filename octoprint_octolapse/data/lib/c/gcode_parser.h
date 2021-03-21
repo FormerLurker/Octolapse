@@ -34,7 +34,8 @@ class gcode_parser
 public:
 	gcode_parser();
 	~gcode_parser();
-	bool try_parse_gcode(const char * gcode, parsed_command * command);
+	bool try_parse_gcode(const char * gcode, parsed_command & command);
+	parsed_command parse_gcode(const char * gcode);
 private:
 	gcode_parser(const gcode_parser &source);
 	// Variables and lookups
@@ -47,7 +48,9 @@ private:
 	bool try_extract_parameter(char ** p_p_gcode, parsed_command_parameter * parameter) const;
 	static bool try_extract_t_parameter(char ** p_p_gcode, parsed_command_parameter * parameter);
 	static bool try_extract_unsigned_long(char ** p_p_gcode, unsigned long * p_value);
-	double static ten_pow(size_t n);
-
+	double static ten_pow(unsigned short n);
+	bool try_extract_comment(char ** p_p_gcode, std::string * p_comment);
+	static bool try_extract_at_command(char ** p_p_gcode, std::string * p_command);
+	bool try_extract_octolapse_parameter(char ** p_p_gcode, parsed_command_parameter * p_parameter);
 };
 #endif

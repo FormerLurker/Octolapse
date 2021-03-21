@@ -1,0 +1,5 @@
+Your gcode file, created from Simplify3D, contains a toolhead index that is higher than expected.  First make sure that your Octolapse printer profile is configured with the correct number of extruders by checking **Firmware Settings->Number of Extruders/Materials**.  You may have to enter extruder offsets if your printer has multiple extruders and not a shared nozzle.  The **First Extruder is 0** setting must also be correct if you have more than one extruder/material.  If your printer uses the **T0** command to select the first extruder, check this box.  If your printer uses **T1** as the first extruder, uncheck this box.
+
+Next, open Simplify3D and edit your process.  Click on the **Extruder** tab and make sure you have one extruder in your **Extruder List** for each extruder/material.  Make sure you set a unique tool index for each extruder.  If you checked the **First Extruder is 0** option above, make sure your first extruder is at index 0, or 1 if **First Extruder is 0** is unchecked.
+ 
+Now, reslice your model using the new process settings and try again!

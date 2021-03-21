@@ -1,0 +1,1 @@
+Octolapse was not able to prevent OctoPrint from sending gcodes to your printer in order to take a snapshot or detect a home position.  This is likely due to another plugin that has acquired the lock.  To verify this issue, disable all other plugins and try again.  If you can figure out which plugin is causing the issue, by enabling each one at a time, please let me know! 
