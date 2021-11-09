@@ -36,6 +36,69 @@ void gcode_comment_processor::update(position& pos)
 
 bool gcode_comment_processor::update_feature_for_slic3r_pe_comment(position& pos, std::string &comment) const
 {
+	// PrusaSlicer / SuperSlicer tags
+	if(comment == "TYPE:Internal perimeter")
+	{
+		pos.feature_type_tag = feature_type_inner_perimeter_feature;
+		return true;
+	}
+	if (comment == "TYPE:External perimeter"
+		|| comment == "TYPE:Thin wall")
+	{
+		pos.feature_type_tag = feature_type_outer_perimeter_feature;
+		return true;
+	}
+	if (comment == "TYPE:Internal infill")
+	{
+		pos.feature_type_tag = feature_type_infill_feature;
+		return true;
+	}
+	if(comment == "TYPE:Solid infill"
+		|| comment == "TYPE:Top solid infill"
+		|| comment == "TYPE:Ironing")
+	{
+		pos.feature_type_tag = feature_type_solid_infill_feature;
+		return true;
+	}
+	if (comment == "TYPE:Gap fill")
+	{
+		pos.feature_type_tag = feature_type_gap_fill_feature;
+		return true;
+	}
+	if (comment == "TYPE:Bridge infill"
+		|| comment == "TYPE:Internal bridge infill"
+		|| comment =="TYPE:Overhang perimeter")
+	{
+		pos.feature_type_tag = feature_type_bridge_feature;
+		return true;
+	}
+	if (comment == "TYPE:Skirt")
+	{
+		pos.feature_type_tag = feature_type_skirt_feature;
+		return true;
+	}
+	if (comment == "TYPE:Support material"
+		|| comment == "TYPE:Support material interface")
+	{
+		// no "support" feature on octolapse. Maybe feature_type_prime_pillar_feature ?
+		pos.feature_type_tag = feature_type_unknown_feature;
+		return true;
+	}
+	if (comment == "TYPE:Wipe tower")
+	{
+		pos.feature_type_tag = feature_type_prime_pillar_feature;
+		return true;
+	}
+	if (comment == "TYPE:Mill"
+		|| comment == "TYPE:Unknown"
+		|| comment == "TYPE:Custom"
+		|| comment == "TYPE:Mixed")
+	{
+		pos.feature_type_tag = feature_type_unknown_feature;
+		return true;
+	}
+
+	// Old slic3r verbose tags
 	if (comment == "perimeter" || comment == "move to first perimeter point")
 	{
 		pos.feature_type_tag = feature_type_unknown_perimeter_feature;
