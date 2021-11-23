@@ -1,9 +1,9 @@
 #pragma once
 #include "position.h"
-#define NUM_FEATURE_TYPES 11
+#define NUM_FEATURE_TYPES 12
 
 static const std::string feature_type_name[NUM_FEATURE_TYPES] = {
-  "unknown_feature", "bridge_feature", "outer_perimeter_feature", "unknown_perimeter_feature",
+  "unknown_feature", "bridge_feature", "support_feature", "outer_perimeter_feature", "unknown_perimeter_feature",
   "inner_perimeter_feature", "skirt_feature", "gap_fill_feature", "solid_infill_feature", "ooze_shield_feature",
   "infill_feature", "prime_pillar_feature"
 };
@@ -12,6 +12,7 @@ enum feature_type
 {
   feature_type_unknown_feature,
   feature_type_bridge_feature,
+  feature_type_support_feature,
   feature_type_outer_perimeter_feature,
   feature_type_unknown_perimeter_feature,
   feature_type_inner_perimeter_feature,
@@ -20,7 +21,7 @@ enum feature_type
   feature_type_solid_infill_feature,
   feature_type_ooze_shield_feature,
   feature_type_infill_feature,
-  feature_type_prime_pillar_feature
+  feature_type_prime_pillar_feature,
 };
 
 enum comment_process_type
@@ -43,7 +44,16 @@ enum section_type
   section_type_skirt_section,
   section_type_solid_infill_section,
   section_type_ooze_shield_section,
-  section_type_prime_pillar_section
+  section_type_prime_pillar_section,
+  section_type_bridge_section,
+  section_type_support_section
+};
+
+// Used for sections inside of sections (depth = 1)
+enum subsection_type
+{
+	subsection_type_none,
+	subsection_type_wipe
 };
 
 // Static strings for slicer comment extraction
@@ -78,7 +88,10 @@ public:
 
 private:
   section_type current_section_;
+  subsection_type current_subsection_;
+
   comment_process_type processing_type_;
+  
   void update_feature_from_section(position& pos) const;
   bool update_feature_from_section_from_section(position& pos) const;
   bool update_feature_from_section_for_cura(position& pos) const;
