@@ -30,7 +30,6 @@ from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 
-
 class Position(utility.JsonSerializable):
     def __init__(self, printer_profile, trigger_profile, overridable_printer_profile_settings):
         # This key is used to call the unique gcode_position object for Octolapse.

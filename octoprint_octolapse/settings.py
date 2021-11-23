@@ -34,7 +34,11 @@ from octoprint_octolapse_setuptools import NumberedVersion
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.log as log
 import math
-import collections
+try:
+    from collections.abc import Iterable
+except ImportError:
+    # Python 2.7
+    from collections import Iterable
 import octoprint_octolapse.settings_preprocessor as settings_preprocessor
 import octoprint_octolapse.migration as migration
 from octoprint_octolapse.gcode_processor import GcodeProcessor, ParsedCommand
@@ -113,7 +117,7 @@ class Settings(object):
             return
         item_to_iterate = iterable
 
-        if not isinstance(iterable, collections.Iterable):
+        if not isinstance(iterable, Iterable):
             to_dict = getattr(iterable, "to_dict", None)
             if callable(to_dict):
                 item_to_iterate = iterable.to_dict()
@@ -1311,7 +1315,7 @@ class MjpgStreamer(StreamingServer):
 
     def update(self, iterable, **kwargs):
         item_to_iterate = iterable
-        if not isinstance(iterable, collections.Iterable):
+        if not isinstance(iterable, Iterable):
             item_to_iterate = iterable.__dict__
 
         for key, value in item_to_iterate.items():
@@ -1453,7 +1457,7 @@ class WebcamSettings(Settings):
     def update(self, iterable, **kwargs):
         try:
             item_to_iterate = iterable
-            if not isinstance(iterable, collections.Iterable):
+            if not isinstance(iterable, Iterable):
                 item_to_iterate = iterable.__dict__
 
             for key, value in item_to_iterate.items():
@@ -2076,7 +2080,7 @@ class Profiles(Settings):
 
     def update(self, iterable, **kwargs):
         item_to_iterate = iterable
-        if not isinstance(iterable, collections.Iterable):
+        if not isinstance(iterable, Iterable):
             item_to_iterate = iterable.__dict__
 
         for key, value in item_to_iterate.items():
@@ -2721,7 +2725,7 @@ class CuraExtruder(SlicerExtruder):
 
     def update(self, iterable, **kwargs):
             item_to_iterate = iterable
-            if not isinstance(iterable, collections.Iterable):
+            if not isinstance(iterable, Iterable):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
@@ -2855,7 +2859,7 @@ class CuraSettings(SlicerSettings):
     def update(self, iterable, **kwargs):
         try:
             item_to_iterate = iterable
-            if not isinstance(iterable, collections.Iterable):
+            if not isinstance(iterable, Iterable):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
@@ -2915,7 +2919,7 @@ class Simplify3dExtruder(SlicerExtruder):
 
     def update(self, iterable, **kwargs):
         item_to_iterate = iterable
-        if not isinstance(iterable, collections.Iterable):
+        if not isinstance(iterable, Iterable):
             item_to_iterate = iterable.__dict__
         for key, value in item_to_iterate.items():
             class_item = getattr(self, key, '{octolapse_no_property_found}')
@@ -3070,7 +3074,7 @@ class Simplify3dSettings(SlicerSettings):
     def update(self, iterable, **kwargs):
         try:
             item_to_iterate = iterable
-            if not isinstance(iterable, collections.Iterable):
+            if not isinstance(iterable, Iterable):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
@@ -3165,7 +3169,7 @@ class Slic3rPeExtruder(SlicerExtruder):
 
     def update(self, iterable, **kwargs):
             item_to_iterate = iterable
-            if not isinstance(iterable, collections.Iterable):
+            if not isinstance(iterable, Iterable):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
@@ -3291,7 +3295,7 @@ class Slic3rPeSettings(SlicerSettings):
     def update(self, iterable, **kwargs):
         try:
             item_to_iterate = iterable
-            if not isinstance(iterable, collections.Iterable):
+            if not isinstance(iterable, Iterable):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
@@ -3352,7 +3356,7 @@ class OtherSlicerExtruder(SlicerExtruder):
 
     def update(self, iterable, **kwargs):
             item_to_iterate = iterable
-            if not isinstance(iterable, collections.Iterable):
+            if not isinstance(iterable, Iterable):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
@@ -3411,7 +3415,7 @@ class OtherSlicerSettings(SlicerSettings):
     def update(self, iterable, **kwargs):
         try:
             item_to_iterate = iterable
-            if not isinstance(iterable, collections.Iterable):
+            if not isinstance(iterable, Iterable):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
