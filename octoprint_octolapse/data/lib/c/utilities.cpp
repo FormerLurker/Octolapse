@@ -4,8 +4,7 @@
 #include <iostream>
 #include <cctype>
 #include <cstring>
-
-#ifdef __linux__ 
+#ifndef _WIN32
 #include <codecvt>
 #include <locale>
 #endif
@@ -165,7 +164,7 @@ bool utilities::is_in_caseless_trim(const std::string& lhs, const char** rhs)
   return false;
 }
 
-#ifdef __linux__ 
+#ifndef _WIN32
 std::string utilities::wstring_to_utf8(std::wstring str) {
     std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_conv;
     return utf8_conv.to_bytes(str);

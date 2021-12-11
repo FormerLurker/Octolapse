@@ -201,12 +201,10 @@ stabilization_results stabilization::process_file()
   const clock_t start_clock = clock();
   file_size_ = get_file_size(stabilization_args_.file_path);
 
-#ifdef __linux__ 
+#ifndef _WIN32
   std::ifstream gcodeFile(utilities::wstring_to_utf8(stabilization_args_.file_path));
-#elif _WIN32
-      std::ifstream gcodeFile(stabilization_args_.file_path.c_str());
 #else
-  std::ifstream gcodeFile(utilities::wstring_to_utf8(stabilization_args_.file_path));
+  std::ifstream gcodeFile(stabilization_args_.file_path.c_str());
 #endif
 
 
