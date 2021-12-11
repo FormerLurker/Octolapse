@@ -349,16 +349,8 @@ def get_no_snapshot_image_download_path(base_folder):
     return get_images_download_path(base_folder, "no_snapshot.png")
 
 
-def get_rendering_directory_template():
-    return os.path.join("{DATADIRECTORY}", "timelapses")
-
-
 def get_rendering_base_filename_template():
     return "{FILENAME}_{DATETIMESTAMP}"
-
-
-def get_rendering_filename(template, tokens):
-    template.format(**tokens)
 
 
 def get_rendering_base_filename(print_name, print_start_time, print_end_time=None):
@@ -396,7 +388,11 @@ def is_valid_temporary_extension(extension):
 
 
 def get_snapshot_filename(print_name, snapshot_number):
-    return "{0}{1}.{2}".format(print_name, format_snapshot_number(snapshot_number), default_snapshot_extension)
+    return "{0}{1}.{2}".format(
+        print_name,
+        format_snapshot_number(snapshot_number),
+        default_snapshot_extension
+    )
 
 
 def get_pre_roll_snapshot_filename(print_name, snapshot_number):

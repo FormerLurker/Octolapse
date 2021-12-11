@@ -328,7 +328,8 @@ class OctolapsePlugin(
             }
             full_path = temp_archive_path
         elif file_type in ['timelapse_octolapse', 'snapshot_archive', 'timelapse_octoprint']:
-            file_name = utility.unquote(request_handler.get_query_arguments('name')[0])
+            #file_name = utility.unquote(request_handler.get_query_arguments('name')[0])
+            file_name = request_handler.get_query_arguments('name')[0]
             # Don't allow any subdirectory access
             if not OctolapsePlugin.file_name_allowed(file_name):
                 raise tornado.web.HTTPError(500)
@@ -3534,6 +3535,7 @@ class OctolapsePlugin(
 
         output_file_name = "{0}.{1}".format(payload.RenderingFilename, payload.RenderingExtension)
         gcode_filename = "{0}.{1}".format(payload.GcodeFilename, payload.GcodeFileExtension)
+        # Todo:  Make sure this path is correct
         output_file_path = payload.get_rendering_path()
 
         # Notify the plugin that a timelapse has been added, if it exists

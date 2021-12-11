@@ -150,7 +150,7 @@ void stabilization::delete_gcode_position()
   }
 }
 
-long stabilization::get_file_size(const std::string& file_path)
+long stabilization::get_file_size(const std::wstring& file_path)
 {
   // Todo:  Fix this function.  This is a pretty weak implementation :(
   std::ifstream file(file_path.c_str(), std::ios::in | std::ios::binary);
@@ -193,8 +193,8 @@ stabilization_results stabilization::process_file()
   snapshots_enabled_ = true;
   int read_lines_before_clock_check = 2000;
   //std::cout << "stabilization::process_file - Processing file.\r\n";
-  stream << "Stabilizing file at: " << stabilization_args_.file_path;
-  octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, stream.str());
+  //stream << "Stabilizing file at: " << stabilization_args_.file_path;
+  //octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, stream.str());
   is_running_ = true;
 
   double next_update_time = get_next_update_time();

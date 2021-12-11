@@ -372,11 +372,11 @@ class RenderJobInfo(object):
         )
         self.snapshot_filename_format = os.path.basename(
             utility.get_snapshot_filename(
-                timelapse_job_info.PrintFileName, utility.SnapshotNumberFormat
+                timelapse_job_info.PrintFileName.replace("%", "%%"), utility.SnapshotNumberFormat
             )
         )
         self.pre_roll_snapshot_filename_format = utility.get_pre_roll_snapshot_filename(
-            timelapse_job_info.PrintFileName, utility.SnapshotNumberFormat
+            timelapse_job_info.PrintFileName.replace("%", "%%"), utility.SnapshotNumberFormat
         )
         # rendering directory path
         self.output_tokens = self._get_output_tokens(self.temporary_directory)
@@ -522,14 +522,22 @@ class RenderJobInfo(object):
         )
 
     @staticmethod
-    def get_rendering_filename(output_template, output_tokens):
+    def get_sanitized_rendering_filename(output_template, output_tokens):
         return utility.sanitize_filename(output_template.format(**output_tokens))
+
+    @staticmethod
+    def get_rendering_filename(output_template, output_tokens):
+        return output_template.format(**output_tokens)
+
+    @staticmethod
+    def get_sanitized_rendering_name_from_metadata(metadata):
+        output_tokens = RenderJobInfo.get_output_tokens_from_metadata(metadata)
+        return RenderJobInfo.get_sanitized_rendering_filename(metadata["output_template"], output_tokens)
 
     @staticmethod
     def get_rendering_name_from_metadata(metadata):
         output_tokens = RenderJobInfo.get_output_tokens_from_metadata(metadata)
-        return RenderJobInfo.get_rendering_filename(metadata["output_template"], output_tokens)
-
+        return RenderJobInfo.get_rendering_name_from_metadata(metadata["output_template"], output_tokens)
 
 class RenderingProcessor(threading.Thread):
     """Watch for rendering jobs via a rendering queue.  Extract jobs from the queue, and spawn a rendering thread,
@@ -728,6 +736,7 @@ class RenderingProcessor(threading.Thread):
         if is_download:
             metadata = self._get_metadata_for_rendering_files(job_guid, camera_guid, temporary_directory)
             target_extension = utility.get_extension_from_full_path(target_path)
+            # TODO:  MAKE SURE THIS WORKS!  USED TO BE SANITIZED
             return "{0}.{1}".format(RenderJobInfo.get_rendering_name_from_metadata(metadata), target_extension)
         return None
 

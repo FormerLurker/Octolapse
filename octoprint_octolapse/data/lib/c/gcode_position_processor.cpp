@@ -1467,15 +1467,29 @@ static bool ParseStabilizationArgs(PyObject* py_args, stabilization_args* args, 
 
 
   // file_path
-  PyObject* py_file_path = PyDict_GetItemString(py_args, "file_path");
-  if (py_file_path == NULL)
+  PyObject* py_dict_key = PyString_SafeFromString("file_path");
+  PyObject* py_dict_item = PyDict_GetItem(py_args, py_dict_key);
+  if (py_dict_item == NULL)
+  {
+      std::string message =
+          "GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve the file_path from the stabilization args dict.";
+      octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
+      return false;
+  }
+  Py_DecRef(py_dict_key);
+  /*
+  Py_UNICODE* py_dict_item_unicode = PyUnicode_AsUnicode(py_dict_item);
+  //PyObject* py_file_path = PyDict_GetItemString(py_args, "file_path");
+  if (py_dict_item_unicode == NULL)
   {
     std::string message =
-      "GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve file_path from the stabilization args.";
+      "GcodePositionProcessor.ParseStabilizationArgs - Unable to convert the file_path dict item to a Py_UNICODE .";
     octolapse_log_exception(octolapse_log::SNAPSHOT_PLAN, message);
     return false;
-  }
-  args->file_path = PyUnicode_SafeAsString(py_file_path);
+  }*/
+  
+  //args->file_path = PyUnicode_SafeAsString(py_file_path);
+  args->file_path = PyObject_SafeFileNameAsWstring(py_dict_item);
   //std::cout << "Stabilization Args parsed successfully.\r\n";
   return true;
 }

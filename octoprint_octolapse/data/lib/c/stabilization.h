@@ -50,7 +50,7 @@ public:
   {
     height_increment = 0.0;
     notification_period_seconds = 0.25;
-    file_path = "";
+    file_path = L"";
     x_coordinate = 0;
     y_coordinate = 0;
     x_stabilization_disabled = false;
@@ -61,7 +61,7 @@ public:
   {
   }
 
-  std::string file_path;
+  std::wstring file_path;
   double height_increment;
   double notification_period_seconds;
 
@@ -141,7 +141,7 @@ protected:
   pythonProgressCallback progress_callback_;
   gcode_position* gcode_position_;
   gcode_parser* gcode_parser_;
-  long get_file_size(const std::string& file_path);
+  long get_file_size(const std::wstring& file_path);
   long file_size_;
   int lines_processed_;
   int gcodes_processed_;
