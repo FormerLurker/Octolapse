@@ -4,9 +4,29 @@
 #include <iostream>
 #include <cctype>
 #include <cstring>
-#ifndef _WIN32
-#include <codecvt>
-#include <locale>
+
+
+#ifdef _MSC_VER
+    #include <Windows.h>  
+    #include <fileapi.h > 
+    
+    std::wstring utilities::ToUtf16(std::string str)
+    {
+        UINT codepage = 65001;
+        #ifdef IS_PYTHON_EXTENSION
+            codepage = 65001; // CP_UTF8
+        #else
+            codepage = 65000; // CP_UTF7
+        #endif
+        std::wstring ret;
+        int len = MultiByteToWideChar(codepage, 0, str.c_str(), str.length(), NULL, 0);
+        if (len > 0)
+        {
+            ret.resize(len);
+            MultiByteToWideChar(codepage, 0, str.c_str(), str.length(), &ret[0], len);
+        }
+        return ret;
+    }
 #endif
 
 
@@ -164,10 +184,4 @@ bool utilities::is_in_caseless_trim(const std::string& lhs, const char** rhs)
   return false;
 }
 
-#ifndef _WIN32
-std::string utilities::wstring_to_utf8(std::wstring str) {
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_conv;
-    return utf8_conv.to_bytes(str);
-}
-#endif
 

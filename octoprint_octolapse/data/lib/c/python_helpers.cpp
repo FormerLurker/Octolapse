@@ -19,26 +19,6 @@ const char* PyUnicode_SafeAsString(PyObject* py)
 #endif
 }
 
-std::wstring PyObject_SafeFileNameAsWstring(PyObject* py)
-{
-#if PY_MAJOR_VERSION >= 3
-    Py_ssize_t size = PyUnicode_GET_SIZE(py);
-    wchar_t* wchar_array = new wchar_t[size];
-    PyUnicode_AsWideChar(py, wchar_array, size);
-    std::wstring result = std::wstring(wchar_array);
-    delete wchar_array;
-    return result;
-#else
-    // In python 2, octoprint does not store unicode file names (I don't think), so just return a string as a wstring
-    Py_ssize_t size = PyUnicode_GET_SIZE(py);
-    wchar_t* wchar_array = new wchar_t[size];
-    PyUnicode_AsWideChar((PyUnicodeObject*)py, wchar_array, size);
-    std::wstring result = std::wstring(wchar_array);
-    delete wchar_array;
-    return result;
-#endif
-}
-
 PyObject* PyString_SafeFromString(const char* str)
 {
 #if PY_MAJOR_VERSION >= 3

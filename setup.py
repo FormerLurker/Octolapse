@@ -100,27 +100,27 @@ compiler_opts = {
     CCompiler.compiler_type: {
         'extra_compile_args': ['-O3', '-std=c++11'],
         'extra_link_args': [],
-        'define_macros': []
+        'define_macros': [('IS_PYTHON_EXTENSION', '1')]
     },
     MSVCCompiler.compiler_type: {
         'extra_compile_args': ['/O2', '/fp:fast', '/GL', '/analyze', '/Gy', '/MD', '/EHsc'],
         'extra_link_args': [],
-        'define_macros': []
+        'define_macros': [('IS_PYTHON_EXTENSION', '1')]
     },
     UnixCCompiler.compiler_type: {
         'extra_compile_args': ['-O3', '-std=c++11'],
         'extra_link_args': [],
-        'define_macros': []
+        'define_macros': [('IS_PYTHON_EXTENSION', '1')]
     },
     BCPPCompiler.compiler_type: {
         'extra_compile_args': ['-O3', '-std=c++11'],
         'extra_link_args': [],
-        'define_macros': []
+        'define_macros': [('IS_PYTHON_EXTENSION', '1')]
     },
     CygwinCCompiler.compiler_type: {
         'extra_compile_args': ['-O3', '-std=c++11'],
         'extra_link_args': [],
-        'define_macros': []
+        'define_macros': [('IS_PYTHON_EXTENSION', '1')]
     }
 }
 
@@ -129,27 +129,27 @@ if DEBUG:
         CCompiler.compiler_type: {
             'extra_compile_args': [],
             'extra_link_args': [],
-            'define_macros': [('DEBUG_chardet', '1')]
+            'define_macros': [('DEBUG_chardet', '1'), ('IS_PYTHON_EXTENSION', '1')]
         },
         MSVCCompiler.compiler_type: {
             'extra_compile_args': ['/EHsc', '/Z7'],
             'extra_link_args': ['/DEBUG'],
-            'define_macros': []
+            'define_macros': [('IS_PYTHON_EXTENSION', '1')]
         },
         UnixCCompiler.compiler_type: {
             'extra_compile_args': ['-g'],
             'extra_link_args': ['-g'],
-            'define_macros': []
+            'define_macros': [('IS_PYTHON_EXTENSION', '1')]
         },
         BCPPCompiler.compiler_type: {
             'extra_compile_args': [],
             'extra_link_args': [],
-            'define_macros': []
+            'define_macros': [('IS_PYTHON_EXTENSION', '1')]
         },
         CygwinCCompiler.compiler_type: {
             'extra_compile_args': [],
             'extra_link_args': [],
-            'define_macros': []
+            'define_macros': [('IS_PYTHON_EXTENSION', '1')]
         }
     }
 
@@ -166,8 +166,8 @@ class build_ext_subclass(build_ext):
         build_ext.build_extensions(self)
 
         for extension in self.extensions:
-            print("Build Extensions for {0} - extra_compile_args:{1} - extra_link_args:{2}".format(
-                extension.name, extension.extra_compile_args, extension.extra_link_args)
+            print("Build Extensions for {0} - extra_compile_args:{1} - extra_link_args:{2} - define_macros:{3}".format(
+                extension.name, extension.extra_compile_args, extension.extra_link_args, extension.define_macros)
             )
 
 

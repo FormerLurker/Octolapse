@@ -1488,8 +1488,8 @@ static bool ParseStabilizationArgs(PyObject* py_args, stabilization_args* args, 
     return false;
   }*/
   
-  //args->file_path = PyUnicode_SafeAsString(py_file_path);
-  args->file_path = PyObject_SafeFileNameAsWstring(py_dict_item);
+  args->file_path = PyUnicode_SafeAsString(py_dict_item);
+  
   //std::cout << "Stabilization Args parsed successfully.\r\n";
   return true;
 }

@@ -150,7 +150,7 @@ void stabilization::delete_gcode_position()
   }
 }
 
-long stabilization::get_file_size(const std::wstring& file_path)
+long stabilization::get_file_size(const std::string& file_path)
 {
   // Todo:  Fix this function.  This is a pretty weak implementation :(
   std::ifstream file(file_path.c_str(), std::ios::in | std::ios::binary);
@@ -192,20 +192,31 @@ stabilization_results stabilization::process_file()
   // Make sure snapshots are enabled at the start of the process.
   snapshots_enabled_ = true;
   int read_lines_before_clock_check = 2000;
-  //std::cout << "stabilization::process_file - Processing file.\r\n";
-  //stream << "Stabilizing file at: " << stabilization_args_.file_path;
-  //octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, stream.str());
+  std::cout << "stabilization::process_file - Processing file.\r\n";
+  stream << "Stabilizing file at: " << stabilization_args_.file_path;
+  octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, stream.str());
   is_running_ = true;
 
   double next_update_time = get_next_update_time();
   const clock_t start_clock = clock();
   file_size_ = get_file_size(stabilization_args_.file_path);
 
-#ifndef _WIN32
-  std::ifstream gcodeFile(utilities::wstring_to_utf8(stabilization_args_.file_path));
+  std::string path = stabilization_args_.file_path;
+
+  
+#ifdef _MSC_VER
+  
+  
+  std::wstring wpath = utilities::ToUtf16(path);
+  stream << "Windows detected, encoding file as UTF16";
+  octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::INFO, stream.str());
+  std::ifstream gcodeFile(wpath.c_str());
+  
+  
 #else
-  std::ifstream gcodeFile(stabilization_args_.file_path.c_str());
+  std::ifstream gcodeFile(path.c_str());
 #endif
+
 
 
   std::string line;
