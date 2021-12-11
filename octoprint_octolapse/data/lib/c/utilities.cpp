@@ -5,6 +5,12 @@
 #include <cctype>
 #include <cstring>
 
+#ifdef __linux__ 
+#include <codecvt>
+#include <locale>
+#endif
+
+
 // Had to increase the zero tolerance because prusa slicer doesn't always retract enough while wiping.
 const double ZERO_TOLERANCE = 0.00005;
 const std::string utilities::WHITESPACE_ = " \n\r\t\f\v";
@@ -158,3 +164,11 @@ bool utilities::is_in_caseless_trim(const std::string& lhs, const char** rhs)
   // If we are here, this string does not appear
   return false;
 }
+
+#ifdef __linux__ 
+std::string utilities::wstring_to_utf8(std::wstring str) {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_conv;
+    return utf8_conv.to_bytes(str);
+}
+#endif
+

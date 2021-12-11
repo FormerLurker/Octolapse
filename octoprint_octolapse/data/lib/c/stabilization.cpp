@@ -200,7 +200,16 @@ stabilization_results stabilization::process_file()
   double next_update_time = get_next_update_time();
   const clock_t start_clock = clock();
   file_size_ = get_file_size(stabilization_args_.file_path);
-  std::ifstream gcodeFile(stabilization_args_.file_path.c_str());
+
+#ifdef __linux__ 
+  std::ifstream gcodeFile(utilities::wstring_to_utf8(stabilization_args_.file_path));
+#elif _WIN32
+      std::ifstream gcodeFile(stabilization_args_.file_path.c_str());
+#else
+  std::ifstream gcodeFile(utilities::wstring_to_utf8(stabilization_args_.file_path));
+#endif
+
+
   std::string line;
   int lines_with_no_commands = 0;
   if (gcodeFile.is_open())

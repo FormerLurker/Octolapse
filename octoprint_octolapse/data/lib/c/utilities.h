@@ -18,6 +18,10 @@ public:
   static std::string trim(const std::string& s);
   static std::istream& safe_get_line(std::istream& is, std::string& t);
   static bool is_in_caseless_trim(const std::string& lhs, const char** rhs);
+#ifdef __linux__ 
+  static std::string wstring_to_utf8(std::wstring str);
+#endif
+  
 protected:
   static const std::string WHITESPACE_;
 private:
