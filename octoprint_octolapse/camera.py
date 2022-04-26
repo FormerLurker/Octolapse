@@ -562,9 +562,20 @@ class CameraControl(object):
                     camera_profile.webcam_settings.username,
                     camera_profile.webcam_settings.password
                 )
+            retry_session = utility.requests_retry_session(session=s)
+            r = retry_session.get(url, stream=True, timeout=timeout_seconds)
 
-            r = utility.requests_retry_session(session=s).request("GET", url, timeout=timeout_seconds)
-
+            body = []
+            start_time = time.time()
+            for chunk in r.iter_content(1024):
+                body.append(chunk)
+                if time.time() > (start_time + timeout_seconds):
+                    message = (
+                        "A read timeout occurred while connecting to {0} for the '{1}' camera profile.  Are you using the video stream URL by mistake?"
+                            .format(url, camera_profile.name)
+                    )
+                    logger.exception(message)
+                    raise CameraError('read-timeout', message)
             #if len(camera_profile.webcam_settings.username) > 0:
             #    r = requests.get(url, auth=HTTPBasicAuth(camera_profile.webcam_settings.username,
             #                                             camera_profile.webcam_settings.password),
