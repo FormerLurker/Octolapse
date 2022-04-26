@@ -47,6 +47,9 @@ class StabilizationPreprocessingThread(Thread):
     ):
 
         super(StabilizationPreprocessingThread, self).__init__()
+        logger.debug(
+            "Pre-Processing thread is being constructed."
+        )
         printer = timelapse_settings["settings"].profiles.current_printer()
         stabilization = timelapse_settings["settings"].profiles.current_stabilization()
         trigger = timelapse_settings["settings"].profiles.current_trigger()
@@ -82,8 +85,15 @@ class StabilizationPreprocessingThread(Thread):
         self.lines_processed = 0
         self.cpp_position_args = printer.get_position_args(timelapse_settings["overridable_printer_profile_settings"])
 
+        logger.debug(
+            "Pre-Processing thread is constructed."
+        )
+
     def run(self):
         try:
+            logger.debug(
+                "Pre-Processing thread is running."
+            )
             # perform the start callback
             self.start_callback()
             ret_val, options = self._run_stabilization()
@@ -151,6 +161,10 @@ class StabilizationPreprocessingThread(Thread):
         self.complete_callback(
             success, self.is_cancelled, snapshot_plans, seconds_elapsed, gcodes_processed, lines_processed,
             missed_snapshots, quality_issues, errors, self.timelapse_settings, self.parsed_command
+        )
+
+        logger.debug(
+            "Pre-Processing thread is completed."
         )
 
     def _get_quality_issues_from_cpp(self, issues):

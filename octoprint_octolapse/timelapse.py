@@ -161,6 +161,9 @@ class Timelapse(object):
         self, settings, overridable_printer_profile_settings,
         gcode_file_path, snapshot_plans=None
     ):
+        logger.debug(
+            "Starting the timelapse with the current configuration."
+        )
         # we must supply the settings first!  Else reset won't work properly.
         self._reset()
         # in case the settings have been destroyed and recreated
@@ -227,6 +230,9 @@ class Timelapse(object):
             raise TimelapseStartException(message, 'm114_not_supported')
         self._state = TimelapseState.WaitingForTrigger
         self.was_started = True
+        logger.debug(
+            "The timelapse configuration is set, waiting to stop the job-on-hold lock."
+        )
 
     _stabilization_gcode_tags = {
         'snapshot-init',

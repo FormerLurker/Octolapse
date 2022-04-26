@@ -2459,38 +2459,57 @@ class OctolapsePlugin(
             self.on_print_start_failed([error], parsed_command=parsed_command)
 
     def test_timelapse_config(self):
+        logger.debug("Testing timelapse configuration.")
+
+        logger.verbose("Verify that Octolapse is enabled.")
         if not self._octolapse_settings.main_settings.is_octolapse_enabled:
+            logger.error("Octolapse is not enabled.  Cannot start timelapse.")
             error = error_messages.get_error(["init","octolapse_is_disabled"])
             logger.error(error["description"])
             return {"success": False, "error": error}
 
-        # make sure we have an active printer
+        logger.verbose("Ensure that we have at least one printer profile.")
+        # make sure that at least one profile is available
+        if len(self._octolapse_settings.profiles.printers) == 0:
+            logger.error("No printer profiles exist.  Cannot start timelapse.")
+            error = error_messages.get_error(["init", "no_printer_profile_exists"])
+            return {"success": False, "error": error}
+
+        # make sure we have an active printer (a selected profile)
+        logger.verbose("Ensure one printer profile is active and selected.")
         if self._octolapse_settings.profiles.current_printer() is None:
+            logger.error("There is no currently selected printer profile.  Cannot start timelapse.")
             error = error_messages.get_error(["init", "no_printer_profile_selected"])
             logger.error(error["description"])
             return {"success": False, "error": error}
 
         # see if the printer profile has been configured
+        logger.verbose("Ensure the current printer profile has been configured or that the configuration is automatic.")
         if (
             not self._octolapse_settings.profiles.current_printer().has_been_saved_by_user and
             not self._octolapse_settings.profiles.current_printer().slicer_type == "automatic"
         ):
+            logger.error("The selected printer profile is not configured, or the slicer type is not automatic.  Cannot start timelapse.")
             error = error_messages.get_error(["init", "printer_not_configured"])
             logger.error(error["description"])
             return {"success": False, "error": error}
 
         # determine the file source
+        logger.verbose("Ensure data exists about the current job.")
         printer_data = self._printer.get_current_data()
         current_job = printer_data.get("job", None)
         if not current_job:
+            logger.error("Data about the current job could not be found.  Cannot start timelapse.")
             error = error_messages.get_error(["init", "no_current_job_data_found"])
             log_message = "Failed to get current job data on_print_start:" \
                           "  Current printer data: {0}".format(printer_data)
             logger.error(log_message)
             return {"success": False, "error": error}
 
+        logger.verbose("Ensure current job has an associated file.")
         current_file = current_job.get("file", None)
         if not current_file:
+            logger.error("The current job has no associated file.  Cannot start timelapse.")
             error = error_messages.get_error(["init", "no_current_job_file_data_found"])
             log_message = "Failed to get current file data on_print_start:" \
                           "  Current job data: {0}".format(current_job)
@@ -2498,23 +2517,29 @@ class OctolapsePlugin(
             # ERROR_REPLACEMENT
             return {"success": False, "error": error}
 
+        logger.verbose("Ensure origin information is available for the current job.")
         current_origin = current_file.get("origin", "unknown")
         if not current_origin:
+            logger.error("File origin information does not exist within the current job info.  Cannot start timelapse.")
             error = error_messages.get_error(["init", "unknown_file_origin"])
             log_message = "Failed to get current origin data on_print_start:" \
                 "Current file data: {0}".format(current_file)
             # ERROR_REPLACEMENT
             logger.error(log_message)
             return {"success": False, "error": error}
+
+        logger.verbose("Ensure the file is being printed locally (not from SD).")
         if current_origin != "local":
+            logger.error("Octolapse does not support printing from SD.  Cannot start timelapse.")
             error = error_messages.get_error(["init", "cant_print_from_sd"])
             log_message = "Unable to start Octolapse when printing from {0}.".format(current_origin)
             logger.error(log_message)
             # ERROR_REPLACEMENT
             return {"success": False, "error": error}
 
+        logger.verbose("Ensure that Octolapse is in the correct state (Initializing).")
         if self._timelapse.get_current_state() != TimelapseState.Initializing:
-
+            logger.error("Octolapse is not in the correct state.  Cannot start timelapse.")
             error = error_messages.get_error(["init", "incorrect_printer_state"])
             log_message = "Octolapse was in the wrong state at print start.  StateId: {0}".format(
                 self._timelapse.get_current_state())
@@ -2523,6 +2548,7 @@ class OctolapsePlugin(
             return {"success": False, "error": error}
 
         # test all cameras and look for at least one enabled camera
+        logger.verbose("Testing all enabled cameras.")
         found_camera = False
         for current_camera in self._octolapse_settings.profiles.active_cameras():
             if current_camera.enabled:
@@ -2536,73 +2562,78 @@ class OctolapsePlugin(
                         return {"success": False, "error": error}
 
         if not found_camera:
+            logger.error("No enabled cameras could be found, please enable at least one camera profile and ensure it passes tests.")
             error = error_messages.get_error(["init", "no_enabled_cameras"])
             return {"success": False, "error": error}
 
+        logger.verbose("Attempting to apply any existing custom camera preferences, if any are set.")
         success, camera_settings_apply_errors = camera.CameraControl.apply_camera_settings(
             self._octolapse_settings.profiles.before_print_start_webcameras()
         )
         if not success:
+            logger.error("Unable to apply custom camera preferences, failed to start timelapse.")
             error = error_messages.get_error(
                 ["init", "camera_settings_apply_failed"],
                 error=camera_settings_apply_errors)
             return {"success": False, "error": error}
 
         # run before print start camera scripts
+        logger.verbose("Running 'before print' camera scripts, if any exist.")
         success, before_print_start_camera_script_errors = camera.CameraControl.run_on_print_start_script(
             self._octolapse_settings.profiles.cameras
         )
         if not success:
+            logger.error("Errors were encountered running 'before print' camera scripts.  Failed to start timelapse.")
             error = error_messages.get_error(
                 ["init", "before_print_start_camera_script_apply_failed"],
                 error=before_print_start_camera_script_errors)
             return {"success": False, "error": error}
 
         # check for version 1.3.8 min
+        logger.verbose("Ensure we are running at least OctoPrint version 1.3.8.")
         if not (LooseVersion(octoprint.server.VERSION) > LooseVersion("1.3.8")):
+            logger.error("The current octoprint version is older than V1.3.8, and is not supported.  Failed to start "
+                         "timelapse.")
             error = error_messages.get_error(
                 ["init", "incorrect_octoprint_version"], installed_version=octoprint.server.DISPLAY_VERSION
             )
             return {"success": False, "error": error}
 
         # Check the rendering filename template
+        logger.verbose("Validating the rendering file template.")
         if not render.is_rendering_template_valid(
             self._octolapse_settings.profiles.current_rendering().output_template,
             self._octolapse_settings.profiles.options.rendering['rendering_file_templates'],
         ):
+            logger.error("The rendering file template is invalid.  Cannot start timelapse.")
             error = error_messages.get_error(["init", "rendering_file_template_invalid"])
             return {"success": False, "error": error}
 
-        # make sure that at least one profile is available
-        if len(self._octolapse_settings.profiles.printers) == 0:
-            error = error_messages.get_error(["init", "no_printer_profile_exists"])
-            return {"success": False, "error": error}
-        # check to make sure a printer is selected
-        if self._octolapse_settings.profiles.current_printer() is None:
-            error = error_messages.get_error(["init", "no_printer_profile_selected"])
-            return {"success": False, "error": error}
-
         # test the main settings directories
+        logger.verbose("Verify that the folder structure is valid.")
         success, errors = self._octolapse_settings.main_settings.test_directories(
             self.get_plugin_data_folder(),
             self.get_octoprint_timelapse_location()
         )
         if not success:
+            logger.error("The Octolapse folder structure is invalid.  Cannot start timelapse.")
             error_folders = ",".join([x["name"] for x in errors])
             error = error_messages.get_error(["init", "directory_test_failed"], failed_directories=error_folders)
             return {"success": False, "error": error}
 
         # test rendering overlay font path
+        logger.verbose("Verify the overlay font path is correct, if rendering overlays are being used.")
         current_rendering_profile = self._octolapse_settings.profiles.current_rendering()
         if (
             current_rendering_profile.overlay_text_template and
             not os.path.isfile(current_rendering_profile.overlay_font_path)
         ):
+            logger.error("The rendering overlay template font path is invalid.  Cannot start timelapse.")
             error = error_messages.get_error(
                 ["init", "overlay_font_path_not_found"],
                 overlay_font_path=current_rendering_profile.overlay_font_path)
             return {"success": False, "error": error}
-
+        logger.debug("Timelapse configuration is valid!")
         return {"success": True}
 
     def get_octoprint_timelapse_location(self):
@@ -2618,6 +2649,7 @@ class OctolapsePlugin(
         # Create a copy of the settings to send to the Timelapse object.
         # We make this copy here so that editing settings vis the GUI won't affect the
         # current timelapse.
+        logger.debug("Getting timelapse settings.")
         settings_clone = self._octolapse_settings.clone()
         current_printer_clone = settings_clone.profiles.current_printer()
         return_value = {
@@ -2772,9 +2804,11 @@ class OctolapsePlugin(
         return_value["overridable_printer_profile_settings"] = overridable_printer_profile_settings
         return_value["ffmpeg_path"] = ffmpeg_path
         return_value["gcode_file_path"] = gcode_file_path
+        logger.debug("Timelapse settings retrieved.")
         return return_value
 
     def start_timelapse(self, timelapse_settings, snapshot_plans=None):
+
         try:
             self._timelapse.start_timelapse(
                 timelapse_settings["settings"],
@@ -2849,6 +2883,9 @@ class OctolapsePlugin(
     def pre_process_stabilization(
         self, timelapse_settings,  parsed_command
     ):
+        logger.debug(
+            "Pre-Processing trigger detected, starting pre-processing thread."
+        )
         if self._stabilization_preprocessor_thread is not None:
             self._stabilization_preprocessor_thread.join()
             self._stabilization_preprocessor_thread = None
