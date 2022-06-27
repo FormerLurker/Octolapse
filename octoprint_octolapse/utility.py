@@ -401,7 +401,7 @@ def get_snapshot_filename(print_name, snapshot_number):
 
 def get_pre_roll_snapshot_filename(print_name, snapshot_number):
     return "{0}{1}_{2}.{3}".format(
-        print_name,
+        print_name.replace('%','%%'),
         format_snapshot_number(snapshot_number),
         format_snapshot_number(snapshot_number),
         "jpg")
