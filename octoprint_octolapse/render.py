@@ -210,11 +210,11 @@ class RenderJobInfo(object):
         )
         self.snapshot_filename_format = os.path.basename(
             utility.get_snapshot_filename(
-                timelapse_job_info.PrintFileName, utility.SnapshotNumberFormat
+                timelapse_job_info.PrintFileName.replace('%','%%'), utility.SnapshotNumberFormat
             )
         )
         self.pre_roll_snapshot_filename_format = utility.get_pre_roll_snapshot_filename(
-            timelapse_job_info.PrintFileName, utility.SnapshotNumberFormat
+            timelapse_job_info.PrintFileName.replace('%','%%'), utility.SnapshotNumberFormat
         )
         # rendering directory path
         self.output_tokens = self._get_output_tokens(self.temporary_directory)

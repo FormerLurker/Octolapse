@@ -396,12 +396,12 @@ def is_valid_temporary_extension(extension):
 
 
 def get_snapshot_filename(print_name, snapshot_number):
-    return "{0}{1}.{2}".format(print_name.replace('%','%%'), format_snapshot_number(snapshot_number), default_snapshot_extension)
+    return "{0}{1}.{2}".format(print_name, format_snapshot_number(snapshot_number), default_snapshot_extension)
 
 
 def get_pre_roll_snapshot_filename(print_name, snapshot_number):
     return "{0}{1}_{2}.{3}".format(
-        print_name.replace('%','%%'),
+        print_name,
         format_snapshot_number(snapshot_number),
         format_snapshot_number(snapshot_number),
         "jpg")
