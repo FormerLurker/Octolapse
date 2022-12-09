@@ -35,7 +35,9 @@ $(function () {
             validation_enabled: false,
             help_enabled: true,
             help_title: 'Timelapse Files Dialog',
-            help_link: 'dialog.timelapse_files.timelapse.tab.md'
+            help_link: 'dialog.timelapse_files.timelapse.tab.md',
+            cancel_button_text: 'Close',
+            cancel_button_title: 'Close the dialog.'
         };
         self.template_id= "octolapse-timelapse-files-dialog-template";
         self.dialog = new Octolapse.OctolapseDialog(self.dialog_id, self.template_id, self.dialog_options);
