@@ -31,10 +31,10 @@
                     </h4>
                 </span>
                 <span class="span3">
-                    Layer: <span data-bind="text:PrinterState.layer()" />
+                    Layer: <span data-bind="text:PrinterState.layer()" ></span>
                 </span>
                 <span class="span3">
-                    Height: <span data-bind="text:PrinterState.height()" /><i>&nbsp;mm</i>
+                    Height: <span data-bind="text:PrinterState.height()" ></span><i>&nbsp;mm</i>
                 </span>
             </div>
         </div>
@@ -56,7 +56,7 @@
                                     <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getHasDefinitePositionText}">
                                         <span class="fa fa-circle fa-stack-2x outline"></span>
                                         <span class="fa fa-circle fa-stack-2x" data-bind="style: {color:PrinterState.getColor(PrinterState.has_definite_position(),'greenyellow','red','red')}"></span>
-                                        <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.has_definite_position(),'icon-ok-circle','fa-times','fa-times')"></span>
+                                        <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.has_definite_position(),'fa-check','fa-times','fa-times')"></span>
                                     </span>
                             </div>
                             <div class="span3">
@@ -68,7 +68,7 @@
                                 <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getXHomedStateText}">
                                     <span class="fa fa-circle fa-stack-2x outline"></span>
                                     <span class="fa fa-circle fa-stack-2x" data-bind="style: {color:PrinterState.getColor(PrinterState.x_homed(),'greenyellow','red','red')}"></span>
-                                    <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.x_homed(),'icon-ok-circle','fa-times','fa-times')"></span>
+                                    <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.x_homed(),'fa-check','fa-times','fa-times')"></span>
                                 </span>
                             </div>
                             <div class="span4">
@@ -77,7 +77,7 @@
                                 <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getYHomedStateText}">
                                     <span class="fa fa-circle fa-stack-2x outline"></span>
                                     <span class="fa fa-circle fa-stack-2x" data-bind="style: {color:PrinterState.getColor(PrinterState.y_homed(),'greenyellow','red','red')}"></span>
-                                    <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.y_homed(),'icon-ok-circle','fa-times','fa-times')"></span>
+                                    <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.y_homed(),'fa-check','fa-times','fa-times')"></span>
                                 </span>
                             </div>
                             <div class="span4">
@@ -85,7 +85,7 @@
                                 <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getZHomedStateText}">
                                     <span class="fa fa-circle fa-stack-2x outline"></span>
                                     <span class="fa fa-circle fa-stack-2x" data-bind="style: {color:PrinterState.getColor(PrinterState.z_homed(),'greenyellow','red','red')}"></span>
-                                    <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.z_homed(),'icon-ok-circle','fa-times','fa-times')"></span>
+                                    <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.z_homed(),'fa-check','fa-times','fa-times')"></span>
                                 </span>
                             </div>
                         </div>
@@ -99,7 +99,7 @@
                             <span class="fa fa-circle fa-stack-2x outline"></span>
                             <span class="fa fa-circle fa-stack-2x" data-bind="style: {color:PrinterState.getColor(PrinterState.is_printer_primed(),'greenyellow','red','red')}"></span>
                             <span class="fa fa-1x fa-stack-1x"
-                                  data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_printer_primed(),'icon-ok-circle','fa-times','fa-times')"></span>
+                                  data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_printer_primed(),'fa-check','fa-times','fa-times')"></span>
                         </span>
 
                     </div>
@@ -117,7 +117,7 @@
                                 <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getIsExtruderRelativeStateText}">
                                     <span class="fa fa-circle fa-stack-2x outline"></span>
                                     <span class="fa fa-circle fa-stack-2x" data-bind="style: {color:PrinterState.getColor(PrinterState.is_extruder_relative(),'greenyellow','greenyellow','red')}"></span>
-                                    <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass( PrinterState.is_extruder_relative(),'icon-ok-circle','icon-ok-circle', 'fa-times')"></span>
+                                    <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass( PrinterState.is_extruder_relative(),'fa-check','fa-check', 'fa-times')"></span>
                                 </span>
 
                             </div>
@@ -131,7 +131,7 @@
                                 <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getIsRelativeStateText}">
                                     <span class="fa fa-circle fa-stack-2x outline"></span>
                                     <span class="fa fa-circle fa-stack-2x" data-bind="style: {color:PrinterState.getColor(PrinterState.is_relative(),'greenyellow','greenyellow','red')}"></span>
-                                    <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_relative(),'icon-ok-circle','icon-ok-circle', 'fa-times')"></span>
+                                    <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_relative(),'fa-check','fa-check', 'fa-times')"></span>
                                 </span>
                             </div>
                         </div>
@@ -145,7 +145,7 @@
                                     <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getIsMetricStateText}">
                                         <span class="fa fa-circle fa-stack-2x outline"></span>
                                         <span class="fa fa-circle fa-stack-2x" data-bind="style: {color:PrinterState.getColor(PrinterState.is_metric(),'greenyellow','red','red')}"></span>
-                                        <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_metric(),'icon-ok-circle','fa-times','fa-times')"></span>
+                                        <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_metric(),'fa-check','fa-times','fa-times')"></span>
                                     </span>
                                 </div>
                             </div>
@@ -160,7 +160,7 @@
                                     <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getIsInPositionStateText}">
                                         <span class="fa fa-circle fa-stack-2x outline"></span>
                                         <span class="fa fa-circle fa-stack-2x" data-bind="style: {color:PrinterState.getColor(PrinterState.is_in_position() || PrinterState.in_path_position(),'greenyellow','orange','orange')}"></span>
-                                        <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_in_position() || PrinterState.in_path_position(), 'icon-ok-circle', 'fa-times','fa-times')"></span>
+                                        <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_in_position() || PrinterState.in_path_position(), 'fa-check', 'fa-times','fa-times')"></span>
                                     </span>
                                 </div>
 
@@ -176,7 +176,7 @@
                                     <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getIsLayerChangeStateText}">
                                         <span class="fa fa-circle fa-stack-2x outline"></span>
                                         <span class="fa fa-circle fa-stack-2x position-state-icon"></span>
-                                        <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_layer_change(),'icon-ok-circle','icon-circle-blank','icon-circle-blank')"></span>
+                                        <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_layer_change(),'fa-check','fa-circle-o','fa-circle-o')"></span>
                                     </span>
 
                                 </div>
@@ -191,7 +191,7 @@
                                 <span class="fa-stack fa-2x info-panel-icon" data-bind="attr: {title: PrinterState.getIsZHopStateText}">
                                     <span class="fa fa-circle fa-stack-2x outline"></span>
                                     <span class="fa fa-circle fa-stack-2x position-state-icon"></span>
-                                    <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_zhop(),'icon-ok-circle','icon-circle-blank','icon-circle-blank')"></span>
+                                    <span class="fa fa-1x fa-stack-1x" data-bind="css:PrinterState.getCheckedIconClass(PrinterState.is_zhop(),'fa-check','fa-circle-o','fa-circle-o')"></span>
                                 </span>
 
                             </div>
