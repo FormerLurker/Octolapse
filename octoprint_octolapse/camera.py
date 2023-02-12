@@ -22,7 +22,8 @@
 ##################################################################################
 from __future__ import unicode_literals
 import json
-import six
+# remove unused imports
+# import six
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.script as script
 from threading import Thread
@@ -35,7 +36,8 @@ import requests
 import os
 import errno
 # Todo:  Do we need to add this to setup.py?
-from requests.auth import HTTPBasicAuth
+# remove unused import
+# from requests.auth import HTTPBasicAuth
 from requests.exceptions import SSLError
 from octoprint_octolapse.settings import CameraProfile, MjpgStreamerControl, MjpgStreamer
 from tempfile import mkdtemp
@@ -78,7 +80,9 @@ class CameraControl(object):
 
         server_types = camera_files["server_types"]
         # loop through each server type
-        for key, server_type in six.iteritems(server_types):
+        # remove python 2 compatibility
+        # for key, server_type in six.iteritems(server_types):
+        for key, server_type in server_types.items():
             camera_types["server_types"][key] = {'cameras': {}}
             # load all of the individual camera type info files for the current server
             for file_name in server_type["file_names"]:
@@ -125,7 +129,9 @@ class CameraControl(object):
                     control_setting.update(control)
                     controls[control_setting.id] = control_setting
             elif isinstance(data, dict):
-                for key, control in six.iteritems(data):
+                # remove python 2 compatibility
+                # for key, control in six.iteritems(data):
+                for key, control in data.items():
                     control_setting = MjpgStreamerControl()
                     control_setting.update(control)
                     controls[key] = control_setting
@@ -141,7 +147,9 @@ class CameraControl(object):
         cameras = CameraControl.camera_types["server_types"][server_type]["cameras"]
 
         # iterate the cameras dictionary for the given server type if possible
-        for key, camera in six.iteritems(cameras):
+        # remove python 2 compatibility
+        # for key, camera in six.iteritems(cameras):
+        for key, camera in cameras.items():
             # see if the current camera type matches the given data
             if CameraControl._is_webcam_type(server_type, camera, data):
                 return {
@@ -209,7 +217,9 @@ class CameraControl(object):
     def run_on_print_start_script(cameras):
         # build the arg list
         args_list = []
-        for key, camera in six.iteritems(cameras):
+        # remove python 2 compatibility
+        # for key, camera in six.iteritems(cameras):
+        for key, camera in cameras.items():
             script_path = camera.on_print_start_script.strip()
             if not script_path or not camera.enabled:
                 # skip any cameras where there is no on print start script or the camera is disabled
@@ -234,7 +244,9 @@ class CameraControl(object):
     def run_on_print_end_script(cameras):
         # build the arg list
         args_list = []
-        for key, camera in six.iteritems(cameras):
+        # remove python 2 compatibility
+        # for key, camera in six.iteritems(cameras):
+        for key, camera in cameras.items():
             script_path = camera.on_print_end_script.strip()
             if not script_path or not camera.enabled:
                 # skip any cameras where there is no on print start script or the camera is disabled
@@ -954,8 +966,9 @@ class CameraControl(object):
                 return False, errors
             # set the control values to the defaults
             controls = settings["webcam_settings"]["mjpg_streamer"]["controls"]
-            for key, control in six.iteritems(controls):
-
+            # remove python 2 compatibility
+            # for key, control in six.iteritems(controls):
+            for key, control in controls.items():
                 control.value = control.default
                 controls[key] = control.to_dict()
 
@@ -1007,7 +1020,9 @@ class MjpgStreamerThread(Thread):
             self.password = password
             self.ignore_ssl_error = ignore_ssl_error
             self.camera_name = camera_name
-        if isinstance(self.address, six.string_types):
+        # remove python 2 compatibility
+        # if isinstance(self.address, six.string_types):
+        if isinstance(self.address, str):
             self.address = self.address.strip()
         self.retries = retries
         self.backoff_factor=backoff_factor
@@ -1159,8 +1174,9 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
 
         controls_list = []
 
-
-        for key, control in six.iteritems(self.controls):
+        # remove python 2 compatibility
+        # for key, control in six.iteritems(self.controls):
+        for key, control in self.controls.items():
             controls_list.append(control)
 
         # Sort the controls.  They need to be sent in order.

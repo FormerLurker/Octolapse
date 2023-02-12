@@ -3,7 +3,8 @@ from octoprint_octolapse_setuptools import NumberedVersion
 import json
 import sys
 import os
-import six
+# remove unused using
+# import six
 import copy
 import shutil
 # create the module level logger
@@ -337,8 +338,11 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
     # set the current trigger profile
     profiles['current_trigger_profile_guid'] = settings_dict['current_snapshot_profile_guid']
 
+
+    # Remove python 2 support
+    # for key, default_profile in six.iteritems(default_settings["profiles"]["triggers"]):
     # add all of the new triggers (the non-real time triggers)
-    for key, default_profile in six.iteritems(default_settings["profiles"]["triggers"]):
+    for key, default_profile in default_settings["profiles"]["triggers"].items():
         if default_profile["trigger_type"] != 'real-time':
             # add this setting, it's new!
             profiles["triggers"][key] = default_profile
@@ -432,8 +436,11 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
         del camera['powerline_frequency'],
         profiles['cameras'][camera['guid']] = camera
 
+    # Remove python 2 support
+    # for key, default_profile in six.iteritems(default_settings['profiles']['debug']):
+
     # UPGRADE THE DEBUG PROFILES - remove and replace the debug profiles, they are too different to salvage
-    for key, default_profile in six.iteritems(default_settings['profiles']['debug']):
+    for key, default_profile in default_settings['profiles']['debug'].items():
         profiles['debug'][key] = default_profile
     # set the default debug profile
     profiles["current_debug_profile_guid"] = default_settings['profiles']['current_debug_profile_guid']
@@ -488,7 +495,9 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
     for profile_default in profile_default_types:
         profile_type = profile_default["profile_type"]
         default_profile_name = profile_default["default_profile_name"]
-        for key, profile in six.iteritems(profiles[profile_type]):
+        # Remove python 2 support
+        # for key, profile in six.iteritems(profiles[profile_type]):
+        for key, profile in profiles[profile_type].items():
             defaults_copy = copy.deepcopy(default_settings["profiles"]["defaults"][default_profile_name])
             defaults_copy.update(profile)
             profiles[profile_type][key] = defaults_copy
@@ -507,7 +516,9 @@ def migrate_pre_0_4_0_rc1_dev2(current_version, settings_dict, default_settings_
     settings_dict["profiles"]["triggers"] = {}
     # add the default triggers
     triggers = default_settings["profiles"]["triggers"]
-    for key, trigger in six.iteritems(triggers):
+    # Remove python 2 support
+    # for key, trigger in six.iteritems(triggers):
+    for key, trigger in triggers.items():
         # Add default triggers
         settings_dict["profiles"]["triggers"][key] = trigger
 
@@ -522,7 +533,9 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
     # adjust each slicer profile to account for the new multiple extruder settings
     printers = settings_dict["profiles"]["printers"]
     default_settings = get_default_settings(default_settings_path)
-    for key, printer in six.iteritems(printers):
+    # Remove python 2 support
+    # for key, printer in six.iteritems(printers):
+    for key, printer in printers.items():
 
         # Adjust gcode generation settings
         if "gcode_generation_settings" in printer:
@@ -647,7 +660,9 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
             slic3r_pe.pop("deretract_speed", None)
 
     renderings = settings_dict["profiles"]["renderings"]
-    for key, render in six.iteritems(renderings):
+    # Remove python 2 support
+    # for key, render in six.iteritems(renderings):
+    for key, render in renderings.items():
         render["archive_snapshots"] = not render.get("cleanup_after_render_complete", True)
         render.pop("cleanup_after_render_complete",None)
         render.pop("cleanup_after_render_fail",None)
@@ -656,7 +671,9 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
         render.pop("snapshots_to_skip_beginning", None)
 
     triggers = settings_dict["profiles"]["triggers"]
-    for key, trigger in six.iteritems(triggers):
+    # Remove python 2 support
+    #for key, trigger in six.iteritems(triggers):
+    for key, trigger in triggers.items():
         if "trigger_type" in trigger and trigger["trigger_type"] == 'smart-layer':
             trigger["trigger_type"] = "smart"
 

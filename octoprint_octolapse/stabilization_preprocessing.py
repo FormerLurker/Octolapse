@@ -22,7 +22,9 @@
 ##################################################################################
 from __future__ import unicode_literals
 from threading import Thread
-from six.moves import queue
+# Remove python 2 support
+# from six.moves import queue
+import queue as queue
 from octoprint_octolapse.stabilization_gcode import SnapshotPlan, SnapshotGcodeGenerator
 from octoprint_octolapse.settings import PrinterProfile, TriggerProfile, StabilizationProfile
 import GcodePositionProcessor

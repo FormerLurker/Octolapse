@@ -34,15 +34,18 @@ from octoprint_octolapse_setuptools import NumberedVersion
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.log as log
 import math
-try:
-    from collections.abc import Iterable
-except ImportError:
-    # Python 2.7
-    from collections import Iterable
+# remove python 2 support
+#try:
+#    from collections.abc import Iterable
+#except ImportError:
+#    # Python 2.7
+#    from collections import Iterable
+from collections.abc import Iterable
 import octoprint_octolapse.settings_preprocessor as settings_preprocessor
 import octoprint_octolapse.migration as migration
 from octoprint_octolapse.gcode_processor import GcodeProcessor, ParsedCommand
-import six
+# remove unused usings
+# import six
 from octoprint_octolapse.error_messages import OctolapseException
 import inspect
 # create the module level logger
@@ -54,7 +57,9 @@ logger = logging_configurator.get_logger(__name__)
 class SettingsJsonEncoder(json.JSONEncoder):
     def default(self, obj):
         if issubclass(type(obj), Settings):
-            return {k: v for (k, v) in six.iteritems(obj.to_dict()) if not k.startswith("_")}
+            # Remove python 2 support
+            # return {k: v for (k, v) in six.iteritems(obj.to_dict()) if not k.startswith("_")}
+            return {k: v for (k, v) in obj.to_dict().items() if not k.startswith("_")}
         elif issubclass(type(obj), StaticSettings):
             return obj.__dict__
         # Let the base class default method raise the TypeError
@@ -101,7 +106,9 @@ class Settings(object):
 
     def to_json(self):
         # remove private variables
-        filtered_dict = {k: v for (k, v) in six.iteritems(self.to_dict()) if not k.startswith("_")}
+        # Remove python 2 support
+        # filtered_dict = {k: v for (k, v) in six.iteritems(self.to_dict()) if not k.startswith("_")}
+        filtered_dict = {k: v for (k, v) in self.to_dict().items() if not k.startswith("_")}
         return json.dumps(filtered_dict, cls=SettingsJsonEncoder)
 
     @classmethod
@@ -129,7 +136,9 @@ class Settings(object):
                 if key.startswith("_"):
                     continue
                 class_item = getattr(source, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                # Remove python 2 support
+                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if isinstance(class_item, Settings):
                         class_item.update(value)
                     elif isinstance(class_item, StaticSettings):
@@ -1080,7 +1089,9 @@ class TriggerProfile(AutomaticConfigurationProfile):
 
     @staticmethod
     def get_extruder_trigger_value(value):
-        if isinstance(value, six.string_types):
+        # Remove python 2 support
+        #if isinstance(value, six.string_types):
+        if isinstance(value, str):
             if value is None or len(value) == 0:
                 return None
             elif value.lower() == TriggerProfile.EXTRUDER_TRIGGER_REQUIRED_VALUE:
@@ -1172,7 +1183,9 @@ class RenderingProfile(AutomaticConfigurationProfile):
     @staticmethod
     def _get_color_(rgba_color):
         overlay_text_color = [255, 255, 255, 1.0]
-        if isinstance(rgba_color, six.string_types):
+        # Remove python 2 support
+        # if isinstance(rgba_color, six.string_types):
+        if isinstance(rgba_color, str):
             overlay_text_color = json.loads(rgba_color)
         elif isinstance(rgba_color, list):
             # make sure to copy the list so we don't alter the original
@@ -1194,7 +1207,9 @@ class RenderingProfile(AutomaticConfigurationProfile):
     @classmethod
     def try_convert_value(cls, destination, value, key):
         if key in ['overlay_text_color', 'overlay_outline_color']:
-            if isinstance(value, six.string_types):
+            # Remove python 2 support
+            # if isinstance(value, six.string_types):
+            if isinstance(value, str):
                 value = json.loads(value)
             if not isinstance(value, list):
                 return None
@@ -1297,8 +1312,9 @@ class MjpgStreamer(StreamingServer):
         # first see if the  number of controls match
         if len(self.controls) != len(server_settings):
             return False
-
-        for key, control in six.iteritems(self.controls):
+        # Remove python 2 support
+        # for key, control in six.iteritems(self.controls):
+        for key, control in self.controls.items():
             # convert the key to a string
             key = str(key)
             # if the key is not in the server_settings_dict, they don't match
@@ -1320,7 +1336,9 @@ class MjpgStreamer(StreamingServer):
 
         for key, value in item_to_iterate.items():
             class_item = getattr(self, key, '{octolapse_no_property_found}')
-            if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+            # Remove python 2 support
+            # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+            if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                 if key == 'controls':
                     self.controls = {}
                     if isinstance(value, dict):
@@ -1462,14 +1480,18 @@ class WebcamSettings(Settings):
 
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                # Remove python 2 support
+                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == 'mjpg_streamer':
                         self.mjpg_streamer.controls = {}
                         if "controls" in value:
                             controls = value["controls"]
                             # controls might be a dict or a list, iterate appropriately
                             if isinstance(controls, dict):
-                                for key, control in six.iteritems(value["controls"]):
+                                # Remove python 2 support
+                                # for key, control in six.iteritems(value["controls"]):
+                                for key, control in value["controls"].items():
                                     if "id" in control:
                                         self.mjpg_streamer.controls[key] = (
                                             MjpgStreamerControl.create_from(control)
@@ -2085,7 +2107,9 @@ class Profiles(Settings):
 
         for key, value in item_to_iterate.items():
             class_item = getattr(self, key, '{octolapse_no_property_found}')
-            if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+            # Remove python 2 support
+            # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+            if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                 profiles_found = True
 
                 if key == 'printers':
@@ -2164,37 +2188,44 @@ class Profiles(Settings):
             "logging": []
         }
         has_profiles = False
-        for key, printer_profile in six.iteritems(self.printers):
+        # Remove python 2 support
+        # for key, printer_profile in six.iteritems(self.printers):
+        for key, printer_profile in self.printers.items():
             if printer_profile.is_updatable_from_server():
                 has_profiles = True
                 identifiers = printer_profile.get_server_update_identifiers_dict()
                 profiles["printer"].append(identifiers)
-
-        for key, stabilization_profile in six.iteritems(self.stabilizations):
+        # Remove python 2 support
+        # for key, stabilization_profile in six.iteritems(self.stabilizations):
+        for key, stabilization_profile in self.stabilizations.items():
             if stabilization_profile.is_updatable_from_server():
                 has_profiles = True
                 identifiers = stabilization_profile.get_server_update_identifiers_dict()
                 profiles["stabilization"].append(identifiers)
-
-        for key, trigger_profile in six.iteritems(self.triggers):
+        # Remove python 2 support
+        # for key, trigger_profile in six.iteritems(self.triggers):
+        for key, trigger_profile in self.triggers.items():
             if trigger_profile.is_updatable_from_server():
                 has_profiles = True
                 identifiers = trigger_profile.get_server_update_identifiers_dict()
                 profiles["trigger"].append(identifiers)
-
-        for key, rendering_profile in six.iteritems(self.renderings):
+        # Remove python 2 support
+        # for key, rendering_profile in six.iteritems(self.renderings):
+        for key, rendering_profile in self.renderings.items():
             if rendering_profile.is_updatable_from_server():
                 has_profiles = True
                 identifiers = rendering_profile.get_server_update_identifiers_dict()
                 profiles["rendering"].append(identifiers)
-
-        for key, camera_profile in six.iteritems(self.cameras):
+        # Remove python 2 support
+        # for key, camera_profile in six.iteritems(self.cameras):
+        for key, camera_profile in self.cameras.items():
             if camera_profile.is_updatable_from_server():
                 has_profiles = True
                 identifiers = camera_profile.get_server_update_identifiers_dict()
                 profiles["camera"].append(identifiers)
-
-        for key, logging_profile in six.iteritems(self.logging):
+        # Remove python 2 support
+        # for key, logging_profile in six.iteritems(self.logging):
+        for key, logging_profile in self.logging.items():
             if logging_profile.is_updatable_from_server():
                 has_profiles = True
                 identifiers = logging_profile.get_server_update_identifiers_dict()
@@ -2729,7 +2760,9 @@ class CuraExtruder(SlicerExtruder):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                # Remove python 2 support
+                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     try:
                         if key in ['retraction_enable', 'retraction_hop_enabled']:
                             self.__dict__[key] = None if value is None else bool(value)
@@ -2839,13 +2872,18 @@ class CuraSettings(SlicerSettings):
                     extruder = self.extruders[extruder_index]
                     # for fun, make sure the setting exists in the extruder class
                     class_item = getattr(extruder, extruder_setting_name, '{octolapse_no_property_found}')
+                    # Remove python 2 support
                     if not (
-                        isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'
+                        # Remove python 2 support
+                        # isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'
+                        isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'
                     ):
                         extruder.__dict__[extruder_setting_name] = value
                     continue
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                # Remove python 2 support
+                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == 'version':
                         self.version = value
                     elif isinstance(class_item, Settings):
@@ -2863,7 +2901,9 @@ class CuraSettings(SlicerSettings):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                # Remove python 2 support
+                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == "extruders":
                         self.extruders = []
                         for extruder in value:
@@ -2923,7 +2963,9 @@ class Simplify3dExtruder(SlicerExtruder):
             item_to_iterate = iterable.__dict__
         for key, value in item_to_iterate.items():
             class_item = getattr(self, key, '{octolapse_no_property_found}')
-            if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+            # Remove python 2 support
+            # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+            if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                 try:
                     if key in ['extruder_use_retract']:
                         self.__dict__[key] = None if value is None else bool(value)
@@ -3078,7 +3120,9 @@ class Simplify3dSettings(SlicerSettings):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                # Remove python 2 support
+                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == "extruders":
                         self.extruders = []
                         for extruder in value:
@@ -3173,7 +3217,9 @@ class Slic3rPeExtruder(SlicerExtruder):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                # Remove python 2 support
+                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     try:
                         self.__dict__[key] = None if value is None else float(value)
                     except ValueError as e:
@@ -3221,7 +3267,9 @@ class Slic3rPeSettings(SlicerSettings):
         try:
             if parse_string is None:
                 return None
-            if isinstance(parse_string, six.string_types):
+            # Remove python 2 support
+            # if isinstance(parse_string, six.string_types):
+            if isinstance(parse_string, str):
                 percent_index = "{}".format(parse_string).strip().find('%')
                 if percent_index < 1:
                     return None
@@ -3268,14 +3316,18 @@ class Slic3rPeSettings(SlicerSettings):
                         extruder = self.extruders[extruder_index]
                         class_item = getattr(extruder, key, '{octolapse_no_property_found}')
                         if not (
-                            isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'
+                            # Remove python 2 support
+                            # isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'
+                            isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'
                         ):
                             # All of the extruder values are floats
                             extruder.__dict__[key] = float(extruder_value)
                         extruder_index += 1
                     continue
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                # Remove python 2 support
+                #if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == 'version':
                         self.version = value["version"]
                     elif isinstance(class_item, Settings):
@@ -3287,7 +3339,9 @@ class Slic3rPeSettings(SlicerSettings):
 
     @classmethod
     def try_convert_value(cls, destination, value, key):
-        if value is None or (isinstance(value, six.string_types) and value == 'None'):
+        # Remove python 2 support
+        # if value is None or (isinstance(value, six.string_types) and value == 'None'):
+        if value is None or (isinstance(value, str) and value == 'None'):
             return None
 
         return super(Slic3rPeSettings, cls).try_convert_value(destination, value, key)
@@ -3299,7 +3353,9 @@ class Slic3rPeSettings(SlicerSettings):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                # Remove python 2 support
+                #if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == "extruders":
                         self.extruders = []
                         for extruder in value:
@@ -3360,7 +3416,9 @@ class OtherSlicerExtruder(SlicerExtruder):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                # Remove python 2 support
+                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     try:
                         if key in ['retract_before_move','lift_when_retracted']:
                             self.__dict__[key] = None if value is None else bool(value)
@@ -3419,7 +3477,9 @@ class OtherSlicerSettings(SlicerSettings):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                # Remove python 2 support
+                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
+                if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == "extruders":
                         self.extruders = []
                         for extruder in value:

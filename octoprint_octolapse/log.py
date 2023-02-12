@@ -24,7 +24,8 @@ from __future__ import unicode_literals
 import logging
 import datetime as datetime
 import os
-import six
+# Remove python 2 support
+# import six
 from octoprint.logging.handlers import AsyncLogHandlerMixin, CleaningTimedRotatingFileHandler
 
 
@@ -92,9 +93,10 @@ class OctolapseFileHandler(CleaningTimedRotatingFileHandler, AsyncLogHandlerMixi
             os.remove(s)
         self.backupCount = backup_count
 
-
-@six.add_metaclass(Singleton)
+# remove python 2 support
+# @six.add_metaclass(Singleton)
 class LoggingConfigurator(object):
+    __metaclass__ = Singleton
     BACKUP_COUNT = 3
 
     def __init__(self):

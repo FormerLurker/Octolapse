@@ -21,7 +21,8 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from __future__ import unicode_literals
-from six import string_types
+# remove unused using
+# from six import string_types
 import operator
 import re
 
@@ -49,7 +50,9 @@ class CommandParameter(object):
 
     @staticmethod
     def parse_float(parameter_string):
-        assert (isinstance(parameter_string, string_types))
+        # remove python 2 support
+        # assert (isinstance(parameter_string, string_types))
+        assert (isinstance(parameter_string, str))
         parameter_string = parameter_string.lstrip()
 
         index = 0
@@ -90,7 +93,9 @@ class CommandParameter(object):
 
     @staticmethod
     def parse_int(parameter_string):
-        assert (isinstance(parameter_string, string_types))
+        # remove python 2 support
+        # assert (isinstance(parameter_string, string_types))
+        assert (isinstance(parameter_string, str))
         parameter_string = parameter_string.lstrip()
         index = 0
         int_string = ""
@@ -115,7 +120,9 @@ class CommandParameter(object):
 
     @staticmethod
     def parse_tool(parameter_string):
-        assert (isinstance(parameter_string, string_types))
+        # remove python 2 support
+        # assert (isinstance(parameter_string, string_types))
+        assert (isinstance(parameter_string, str))
         parameter_string = parameter_string.strip().upper()
 
         if parameter_string[0] in ['?','X','C']:

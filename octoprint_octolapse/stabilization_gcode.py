@@ -27,7 +27,8 @@ from octoprint_octolapse.settings import *
 from octoprint_octolapse.trigger import Triggers
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
-import json
+# remove unused using
+# import json
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 

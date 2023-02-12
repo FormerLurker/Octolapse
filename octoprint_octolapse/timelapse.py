@@ -24,8 +24,11 @@ from __future__ import unicode_literals
 import threading
 import time
 import uuid
-from six import iteritems, string_types
-from six.moves import queue
+# remove unused usings
+# from six import iteritems, string_types
+# Remove python 2 support
+# from six.moves import queue
+import queue as queue
 import os
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.stabilization_gcode import SnapshotGcodeGenerator, SnapshotGcode
@@ -339,7 +342,9 @@ class Timelapse(object):
                 error_count += 1
                 if isinstance(result.error, SnapshotError):
                     error_message = result.error.message
-                elif isinstance(result.error, string_types):
+                # remove python 2 support
+                # elif isinstance(result.error, string_types):
+                elif isinstance(result.error, str):
                     error_message = result.error
 
                 if result.job_type not in errors:
@@ -353,7 +358,9 @@ class Timelapse(object):
 
         error_message = ""
         if error_count == 1:
-            for key, value in iteritems(errors):
+            # remove python 2 support
+            # for key, value in iteritems(errors):
+            for key, value in errors.items():
                 error = value["error"]
                 if key == 'before-snapshot':
                     error_message = "Before Snapshot Script Error: {0}"
@@ -368,7 +375,9 @@ class Timelapse(object):
             before_snapshot_error_count = False
             after_snapshot_error_count = False
             snapshot_error_count = False
-            for key, value in iteritems(errors):
+            # remove python 2 support
+            # for key, value in iteritems(errors):
+            for key, value in errors.items():
                 if key == 'before-snapshot':
                     before_snapshot_error_count = value["count"]
                 elif key == 'after-snapshot':

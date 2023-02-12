@@ -38,6 +38,7 @@ import errno
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
+# Todo:  Determin if this is still necessary.
 try:
     from slugify import Slugify
 except ImportError:

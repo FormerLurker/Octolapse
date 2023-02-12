@@ -25,7 +25,8 @@ from octoprint_octolapse_setuptools import NumberedVersion
 import requests
 import uuid
 import json
-import six
+# remove unused usings
+# import six
 import os
 import copy
 
@@ -136,7 +137,9 @@ class ExternalSettings(object):
             available_profiles is not None
         ):
             # loop through the updatable profile dicts
-            for profile_type, value in six.iteritems(updatable_profiles):
+            # Remove python 2 support
+            # for profile_type, value in six.iteritems(updatable_profiles):
+            for profile_type, value in updatable_profiles.items():
                 # loop through the profiles
                 for updatable_profile in value:
                     # get the available profile for the updatable profile keys

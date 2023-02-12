@@ -21,14 +21,16 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from __future__ import unicode_literals
-import six
+# remove unused usings
+# import six
 import os
 import json
 from csv import DictWriter
 from time import sleep
 import requests
 from PIL import ImageFile
-import sys
+# remove unused usings
+# import sys
 # PIL is in fact in setup.py.
 from requests.auth import HTTPBasicAuth
 from threading import Thread, Event
@@ -675,7 +677,9 @@ class WebcamSnapshotJob(SnapshotThread):
             on_post_processing_error_callback=on_post_processing_error_callback
         )
         self.address = self.snapshot_job_info.camera.webcam_settings.address
-        if isinstance(self.address, six.string_types):
+        # Remove python 2 support
+        # if isinstance(self.address, six.string_types):
+        if isinstance(self.address, str):
             self.address = self.address.strip()
         self.username = self.snapshot_job_info.camera.webcam_settings.username
         self.password = self.snapshot_job_info.camera.webcam_settings.password

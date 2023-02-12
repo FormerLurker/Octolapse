@@ -40,13 +40,17 @@ import sys
 import base64
 import json
 import os
-from flask import request, send_file, jsonify, Response, stream_with_context, send_from_directory, current_app, Flask
-
+# remove unused imports
+#from flask import request, send_file, jsonify, Response, stream_with_context, send_from_directory, current_app, Flask
+from flask import request, jsonify
 import threading
 import uuid
-import six
+# remove unused imports
+# import six
 import time
-from six.moves import queue
+# Remove python 2 support
+# from six.moves import queue
+import queue as queue
 from tempfile import mkdtemp
 from distutils.version import LooseVersion
 from io import BytesIO
@@ -54,17 +58,20 @@ import octoprint.plugin
 import octoprint.filemanager
 from octoprint.events import Events
 from octoprint.server.util.flask import restricted_access
-import octoprint_octolapse.stabilization_preprocessing
+# remove unused import
+# import octoprint_octolapse.stabilization_preprocessing
 import octoprint_octolapse.camera as camera
 import octoprint_octolapse.render as render
 import octoprint_octolapse.snapshot as snapshot
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.error_messages as error_messages
 from octoprint_octolapse.migration import migrate_files, get_version_from_settings_index
-from octoprint_octolapse.position import Position
+# remove unused import
+# from octoprint_octolapse.position import Position
 from octoprint_octolapse.stabilization_gcode import SnapshotGcodeGenerator
 from octoprint_octolapse.gcode_commands import Commands
-from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
+# remove unused import
+# from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, TriggerProfile, \
     CameraProfile, RenderingProfile, LoggingProfile, SlicerSettings, CuraSettings, OtherSlicerSettings, \
     Simplify3dSettings, Slic3rPeSettings, SettingsJsonEncoder, MjpgStreamer, MainSettings
@@ -75,14 +82,14 @@ from octoprint_octolapse.settings_external import ExternalSettings, ExternalSett
 from octoprint_octolapse.render import RenderError, RenderingProcessor, RenderingCallbackArgs, RenderJobInfo
 #import octoprint_octolapse_setuptools as octoprint_octolapse_setuptools
 #import octoprint_octolapse_setuptools.github_release as github_release
-
-try:
-    # noinspection PyCompatibility
-    from urlparse import urlparse as urlparse
-except ImportError:
-    # noinspection PyUnresolvedReferences
-    from urllib.parse import urlparse as urlparse
-
+# remove python 2 compatibility
+#try:
+#    # noinspection PyCompatibility
+#    from urlparse import urlparse as urlparse
+#except ImportError:
+#    # noinspection PyUnresolvedReferences
+#    from urllib.parse import urlparse as urlparse
+from urllib.parse import urlparse as urlparse
 # configure all imported loggers
 logging_configurator.configure_loggers()
 
@@ -831,7 +838,9 @@ class OctolapsePlugin(
             available_profiles = self.check_for_updates(ignore_suppression=ignore_suppression)
             available_profile_count = 0
             if available_profiles:
-                for key, profile_type in six.iteritems(available_profiles):
+                # remove python 2 support
+                # for key, profile_type in six.iteritems(available_profiles):
+                for key, profile_type in available_profiles.items():
                     available_profile_count += len(profile_type)
             return jsonify({
                 "success": True,
@@ -853,7 +862,9 @@ class OctolapsePlugin(
                         "num_updated": 0
                     })
                 num_profiles = 0
-                for profile_type, updatable_profiles in six.iteritems(profiles_to_update):
+                # remove python 2 support
+                # for profile_type, updatable_profiles in six.iteritems(profiles_to_update):
+                for profile_type, updatable_profiles in profiles_to_update.items():
                     # now iterate through the printer profiles
                     for updatable_profile in updatable_profiles:
                         current_profile = self._octolapse_settings.profiles.get_profile(
@@ -897,7 +908,9 @@ class OctolapsePlugin(
 
             with self.automatic_update_lock:
                 has_updated = False
-                for profile_type, updatable_profiles in six.iteritems(self._octolapse_settings.profiles.get_updatable_profiles_dict()):
+                # remove python 2 support
+                # for profile_type, updatable_profiles in six.iteritems(self._octolapse_settings.profiles.get_updatable_profiles_dict()):
+                for profile_type, updatable_profiles in self._octolapse_settings.profiles.get_updatable_profiles_dict().items():
                     # now iterate through the printer profiles
                     for updatable_profile in updatable_profiles:
                         current_profile = self._octolapse_settings.profiles.get_profile(
@@ -2285,7 +2298,9 @@ class OctolapsePlugin(
             if profiles_to_update:
                 if notify:
                     num_available = 0
-                    for key, profile_type in six.iteritems(profiles_to_update):
+                    # remove python 2 support
+                    # for key, profile_type in six.iteritems(profiles_to_update):
+                    for key, profile_type in profiles_to_update.items():
                         num_available += len(profile_type)
                     data = {
                         "type": "updated-profiles-available",

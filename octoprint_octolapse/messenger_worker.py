@@ -23,7 +23,9 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 from threading import Thread, Lock
-from six.moves import queue
+# Remove python 2 support
+# from six.moves import queue
+import queue as queue
 from collections import deque
 import time
 from octoprint_octolapse.log import LoggingConfigurator
