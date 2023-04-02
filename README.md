@@ -263,4 +263,4 @@ View the [Octolapse license](https://github.com/FormerLurker/Octolapse/blob/mast
 
 <hr/>
 
-_Copyright (C) 2020  Brad Hochgesang - FormerLurker@pm.me_
+_Copyright (C) 2023  Brad Hochgesang - FormerLurker@pm.me_

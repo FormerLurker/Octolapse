@@ -1,7 +1,7 @@
 # coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2020  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -29,7 +29,7 @@ import functools
 class NumberedVersion(version.LooseVersion):
     # This is the current plugin version, not including any versioneer info,
     # which could be earlier or later
-    CurrentVersion = "0.4.1"
+    CurrentVersion = "0.4.2"
     # This is the CurrentVersion last time the settings were migrated.
     CurrentSettingsVersion = "0.4.0"
     '''
