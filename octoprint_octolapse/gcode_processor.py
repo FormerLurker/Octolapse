@@ -511,6 +511,8 @@ class Pos(utility.JsonSerializable):
             self.last_extrusion_height is None
             else z_hop - (self.z - self.last_extrusion_height)
         )
+        if amount_to_lift is None:
+            return 0
         if restrict_lift_height:
             if amount_to_lift < utility.FLOAT_MATH_EQUALITY_RANGE:
                 return 0
