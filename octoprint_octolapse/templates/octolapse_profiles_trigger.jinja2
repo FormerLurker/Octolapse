@@ -175,6 +175,18 @@
                     </div>
                 </div>
             </div>
+            <div data-bind="visible: trigger_type() == 'smart' && trigger_subtype() != 'gcode'">
+                <div class="control-group">
+                    <label class="control-label">Allow Snapshot Commands</label>
+                    <div class="controls">
+                        <label class="checkbox" title="Enable or disable the @OCTOLAPSE TAKE-SNAPSHOT command">
+                            <input data-bind="checked: allow_smart_snapshot_commands"
+                                   type="checkbox" /> Enabled
+                            <a class="octolapse_help" data-help-url="profiles.trigger.allow_smart_snapshot_commands.md" data-help-title="Allow Snapshot Commands"></a>
+                        </label>
+                    </div>
+                </div>
+            </div>
             <div data-bind="visible: trigger_type() == 'smart' && trigger_subtype() == 'gcode'">
                 <p>
                     The smart gcode trigger will take a snapshot whenever the snapshot command is encountered.  You can always use the <strong>@OCTOLAPSE TAKE-SNAPSHOT<a class="octolapse_help" data-help-url="profiles.printer.snapshot_command.md" data-help-title="Triggering Snapshots via GCode"></a></strong> command to trigger a snapshot.  Alternatively you can add a custom snapshot command by editing your printer profile entering an alternative snapshot command.

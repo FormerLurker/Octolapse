@@ -1,8 +1,8 @@
 // Todo:  Convert to C++
 #ifdef _DEBUG
-#undef _DEBUG
+//#undef _DEBUG
 #include <Python.h>
-#define _DEBUG
+//python311_d.lib
 #else
 #include <Python.h>
 #endif

@@ -3820,7 +3820,7 @@ class OctolapsePlugin(
         ]
 
 __plugin_name__ = "Octolapse"
-__plugin_pythoncompat__ = ">=2.7,<4"
+__plugin_pythoncompat__ = ">=3.7,<4"
 
 def __plugin_load__():
     global __plugin_implementation__

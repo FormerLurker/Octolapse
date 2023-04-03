@@ -11,8 +11,6 @@ stabilization_smart_layer::stabilization_smart_layer()
   is_layer_change_wait_ = false;
   has_one_extrusion_speed_ = true;
   last_tested_gcode_number_ = -1;
-  stabilization_x_ = 0;
-  stabilization_y_ = 0;
   current_layer_saved_extrusion_speed_ = -1;
   standard_layer_trigger_distance_ = 0.0;
   fastest_extrusion_speed_ = -1;
@@ -37,8 +35,6 @@ stabilization_smart_layer::stabilization_smart_layer(
 
   smart_layer_args_ = mt_args;
   // initialize closest extrusion/travel tracking structs
-  stabilization_x_ = 0;
-  stabilization_y_ = 0;
   current_layer_saved_extrusion_speed_ = -1;
   standard_layer_trigger_distance_ = 0.0;
 
@@ -69,9 +65,6 @@ stabilization_smart_layer::stabilization_smart_layer(
   slowest_extrusion_speed_ = -1;
 
   smart_layer_args_ = mt_args;
-  // Get the initial stabilization coordinates
-  stabilization_x_ = 0;
-  stabilization_y_ = 0;
   current_layer_saved_extrusion_speed_ = -1;
   standard_layer_trigger_distance_ = 0.0;
 

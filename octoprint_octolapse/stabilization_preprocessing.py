@@ -211,7 +211,9 @@ class StabilizationPreprocessingThread(Thread):
             ),
             "y_stabilization_disabled": (
                 self.stabilization_profile.y_type == StabilizationProfile.STABILIZATION_AXIS_TYPE_DISABLED
-            )
+            ),
+            "allow_snapshot_commands": self.trigger_profile.allow_smart_snapshot_commands,
+            "snapshot_command": self.printer_profile.snapshot_command
         }
         return stabilization_args
 
@@ -271,8 +273,9 @@ class StabilizationPreprocessingThread(Thread):
                 trigger_subtype == TriggerProfile.GCODE_TRIGGER_TYPE
         ):
             # run smart gcode trigger
+            # Note: there are no arguments for the smart gcode trigger currently
             smart_gcode_args = {
-                'snapshot_command': self.printer_profile.snapshot_command,
+
             }
             ret_val = list(GcodePositionProcessor.GetSnapshotPlans_SmartGcode(
                 self.cpp_position_args,
@@ -305,7 +308,10 @@ class StabilizationPreprocessingThread(Thread):
                 [other_error]
             )
             logger.error("The current precalculated trigger type is unknown.")
-
+        # We need to sort the snapshot plans by line number because they can sometimes be out of order
+        def sort_by_line_number(val):
+            return val[0]
+        results[1].sort(key=sort_by_line_number)
         return results, options
 
     def on_progress_received(self, percent_progress, seconds_elapsed, seconds_to_complete, gcodes_processed,

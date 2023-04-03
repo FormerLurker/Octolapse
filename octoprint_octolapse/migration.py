@@ -137,9 +137,14 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
 
     # Start using main_settings.settings_version for migrations
     # this value will start off as None
-    if settings_version is None:  # None < 0.4.0
+    if settings_version is None:
         has_updated = True
         settings_dict = migrate_pre_0_4_0(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0.json'))
+
+    if settings_version is not None and NumberedVersion(settings_version) < NumberedVersion("0.4.3"):  # None < 0.4.0
+        has_updated = True
+        settings_dict = migrate_pre_0_4_0(current_version, settings_dict,
+                                          os.path.join(default_settings_directory, 'settings_default_0.4.3.json'))
 
     # Add other migrations here in the future...
 
@@ -741,6 +746,15 @@ def migrate_pre_0_4_0(current_version, settings_dict, default_settings_path):
     if smart_gcode_trigger is not None:
         settings_dict["profiles"]["logging"]["fa759ab9-bc02-4fd0-8d12-a7c5c89591c1"] = script_camera_debug_logging
 
+    return settings_dict
+
+def migrate_pre_0_4_3(current_version, settings_dict, default_settings_path):
+    # Switch to Settings Version for migration starting at "0.4.0"
+    default_settings = get_default_settings(default_settings_path)
+
+    # add the allow_smart_snapshot_commands setting to all triggers with the value True
+    for trigger in settings_dict["profiles"]["triggers"]:
+        trigger["allow_smart_snapshot_commands"] = True
     return settings_dict
 
 

@@ -8,16 +8,7 @@ struct smart_gcode_args
 {
   smart_gcode_args()
   {
-    snapshot_command_text = "@OCTOLAPSE TAKE-SNAPSHOT";
-    snapshot_command.command = "@OCTOLAPSE";
-    parsed_command_parameter parameter;
-    parameter.name = "TAKE-SNAPSHOT";
-    snapshot_command.gcode = "@OCTOLAPSE TAKE-SNAPSHOT";
-    snapshot_command.parameters.push_back(parameter);
   }
-
-  parsed_command snapshot_command;
-  std::string snapshot_command_text;
 };
 
 class stabilization_smart_gcode :
@@ -38,12 +29,7 @@ private:
   void on_processing_complete() override;
   std::vector<stabilization_quality_issue> get_quality_issues() override;
   std::vector<stabilization_processing_issue> get_internal_processing_issues() override;
-  bool process_snapshot_command(position* p_cur_pos);
-  void process_snapshot_command_parameters(position* p_cur_pos);
-  void add_plan(position* p_position);
   smart_gcode_args smart_gcode_args_;
-  double stabilization_x_;
-  double stabilization_y_;
   int snapshot_commands_found_;
-  void update_stabilization_coordinates();
+  
 };

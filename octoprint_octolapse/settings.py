@@ -1001,7 +1001,7 @@ class TriggerProfile(AutomaticConfigurationProfile):
         self.smart_layer_snap_to_print_high_quality = False
         self.smart_layer_snap_to_print_smooth = False
         self.smart_layer_disable_z_lift = True
-
+        self.allow_smart_snapshot_commands = True
         # Settings that were formerly in the snapshot profile (now removed)
         self.is_default = False
         self.trigger_subtype = TriggerProfile.LAYER_TRIGGER_TYPE

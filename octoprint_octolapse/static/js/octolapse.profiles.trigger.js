@@ -36,6 +36,7 @@ $(function () {
         self.smart_layer_snap_to_print_smooth = ko.observable(values.smart_layer_snap_to_print_smooth);
 
         self.smart_layer_disable_z_lift = ko.observable(values.smart_layer_disable_z_lift);
+        self.allow_smart_snapshot_commands = ko.observable(values.allow_smart_snapshot_commands);
         self.trigger_subtype = ko.observable(values.trigger_subtype);
         /*
             Timer Trigger Settings
@@ -153,6 +154,7 @@ $(function () {
             self.smart_layer_snap_to_print_smooth(values.smart_layer_snap_to_print_smooth);
             self.smart_layer_trigger_type(values.smart_layer_trigger_type);
             self.smart_layer_disable_z_lift(values.smart_layer_disable_z_lift);
+            self.allow_smart_snapshot_commands(values.allow_smart_snapshot_commands);
             self.trigger_subtype(values.trigger_subtype);
             self.timer_trigger_seconds(values.timer_trigger_seconds);
             self.layer_trigger_height(values.layer_trigger_height);

@@ -4,9 +4,9 @@
 #include "position.h"
 #include "trigger_position.h"
 #ifdef _DEBUG
-#undef _DEBUG
+//#undef _DEBUG
 #include <Python.h>
-#define _DEBUG
+//python311_d.lib
 #endif
 static const char* SMART_LAYER_STABILIZATION = "smart_layer";
 
@@ -63,8 +63,6 @@ private:
   double fastest_extrusion_speed_;
   double slowest_extrusion_speed_;
   bool has_one_extrusion_speed_;
-  double stabilization_x_;
-  double stabilization_y_;
   double current_layer_saved_extrusion_speed_;
   double standard_layer_trigger_distance_;
   smart_layer_args smart_layer_args_;
