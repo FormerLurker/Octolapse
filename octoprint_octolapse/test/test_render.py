@@ -33,7 +33,13 @@ from random import randint
 from shutil import rmtree
 from tempfile import mkdtemp, NamedTemporaryFile
 import errno
-from PIL import Image
+# Recent versions of Pillow changed the case of the import
+# Why!?
+try:
+    from pil import Image
+except ImportError:
+    from PIL import Image
+
 from mock import Mock
 
 from octoprint_octolapse.render import TimelapseRenderJob, Render, Rendering

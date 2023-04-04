@@ -40,7 +40,13 @@ from csv import DictReader
 import datetime
 from tempfile import mkdtemp
 import uuid
-from PIL import Image, ImageDraw, ImageFont
+# Recent versions of Pillow changed the case of the import
+# Why!?
+try:
+    from pil import Image, ImageDraw, ImageFont
+except ImportError:
+    from PIL import Image, ImageDraw, ImageFont
+
 
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.script as script

@@ -28,16 +28,26 @@ import json
 from csv import DictWriter
 from time import sleep
 import requests
-from PIL import ImageFile
-# remove unused usings
-# import sys
-# PIL is in fact in setup.py.
+
+# Recent versions of Pillow changed the case of the import
+# Why!?
+try:
+    from pil import ImageFile
+except ImportError:
+    from PIL import ImageFile
+
 from requests.auth import HTTPBasicAuth
 from threading import Thread, Event
 from tempfile import mkdtemp
 from uuid import uuid4
 from time import time
-from PIL import Image
+# Recent versions of Pillow changed the case of the import
+# Why!?
+try:
+    from pil import Image
+except ImportError:
+    from PIL import Image
+
 import errno
 # create the module level logger
 import octoprint_octolapse.camera as camera
