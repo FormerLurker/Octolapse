@@ -95,8 +95,7 @@ class OctolapseFileHandler(CleaningTimedRotatingFileHandler, AsyncLogHandlerMixi
 
 # remove python 2 support
 # @six.add_metaclass(Singleton)
-class LoggingConfigurator(object):
-    __metaclass__ = Singleton
+class LoggingConfigurator(metaclass=Singleton):
     BACKUP_COUNT = 3
 
     def __init__(self):
