@@ -28,7 +28,7 @@ Prevents the extruder from leaving the print during stabilization, reducing trav
 
 ### Position Rankings by Quality
 
-Octoalpse ranks positions by both position and feature type.  Exactly how it does this depends on the exact smart layer trigger type and options.
+Octolapse ranks positions by both position and feature type.  Exactly how it does this depends on the exact smart layer trigger type and options.
 
 #### Feature Type
 
