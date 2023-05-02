@@ -51,7 +51,7 @@ plugin_url = "https://github.com/FormerLurker/Octolapse"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["pillow >=6.2.0<7.0.0", "sarge", "six", "OctoPrint>1.3.8", "psutil", "file_read_backwards",
+plugin_requires = ["pillow >=6.2.0,<7.0.0", "sarge", "six", "OctoPrint>1.3.8", "psutil", "file_read_backwards",
                    "setuptools>=6.0", "awesome-slugify>=1.6.5,<1.7"]
 
 import octoprint.server
