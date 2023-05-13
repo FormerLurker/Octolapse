@@ -1688,12 +1688,13 @@ class TimelapseRenderJob(threading.Thread):
         try:
             # set the outputs - output directory, output filename, output extension
             self._set_outputs()
+
+            # Run any prerender script configured in the camera profile.  This routine reports a progress
+            # phase change, but does not send completed percentage
+            self._pre_render_script()
+
             if self._render_job_info.rendering.enabled:
                 logger.info("Rendering is enabled for camera %s.", self._render_job_info.camera_guid)
-
-                # Run any prerender script configured in the camera profile.  This routine reports a progress
-                # phase change, but does not send completed percentage
-                self._pre_render_script()
 
                 # Create and copy images to the temporary rendering directory, converting them to jpg if necessary
                 # this routine reports progress
