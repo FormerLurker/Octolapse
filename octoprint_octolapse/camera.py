@@ -205,8 +205,15 @@ class CameraControl(object):
 
         if not no_wait:
             # join the threads, but timeout in a reasonable way
+            if hasattr(requests.packages.urllib3.util.retry.Retry, 'BACKOFF_MAX'):
+                timeout = requests.packages.urllib3.util.retry.Retry.BACKOFF_MAX
+            elif hasattr(requests.packages.urllib3.util.retry.Retry, 'DEFAULT_BACKOFF_MAX'):
+                timeout = requests.packages.urllib3.util.retry.Retry.DEFAULT_BACKOFF_MAX
+            else:
+                timeout = 120
+
             for thread in threads:
-                thread.join(requests.packages.urllib3.util.retry.Retry.BACKOFF_MAX)
+                thread.join(timeout)
                 if not thread.success:
                     for error in thread.errors:
                         errors.append(error)
