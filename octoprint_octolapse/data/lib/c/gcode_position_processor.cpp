@@ -1401,7 +1401,7 @@ static bool ParseStabilizationArgs(PyObject* py_args, stabilization_args* args, 
 		std::string message =
 			"GcodePositionProcessor.ParseStabilizationArgs - Unable to retrieve get_snapshot_position function from the gcode_generator object.";
 		octolapse_log(octolapse_log::SNAPSHOT_PLAN, octolapse_log::ERROR, message);
-		return NULL;
+		return false;
 	}
 	// py_get_snapshot_position_callback is a new reference, no reason to incref
 	*py_snapshot_position_callback = py_get_snapshot_position_callback;
