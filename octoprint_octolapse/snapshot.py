@@ -482,7 +482,7 @@ class ImagePostProcessing(object):
             with Image.open(latest_snapshot_path) as img:
                 wpercent = (basewidth / float(img.size[0]))
                 hsize = int((float(img.size[1]) * float(wpercent)))
-                img.thumbnail([basewidth, hsize], Image.Resampling.LANCZOS)
+                img.thumbnail([basewidth, hsize], Image.LANCZOS)
                 img.save(
                     utility.get_latest_snapshot_thumbnail_download_path(
                         self.snapshot_job_info.temporary_directory, self.snapshot_job_info.camera.guid
