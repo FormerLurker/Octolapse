@@ -1,7 +1,7 @@
 # coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2019  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -21,13 +21,14 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 from __future__ import unicode_literals
-from distutils.version import LooseVersion
+from octoprint_octolapse_setuptools import NumberedVersion
 import requests
 import uuid
-import tempfile
 import json
-import six
+# remove unused usings
+# import six
 import os
+import copy
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -77,7 +78,6 @@ class ExternalSettings(object):
                 except ValueError as e:
                     raise ExternalSettingsError('Error loading available profiles from json path.', cause=e)
 
-
     @staticmethod
     def _get_profiles_from_server(current_octolapse_version):
         # get the best settings version, or raise an error if we can't get one
@@ -119,16 +119,15 @@ class ExternalSettings(object):
                         profiles = profile["values"]
         return None
 
-
     @staticmethod
-    def check_for_updates(available_profiles, updatable_profiles, force_updates):
+    def check_for_updates(available_profiles, updatable_profiles, force_updates, ignore_suppression):
         profiles_to_update = {
             "printer": [],
             "stabilization": [],
             "trigger": [],
             "rendering": [],
             "camera": [],
-            "debug": [],
+            "logging": [],
 
         }
         updates_available = False
@@ -138,7 +137,9 @@ class ExternalSettings(object):
             available_profiles is not None
         ):
             # loop through the updatable profile dicts
-            for profile_type, value in six.iteritems(updatable_profiles):
+            # Remove python 2 support
+            # for profile_type, value in six.iteritems(updatable_profiles):
+            for profile_type, value in updatable_profiles.items():
                 # loop through the profiles
                 for updatable_profile in value:
                     # get the available profile for the updatable profile keys
@@ -154,13 +155,13 @@ class ExternalSettings(object):
                     if (
                         updatable_profile["version"] is None or
                         (
-                            LooseVersion(str(available_profile["version"])) > LooseVersion(str(updatable_profile["version"])) and
+                            NumberedVersion(str(available_profile["version"])) > NumberedVersion(str(updatable_profile["version"])) and
                             (
                                 not updatable_profile["suppress_update_notification_version"] or
                                 (
-                                    force_updates or
-                                    LooseVersion(str(available_profile["version"])) >
-                                    LooseVersion(str(updatable_profile["suppress_update_notification_version"]))
+                                    force_updates or ignore_suppression or
+                                    NumberedVersion(str(available_profile["version"])) >
+                                    NumberedVersion(str(updatable_profile["suppress_update_notification_version"]))
                                 )
                             )
                         )
@@ -184,16 +185,24 @@ class ExternalSettings(object):
         r = requests.get(url, timeout=float(5))
         if r.status_code != requests.codes.ok:
             message = (
-                "An invalid status code or {0} was returned while getting available profiles."
-                .format(r.status_code)
+                "An invalid status code or {0} was returned while getting available profiles at {1}."
+                .format(r.status_code, url)
             )
             raise ExternalSettingsError('invalid-status-code', message)
         if 'content-length' in r.headers and r.headers["content-length"] == 0:
-            message = "No profile data was returned."
+            message = "No profile data was returned for a request at {0}.".format(url)
             raise ExternalSettingsError('no-data', message)
         # if we're here, we've had great success!
-        return r.json()
+        json_value = r.json()
+        # make sure the key values match by replacing any existing key values with the request values.
+        if "automatic_configuration" in json_value and "key_values" in json_value["automatic_configuration"]:
+            json_value["automatic_configuration"]["key_values"] = copy.deepcopy(key_values)
 
+        # remove any guid value
+        if "guid" in json_value:
+            del json_value["guid"]
+
+        return json_value
 
     @staticmethod
     def _get_url_for_profile(settings_version, profile_type, key_values):
@@ -206,21 +215,22 @@ class ExternalSettings(object):
 
     @staticmethod
     def _get_best_settings_version(current_version):
-        # load the available versions
+        # load the available versions for the current settings version.  This number will be incremented as the
+        # settings change enough to not be backwards compatible
         versions = ExternalSettings._get_versions()["versions"]
         if not versions:
             return None
-        versions.sort(key=LooseVersion)
+
+        versions.sort(key=NumberedVersion)
+
         settings_version = None
         for version in versions:
-            if LooseVersion(str(version)) >= LooseVersion(str(current_version)):
-                settings_version = version
+            if NumberedVersion(str(version)) > NumberedVersion(str(NumberedVersion.CurrentSettingsVersion)):
                 break
+            settings_version = version
 
-        if settings_version is None:
-            message = "No available settings were found for the current version ((0)) of Octolapse.  This is probably " \
-                      "a development or alpha version.  Try back soon!".format(version)
-            raise ExternalSettingsError('no-version-found', message)
+        if settings_version is None and len(versions) > 0:
+            settings_version = versions[len(versions)-1]
         return settings_version
 
     @staticmethod
@@ -246,7 +256,8 @@ class ExternalSettings(object):
         except (
             requests.exceptions.HTTPError,
             requests.exceptions.ConnectionError,
-            requests.exceptions.ConnectTimeout
+            requests.exceptions.ConnectTimeout,
+            requests.exceptions.ReadTimeout
         ) as e:
             message = "An error occurred while retrieving profiles from the server."
             raise ExternalSettingsError('profiles-retrieval-error', message, cause=e)

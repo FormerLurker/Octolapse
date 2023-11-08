@@ -1,0 +1,1 @@
+Octolapse was unable to connect to your web camera.  Make sure your camera is reachable by opening up your camera profile and clicking the **Test** button under the **Snapshot Address Template**.  If the test fails, click on the <span class="fa fa-question-circle fa-lg"></span> icon to the right of the the **Snapshot Address Template** setting for additional information.

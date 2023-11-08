@@ -1,0 +1,1 @@
+When using smart triggers, allow the use of the @OCTOLAPSE TAKE-SNAPSHOT command, which will force a snapshot when it is encountered.  This is useful for ensuring a snapshot is taken before the print starts and after the print ends.

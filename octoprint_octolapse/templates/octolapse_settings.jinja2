@@ -1,7 +1,7 @@
 <!--
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -14,7 +14,7 @@
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see the following:
+# along with this program.  If not, see the following:p
 # https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
 #
 # You can contact the author either through the git-hub repository, or at the
@@ -24,17 +24,15 @@
 <div class="octolapse">
     <div id="octolapse_settings">
         <div class="row-fluid" id="octolapse_settings_title">
-            <div class="span2"></div>
-            <div class="span8">
-                <div class="text-center">
-                    <h3>Octolapse Settings</h3>
-                </div>
+
+            <div class="span9">
+                <h3>Octolapse Settings</h3>
             </div>
-            <div class="span2">
-                <span data-bind="visible: !Octolapse.SettingsMain.is_octolapse_enabled()">Disabled</span>
+            <div class="span3">
+                <span class="label label-important" data-bind="visible: !Octolapse.Globals.main_settings.is_octolapse_enabled()">Octolapse is Disabled</span>
             </div>
         </div>
-        <div class="row">
+        <div class="row-fluid">
             <div class="span12">
                 <div id="octolapse_settings_nav">
                     <ul class="nav nav-pills">
@@ -67,17 +65,17 @@
                             <a href="#octolapse_camera_tab" data-toggle="tab" data-profile-type="camera" >Camera</a>
                         </li>
                         <li>
-                            <a href="#octolapse_debug_tab" data-toggle="tab" data-profile-type="debug">Debug</a>
+                            <a href="#octolapse_logging_tab" data-toggle="tab" data-profile-type="logging">Logging</a>
                         </li>
                         <li>
-                            <a href="#octolapse_about_tab" data-toggle="tab">About</a>
+                            <a href="#octolapse_about_tab" data-toggle="tab" data-profile-type="about">About</a>
                         </li>
                     </ul>
                 </div>
                 <div class="tab-content">
 
                     <div id="octolapse_main_tab" class="panel panel-default tab-pane active">
-                        <div data-bind="template: 'octolapse-settings-main'"></div>
+                        <div data-bind="template: {name: 'octolapse-settings-main', data: Octolapse.MainSettingsDisplay, as: 'main_settings'}"></div>
                     </div>
                     <div id="octolapse_printer_tab" class="panel panel-default tab-pane">
                         <div data-bind="template: 'profiles-template'"></div>
@@ -94,14 +92,26 @@
                     <div id="octolapse_camera_tab" class="panel panel-default tab-pane">
                         <div data-bind="template: 'profiles-template'"></div>
                     </div>
-                    <div id="octolapse_debug_tab" class="panel panel-default tab-pane">
+                    <div id="octolapse_logging_tab" class="panel panel-default tab-pane">
                         <div data-bind="template: 'profiles-template'"></div>
                     </div>
                     <div id="octolapse_about_tab" class="panel panel-default tab-pane">
                         <div class="panel-heading ol-heading">
-                            <h4>
-                                Octolapse <i data-bind="text:Octolapse.Globals.version"></i>
-                            </h4>
+                            <div class="row-fluid">
+                                <div class="span6">
+                                    <a target="_blank" data-bind="visible: Octolapse.Globals.main_settings.github_link() != null, attr: { href: Octolapse.Globals.main_settings.github_link}">
+                                        Octolapse <i data-bind="text:Octolapse.Globals.main_settings.octolapse_version"></i>
+                                    </a>
+                                    <h4 data-bind="visible: !Octolapse.Globals.main_settings.github_link() == null" >
+                                        Octolapse <i data-bind="text:Octolapse.Globals.main_settings.octolapse_version"></i>
+                                    </h4>
+                                </div>
+                                <div class="span6 text-right">
+                                    Settings Version: <span data-bind="text: Octolapse.Globals.main_settings.settings_version"></span>
+                                </div>
+
+                            </div>
+
                         </div>
 
                         <div class="panel-body">
@@ -111,7 +121,14 @@
                                     <b>Please support my work by becoming a patron.</b>
                                 </a>
                             </p>
+                            <hr/>
                             <h4>Thanks to all my patrons, may you live forever!</h4>
+                            <p>
+                                Note:  I've been away for quite a while for various reasons, but am trying hard to get
+                                back into things.  I've not updated the docs/wikis/plugin-pages/sponsors/patreon lists
+                                for this update, because of the critical issues with Python 3.10+.  I will try to circle
+                                back ASAP.  I apologize for this.
+                            </p>
                             <p>
                                 Octolapse was built entirely in open source for the 3D printing community.
                                 I don't ask for any royalties, don't steal any personal info, and don't push any adds
@@ -119,7 +136,7 @@
                                 keep plowing through the issues, to add new fancy features, and to continue combing the internet for
                                 users that may need assistance.  All of the users below have contributed to Octolapse:
                             </p>
-                            <p>
+                            <div style="-webkit-columns: 100px 3; -moz-columns: 100px 3; columns: 100px 3;">
                                 3Dprinterman<br />
                                 <b>Blacksheep</b><br />
                                 Steve Smith<br />
@@ -151,22 +168,81 @@
                                 <b>Scott Rini</b><br />
                                 Narskogr<br />
                                 Mike Phelps<br />
+                                <b>Rory Martin</b><br />
                                 <b>Nathan Johnson</b><br />
                                 Michael Thompson<br />
                                 Brian Moses<br />
-                                <b>Rory Martin</b><br />
-                            </p>
-
+                                Randy Ubillos<br />
+                                Patrick Akers<br />
+                                Alex Lennon<br />
+                                Daniel Cucciniello<br/>
+                                Simon Bugler<br/>
+                                <b>Dave Haughey</b><br/>
+                                Sunlis<br/>
+                                <b>Thor Kuhlow</b><br/>
+                                <b>Thomas Le</b><br/>
+                                Nils Henning<br/>
+                                C Genco<br/>
+                                <b>Andi_l</b><br/>
+                                <b>John Bolland</b><br/>
+                                <b>Michael Black</b><br/>
+                                <b>320StudiosHawaii</b><br/>
+                                <b>EJ Tech and DIY</b><br/>
+                                printerthinker<br/>
+                                <b>freeman</b><br/>
+                                <b>Łukasz Sternowski</b><br/>
+                                Jukka Seppänen<br/>
+                                Helmut Eder<br/>
+                                Michael Mendoza<br/>
+                                Jan-Henryk Susek<br/>
+                                Dale Ferrier<br/>
+                                <b>Edward Boston</b><br/>
+                                Pavel Pletenev<br/>
+                                Kyle Williams<br/>
+                                <b>Dan Maloney</b><br/>
+                                <b>Sebastian Span</b><br/>
+                                <b>Edward Bianchina</b><br/>
+                                <b>Allan Myslak</b><br/>
+                                John Lopez<br/>
+                                <b>Joshua Wachs</b><br/>
+                                <b>Knud Poulsen</b><br/>
+                                Steve Nelmes<br/>
+                                Jeremy Kennedy<br/>
+                                Bret Martin<br/>
+                                <b>Cristi Diaconescu</b><br/>
+                                <b>Adam's Lab</b><br/>
+                                Richard Stocks<br/>
+                                <b>Nathan Johnson</b><br/>
+                                <b>Tom Rusnock</b><br/>
+                                <b>Roger Marchese</b><br/>
+                                <b>Katie Morano</b><br/>
+                                StokiePhil<br/>
+                                <b>David Hunter</b><br/>
+                                <b>LayerFused LLC</b><br/>
+                                <b>Piotr Rozycki</b><br/>
+                            </div>
+                            <hr/>
+                            <h4>Thanks to my Github sponsors!</h4>
+                            <p>This is a relatively new thing that I am grateful for.  It's similar to Patreon, all conveniently contained within GitHub itself.  If you are interested in becoming a sponsor, <a href="https://github.com/sponsors/FormerLurker" target="_blank">you can find more information here</a>.</p>
+                            <div style="-webkit-columns: 100px 3; -moz-columns: 100px 3; columns: 100px 3;">
+                                <b>BradMcGonigle</b><br/>
+                                dgcntrk<br/>
+                                <b>fieldOfView</b><br/>
+                            </div>
+                            <hr/>
+                            <h4>Beer Money Providers</h4>
+                            <p>For those of you who have <a href="https://paypal.me/formerlurker" target="_blank">sent me coffee/beer money via PayPal</a> or by any other service, I appreciate it <b>so</b> much!  You guys and gals always make my day.  There is no better way to start a morning of open source development than with a good cup of joe and end it with a nice crisp Pilsner (preferably an Urquell)!</p>
+                            <hr/>
                             <h4>Three cheers for the Octoprint development community!</h4>
                             <p>
-                                When I first started to develop Octolapse, I knew practically noting about the technology
-                                or open source development in general.  Fortunately for me the Octoprint/Open Source
+                                When I first started to develop Octolapse, I knew practically nothing about the technology
+                                or open source development in general.  Fortunately for me, the Octoprint/Open Source
                                 community is a welcoming and educational place.  Thank you to everyone who has
-                                contributed to the source code, or by posting issues/feature requests to the github
-                                page!  Here are some, but not all, of those users whom I feel require a special mention:
+                                contributed to the source code or by posting issues/feature requests to the github
+                                page!  Here are some, but not all, of those users who I feel require a special mention:
                             </p>
                             <p>
-                                <b>Gina Häußge</b> - Creator of OctoPrint, development guru, and all around good person<br />
+                                <b>Gina Häußge</b> - Creator of OctoPrint, development guru, and all around good person and friend<br />
                                 <b>Shadowen</b> - A key contributor who has implemented several key features and bugfixes,
                                 including but not limited to: GIF and H.264 rendering, custom watermarking, and rendering
                                 text overlay/preview.<br />
@@ -175,13 +251,28 @@
                                 code<br />
                                 <b>bluecamel</b> - url fix for proxies, Taz6 support.<br />
                                 <b>tjjfvi</b> - created a <a href="https://csi.t6.fyi/" title="Link to cura gcode settings template">Cura gcode settings template</a> that can be used to extract slicer settings.<br />
-                                <b>einfallstoll</b> - pointed out an embarrasing spelling mistake and even submitted a pull reqest to fix it!  Turns out this error existed all over the place, so I refactored the code myself.
-                                If there's anyone I've forgotten here, please let me know!<br />
-                                <br />
-                                I'd like to add a special thank you to <b>Andy</b> and <b>Maggie</b> for encouragement, testing, support, and tolerance.<br />
-
+                                <b>einfallstoll</b> - Pointed out an embarrassing spelling mistake and even submitted a pull request to fix it!  Turns out this error existed all over the place, so I refactored the code myself.<br/>
+                                <b>Billie Ruben</b> - Famed and beloved influencer, contributor, mod of the 3DPrinters discord server, and all around good person.  Check out her <a href="https://www.youtube.com/channel/UCM8Dsa0zmBujitlkVcfnuNA" target="_blank">YouTube channel</a> if you are ever looking for inspiration!<br />
+                                <b>Tech2077</b> - Thank you for digging through the c++ code and tracking down a bug that had been driving me mad for several months.  I'm not sure if I'd have ever found it without you!<br/>
+                                <b>jneilliii</b> - Handling all those support requests is a huge pain and is really appreciated.  That and all the general good vibes and programming tips!<br/>
+                                <b>cp2004</b> - Another kind soul who has helped others with the ins and outs of Octolapse, as well as putting up with the occasional rant.<br/>
+                                <b>OutsourcedGuru</b> - Another OctoPrint regular who has listened to both good and bad ideas, performed testing, given feedback, and been supportive through my journey<br/>
+                                <b>Philipp Hanes</b> - Did some daring debug on the python extension code (c++) and found a NULL that should have been a false.  Thanks!<br/>
                             </p>
-
+                            <hr/>
+                            <h4>Special Thanks</h4>
+                            <p>I'd like to add a special thank you to my brother <b>Andy</b> and my wife <b>Maggie</b> for their encouragement, testing, support, and tolerance.  Also, thanks Mom, who has always been my biggest fan!</p>
+                            <hr/>
+                            <h4>Unsung Heroes</h4>
+                            <p>There are many many others who I have missed I am sure.  If that's the case, please send me a message and I'll rectify the situation!</p>
+                            <hr/>
+                            <h4>Other Projects</h4>
+                            <p>If you liked Octolapse, you may want to check out some of my other work:</p>
+                            <ul>
+                                <li><a href="https://plugins.octoprint.org/plugins/arc_welder/" target="_blank">Arc Welder</a> - An OctoPrint plugin for compressing your gcode files to save space and reduce stuttering.</li>
+                                <li><a href="https://github.com/FormerLurker/ArcWelderLib" target="_blank">ArcWelderLib</a> - This is the heart and soul of <i>Arc Welder</i>.  Contains libraries for parsing gcode and tracking printer movements (based on the Octolapse c++ extension), performing Arc compression, a console application you can run on Linux, Windows, or Mac, and an <i>Arc Straightener</i> application you can use to convert G2/G3 back into G1 by mimicking Marlin's movements.</li>
+                            </ul>
+                            <p>I've got more stuff in the works too, which I will add here when appropriate.</p>
                         </div>
                     </div>
                 </div>
@@ -193,25 +284,25 @@
         <div style="display:none">{% include "octolapse_profile_dialog_add_edit.jinja2" %}</div>
         <div class="row-fluid">
             <a class="btn btn-default span3"
-               data-bind="attr: {href: '{{ url_for('plugin.octolapse.download_settings_request', apikey='') }}' + UI_API_KEY}"
+               data-bind="attr: {href: '/plugin/octolapse/downloadFile?type=settings&apikey=' + UI_API_KEY}"
                download="">
                 <i class="fa fa-download"></i> Export Settings
             </a>
-            <div data-bind="template:'octolapse-import-dialog-template'"></div>
             <a class="span3 btn btn-default" data-bind="click: Octolapse.SettingsImport.showSettingsImportPopup">
                 <i class="fa fa-upload"></i>
-                Import Settings
+                Import Settings&hellip;
             </a>
             <a class="span3 btn btn-default" data-bind="click: Octolapse.Settings.restoreDefaultSettings">
                 <i class="fa fa-refresh"></i>
-                Restore Defaults
+                Restore Defaults&hellip;
             </a>
             <a class="span3 btn btn-default"
-               data-bind="click: function(){Octolapse.Settings.updateProfilesFromServer();};">
+               data-bind="click: function(){Octolapse.Settings.checkForProfileUpdates();};">
                 <i class="fa fa-cloud-download"></i>
                 Update Profiles
             </a>
         </div>
+        <div data-bind="template:'octolapse-import-dialog-template'"></div>
     </div>
     <div>
         <span class="help-inline">
@@ -230,5 +321,5 @@
 {% include "octolapse_profiles_trigger.jinja2" %}
 {% include "octolapse_profiles_rendering.jinja2" %}
 {% include "octolapse_profiles_camera.jinja2" %}
-{% include "octolapse_profiles_debug.jinja2" %}
+{% include "octolapse_profiles_logging.jinja2" %}
 {% include "octolapse_profiles_library.jinja2" %}

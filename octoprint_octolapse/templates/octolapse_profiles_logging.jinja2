@@ -1,0 +1,147 @@
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2023  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
+<script type="text/html" id="logging-profile-template">
+    <div>
+        <div>
+            <h4>Profile</h4>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Name:</label>
+            <div class="controls">
+                <input id="logging_profile_name" name="name" type="text" class="input-block-level form-input" data-bind="value: name" required="" />
+                <div class="error_label_container text-error" data-error-for=""></div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Description</label>
+            <div class="controls">
+                <textarea id="logging_profile_description" name="description" type="text" class="input-block-level" data-bind="value: description" maxlength="1024" ></textarea>
+                <div class="error_label_container text-error" data-error-for=""></div>
+            </div>
+        </div>
+    </div>
+    <div data-bind="template: {name:'octolapse-profile-library-test-template', data: automatic_configuration}"></div>
+    <hr/>
+    <div>
+        <h4>Manage Log Files<a class="octolapse_help" data-help-url="profiles.logging.manage_log_files.md" data-help-title="Manage Log Files" ></a></h4>
+         <div class="text-center">
+                <button type="button" class="btn btn-large" data-bind="click: function(){clearLog(false);}" title="Clear the most recent log."> <i class="fa fa-trash"></i>Clear Log&hellip;</button>
+                <button type="button" class="btn btn-large" data-bind="click: function(){clearLog(true);}" title="Clear the most recent log and deletes any log file backups (up to 3)."><i class="fa fa-trash"></i>Clear All Logs&hellip;</button>
+                 <a class="btn btn-large" title="Download the most recent logfile."
+                   data-bind="attr: {href: '/plugin/octolapse/downloadFile?type=log&apikey=' + UI_API_KEY}" download="">
+                    <i class="fa fa-download"></i> Download Log
+                </a>
+        </div>
+    </div>
+    <div data-bind="slideVisible: !automatic_configuration.updating_from_server()">
+        <hr />
+        <div>
+            <div>
+                <h4>Log Additional Information</h4>
+                <p>
+                    Here you can enable or disable additional logging info that will appear in plugin_octolapse.log, which you can download from the <i>Logs</i> page available in the main menu.  The log file can grow quite large, so do not enable these unless it is necessary.
+                </p>
+                <p>By default, Octolapse logs any errors or exceptions.  Additional logging can be added if necessary.  For example, if you are filing a bug report, a detailed log is necessary.</p>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Additional Logging</label>
+            <div class="controls">
+                <label class="checkbox">
+                    <input type="checkbox" data-bind="checked: enabled" title="Enable or disable enhanced logging" />Enabled
+                    <a class="octolapse_help" data-help-url="profiles.logging.enabled.md" data-help-title="Additional Logging"></a>
+                </label>
+            </div>
+        </div>
+        <div data-bind="visible: enabled">
+            <div class="control-group">
+                <label class="control-label">Write To Console</label>
+                <div class="controls">
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: log_to_console" title="Write all output to the console" />Enabled
+                        <a class="octolapse_help" data-help-url="profiles.logging.log_to_console.md" data-help-title="Write To Console"></a>
+                    </label>
+                    <span class="help-inline">This is useful when running a debugger to view the log output in real time along with the Octoprint console output.   If you are not running Octolapse in a debugger, you do not need to enable this option.</span>
+                </div>
+            </div>
+            <div class="container-fluid">
+                <div class="row-fluid">
+                    <div class="span5">
+                        Module to Log <a class="octolapse_help" data-help-url="profiles.logging.modules_to_log.md" data-help-title="Modules to Log"></a>
+                    </div>
+                    <div class="span5">
+                        Logging Level<a class="octolapse_help" data-help-url="profiles.logging.logging_level.md" data-help-title="Logging Level"></a>
+                    </div>
+                    <div class="span2">
+                        &nbsp;
+                    </div>
+                </div>
+                <div data-bind="foreach: enabled_loggers">
+                    <div class="row-fluid" style="margin-bottom:5px;">
+                        <div class="span5">
+                            <select data-bind="options: $parent.enabled_loggers,
+                                optionsText: 'name',
+                                optionsValue: 'name',
+                                value: name" disabled></select>
+                        </div>
+                        <div class="span5">
+                            <select data-bind="options: Octolapse.LoggingProfiles.profileOptions.logging_levels,
+                                optionsText: 'name',
+                                optionsValue: 'value',
+                                value: log_level"></select>
+                        </div>
+                        <div class="span2">
+                            <a title="Delete" class="btn btn-danger" data-bind="click: $parent.removeLogger"><i class="fa fa-trash"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div data-bind="visible: available_loggers().length > 0" class="row-fluid">
+                    <div class="span5">
+                        <select id="logging_profile_available_loggers" name="logging_profile_available_loggers" data-bind="options: available_loggers_sorted,
+                        optionsText: 'name',
+                        optionsValue: 'name',
+                        value: logger_name_add"></select>
+                    </div>
+                    <div class="span5">
+                        <select id="logging_profile_logging_level" name="logging_profile_logging_level"
+                                data-bind="options: Octolapse.LoggingProfiles.profileOptions.logging_levels,
+                        optionsText: 'name',
+                        optionsValue: 'value',
+                        value: logger_level_add"></select>
+                    </div>
+                    <div class="span2">
+                        <a title="Add" class="btn btn-primary" data-bind="click: addLogger"><i class="icon-plus"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</script>
+
+
+
+
+

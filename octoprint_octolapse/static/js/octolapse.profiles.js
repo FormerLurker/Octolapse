@@ -1,7 +1,7 @@
 /*
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -63,7 +63,7 @@ $(function() {
         });
 
         // Created a sorted observable
-        self.profiles_sorted = ko.computed(function() { return Octolapse.observableNameSort(self.profiles) });
+        self.profiles_sorted = ko.computed(function() { return Octolapse.observableNameSort(self.profiles); });
 
         /*
             Octoprint Viewmodel Events
@@ -121,7 +121,8 @@ $(function() {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false,
+                            icon: null
                         }
                     };
                     Octolapse.displayPopup(options);
@@ -130,7 +131,7 @@ $(function() {
         };
         //Remove an existing profile from the server settings, then if successful remove it from the observable array.
         self.removeProfile = function (guid) {
-            var currentProfile = self.getProfileByGuid(guid)
+            var currentProfile = self.getProfileByGuid(guid);
             if (confirm("Are you sure you want to permanently erase the profile:'" + currentProfile.name() + "'?")) {
                 var data = { "client_id": Octolapse.Globals.client_id,'guid': ko.toJS(guid), 'profileType': self.profileTypeName() };
                 $.ajax({
@@ -151,7 +152,7 @@ $(function() {
                                 hide: false,
                                 addclass: "octolapse",
                                 desktop: {
-                                    desktop: true
+                                    desktop: false
                                 }
                             };
                             Octolapse.displayPopup(options);
@@ -166,7 +167,7 @@ $(function() {
                             hide: false,
                             addclass: "octolapse",
                             desktop: {
-                                desktop: true
+                                desktop: false
                             }
                         };
                         Octolapse.displayPopup(options);
@@ -199,7 +200,7 @@ $(function() {
                             hide: false,
                             addclass: "octolapse",
                             desktop: {
-                                desktop: true
+                                desktop: false
                             }
                         };
                         Octolapse.displayPopup(options);
@@ -213,7 +214,7 @@ $(function() {
                             hide: false,
                             addclass: "octolapse",
                             desktop: {
-                                desktop: true
+                                desktop: false
                             }
                         };
                         Octolapse.displayPopup(options);
@@ -232,7 +233,7 @@ $(function() {
                 newProfile = new self.profileViewModelCreate(ko.toJS(self.default_profile())); // Create our profile viewmodel
             }
             else {
-                var current_profile = ko.toJS(self.getProfileByGuid(guid))
+                var current_profile = ko.toJS(self.getProfileByGuid(guid));
                 if(current_profile == null)
                     return null;
 
@@ -246,7 +247,7 @@ $(function() {
             var index = Octolapse.arrayFirstIndexOf(self.profiles(),
                 function(item) {
                     var itemGuid = item.guid();
-                    return itemGuid === guid
+                    return itemGuid === guid;
                 }
             );
             if (index < 0) {
@@ -258,7 +259,7 @@ $(function() {
                     hide: false,
                     addclass: "octolapse",
                     desktop: {
-                        desktop: true
+                        desktop: false
                     }
                 };
                 Octolapse.displayPopup(options);
@@ -274,7 +275,7 @@ $(function() {
                     var itemGuid = item.guid();
                     var matchFound = itemGuid === guid;
                     if (matchFound)
-                        return matchFound
+                        return matchFound;
                 }
             );
             if (index < 0) {
@@ -332,9 +333,9 @@ $(function() {
                 warning = null;
                 if(Octolapse.Status.is_timelapse_active())
                 {
-                     if(newProfile.profileTypeName() == 'Debug')
+                     if(newProfile.profileTypeName() == 'Logging')
                      {
-                        warning = "A timelapse is active.  All debug settings will IMMEDIATELY take effect, except for 'Test Mode' which will not take effect until the next print.";
+                        warning = "A timelapse is active.  All logging settings will IMMEDIATELY take effect.";
                      }
                      else
                         warning = "A timelapse is active.  Any changes made here will NOT take effect until the next print.";

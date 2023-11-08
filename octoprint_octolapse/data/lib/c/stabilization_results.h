@@ -24,18 +24,57 @@
 #include <string>
 #include <vector>
 #include "snapshot_plan.h"
-class stabilization_results
-{
-public:
-	stabilization_results();
-	virtual ~stabilization_results();
 
-	bool success_;
-	std::string errors_;
-	std::vector<snapshot_plan*> snapshot_plans_;
-	double seconds_elapsed_;
-	long gcodes_processed_;
-	long lines_processed_;
+enum stabilization_quality_issue_type
+{
+  stabilization_quality_issue_fast_trigger = 1,
+  stabilization_quality_issue_snap_to_print_low_quality = 2,
+  stabilization_quality_issue_no_print_features = 3
 };
+
+enum stabilization_processing_issue_type
+{
+  stabilization_processing_issue_type_xyz_axis_mode_unknown = 1,
+  stabilization_processing_issue_type_e_axis_mode_unknown = 2,
+  stabilization_processing_issue_type_no_definite_position = 3,
+  stabilization_processing_issue_type_printer_not_primed = 4,
+  stabilization_processing_issue_type_no_metric_units = 5,
+  stabilization_processing_issue_type_no_snapshot_commands_found = 6
+};
+
+struct stabilization_quality_issue
+{
+  std::string description;
+  stabilization_quality_issue_type issue_type;
+  PyObject* to_py_object() const;
+};
+
+struct replacement_token
+{
+  std::string key;
+  std::string value;
+};
+
+struct stabilization_processing_issue
+{
+  std::string description;
+  stabilization_processing_issue_type issue_type;
+  std::vector<replacement_token> replacement_tokens;
+  PyObject* to_py_object() const;
+};
+
+struct stabilization_results
+{
+  stabilization_results();
+  PyObject* to_py_object();
+  std::vector<snapshot_plan> snapshot_plans;
+  double seconds_elapsed;
+  long gcodes_processed;
+  long lines_processed;
+  int missed_layer_count;
+  std::vector<stabilization_quality_issue> quality_issues;
+  std::vector<stabilization_processing_issue> processing_issues;
+};
+
 
 #endif

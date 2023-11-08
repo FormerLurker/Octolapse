@@ -1,0 +1,91 @@
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2023  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
+<script type="text/html" id="octolapse-timelapse-files-dialog-template">
+    <ul class="nav nav-pills">
+        <li class="dropdown pull-right tabdrop hide">
+            <a class="dropdown-toggle" data-toggle="dropdown">
+                <i class="icon-align-justify"></i>
+                <b class="caret"></b>
+            </a>
+            <ul class="dropdown-menu"></ul>
+        </li>
+        <li class="active">
+            <a id="octolapse_timelapse_videos_tab_button" href="#octolapse_timelapse_videos_tab" data-toggle="tab" data-profile-type="main-settings"  data-bind="click: timelapse_tab_selected">Timelapse</a>
+        </li>
+        <li>
+            <a id="octolapse_snapshot_archive_tab_button" href="#octolapse_snapshot_archive_tab" data-toggle="tab" data-profile-type="main-settings"  data-bind="click: snapshot_archive_tab_selected">Saved Snapshots</a>
+        </li>
+
+    </ul>
+    <div class="tab-content">
+        <div id="octolapse_timelapse_videos_tab" class="tab-pane active">
+            <h3>Timelapse Videos</h3>
+            <div data-bind="template: {name: 'octolapse-file-browser', data: timelapse_browser}"></div>
+        </div>
+        <div id="octolapse_snapshot_archive_tab" class="tab-pane">
+            <h3>Saved Snapshots (zip archives)</h3>
+            <fieldset class="octolapse" data-bind="visible: Octolapse.Globals.is_admin">
+                <legend>Import Snapshot Archive (.zip)&nbsp;<a class="octolapse_help" style="font-size:16px;" data-help-url="dialog.timelapse_files.snapshot_archive.import.md" data-help-title="Import Snapshot Archive"></a></legend>
+                <div class="row-fluid">
+                    <div class="span3">
+                        <input id="octolapse_snapshot_upload" type="file" name="octolapse_snapshot_upload" accept=".zip" data-url="{{ url_for('plugin.octolapse.import_snapshots_request') }}">
+                    </div>
+                    <div class="span9"><span id="octolapse_snapshot_upload_progress" class="progress-bar-container">
+                <span class="progress-bar" style="width: 0;"></span>
+                </span></div>
+                </div>
+            </fieldset>
+            <div data-bind="template: {name: 'octolapse-file-browser', data: archive_browser}"></div>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" id="octolapse-snapshot-archive-custom-actions">
+        <a data-bind="click: $data.data.parent.download">
+        <i data-bind="class: $data.data.parent._download_icon_class, attr: {title: $data.data.parent._download_icon_title}" class="fa fa-lg fa-download"></i>
+    </a>
+    <span data-bind="visible: $data.data.parent.is_admin">&nbsp;|&nbsp;
+        <a data-bind="click: function(){$data.data.parent.delete_file($data);}">
+            <i class="fa fa-lg fa-trash-o"></i>
+        </a>
+    </span>
+    &nbsp;|&nbsp;
+    <a data-bind="click: function(){ $data.data.parent.data.parent.add_archive_to_unfinished_rendering($data); }" title="Extract the archive and add to the unfinished renderings list.">
+        <i class="fa fa-lg fa-film"></i>
+    </a>
+</script>
+
+<script type="text/html" id="octolapse-timelapse-files-custom-actions">
+    <a data-bind="click: $data.data.parent.download">
+        <i data-bind="class: $data.data.parent._download_icon_class, attr: {title: $data.data.parent._download_icon_title}" class="fa fa-lg fa-download"></i>
+    </a>
+    <span data-bind="visible: $data.data.parent.is_admin">&nbsp;|&nbsp;
+        <a data-bind="click: function(){$data.data.parent.delete_file($data);}">
+            <i class="fa fa-lg fa-trash-o"></i>
+        </a>
+    </span>
+</script>
+
+{% include "octolapse_file_browser.jinja2" %}
+

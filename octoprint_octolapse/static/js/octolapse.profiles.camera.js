@@ -1,7 +1,7 @@
 /*
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -32,30 +32,28 @@ $(function() {
         self.enabled = ko.observable(values.enabled);
         self.description = ko.observable(values.description);
         self.camera_type = ko.observable(values.camera_type);
+        self.on_before_snapshot_gcode = ko.observable(values.on_before_snapshot_gcode);
         self.gcode_camera_script = ko.observable(values.gcode_camera_script);
+        self.on_after_snapshot_gcode = ko.observable(values.on_after_snapshot_gcode);
         self.on_print_start_script = ko.observable(values.on_print_start_script);
         self.on_before_snapshot_script = ko.observable(values.on_before_snapshot_script);
         self.external_camera_snapshot_script = ko.observable(values.external_camera_snapshot_script);
         self.on_after_snapshot_script = ko.observable(values.on_after_snapshot_script);
         self.on_before_render_script = ko.observable(values.on_before_render_script);
         self.on_after_render_script = ko.observable(values.on_after_render_script);
+        self.on_print_end_script = ko.observable(values.on_print_end_script);
         self.delay = ko.observable(values.delay);
         self.timeout_ms = ko.observable(values.timeout_ms);
         self.enable_custom_image_preferences = ko.observable(values.enable_custom_image_preferences);
         self.apply_settings_before_print = ko.observable(values.apply_settings_before_print);
         self.apply_settings_at_startup = ko.observable(values.apply_settings_at_startup);
+        self.apply_settings_when_disabled = ko.observable(values.apply_settings_when_disabled);
         self.snapshot_transpose = ko.observable(values.snapshot_transpose);
-        self.camera_stream_closed = false;
-        self.camera_stream_visible = ko.pureComputed(function(){
-            var visible = (
-                self.camera_type() === 'webcam' &&
-                self.enable_custom_image_preferences() &&
-                !self.camera_stream_closed
-            );
-            self.webcam_settings.setStreamVisibility(visible);
-            return visible;
-        });
-        self.webcam_settings = new Octolapse.WebcamSettingsViewModel(null);
+        self.webcam_settings = new Octolapse.WebcamSettingsViewModel();
+        self.webcam_settings_popup = new Octolapse.WebcamSettingsPopupViewModel("octolapse_camera_image_preferences_popup");
+        self.webcam_settings_popup.webcam_settings.updateWebcamSettings(values.webcam_settings);
+        self.is_dialog_open = ko.observable(false);
+
         self.is_testing_custom_image_preferences = ko.observable(false);
 
         self.applySettingsToCamera = function (settings_type) {
@@ -97,7 +95,7 @@ $(function() {
             });
         };
 
-        self.toggleCamera = function(){
+        self.toggleCamera = function(callback){
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             //console.log("Running camera request.");
             var data = { 'guid': self.guid(), "client_id": Octolapse.Globals.client_id };
@@ -110,6 +108,10 @@ $(function() {
                 success: function (results) {
                     if (results.success) {
                         self.enabled(results.enabled);
+                        if (callback)
+                        {
+                            callback(results.enabled);
+                        }
                     }
                     else {
                         var options = {
@@ -119,13 +121,11 @@ $(function() {
                             hide: false,
                             addclass: "octolapse",
                             desktop: {
-                                desktop: true
+                                desktop: false
                             }
                         };
                         Octolapse.displayPopup(options);
-
                     }
-
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     var message = "Unable to toggle the camera:(  Status: " + textStatus + ".  Error: " + errorThrown;
@@ -136,13 +136,14 @@ $(function() {
                         hide: false,
                         addclass: "octolapse",
                         desktop: {
-                            desktop: true
+                            desktop: false
                         }
                     };
                     Octolapse.displayPopup(options);
                 }
             });
         };
+
 
         self.testCamera = function () {
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
@@ -191,25 +192,104 @@ $(function() {
             });
         };
 
-        self.toggleCustomImagePreferences = function () {
-            var id = 'camera_profile_apply_settings_before_print';
+        self.testCameraScript = function(script_type)
+        {
+            // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
+            //console.log("Running camera request.");
+            var message = "Testing the " + script_type + " script with " + (self.timeout_ms() / 1000.0).toFixed(2) + " second timeout.  Please do not attempt" +
+                " to run any further tests until this script has finished.  If your script times out, try increasing your 'Snapshot Timeout'.";
+            var testing_popup = {
+                title: "Testing Camera Script",
+                text: message,
+                type: "info",
+                hide: false,
+                addclass: "octolapse"
+            };
+            Octolapse.displayPopupForKey(testing_popup, "camera_script_test", ["camera_script_test"]);
 
+            var data = { 'profile': self.toJS(self), 'script_type': script_type };
+            $.ajax({
+                url: "./plugin/octolapse/testCameraScript",
+                type: "POST",
+                data: JSON.stringify(data),
+                contentType: "application/json",
+                dataType: "json",
+                success: function (results) {
+                    if (results.success){
+                        var title = "Camera Script Success";
+                        var message_type='success';
+                        var message = "The script appears to work!  No errors or error codes were returned.";
+                        var hide = true;
+                        if (script_type == 'snapshot') {
+                            if (results.snapshot_created)
+                            {
+                                 message = "The script appears to work, and a snapshot was found!  No errors or error codes were returned.";
+                            }
+                            else
+                            {
+                                 title = "Partial Camera Script Success";
+                                 message = "The script appears to work, but no snapshot was found in the target folder.  This is OK if you are leaving images on your DSLR's internal memory.  Otherwise this could be a problem.";
+                                 message_type = "warning";
+                                 hide = false;
+                            }
+                        }
+                        var success_options = {
+                            title: title,
+                            text: message,
+                            type: message_type,
+                            hide: hide,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(success_options, "camera_script_test", ["camera_script_test"]);
+                    }
+                    else {
+                        var fail_options = {
+                            title: 'Camera Script Failed',
+                            text: 'Errors were detected - ' + results.error,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(fail_options, "camera_script_test",["camera_script_test"]);
+                    }
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                    var options = {
+                        title: 'Camera Script Test Failed',
+                        text: "Unable to perform the test, or an unexpected error occurred.  Please check the log file for details.  Status: " + textStatus + ".  Error: " + errorThrown,
+                        type: 'error',
+                        hide: false,
+                        addclass: "octolapse"
+                    };
+                    Octolapse.displayPopupForKey(options, "camera_script_test",["camera_script_test"]);
+                }
+            });
+        };
+
+        self.toggleCustomImagePreferences = function () {
             if (self.enable_custom_image_preferences()) {
                 self.enable_custom_image_preferences(false);
-                return;
             }
-
-            if (self.camera_stream_visible()) {
-                self.enable_custom_image_preferences(true);
-                $('#'+ id).prop("checked",true);
-                return;
+            else {
+                self.tryEnableCustomImagePreferences();
             }
-
-            self.testCustomImagePreferences(self.enable_custom_image_preferences,id);
 
         };
 
-        self.testCustomImagePreferences = function(bool_observable, id){
+        self.showWebcamSettings = function() {
+            var profile = self.toJS();
+            self.webcam_settings_popup.showWebcamSettingsForProfile(profile, function(webcam_settings) {
+                //console.log("Applying new settings to camera profile.");
+                if (webcam_settings)
+                {
+                    profile.webcam_settings = webcam_settings;
+                    self.webcam_settings.updateWebcamSettings(profile);
+                }
+            });
+        };
+
+        self.tryEnableCustomImagePreferences = function(){
             self.is_testing_custom_image_preferences(true);
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             //console.log("Running camera request.");
@@ -222,11 +302,10 @@ $(function() {
                 dataType: "json",
                 success: function (results) {
                     if (results.success){
-                        bool_observable(true);
-                        $('#'+ id).prop("checked",true);
-                        self.updateImagePreferencesFromServer(true);
+                        self.enable_custom_image_preferences(true);
                     }
                     else {
+                        self.enable_custom_image_preferences(false);
                         var options = {
                             title: 'Unable To Enable Custom Preferences',
                             text: results.error,
@@ -254,38 +333,44 @@ $(function() {
             });
         };
 
+        self.on_opened = function(dialog) {
+            //console.log("Opening camera profile");
+            self.is_dialog_open(true);
+        };
+
         self.on_closed = function(){
             //console.log("Closing camera profile");
-            self.webcam_settings.setStreamVisibility(false);
+            self.is_dialog_open(false);
             self.automatic_configuration.on_closed();
         };
 
-        self.on_cancelled = function(){
-            //console.log("Cancelling camera profile");
-            if(self.camera_type() == "webcam" && self.enable_custom_image_preferences()) {
-                self.webcam_settings.cancelWebcamChanges();
-            }
-        };
-
         self.updateFromServer = function(values) {
-            self.guid(values.guid);
             self.name(values.name);
             self.enabled(values.enabled);
             self.description(values.description);
             self.camera_type(values.camera_type);
-            //self.gcode_camera_script = ko.observable(values.gcode_camera_script);
+            self.on_before_snapshot_gcode = ko.observable(values.on_before_snapshot_gcode);
+            self.gcode_camera_script = ko.observable(values.gcode_camera_script);
+            self.on_after_snapshot_gcode = ko.observable(values.on_after_snapshot_gcode);
+            self.on_before_snapshot_gcode = ko.observable(values.on_before_snapshot_gcode);
             self.enable_custom_image_preferences(values.enable_custom_image_preferences);
-            self.on_print_start_script(values.on_print_start_script);
-            self.on_before_snapshot_script(values.on_before_snapshot_script);
-            //self.external_camera_snapshot_script = ko.observable(values.external_camera_snapshot_script);
-            //self.on_after_snapshot_script = ko.observable(values.on_after_snapshot_script);
-            //self.on_before_render_script = ko.observable(values.on_before_render_script);
-            //self.on_after_render_script = ko.observable(values.on_after_render_script);
             self.delay(values.delay);
             self.timeout_ms(values.timeout_ms);
             self.apply_settings_before_print(values.apply_settings_before_print);
             self.apply_settings_at_startup(values.apply_settings_at_startup);
             self.snapshot_transpose(values.snapshot_transpose);
+            if (typeof values.apply_settings_when_disabled != 'undefined')
+            {
+                self.apply_settings_when_disabled(values.apply_settings_when_disabled);
+            }
+            // Clear any settings that we don't want to update, unless they aren't important.
+            self.on_print_start_script("");
+            self.on_before_snapshot_script("");
+            self.external_camera_snapshot_script("");
+            self.on_after_snapshot_script("");
+            self.on_before_render_script("");
+            self.on_after_render_script("");
+            self.on_print_end_script("");
             self.webcam_settings.updateWebcamSettings(values);
         };
 
@@ -302,8 +387,11 @@ $(function() {
             // need to remove the parent link from the automatic configuration to prevent a cyclic copy
             var parent = self.automatic_configuration.parent;
             self.automatic_configuration.parent = null;
+            var webcam_settings_popup = self.webcam_settings_popup;
+            self.webcam_settings_popup = null;
             var copy = ko.toJS(self);
             self.automatic_configuration.parent = parent;
+            self.webcam_settings_popup = webcam_settings_popup;
             return copy;
         };
 
@@ -312,90 +400,18 @@ $(function() {
             Octolapse.Cameras.setIsClickable(!value);
         });
 
-        self.updateImagePreferencesFromServer = function(replace) {
-            self.webcam_settings.getMjpgStreamerControls(replace, function (results) {
-                // Update the current settings that we just received
-                self.webcam_settings.updateWebcamSettings(results.settings);
-                if (results.settings.new_preferences_available) {
-                    // If new settings are available, offer to update them, but don't do it automatically
-                    var message = "Octolapse has detected new camera preferences from your " +
-                        "streaming server.  Do you want to overwrite your current image preferences?";
-                    Octolapse.showConfirmDialog(
-                        "replace-image-preferences",
-                        "New Image Preferences Available",
-                        message,
-                        function () {
-                            self.updateImagePreferencesFromServer(true, function (results) {
-                                self.webcam_settings.updateWebcamSettings(results.settings);
-                            });
-                        }
-                    );
-                }
-            }, function(results){
-                 self.enable_custom_image_preferences(false);
-                 var message = "There was a problem retrieving webcam settings from the server.";
-                 if (results && results.error)
-                     message = message + " Details: " + results.error;
-                 var options = {
-                    title: 'Webcam Settings Error',
-                    text: message,
-                    type: 'error',
-                    hide: false,
-                    addclass: "octolapse"
-                };
-
-                Octolapse.displayPopupForKey(options, "webcam_settings_error",["webcam_settings_error"]);
-            });
-        };
-
-        self.on_opened = function() {
-            console.log("Opening camera profile");
-            if (self.enable_custom_image_preferences())
-                self.updateImagePreferencesFromServer(false);
-        };
-
         // update the webcam settings
         self.webcam_settings.updateWebcamSettings(values);
-
-        // Now that the webcam settings are updated, subscribe to address changes
-        // so we can update the streaming server controls
-        self.webcam_settings.address.subscribe(function(newValue){
-            if(self.enable_custom_image_preferences)
-                self.updateImagePreferencesFromServer(true);
-        });
     };
 
     Octolapse.CameraProfileValidationRules = {
         rules: {
-            camera_type: { required: true },
-            exposure_type: { required: true },
-            led_1_mode: { required: true},
-            powerline_frequency: { required: true},
-            snapshot_request_template: { octolapseSnapshotTemplate: true },
-            stream_template: { octolapseSnapshotTemplate: true },
-            brightness_request_template: { octolapseCameraRequestTemplate: true },
-            contrast_request_template: { octolapseCameraRequestTemplate: true },
-            saturation_request_template: { octolapseCameraRequestTemplate: true },
-            white_balance_auto_request_template: { octolapseCameraRequestTemplate: true },
-            gain_request_template: { octolapseCameraRequestTemplate: true },
-            powerline_frequency_request_template: { octolapseCameraRequestTemplate: true },
-            white_balance_temperature_request_template: { octolapseCameraRequestTemplate: true },
-            sharpness_request_template: { octolapseCameraRequestTemplate: true },
-            backlight_compensation_enabled_request_template: { octolapseCameraRequestTemplate: true },
-            exposure_type_request_template: { octolapseCameraRequestTemplate: true },
-            exposure_request_template: { octolapseCameraRequestTemplate: true },
-            exposure_auto_priority_enabled_request_template: { octolapseCameraRequestTemplate: true },
-            pan_request_template: { octolapseCameraRequestTemplate: true },
-            tilt_request_template: { octolapseCameraRequestTemplate: true },
-            autofocus_enabled_request_template: { octolapseCameraRequestTemplate: true },
-            focus_request_template: { octolapseCameraRequestTemplate: true },
-            zoom_request_template: { octolapseCameraRequestTemplate: true },
-            led1_mode_request_template: { octolapseCameraRequestTemplate: true },
-            led1_frequency_request_template: { octolapseCameraRequestTemplate: true },
-            jpeg_quality_request_template: { octolapseCameraRequestTemplate: true }
+            octolapse_camera_camera_type: { required: true },
+            octolapse_camera_snapshot_request_template: { octolapseSnapshotTemplate: true },
+            octolapse_camera_stream_template: { octolapseSnapshotTemplate: true },
         },
         messages: {
-            name: "Please enter a name for your profile"
+            octolapse_camera_name: "Please enter a name for your profile"
         }
     };
 

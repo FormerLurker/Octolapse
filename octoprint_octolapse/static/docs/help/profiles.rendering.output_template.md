@@ -12,6 +12,7 @@ Determines the rendering file name. You can use the following replacement tokens
  * {PRINTSTARTTIMESTAMP}
  * {SNAPSHOTCOUNT}
  * {FPS}
+ * {CAMERANAME}
  
  The default template `{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}` might render something like this for a failed print:
  

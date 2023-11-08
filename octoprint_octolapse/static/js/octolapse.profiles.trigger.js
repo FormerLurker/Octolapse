@@ -1,7 +1,7 @@
 /*
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -23,7 +23,7 @@
 */
 $(function () {
     Octolapse.TriggerProfileViewModel = function (values) {
-        
+
         var self = this;
         self.profileTypeName = ko.observable("Trigger");
         self.guid = ko.observable(values.guid);
@@ -31,13 +31,12 @@ $(function () {
         self.description = ko.observable(values.description);
         self.trigger_type = ko.observable(values.trigger_type);
         // Pre-calculated trigger options
-        self.snap_to_print_disable_z_lift = ko.observable(values.snap_to_print_disable_z_lift);
-        self.fastest_speed = ko.observable(values.fastest_speed);
         self.smart_layer_trigger_type = ko.observable(values.smart_layer_trigger_type);
-        self.smart_layer_trigger_speed_threshold = ko.observable(values.smart_layer_trigger_speed_threshold);
-        self.smart_layer_trigger_distance_threshold_percent = ko.observable(values.smart_layer_trigger_distance_threshold_percent);
-        self.smart_layer_snap_to_print = ko.observable(values.smart_layer_snap_to_print);
+        self.smart_layer_snap_to_print_high_quality = ko.observable(values.smart_layer_snap_to_print_high_quality);
+        self.smart_layer_snap_to_print_smooth = ko.observable(values.smart_layer_snap_to_print_smooth);
+
         self.smart_layer_disable_z_lift = ko.observable(values.smart_layer_disable_z_lift);
+        self.allow_smart_snapshot_commands = ko.observable(values.allow_smart_snapshot_commands);
         self.trigger_subtype = ko.observable(values.trigger_subtype);
         /*
             Timer Trigger Settings
@@ -47,7 +46,7 @@ $(function () {
             Layer/Height Trigger Settings
         */
         self.layer_trigger_height = ko.observable(values.layer_trigger_height);
-        
+
         /*
         * Quaity Settiings
         */
@@ -64,16 +63,17 @@ $(function () {
         self.trigger_on_deretracting = ko.observable(values.trigger_on_deretracting);
         self.trigger_on_deretracted = ko.observable(values.trigger_on_deretracted);
         self.require_zhop = ko.observable(values.require_zhop);
-        
+
         /*
         * Position Restrictions
         * */
         self.position_restrictions_enabled = ko.observable(values.position_restrictions_enabled);
-        self.position_restrictions = ko.observableArray([]);
+        var position_restrictions = [];
         for (var index = 0; index < values.position_restrictions.length; index++) {
-            self.position_restrictions.push(
+            position_restrictions.push(
                 ko.observable(values.position_restrictions[index]));
         }
+        self.position_restrictions = ko.observableArray(position_restrictions);
 
         // Temporary variables to hold new layer position restrictions
         self.new_position_restriction_type = ko.observable('required');
@@ -84,13 +84,14 @@ $(function () {
         self.new_position_restriction_y2 = ko.observable(1);
         self.new_position_restriction_r = ko.observable(1);
         self.new_calculate_intersections = ko.observable(false);
-
+        // Hold the parent dialog.
+        self.dialog = null;
         self.get_trigger_subtype_options = ko.pureComputed( function () {
-                if (self.trigger_type() !== 'real-time') {
+                if (self.trigger_type() == 'smart') {
                     var options = [];
                     for (var index = 0; index < Octolapse.Triggers.profileOptions.trigger_subtype_options.length; index++) {
                         var curItem = Octolapse.Triggers.profileOptions.trigger_subtype_options[index];
-                        if (curItem.value !== 'layer') {
+                        if (curItem.value == 'timer') {
                             continue;
                         }
                         options.push(curItem);
@@ -122,6 +123,11 @@ $(function () {
 
         self.addPositionRestriction = function () {
             //console.log("Adding " + type + " position restriction.");
+            if (!self.dialog.IsValid())
+            {
+                return;
+            }
+
             var restriction = ko.observable({
                 "type": self.new_position_restriction_type(),
                 "shape": self.new_position_restriction_shape(),
@@ -139,19 +145,16 @@ $(function () {
             //console.log("Removing restriction at index: " + index);
             self.position_restrictions.splice(index, 1);
         };
-        
+
         self.updateFromServer = function(values) {
-            self.guid(values.guid);
             self.name(values.name);
             self.description(values.description);
             self.trigger_type(values.trigger_type);
-            self.snap_to_print_disable_z_lift(values.snap_to_print_disable_z_lift);
-            self.fastest_speed(values.fastest_speed);
+            self.smart_layer_snap_to_print_high_quality(values.smart_layer_snap_to_print_high_quality);
+            self.smart_layer_snap_to_print_smooth(values.smart_layer_snap_to_print_smooth);
             self.smart_layer_trigger_type(values.smart_layer_trigger_type);
-            self.smart_layer_trigger_speed_threshold(values.smart_layer_trigger_speed_threshold);
-            self.smart_layer_trigger_distance_threshold_percent(values.smart_layer_trigger_distance_threshold_percent);
-            self.smart_layer_snap_to_print(values.smart_layer_snap_to_print);
             self.smart_layer_disable_z_lift(values.smart_layer_disable_z_lift);
+            self.allow_smart_snapshot_commands(values.allow_smart_snapshot_commands);
             self.trigger_subtype(values.trigger_subtype);
             self.timer_trigger_seconds(values.timer_trigger_seconds);
             self.layer_trigger_height(values.layer_trigger_height);
@@ -168,11 +171,12 @@ $(function () {
             self.trigger_on_deretracted(values.trigger_on_deretracted);
             self.require_zhop(values.require_zhop);
             self.position_restrictions_enabled(values.position_restrictions_enabled);
-            self.position_restrictions([]);
+            var position_restrictions = [];
             for (var index = 0; index < values.position_restrictions.length; index++) {
-                self.position_restrictions.push(
+                position_restrictions.push(
                     ko.observable(values.position_restrictions[index]));
             }
+            self.position_restrictions(position_restrictions);
         };
 
         self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
@@ -187,10 +191,18 @@ $(function () {
         {
             // need to remove the parent link from the automatic configuration to prevent a cyclic copy
             var parent = self.automatic_configuration.parent;
+            var dialog = self.dialog;
+            self.dialog = null;
             self.automatic_configuration.parent = null;
             var copy = ko.toJS(self);
+            self.dialog = dialog;
             self.automatic_configuration.parent = parent;
             return copy;
+        };
+
+        self.on_opened = function(dialog)
+        {
+            self.dialog = dialog;
         };
         self.on_closed = function(){
             self.automatic_configuration.on_closed();
@@ -207,24 +219,18 @@ $(function () {
 
             rules: {
 
-            name: "required",
-            new_position_restriction_x: { lessThan: "#octolapse_trigger_new_position_restriction_x2:visible" },
-            new_position_restriction_x2: { greaterThan: "#octolapse_trigger_new_position_restriction_x:visible" },
-            new_position_restriction_y: { lessThan: "#octolapse_trigger_new_position_restriction_y2:visible" },
-            new_position_restriction_y2: { greaterThan: "#octolapse_trigger_new_position_restriction_y:visible" },
-            layer_trigger_enabled: {check_one: ".octolapse_trigger_enabled"},
-            gcode_trigger_enabled: {check_one: ".octolapse_trigger_enabled"},
-            timer_trigger_enabled: {check_one: ".octolapse_trigger_enabled"},
+            octolapse_trigger_name: "required",
+            octolapse_trigger_new_position_restriction_x: { lessThan: "#octolapse_trigger_new_position_restriction_x2:visible" },
+            octolapse_trigger_new_position_restriction_x2: { greaterThan: "#octolapse_trigger_new_position_restriction_x:visible" },
+            octolapse_trigger_new_position_restriction_y: { lessThan: "#octolapse_trigger_new_position_restriction_y2:visible" },
+            octolapse_trigger_new_position_restriction_y2: { greaterThan: "#octolapse_trigger_new_position_restriction_y:visible" },
         },
         messages: {
-            name: "Please enter a name for your profile",
-            new_position_restriction_x : { lessThan: "Must be less than the 'X2' field." },
-            new_position_restriction_x2: { greaterThan: "Must be greater than the 'X' field." },
-            new_position_restriction_y: { lessThan: "Must be less than the 'Y2." },
-            new_position_restriction_y2: { greaterThan: "Must be greater than the 'Y' field." },
-            layer_trigger_enabled: {check_one: "No triggers are enabled.  You must enable at least one trigger."},
-            gcode_trigger_enabled: {check_one: "No triggers are enabled.  You must enable at least one trigger."},
-            timer_trigger_enabled: {check_one: "No triggers are enabled.  You must enable at least one trigger."},
+            octolapse_trigger_name: "Please enter a name for your profile",
+            octolapse_trigger_new_position_restriction_x : { lessThan: "Must be less than the 'X2' field." },
+            octolapse_trigger_new_position_restriction_x2: { greaterThan: "Must be greater than the 'X' field." },
+            octolapse_trigger_new_position_restriction_y: { lessThan: "Must be less than the 'Y2." },
+            octolapse_trigger_new_position_restriction_y2: { greaterThan: "Must be greater than the 'Y' field." },
         }
     };
 });

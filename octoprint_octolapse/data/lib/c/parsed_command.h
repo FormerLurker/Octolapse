@@ -23,9 +23,9 @@
 #ifndef PARSED_COMMAND_H
 #define PARSED_COMMAND_H
 #ifdef _DEBUG
-#undef _DEBUG
+//#undef _DEBUG
 #include <Python.h>
-#define _DEBUG
+//python311_d.lib
 #else
 #include <Python.h>
 #endif
@@ -33,19 +33,18 @@
 #include <vector>
 #include "parsed_command_parameter.h"
 
-class parsed_command
+struct parsed_command
 {
 public:
-	parsed_command();
-	parsed_command(parsed_command & source);
-	~parsed_command();
-	std::string cmd_;
-	std::string gcode_;
-	std::vector<parsed_command_parameter* > parameters_;
-	PyObject * to_py_object();
-	void clear();
-private:
-	
+  parsed_command();
+  std::string command;
+  std::string gcode;
+  std::string comment;
+  bool is_empty;
+  bool is_known_command;
+  std::vector<parsed_command_parameter> parameters;
+  PyObject* to_py_object();
+  void clear();
 };
 
 #endif

@@ -1,7 +1,7 @@
 # coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -24,7 +24,7 @@
 import time
 import unittest
 
-from octoprint_octolapse.gcode import SnapshotGcode
+from octoprint_octolapse.stabilization_gcode import SnapshotGcode
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.settings import OctolapseSettings
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState
@@ -322,11 +322,6 @@ class TestTimelapse(unittest.TestCase):
             snapshotCommand)
         self.assertTrue(triggeringTrigger ==
                         self.Timelapse_GcodeTrigger.Triggers[0])
-
-        # test with position error
-        self.Timelapse_GcodeTrigger.Position.get_position(0).has_position_error = True
-        self.assertTrue(self.Timelapse_GcodeTrigger.IsTriggering(
-            snapshotCommand) is None)
 
     def test_IsTriggering_TimerTrigger(self):
         self.Settings.profiles.current_snapshot().gcode_trigger_enabled = False
@@ -661,7 +656,7 @@ class TestTimelapse(unittest.TestCase):
         self.assertTrue(self.Timelapse_GcodeTrigger.OctoprintPrinter.IsPaused)
 
     def test_GcodeSent_IgnoredStates(self):
-        """Tests WaitingForTrigger,	RequestingReturnPosition, SendingSnapshotGcode, TakingSnapshot, RequestingSnapshotPosition, SendingReturnGcode, all of which should be ignored except for a debug message."""
+        """Tests WaitingForTrigger,	RequestingReturnPosition, SendingSnapshotGcode, TakingSnapshot, RequestingSnapshotPosition, SendingReturnGcode, all of which should be ignored except for a logging message."""
         snapshotCommand = "snap"
         self.Settings.profiles.current_printer().snapshot_command = snapshotCommand
         self.Settings.profiles.current_snapshot().gcode_trigger_enabled = True

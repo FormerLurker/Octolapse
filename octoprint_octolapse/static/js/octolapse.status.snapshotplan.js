@@ -1,7 +1,7 @@
 /*
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2019  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -32,12 +32,21 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.plan_count = ko.observable(null);
             self.lines_remaining = ko.observable(null);
             self.lines_total = ko.observable(null);
-            self.x_initial = ko.observable(null).extend({numeric: 2});
-            self.y_initial = ko.observable(null).extend({numeric: 2});
-            self.z_initial = ko.observable(null).extend({numeric: 2});
-            self.x_return = ko.observable(null).extend({numeric: 2});
-            self.y_return = ko.observable(null).extend({numeric: 2});
-            self.z_return = ko.observable(null).extend({numeric: 2});
+            self.x_initial = ko.observable(null);
+            self.y_initial = ko.observable(null);
+            self.z_initial = ko.observable(null);
+            self.x_return = ko.observable(null);
+            self.y_return = ko.observable(null);
+            self.z_return = ko.observable(null);
+
+            self.format_coordinates = function(val)
+            {
+                if (val) return val.toFixed(2);
+                return "";
+            };
+
+            self.multi_extruder = ko.observable(false);
+            self.current_tool = ko.observable(0);
             self.progress_percent = ko.observable(null).extend({numeric: 2});
             self.snapshot_positions = ko.observableArray([]);
             self.is_animating_plans = ko.observable(false);
@@ -49,6 +58,15 @@ Octolapse.snapshotPlanStateViewModel = function() {
             self.axes = null;
             self.is_preview = false;
             self.is_confirmation_popup = ko.observable(false);
+            self.autoclose = ko.observable(false);
+            self.autoclose_seconds = ko.observable(0);
+            self.quality_issues = ko.observableArray();
+            self.missed_snapshots = ko.observable(0);
+
+            setInterval(function() {
+                var newTimer = self.autoclose_seconds() -1;
+                self.autoclose_seconds(newTimer <= 0 ? 1 : newTimer);
+            }, 1000);
 
             self.update = function (state) {
                 if (state.snapshot_plans != null)
@@ -64,6 +82,24 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     }
                     self.total_saved_travel_percent(percent_saved);
 
+                    if(typeof state.quality_issues !== 'undefined')
+                    {
+                        self.quality_issues(state.quality_issues);
+                    }
+
+                    if(typeof state.missed_snapshots !== 'undefined')
+                    {
+                        self.missed_snapshots(state.missed_snapshots);
+                    }
+
+                    if (typeof state.autoclose !== 'undefined') {
+                        //console.log("Setting snapshot plan preview autoclose");
+                        self.autoclose(state.autoclose);
+                        self.autoclose_seconds(state.autoclose_seconds);
+                    }
+                    else {
+                        console.error("Autoclose property not set!");
+                    }
                 }
                 if (state.current_plan_index != null)
                 {
@@ -104,25 +140,36 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 self.lines_remaining(lines_remaining);
                 var previous_line = 0;
                 if (self.current_plan_index() - 1 > 0)
-                    previous_plan = self.snapshot_plans()[self.current_plan_index() - 1]
+                    previous_plan = self.snapshot_plans()[self.current_plan_index() - 1];
                 if (previous_plan != null)
                     previous_line = previous_plan.file_gcode_number;
                 var lines_total = current_plan.file_gcode_number - previous_line;
                 self.lines_total(lines_total);
                 self.progress_percent((1-(lines_remaining / lines_total)) * 100);
 
+                self.multi_extruder(showing_plan.initial_position.extruders.length > 1);
+                self.current_tool(showing_plan.initial_position.current_tool);
+
                 self.x_initial(showing_plan.initial_position.x);
                 self.y_initial(showing_plan.initial_position.y);
                 self.z_initial(showing_plan.initial_position.z);
-                self.x_return(showing_plan.return_position.x);
-                self.y_return(showing_plan.return_position.y);
-                self.z_return(showing_plan.return_position.z);
+                if (showing_plan.return_position) {
+                    self.x_return(showing_plan.return_position.x);
+                    self.y_return(showing_plan.return_position.y);
+                    self.z_return(showing_plan.return_position.z);
+                }
+                else
+                {
+                    self.x_return(showing_plan.initial_position.x);
+                    self.y_return(showing_plan.initial_position.y);
+                    self.z_return(showing_plan.initial_position.z);
+                }
                 self.travel_distance(showing_plan.total_travel_distance);
                 self.saved_travel_distance(showing_plan.total_saved_travel_distance);
                 var x_current = showing_plan.initial_position.x;
                 var y_current = showing_plan.initial_position.y;
                 var z_current = showing_plan.initial_position.z;
-                self.snapshot_positions([]);
+                var snapshot_positions = [];
                 // Create snapshot positions from steps
                 for (var stepIndex = 0; stepIndex < showing_plan.steps.length; stepIndex++)
                 {
@@ -138,9 +185,10 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     }
                     else if(current_step.action == "snapshot")
                     {
-                        self.snapshot_positions.push({x: x_current, y: y_current, z: z_current});
+                        snapshot_positions.push({x: x_current, y: y_current, z: z_current});
                     }
                 }
+                self.snapshot_positions(snapshot_positions);
                 // Update Canvass
                 self.updateCanvas();
             };
@@ -149,10 +197,17 @@ Octolapse.snapshotPlanStateViewModel = function() {
             {
                 self.is_animating_plans(false);
                 self.view_current_plan(false);
+                if (self.snapshot_plans().length < 1)
+                    return;
+
                 var index = self.plan_index()+1;
                 if (index < self.snapshot_plans().length)
                 {
                     self.plan_index(index);
+                }
+                else
+                {
+                    self.plan_index(0);
                 }
                 self.update_current_plan();
                 return false;
@@ -162,10 +217,16 @@ Octolapse.snapshotPlanStateViewModel = function() {
             {
                 self.is_animating_plans(false);
                 self.view_current_plan(false);
+                if (self.snapshot_plans().length < 1)
+                    return false;
                 var index = self.plan_index()-1;
-                if (index > -1 && self.snapshot_plans().length > 0)
+                if (index > -1)
                 {
                     self.plan_index(index);
+                }
+                else
+                {
+                    self.plan_index(self.snapshot_plans().length - 1);
                 }
                 self.update_current_plan();
                 return false;
@@ -432,7 +493,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     "Y",
                     self.canvas_border_size[0] * 0.5 - text_width.width/2 - 1,
                     self.canvas_printer_size[1] - self.axis_line_length + self.canvas_border_size[1] * 1.5 - 2
-                )
+                );
 
                 // *** draw the X arrow
                 // draw the horizontal line
@@ -476,7 +537,7 @@ Octolapse.snapshotPlanStateViewModel = function() {
                     "X",
                     self.canvas_border_size[0] * 0.5 + self.axis_line_length,
                     self.canvas_printer_size[1] + self.canvas_border_size[1] * 1.5 + 4.5
-                )
+                );
 
             };
 
@@ -590,20 +651,28 @@ Octolapse.snapshotPlanStateViewModel = function() {
                 return (max - min) - coord;
             };
 
-            self.normalize_coordinate = function(coord, min)
+            self.normalize_coordinate = function(coord, min, max)
             {
-                return coord - min;
+                if (self.printer_volume.origin_type == 'center')
+                {
+                    return coord + (max - min) / 2.0;
+                }
+                else
+                {
+                    return coord - min;
+                }
+
             };
 
             self.to_canvas_x = function(x)
             {
-                x = self.normalize_coordinate(x, self.printer_volume.min_x);
+                x = self.normalize_coordinate(x, self.printer_volume.min_x, self.printer_volume.max_x);
                 return x *self.x_canvas_scale + self.canvas_border_size[0];
             };
 
             self.to_canvas_y = function(y)
             {
-                y = self.normalize_coordinate(y, self.printer_volume.min_y);
+                y = self.normalize_coordinate(y, self.printer_volume.min_y, self.printer_volume.max_y);
                 // Y coordinates are flipped on the camera when compared to the standard 3d printer
                 // coordinates, so invert the coordinate
                 y = self.invert_coordinate(y, self.printer_volume.min_y, self.printer_volume.max_y);
@@ -613,7 +682,8 @@ Octolapse.snapshotPlanStateViewModel = function() {
 
             self.to_canvas_z = function(z)
             {
-                z = self.normalize_coordinate(z, self.printer_volume.min_z);
+                // This isn't right, z coordinates always start at 0!
+                z = self.normalize_coordinate(z, 0, 0);
                 return z *self.z_canvas_scale + self.canvas_border_size[2];
             };
 
