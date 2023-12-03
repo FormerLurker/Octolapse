@@ -484,7 +484,7 @@ bool gcode_parser::try_extract_double(char** p_p_gcode, double* p_double) const
       ++p;
     }
     //r += f / std::pow(10.0, n);
-    r += f / ten_pow(n);
+    r += f / gcode_parser::ten_pow(n);
   }
   if (neg)
   {
