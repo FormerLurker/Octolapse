@@ -146,7 +146,7 @@ protected:
     void process_snapshot_command_parameters(position* p_cur_pos);
     void add_plan_plan_from_snapshot_command(position* p_position);
     void update_stabilization_coordinates();
-    std::vector<snapshot_plan> p_snapshot_plans_;
+    std::vector<snapshot_plan> snapshot_plans_;
     bool is_running_;
     gcode_position_args gcode_position_args_;
     stabilization_args stabilization_args_;

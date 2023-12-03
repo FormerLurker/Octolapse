@@ -297,8 +297,9 @@ stabilization_results stabilization::process_file()
 			{
 				if (snapshots_enabled_)
 				{
-					position* currentPositionPtr = gcode_position_->get_current_position_ptr();
-					if (stabilization_args_.allow_snapshot_commands && process_snapshot_command(currentPositionPtr) && currentPositionPtr->can_take_snapshot())
+					position* previousPositionPtr = gcode_position_->get_previous_position_ptr();
+					position* currentPositionPtr = gcode_position_->get_previous_position_ptr();
+					if (stabilization_args_.allow_snapshot_commands && process_snapshot_command(previousPositionPtr) && previousPositionPtr->can_take_snapshot())
 					{
 						// If we've received a snapshot command, and this isn't the smart gcode stabilizastion, add the snapshot
 						add_plan_plan_from_snapshot_command(currentPositionPtr);
@@ -306,7 +307,7 @@ stabilization_results stabilization::process_file()
 					else
 					{
 						// process the position as usual
-						process_pos(currentPositionPtr, gcode_position_->get_previous_position_ptr(), found_command);
+						process_pos(currentPositionPtr, previousPositionPtr, found_command);
 					}
 
 				}
@@ -351,7 +352,7 @@ stabilization_results stabilization::process_file()
 	results.gcodes_processed = gcodes_processed_;
 	results.lines_processed = lines_processed_;
 	results.quality_issues = get_quality_issues();
-	results.snapshot_plans = p_snapshot_plans_;
+	results.snapshot_plans = snapshot_plans_;
 	results.processing_issues = get_processing_issues();
 	// Calculate number of missed layers
 	results.missed_layer_count = missed_snapshots_;
@@ -636,7 +637,7 @@ void stabilization::add_plan_plan_from_snapshot_command(position* p_position)
 	p_plan.file_position = p_position->file_position;
 
 	// Add the plan
-	p_snapshot_plans_.push_back(p_plan);
+	snapshot_plans_.push_back(p_plan);
 	// get the next coordinates
 	update_stabilization_coordinates();
 }

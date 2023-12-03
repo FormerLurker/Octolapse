@@ -229,7 +229,8 @@ void stabilization_smart_layer::add_plan()
     p_plan.file_position = p_closest.pos.file_position;
 
     // Add the plan
-    p_snapshot_plans_.push_back(p_plan);
+    snapshot_plans_.push_back(p_plan);
+
     last_snapshot_initial_position_ = p_plan.initial_position;
     // only get the next coordinates if we've actually added a plan.
     update_stabilization_coordinates();
