@@ -7,7 +7,7 @@ Gets the closest position.  **This WILL leave very noticeable defects on your pr
 
 **Not recommended for vase mode**
 #### Compatibility
-Attempts to return a high quality position if possible (see position rankings below).  If it cannot, it will return the next best position available, **including extrusions**, to ensure that a snapshot is taken on every layer.  Use this trigger if you're concerned with quality, but you want Octolapse to trigger on every layer no matter what.  This mode is also more likely to work with some lesser tested slicers and slicer settings.  This mode WILL take a snapshot while extruding if it has found no alternative and is more likely to leave artifacts than the high quality or smap to print types.
+Attempts to return a high quality position if possible (see position rankings below).  If it cannot, it will return the next best position available, **including extrusions**, to ensure that a snapshot is taken on every layer.  Use this trigger if you're concerned with quality, but you want Octolapse to trigger on every layer no matter what.  This mode is also more likely to work with some lesser tested slicers and slicer settings.  This mode WILL take a snapshot while extruding if it has found no alternative and is more likely to leave artifacts than the high quality or snap to print types.
 **Not recommended for vase mode**
 #### High Quality
 Gets the best quality position available.  This includes any slicer comment based gcode features.
@@ -28,7 +28,7 @@ Prevents the extruder from leaving the print during stabilization, reducing trav
 
 ### Position Rankings by Quality
 
-Octoalpse ranks positions by both position and feature type.  Exactly how it does this depends on the exact smart layer trigger type and options.
+Octolapse ranks positions by both position and feature type.  Exactly how it does this depends on the exact smart layer trigger type and options.
 
 #### Feature Type
 
