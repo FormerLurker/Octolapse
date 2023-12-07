@@ -325,5 +325,15 @@ $(function () {
             Octolapse.download(url, e, options);
         };
 
+        self.showTimelapsePreview = function(data) {
+            var url = data.value.get_download_url(data);
+            var previewModal = $("#octolapseTimelapsePreviewModal");
+            previewModal.children("div.modal-body").children("video").attr("src", url);
+            previewModal.off("hidden.bs.modal").on("hidden.bs.modal", function() {
+                $(this).attr("src", "");
+            });
+            previewModal.modal("show");
+        };
+
     };
 });
