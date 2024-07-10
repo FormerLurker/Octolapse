@@ -231,6 +231,11 @@ setup_parameters = octoprint_setuptools.create_plugin_setup_parameters(
     cmdclass=plugin_cmdclass
 )
 
+setup_parameters |= {
+    "version": versioneer.get_version(),
+    "cmdclass": versioneer.get_cmdclass()
+}
+
 if len(additional_setup_parameters):
     from octoprint.util import dict_merge
     setup_parameters = dict_merge(setup_parameters, additional_setup_parameters)
