@@ -1,10 +1,16 @@
 # coding=utf-8
 from setuptools import setup, Extension
-from skbuild import setup
-from packaging.version import Version as LooseVersion  # Für Versionsvergleiche
-
+from setuptools.command.build_ext import build_ext
+from setuptools import CCompiler
+from setuptools.unixccompiler import UnixCCompiler
+from setuptools.msvccompiler import MSVCCompiler
+from setuptools.bcppcompiler import BCPPCompiler
+from setuptools.cygwinccompiler import CygwinCCompiler
+from setuptools.version import LooseVersion
+from octoprint_octolapse_setuptools import NumberedVersion
 import sys
 import versioneer
+
 ########################################################################################################################
 # The plugin's identifier, has to be unique
 plugin_identifier = "octolapse"
@@ -20,7 +26,6 @@ fallback_version = NumberedVersion.clean_version(NumberedVersion.CurrentVersion)
 plugin_version = NumberedVersion.clean_version(versioneer.get_versions(verbose=True)["version"])
 
 # Depending on the installation method, versioneer might not know the current version
-# if plugin_version == "0+unknown" or NumberedVersion(plugin_version) < NumberedVersion(fallback_version):
 if plugin_version == "0+unknown":
     plugin_version = fallback_version
     try:
@@ -58,15 +63,8 @@ if (3, 0) < sys.version_info < (3, 3):
     print("Adding faulthandler requirement.")
     plugin_requires.append("faulthandler>=3.1")
 
-# TODO:  Get fontconfig to work
-#from sys import platform
-#if platform == "linux" or platform == "linux2":
-#    plugin_requires.append("enum34")
-#    plugin_requires.append("fontconfig")
-
 # --------------------------------------------------------------------------------------------------------------------
 # More advanced options that you usually shouldn't have to touch follow after this point
-# --------------------------------------d------------------------------------------------------------------------------
 
 # Additional package data to install for this plugin. The subfolders "templates", "static" and "translations" will
 # already be installed automatically if they exist. Note that if you add something here you'll also need to update
