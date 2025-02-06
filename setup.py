@@ -3,6 +3,7 @@ from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 import sys
 import versioneer
+import configparser  # Ändere hier den Import
 
 ########################################################################################################################
 # The plugin's identifier, has to be unique
@@ -69,61 +70,4 @@ plugin_ext_sources = [
     'octoprint_octolapse/data/lib/c/gcode_parser.cpp',
     'octoprint_octolapse/data/lib/c/gcode_position.cpp',
     'octoprint_octolapse/data/lib/c/parsed_command.cpp',
-    'octoprint_octolapse/data/lib/c/parsed_command_parameter.cpp',
-    'octoprint_octolapse/data/lib/c/position.cpp',
-    'octoprint_octolapse/data/lib/c/python_helpers.cpp',
-    'octoprint_octolapse/data/lib/c/snapshot_plan.cpp',
-    'octoprint_octolapse/data/lib/c/snapshot_plan_step.cpp',
-    'octoprint_octolapse/data/lib/c/stabilization.cpp',
-    'octoprint_octolapse/data/lib/c/stabilization_results.cpp',
-    'octoprint_octolapse/data/lib/c/stabilization_smart_layer.cpp',
-    'octoprint_octolapse/data/lib/c/stabilization_smart_gcode.cpp',
-    'octoprint_octolapse/data/lib/c/logging.cpp',
-    'octoprint_octolapse/data/lib/c/utilities.cpp',
-    'octoprint_octolapse/data/lib/c/trigger_position.cpp',
-    'octoprint_octolapse/data/lib/c/gcode_comment_processor.cpp',
-    'octoprint_octolapse/data/lib/c/extruder.cpp'
-]
-cpp_gcode_parser = Extension(
-    'GcodePositionProcessor',
-    sources=plugin_ext_sources,
-    language="c++"
-)
-
-additional_setup_parameters = {
-    "ext_modules": [cpp_gcode_parser],
-    "cmdclass": {"build_ext": build_ext_subclass}
-}
-
-# Ensure OctoPrint's setuptools is available
-try:
-    import octoprint_setuptools
-except ImportError:
-    print("Could not import OctoPrint's setuptools, are you sure you are running under the correct Python environment?")
-    sys.exit(-1)
-
-# Generate the setup parameters
-setup_parameters = octoprint_setuptools.create_plugin_setup_parameters(
-    identifier=plugin_identifier,
-    package=plugin_package,
-    name=plugin_name,
-    version=plugin_version,
-    description=plugin_description,
-    author=plugin_author,
-    mail=plugin_author_email,
-    url=plugin_url,
-    license=plugin_license,
-    requires=plugin_requires,
-    additional_packages=plugin_additional_packages,
-    ignored_packages=plugin_ignored_packages,
-    additional_data=plugin_additional_data,
-    cmdclass=plugin_cmdclass
-)
-
-# Merge additional setup parameters
-if len(additional_setup_parameters):
-    from octoprint.util import dict_merge
-    setup_parameters = dict_merge(setup_parameters, additional_setup_parameters)
-
-# Run the setup function
-setup(**setup_parameters)
+    'octoprint_octolapse/data/lib/c/parsed_
