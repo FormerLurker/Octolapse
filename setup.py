@@ -1,12 +1,7 @@
 # coding=utf-8
 from setuptools import setup, Extension
-from setuptools.command.build_ext import build_ext
-from setuptools._distutils.ccompiler import CCompiler
-from setuptools._distutils.unixccompiler import UnixCCompiler
-from setuptools._distutils.msvccompiler import MSVCCompiler
-from setuptools._distutils.bcppcompiler import BCPPCompiler
-from setuptools._distutils.cygwinccompiler import CygwinCCompiler
-from setuptools._distutils.version import LooseVersion
+from skbuild import setup
+from packaging.version import Version as LooseVersion  # Für Versionsvergleiche
 
 import sys
 import versioneer
