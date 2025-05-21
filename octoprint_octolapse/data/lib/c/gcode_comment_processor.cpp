@@ -127,7 +127,11 @@ void gcode_comment_processor::update_feature_from_section(position& pos) const
 		break;
 	case (section_type_support_section):
 		pos.feature_type_tag = feature_type_support_feature;
-	}
+        break;
+    case (section_type_no_section):
+        // Not reached, but to silence the warning
+        break;
+    }
 }
 
 void gcode_comment_processor::update(std::string& comment)
