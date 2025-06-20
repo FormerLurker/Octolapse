@@ -1,7 +1,7 @@
 # coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -22,8 +22,9 @@
 ##################################################################################
 
 import unittest
-
+from octoprint_octolapse._version import get_versions
 import octoprint_octolapse.utility as utility
+from octoprint_octolapse_setuptools import NumberedVersion
 
 
 class TestUtility(unittest.TestCase):
@@ -254,6 +255,19 @@ class TestUtility(unittest.TestCase):
         self.assertTrue(utility.is_close(113.33847, 113.34, 0.005))
         self.assertTrue(utility.is_close(119.9145519, 119.91, 0.005))
 
+    def test_numbered_version(self):
+        fallback_version = NumberedVersion.clean_version("0.4.0rc3")
+        plugin_version = NumberedVersion.clean_version(get_versions()['version'])
+        #if plugin_version == "0+unknown" or NumberedVersion(plugin_version) < NumberedVersion(fallback_version):
+        if plugin_version == "0+unknown":
+            plugin_version = fallback_version
+            try:
+                # This generates version in the following form:
+                #   0.4.0rc1+?.GUID_GOES_HERE
+                plugin_version += "+u." + versioneer.get_versions()['full-revisionid'][0:7]
+            except:
+                pass
+        self.assertEqual(plugin_version, fallback_version)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(TestUtility)

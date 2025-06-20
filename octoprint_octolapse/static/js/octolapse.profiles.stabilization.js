@@ -1,7 +1,7 @@
 /*
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -48,9 +48,9 @@ $(function () {
         self.y_relative_path = ko.observable(values.y_relative_path);
         self.y_relative_path_loop = ko.observable(values.y_relative_path_loop);
         self.y_relative_path_invert_loop = ko.observable(values.y_relative_path_invert_loop);
+        self.wait_for_moves_to_finish = ko.observable(values.wait_for_moves_to_finish);
 
         self.updateFromServer = function(values) {
-            self.guid(values.guid);
             self.name(values.name);
             self.description(values.description);
             self.x_type(values.x_type);
@@ -73,6 +73,9 @@ $(function () {
             self.y_relative_path(values.y_relative_path);
             self.y_relative_path_loop(values.y_relative_path_loop);
             self.y_relative_path_invert_loop(values.y_relative_path_invert_loop);
+            if (typeof values.wait_for_moves_to_finish !== 'undefined') {
+                self.wait_for_moves_to_finish(values.wait_for_moves_to_finish);
+            }
         };
 
         self.automatic_configuration = new Octolapse.ProfileLibraryViewModel(
@@ -106,23 +109,21 @@ $(function () {
 
     Octolapse.StabilizationProfileValidationRules = {
         rules: {
-            name: "required"
-            , stabilization_type: "required"
-            , x_type: "required"
-            , x_fixed_coordinate: {number: true, required: true}
-            , x_fixed_path: {required: true, csvFloat: true}
-            , x_relative: {required: true, number: true, min: 0.0, max: 100.0}
-            , x_relative_path: {required: true, csvRelative: true}
-            , y_type: "required"
-            , y_fixed_coordinate: {number: true, required: true}
-            , y_fixed_path: {required: true, csvFloat: true}
-            , y_relative: {required: true, number: true, min: 0.0, max: 100.0}
-            , y_relative_path: {required: true, csvRelative: true},
-            // Rules formerly belonging to snapshot profile
-
+            octolapse_stabilization_name: "required"
+            , octolapse_stabilization_stabilization_type: "required"
+            , octolapse_stabilization_x_type: "required"
+            , octolapse_stabilization_x_fixed_coordinate: {number: true, required: true}
+            , octolapse_stabilization_x_fixed_path: {required: true, csvFloat: true}
+            , octolapse_stabilization_x_relative: {required: true, number: true, min: 0.0, max: 100.0}
+            , octolapse_stabilization_x_relative_path: {required: true, csvRelative: true}
+            , octolapse_stabilization_y_type: "required"
+            , octolapse_stabilization_y_fixed_coordinate: {number: true, required: true}
+            , octolapse_stabilization_y_fixed_path: {required: true, csvFloat: true}
+            , octolapse_stabilization_y_relative: {required: true, number: true, min: 0.0, max: 100.0}
+            , octolapse_stabilization_y_relative_path: {required: true, csvRelative: true},
         },
         messages: {
-            name: "Please enter a name for your profile",
+            octolapse_stabilization_name: "Please enter a name for your profile",
         }
     };
 });

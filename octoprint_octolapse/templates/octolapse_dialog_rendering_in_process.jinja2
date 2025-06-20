@@ -1,0 +1,59 @@
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2023  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
+<script type="text/html" id="octolapse-rendering-in-process-no-items">
+    <p>
+        No timelapses are currently being rendered.
+    </p>
+</script>
+
+<script type="text/html" id="octolapse-rendering-in-process-file-size">
+    <div class="text-right">
+        File Size:&nbsp;<span data-bind="text: data.parent.in_process_renderings_size_formatted"></span>
+    </div>
+</script>
+
+<script type="text/html" id="octolapse-rendering-in-process-template">
+    <!-- ko template: {name: 'octolapse-list', data: in_process_renderings} --><!-- /ko -->
+</script>
+
+<script type="text/html" id="octolpase-rendering-progress">
+
+</script>
+
+<script type="text/html" id="octolapse-rendering-progress">
+    <!-- ko if: item.value.progress_percent() !== null -->
+        <div class="progress progress-striped active" style="margin:0">
+            <div data-bind="attr: {'aria-valuenow': item.value.progress_percent}, style: {width: item.value.progress_percent().toFixed(1).toString() + '%'}"
+                 class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+                <span class="progress-text" data-bind="text: item.value.progress_text"></span>
+            </div>
+        </div>
+    <!-- /ko -->
+    <!-- ko if: item.value.progress_percent() === null -->
+        <span data-bind="text: item.value.progress_text"></span>
+    <!-- /ko -->
+</script>
+
+
+

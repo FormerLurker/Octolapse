@@ -1,7 +1,7 @@
 /*
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -21,6 +21,11 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 */
+
+.octolapse.pagination {
+    margin: 0px;
+}
+
 .octolapse-pnotify-help .alert {
     text-shadow: none;
 }
@@ -33,6 +38,20 @@
 
 .octolapse-pnotify-help div.ui-pnotify-text {
     min-height: 100px;
+}
+
+.octolapse_dialog_help {
+    float: right;
+    padding-right:5px;
+    line-height:20px;
+}
+
+.right {
+    float:right;
+}
+
+.alert.octolapse{
+    padding: 8px 14px 8px 14px;
 }
 
 .two-column .column{
@@ -80,134 +99,6 @@
     text-decoration: none;
 }
 
-/* CHECKBOX SWITCH CONTROL STYLE */
-/* Remove the existing checkbox */
-.toggle-switch-fa-lg input,
-.toggle-switch-fa input,
-.toggle-switch-fa-sm input,
-.toggle-switch-fa-xsm input  {
-    opacity:0;
-    box-shadow: none;
-}
-
-.toggle-switch-fa-lg, .toggle-switch-fa, .toggle-switch-fa-sm, .toggle-switch-fa-xsm  {
-    position: relative;
-    display: inline-block;
-
-}
-.toggle-switch-fa-lg
-{
-    margin: 5px;
-}
-/* Sizes */
-.toggle-switch-fa-lg {
-    width: 70px;
-    height: 48px;
-}
-
-.toggle-switch-fa {
-	width: 60px;
-	height: 33px;
-	margin-top: 2px;
-	margin-bottom: 0px;
-}
-
-.toggle-switch-fa-sm
-{
-    width:35px;
-    height:20px;
-}
-
-.toggle-switch-fa-xsm
-{
-    width:30px;
-    height:19px;
-}
-
-
-/* the slider part of the switch */
-.fa-slider {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: lightgray; /*disabled color*/
-    cursor: pointer;
-    border-radius: 10px;
-    -webkit-transition: 0.5s;
-    transition: 0.5s;
-}
-
-
-/* The round part of the slider */
-.fa-slider i {
-    position: absolute;
-    content: "";
-    left: 7px;
-    bottom: 3px;
-    font-size:24px;
-    -webkit-transition: .4s;
-    transition: .4s;
-}
-
-.toggle-switch-fa-sm .fa-slider i
-{
-    left: 5px;
-    bottom: 4px;
-    font-size: 12px;
-}
-.toggle-switch-fa-xsm .fa-slider i
-{
-    left: 5px;
-    bottom: 4px;
-    font-size: 12px;
-}
-.toggle-switch-fa-lg .fa-slider i
-{
-    left: 10px;
-    bottom: 10px;
-    font-size: 28px;
-}
-
-input[type="checkbox"]:checked + label .fa-slider {
-  background-color: #000000;
-}
-input[type="checkbox"] + label .fa-slider
-{
-    color: white;
-}
-input[type="checkbox"]:focus + label .fa-slider {
-    box-shadow: 2px 2px 2px rgba(129,182,224,0.867)
-}
-input[type="checkbox"]:checked + label .fa-slider
-{
-    color: greenyellow;
-}
-
-input[type="checkbox"]:checked + label .fa-slider i{
-    -webkit-transform: translateX(24px);
-    -ms-transform: translateX(24px);
-    transform: translateX(24px);
-}
-
-.toggle-switch-fa-lg input[type="checkbox"]:checked + label .fa-slider i{
-    -webkit-transform: translateX(26px);
-    -ms-transform: translateX(26px);
-    transform: translateX(26px);
-}
-
-.toggle-switch-fa-sm input[type="checkbox"]:checked + label .fa-slider i{
-    -webkit-transform: translateX(15px);
-    -ms-transform: translateX(15px);
-    transform: translateX(15px);
-}
-
-.toggle-switch-fa-xsm input[type="checkbox"]:checked + label .fa-slider i{
-    -webkit-transform: translateX(10px);
-    -ms-transform: translateX(10px);
-    transform: translateX(10px);
-}
 /* ol-button and ol-hover-button*/
 .ol-hover-button a .fa-stack,
 a.ol-button{
@@ -219,9 +110,6 @@ a.ol-button .fa-square{
     color: black;
 }
 
-.ol-hover-button a:not(.disable):hover .fa-square, .snapshot_refresh_container a:not(.disable):active .fa-square {
-    /*color: lightgray;*/
-}
 .ol-hover-button a:not(.disable):hover .fa-stack:nth-child(1){
     color: green;
 }
@@ -235,9 +123,7 @@ a.ol-button:not(.disable):active i:nth-child(2){
 }
 
 .ol-hover-button a:not(.disable):hover:not(:active) i,
-a.ol-button:hover:not(:active) span.fs-stack:nth-child(2),
-.fa-slider:hover:not(:active)
-/*,.ol-hover-button .fa-square*/
+a.ol-button:hover:not(:active) span.fs-stack:nth-child(2)
 {
     -webkit-transition: color 0.250s 0s ease-in;
     -moz-transition: color 0.250s 0s ease-in;
@@ -252,10 +138,12 @@ a.ol-button:hover:not(:active) span.fs-stack:nth-child(2),
 .ol-button i.fa-stop:hover {
     color:red;
 }
-.ol-button i.fa-gear:hover, .fa-slider:hover i{
+.ol-button i.fa-gear:hover{
     color:green;
 }
-
+a.unclickable:hover {
+    cursor: default;
+}
 div#octolapse-current-camera{
     margin-left:auto;
     margin-right:auto;
@@ -271,6 +159,20 @@ div#octolapse-current-camera{
     background-color: #b94a48!important;
     color: #cccccc!important;
 }
+
+.octolapse button.btn-danger.btn {
+    color: #fff;
+    text-shadow: 0 -1px 0 rgba(0,0,0,.25);
+    background-color: #da4f49;
+}
+.octolapse button.btn-danger.btn:hover {
+    color: #fff;
+    background-color: #bd362f;
+}
+
+.octolapse .info-panel-icon {
+    color: black;
+}
 .text-left{
     text-align:left;
 }
@@ -282,7 +184,13 @@ div#octolapse-current-camera{
     text-align: center;
     width: 100%;
     height:400px;
+    position: unset;
+	top: unset;
+	left: unset;
+	transform: unset;
+
 }
+
 .octolapse-pnotify-container .alert
 {
     text-shadow:none;
@@ -300,6 +208,10 @@ div#octolapse-current-camera{
     display: table-cell;
     vertical-align: middle;
     font-size: large;
+    position: unset;
+	top: unset;
+	left: unset;
+	transform: unset;
 }
 
 .no-min-height{
@@ -308,7 +220,7 @@ div#octolapse-current-camera{
 #octolapse_add_edit_profile_dialog .input-xlg{
     width: 345px;
 }
-#octolapse_add_edit_profile_dialog .input-xxl{
+.octolapse .input-xxl, #octolapse_add_edit_profile_dialog .input-xxl{
     width: 430px;
 }
 #octolapse_add_edit_profile_dialog .control-group{
@@ -317,6 +229,9 @@ div#octolapse-current-camera{
 a.disabled {
     color: #ccc;
     cursor: default;
+}
+.ui-pnotify.octolapse{
+    width:375px !important;
 }
 
 .ui-pnotify.octolapse .ui-pnotify-text{
@@ -330,38 +245,137 @@ a.disabled {
 }
 span.octolapse-icon-text {
     font-family: Helvetica Neue,Helvetica,Arial,sans-serif;
-    position: relative;
-    top: -3px;
-    font-size: 16px;
+    font-size: 26px;
     font-weight: 600;
-    color: greenyellow;
+    color: rgba(173,255,47,1);
     text-shadow: 1px 0px black, -1px 0px black, 0px 1px black, 0px -1px black;
+    vertical-align: middle;
+    position: relative;
 }
 
-table.octolapse-profiles td {
+table.octolapse-table-list {
+    border-collapse: collapse;
+    table-layout: fixed;
+    max-width: 100%;
+}
+
+table.octolapse-table-list td {
     font-size: small
 }
 
-table.octolapse-profiles td.profile_name,
-table.octolapse-profiles td.profile_description,
-table.octolapse-profiles td.profile_action {
+table.octolapse-table-list td{
     height: 20px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-table.octolapse-profiles td.profile_name {
-    max-width: 180px;
-    min-width: 180px;
+/* Octolapse Profile Table Column Sizes */
+table.octolapse-table-list td.profile-name, table.octolapse-table-list th.profile-name{
+    width:30%;
 }
-table.octolapse-profiles td.profile_description {
-    max-width: 300px;
-    min-width: 300px;
+table.octolapse-table-list td.profile-description, table.octolapse-table-list th.profile-description {
+    width:50%;
 }
-table.octolapse-profiles td.profile_action {
-    max-width: 120px;
-    min-width: 120px;
+table.octolapse-table-list td.profile-action, table.octolapse-table-list th.profile-action {
+    width:20%;
+}
+
+/* Octolapse Unfinished Renderings Table Column Sizes */
+table.octolapse-table-list td.rendering-print-name, table.octolapse-table-list th.rendering-print-name{
+    width:21%;
+}
+table.octolapse-table-list td.rendering-print-end-state, table.octolapse-table-list th.rendering-print-end-state{
+    width:10%;
+}
+table.octolapse-table-list td.rendering-size, table.octolapse-table-list th.rendering-size{
+    width:8%;
+}
+table.octolapse-table-list td.rendering-date, table.octolapse-table-list th.rendering-date{
+    width:9%;
+}
+table.octolapse-table-list td.rendering-camera-name, table.octolapse-table-list th.rendering-camera-name{
+    width:12%;
+}
+table.octolapse-table-list td.rendering-name, table.octolapse-table-list th.rendering-name{
+    width:12%;
+}
+table.octolapse-table-list td.rendering-action, table.octolapse-table-list th.rendering-action{
+    width:12%;
+}
+table.octolapse-table-list td.rendering-progress, table.octolapse-table-list th.rendering-progress{
+    width:16%;
+}
+td.rendering-progress .progress {
+    position: relative;
+    background: #888888;
+    background-image: none;
+}
+td.rendering-progress .progress .progress-text{
+    position: absolute;
+    width:100%;
+    left:0px;
+}
+
+
+.octolapse-list .list-item-selection {
+    width:12px;
+}
+.octolapse-list .list-item-selection-dropdown {
+    width:36px;
+    text-align: center;
+}
+.octolapse-list .list-item-selection input {
+    margin-top: -2px;
+}
+.octolapse-list .list-item-selection-header-dropdown {
+    width:36px;
+    overflow: visible;
+}
+.octolapse-list .file-browser-name {
+    width:69%;
+}
+
+.octolapse-list .file-browser-date {
+    width:16%;
+}
+
+.octolapse-list .file-browser-size {
+    width:8%;
+}
+
+.octolapse-list .file-browser-action {
+    width:7%;
+    text-align: center;
+}
+
+.octolapse-list .file-browser-snapshot-archive-action {
+    width:12%;
+    text-align: center;
+}
+
+.octolapse-camera-list-item
+{
+    margin-bottom:20px;
+}
+.octolapse-table-list tr.disabled {
+    filter: brightness(75%);
+}
+
+.row-fluid.octolapse-table-list-row .span1,
+.row-fluid.octolapse-table-list-row .span2,
+.row-fluid.octolapse-table-list-row .span3,
+.row-fluid.octolapse-table-list-row .span4,
+.row-fluid.octolapse-table-list-row .span5,
+.row-fluid.octolapse-table-list-row .span6,
+.row-fluid.octolapse-table-list-row .span7,
+.row-fluid.octolapse-table-list-row .span8,
+.row-fluid.octolapse-table-list-row .span9,
+.row-fluid.octolapse-table-list-row .span10,
+.row-fluid.octolapse-table-list-row .span11,
+.row-fluid.octolapse-table-list-row .span12
+{
+    margin-left:0px;
 }
 
 .octolapse_dropzone
@@ -398,10 +412,15 @@ div.webcam_settings_preview img{
 div.webcam_settings_preview .loading, div.webcam_settings_preview .error{
     display:table-cell;
     vertical-align:middle;
+    position: unset;
+	top: unset;
+	left: unset;
+	transform: unset;
+    font-size: unset;
 }
 
 
-
+div.octolapse_dialog,
 #octolapse_add_edit_profile_dialog.modal,
 #octolapse_edit_settings_main_dialog.modal,
 #octolapse_webcam_settings_dialog.modal
@@ -432,10 +451,12 @@ form.octolapse_form .modal-body {
 .ol-compact-row.row-fluid [class*="span"] {
     min-height: unset;
 }
-
+/*
 .octolapse_add_edit_dialog .row-fluid [class*="span"] {
     text-align: left;
 }
+*/
+
 .octolapse .text-center
 {
     text-align: center;
@@ -467,17 +488,41 @@ form.octolapse_form .modal-body {
     color: white;
 }
 
+.icon_active_color {
+    color: greenyellow;
+}
+.icon_idle_color {
+    color: lightgray;
+}
+.icon_warning_color {
+    color: orange;
+}
+
+.icon_error_color {
+    color: red;
+}
+.clear_color {
+    color: unset;
+}
 .position-state-icon, .extruder-icon {
     color: greenyellow;
 }
 
-.bg-paused, .bg-not-homed, .bg-lightgray {
+.bg-paused, .bg-unknown-position, .bg-lightgray {
     color: lightgray;
 }
 
 
 .margin-small {
     margin: 10px;
+}
+
+.margin-bottom-small {
+    margin-bottom:10px;
+}
+
+.padded-small {
+    padding: 10px;
 }
 
 .ol-text-status-title {
@@ -575,13 +620,6 @@ form.octolapse_form .modal-body {
 }
 
 
-table.octolapse-profiles {
-    border-collapse: collapse;
-    table-layout: auto;
-    max-width: 100%;
-}
-
-
 .button-container.top-right {
     top: 10px;
     right: 0;
@@ -594,12 +632,6 @@ table.octolapse-profiles {
     left: 50%;
     margin-left: -50px;
 }
-.snapshot_refresh_container {
-    z-index: 999;
-    position: absolute;
-    top: 5px;
-    right: 5px;
-}
 
 .latest-snapshot-modal .button-container {
     z-index: 1000;
@@ -608,15 +640,34 @@ table.octolapse-profiles {
 #octolapse_snapshot_thumbnail_container{
     position:relative;
 }
-.octolapse-snapshot-text {
+
+.octolapse-camera-state-text {
     position: absolute;
-    top: 15px;
-    left: 50%;
-    transform: translate(-50%, 0%);
-    color: white;
-    text-shadow: 0px 0px 2px #000000;
-    font-size:28px;
+    display:table;
+    height:282px;
+    width:590px;
+    z-index:257;
 }
+.octolapse-camera-state-text div.octolapse-camera-state-text-wrapper {
+    display: table-cell;
+    vertical-align: middle;
+    width:100%;
+}
+.octolapse-camera-state-text div.octolapse-camera-state-text-wrapper div{
+    display: table-cell;
+    vertical-align: middle;
+    font-size:28px;
+    line-height: 1em;
+    background-color: rgba(255,255,255,1);
+    padding-top: 15px;
+    width:590px;
+}
+.octolapse-camera-state-text p{
+    color: black;
+    margin: 0;
+    padding: 0 15px 15px 15px;
+}
+
 .snapshot-container
 {
     position: relative;
@@ -651,7 +702,7 @@ div#octolapse_snapshot_image_container .snapshot-container {
     width:100%;
     height:100%;
 }
-.latest-snapshot
+.latest-snapshot img
 {
     z-index:256;
 }
@@ -717,13 +768,12 @@ input.error {
     font-weight: 400;
 }
 
-#octolapse_tab i.fa, #octolapse_tab span.fa-slider {
+#octolapse_tab i.fa {
     border: 1px solid #000000;
 }
 
 #octolapse_tab i.fa, #octolapse_tab span.fa,
-#octolapse_tab i.fa, #octolapse_tab span.fa-slider i{
-	text-shadow: 1px 0px black, -1px 0px black, 0px 1px black, 0px -1px black;
+#octolapse_tab i.fa{
     border: none;
 }
 a.ol-button i {
@@ -760,8 +810,84 @@ fieldset.octolapse legend
 .full-width {
     width:100%;
 }
+.octolapse-secondary-gray {
+    opacity: 0.2;
+}
+.octolapse-secondary-gray-background {
+    background-color: rgba(0,0,0,0.05);
+}
+
+.select-with-edit {
+    display:flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.select-with-edit select{
+    flex:1;
+    margin-bottom: 0;
+    z-index:257;
+}
+.select-with-edit a{
+    padding: 0 0 0 6px;
+
+}
+
+.fa.outline
+{
+    text-shadow: -1px 0, 0 1px, 1px 0, 0 -1px;
+}
+
+.octolapse-snapshot-button-overlay
+{
+    width:100%;
+    height:100%;
+    position: relative;
+}
+.octolapse-snapshot-button-overlay > a, .octolapse-snapshot-button-overlay > span
+{
+    opacity: 1;
+    position: absolute;
+    z-index:257;
+}
+
+.octolapse-snapshot-button-overlay > a, .octolapse-snapshot-button-overlay > span > a
+{
+
+    -webkit-transition: opacity 0.25s;
+    -moz-transition: opacity 0.25s;
+    -o-transition: opacity 0.25s;
+    transition: opacity 0.25s;
+}
+.octolapse-snapshot-button-overlay .fade-out
+{
+    opacity: 0;
+}
+
+.octolapse-snapshot-button-overlay .snapshot-indicator
+{
+    left:50%;
+    top:50%;
+}
+.octolapse-snapshot-button-overlay span.play-button a > i, .octolapse-snapshot-button-overlay .snapshot-indicator > i {
+    margin: -42px 0 0 -42px;
+}
+.octolapse-snapshot-button-overlay span.play-button{
+    left:50%;
+    top:50%;
+}
+.snapshot-container:hover .octolapse-snapshot-button-overlay a.play{
+    opacity:1;
+}
+.octolapse-snapshot-button-overlay a.octolapse-fullscreen{
+    right:0;
+    bottom:0;
+}
+.octolapse-snapshot-button-overlay a.refresh{
+    right:0;
+}
+
 /* The slider itself */
-.slider {
+.octolapse-slider {
   width: 100%; /* Full-width */
   height: 25px; /* Specified height */
   opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
@@ -770,7 +896,7 @@ fieldset.octolapse legend
 }
 
 /* Mouse-over effects */
-.slider:hover {
+.octolapse-slider:hover {
   opacity: 1; /* Fully shown on mouse-over */
 }
 
@@ -1232,4 +1358,22 @@ fieldset.octolapse legend
 .fixed-width-label {
     width: 10em;
     overflow-wrap: break-word;
+}
+
+div.rendering-overlay-preview img {
+    max-height:480px;
+    max-width:890px;
+}
+div.rendering-overlay-preview {
+    position:relative;
+    width:890px;
+    height:480px;
+}
+
+.octolapse .valign
+{
+    position:absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width:100%;
 }

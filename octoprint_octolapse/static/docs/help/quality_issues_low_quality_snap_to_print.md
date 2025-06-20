@@ -1,0 +1,1 @@
+If you are using the regular 'Snap To Print' trigger profile, you might experience some print quality reductions.  If you are unhappy with your print quality, consider using the high quality snap-to-print option (available in the trigger profiles when using the snap to print smart trigger).  Please note that if you are using vase mode, this option will have no effect.

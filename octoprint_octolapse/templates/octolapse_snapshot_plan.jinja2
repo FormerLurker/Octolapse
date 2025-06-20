@@ -1,0 +1,149 @@
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2023  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
+
+<script type="text/html" id="snapshot-plan-template">
+    <div data-bind="visible: SnapshotPlanState.is_confirmation_popup()">
+        <div class="alert alert-warning" data-bind="visible: SnapshotPlanState.missed_snapshots()  > 0">
+            <p>
+                <span data-bind="text: SnapshotPlanState.missed_snapshots"></span> snapshots were missed!&nbsp;<a class="octolapse_help" data-help-url="snapshot_plan_missed_snapshots.md" data-help-title="Missed Snapshots" ></a>
+            </p>
+        </div>
+        <div data-bind="visible: SnapshotPlanState.quality_issues().length > 0, foreach: SnapshotPlanState.quality_issues">
+            <div class="alert alert-warning">
+                <p>
+                    <span data-bind="text: description"></span>&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':help_link, 'data-help-title':name}"></a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div class="span6"></div>
+        <div class="span6 text-center">
+            Showing<span data-bind="visible: SnapshotPlanState.view_current_plan">&nbsp;Current</span>&nbsp;Plan <span data-bind="text: (SnapshotPlanState.plan_index() + 1)"></span> of <span data-bind="text: SnapshotPlanState.plan_count"></span></a>
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div class="span6">
+            <div data-bind="visible: !SnapshotPlanState.is_confirmation_popup()">
+                <strong>
+                    Next Snapshot Progress
+                </strong>
+                <div class="row-fluid">
+                    <div class="span6 text-right no-min-height">
+                        Current Plan:
+                    </div>
+                    <div class="span6 text-right no-min-height text-left">
+                        <span data-bind="text: (SnapshotPlanState.current_plan_index() + 1)"></span>
+                    </div>
+                </div>
+
+                <div class="row-fluid">
+                    <div class="span6 text-right no-min-height">
+                        Lines Remaining:
+                    </div>
+                    <div class="span6 text-right no-min-height text-left">
+                        <span data-bind="text: SnapshotPlanState.lines_remaining"></span> of
+                        <span data-bind="text: SnapshotPlanState.lines_total"></span>
+                    </div>
+                </div>
+                <div class="row-fluid">
+                    <div class="span6 text-right no-min-height">
+                        Percent Complete:
+                    </div>
+                    <div class="span6 text-right no-min-height text-left">
+                        <span data-bind="text: SnapshotPlanState.progress_percent"></span> %
+                    </div>
+                </div>
+            </div>
+
+            <strong>Planned Positions</strong>
+            <div class="row-fluid">
+                <div class="span3 text-right no-min-height">
+                    Initial:&nbsp;
+                </div>
+                <div class="span9 text-left no-min-height">
+                    <strong>X</strong><span data-bind="text: SnapshotPlanState.format_coordinates(SnapshotPlanState.x_initial())"></span>,&nbsp;<strong>Y</strong><span data-bind="text: SnapshotPlanState.format_coordinates(SnapshotPlanState.y_initial())"></span>,&nbsp;<strong>Z</strong><span data-bind="text: SnapshotPlanState.format_coordinates(SnapshotPlanState.z_initial())"></span>
+                </div>
+            </div>
+            <div class="ol-compact-row">
+                <div class="span3 text-right no-min-height">
+                    Snapshot:&nbsp;
+                </div>
+                <div class="span9 text-left no-min-height">
+                    <div data-bind="foreach: SnapshotPlanState.snapshot_positions">
+                        <strong>X</strong><span data-bind="text: $parent.SnapshotPlanState.format_coordinates($data.x)"></span>,&nbsp;<strong>Y</strong><span data-bind="text:  $parent.SnapshotPlanState.format_coordinates($data.y)"></span>,&nbsp;<strong>Z</strong><span data-bind="text:  $parent.SnapshotPlanState.format_coordinates($data.z)"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="ol-compact-row">
+                <div class="span3 text-right no-min-height">
+                    Return:&nbsp;
+                </div>
+                <div class="span9 text-left no-min-height">
+                    <strong>X</strong><span data-bind="text: SnapshotPlanState.format_coordinates(SnapshotPlanState.x_return())"></span>,&nbsp;<strong>Y</strong><span data-bind="text: SnapshotPlanState.format_coordinates(SnapshotPlanState.y_return())"></span>,&nbsp;<strong>Z</strong><span data-bind="text: SnapshotPlanState.format_coordinates(SnapshotPlanState.z_return())"></span>
+                </div>
+            </div>
+            <div class="ol-compact-row" data-bind="visible: SnapshotPlanState.multi_extruder">
+                <div class="span3 text-right no-min-height">
+                    Tool:&nbsp;
+                </div>
+                <div class="span9 text-left no-min-height">
+                    <span data-bind="text: (SnapshotPlanState.current_tool()+1).toString()"></span>
+                </div>
+            </div>
+            <div data-bind="visible:SnapshotPlanState.total_travel_distance() > 0">
+                <strong>Statistics</strong>
+                <div class="row-fluid">
+                    <div class="span4 text-right no-min-height">
+                        Total Travel:&nbsp;
+                    </div>
+                    <div class="span8 text-left no-min-height">
+                        <span data-bind="text: SnapshotPlanState.total_travel_distance"></span> mm,&nbsp;<strong>Saved:&nbsp</strong><span data-bind="text: SnapshotPlanState.total_saved_travel_percent"></span> &#37;
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="span6 no-min-height">
+            <div id="snapshot_plan_canvas_container" class="text-center" title="Shows the position of the extruder during each phase of the snapshot."></div>
+            <div class="text-center ol-hover-button">
+                <a data-bind="click: SnapshotPlanState.previous_plan_clicked" title="Display the previous snapshot plan."><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-caret-left fa-stack-1x"></i></span></a>
+                <a data-bind="click: SnapshotPlanState.show_current_plan_clicked,
+                              attr: {title: (SnapshotPlanState.is_confirmation_popup() ? 'View the first snapshot plan' : 'Display the current snapshot plan.')}">
+                    <span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-refresh fa-stack-1x"></i></span>
+                </a>
+                <a data-bind="click: SnapshotPlanState.animate_plan_clicked, disable: SnapshotPlanState.is_animating_plans" title="Animate all snapshot plans."><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-play-circle fa-stack-1x"></i></span></a>
+                <a data-bind="click: SnapshotPlanState.next_plan_clicked" title="Display the next snapshot plan."><span class="fa-stack"><i class="fa fa-square fa-stack-2x"></i><i class="fa fa-caret-right fa-stack-1x"></i></span></a>
+            </div>
+        </div>
+    </div>
+    <div data-bind="visible: SnapshotPlanState.is_confirmation_popup()">
+        <p data-bind="visible: SnapshotPlanState.autoclose()">
+            This popup will auto-close, and your print will automatically start in <span data-bind="text:SnapshotPlanState.autoclose_seconds"></span> seconds.
+        </p>
+
+        <div class="alert alert-info">
+            You can enable or disable the snapshot plan preview and configure auto-close within the <a title="Open Octolapse Main Settings" data-bind="click: function() {openOctolapseSettings('main-settings');}"><strong>main settings</strong></a>.
+        </div>
+    </div>
+</script>

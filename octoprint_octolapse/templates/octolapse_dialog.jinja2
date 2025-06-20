@@ -1,0 +1,66 @@
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2023  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
+<script type="text/html" id="octolapse-dialog-template">
+    <div data-bind="attr: {id: dialog.dialog_id}" class="modal hide fade octolapse_dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content octolapse">
+                <form class="form-horizontal octolapse_form">
+                    <div class="modal-header">
+                        <div>
+                            <a class="close" aria-hidden="true">&times;</a>
+                            <a class="octolapse_help octolapse_dialog_help" data-bind="visible: dialog.help_enabled, attr: {'data-help-url': dialog.help_link, 'data-help-title': dialog.help_title, title: dialog.help_tooltip}" ><span class="fa fa-question-circle fa-lg"></span></a>
+                        </div>
+                        <div>
+                            <h3><span data-bind="text: dialog.title"></span></h3>
+                        </div>
+                    </div>
+                    <div class="modal-body scrollable" data-bind="template:{name: dialog.template_id, data: $data}">
+                    </div>
+                    <div class="modal-footer" style="bottom:0;position:relative">
+                        <div class="row-fluid text-right">
+                            <span class="span4" data-bind="visible: dialog.cancel_button_visible">
+                                <button type="button"
+                                        data-bind="text: dialog.cancel_button_text, click: dialog.cancel_button_clicked, attr: {title: dialog.cancel_button_title }"
+                                        class="span6 btn btn-default cancel input-block-level">
+                                </button>
+                            </span>
+                            <span class="span4" data-bind="visible: dialog.option_button_visible">
+                                <button type="button"
+                                        data-bind="text: dialog.option_button_text, click: dialog.option_button_clicked, attr: {title: dialog.ok }"
+                                        class="span6 btn btn-default option input-block-level">
+                                </button>
+                            </span>
+                            <span class="span4" data-bind="visible: dialog.ok_button_visible">
+                                <button type="button"
+                                        data-bind="text: dialog.ok_button_text, click: dialog.ok_button_clicked, attr: {title: dialog.ok_button_title }"
+                                        class="span6 btn btn-default ok input-block-level">
+                                </button>
+                            </span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</script>

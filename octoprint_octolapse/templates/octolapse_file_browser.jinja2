@@ -1,0 +1,101 @@
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2023  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
+<script type="text/html" id="octolapse-file-browser-not-loaded">
+    <p>Initializing, please wait.</p>
+</script>
+<script type="text/html" id="octolapse-file-browser-no-items">
+    <p>
+        There are no files available.
+    </p>
+</script>
+
+<script type="text/html" id="octolapse-file-browser-action">
+    <a data-bind="attr: {href: item.value.get_download_url(item)}" download>
+        <i class="fa fa-lg fa-download"></i>
+    </a>
+    <span data-bind="visible: item.data.parent.is_admin">&nbsp;|&nbsp;
+        <a data-bind="click: function(){item.data.parent.delete_file(item);}">
+            <i class="fa fa-lg fa-trash-o"></i>
+        </a>
+    </span>
+</script>
+
+<script type="text/html" id="octolapse-file-browser-action-custom">
+    <!-- ko template: {name: item.data.parent.custom_actions_template_id} --><!-- /ko -->
+</script>
+
+<script type="text/html" id="octolapse-file-browser-delete-selected">
+    <button type="button" data-bind="visible: data.parent.is_admin() && list_items().length > 0 && selected_count() > 0, click: data.parent.delete_selected">
+        Delete <span data-bind="text:selected_count()"></span> Files
+    </button>
+</script>
+
+<script type="text/html" id="octolapse-file-browser-empty-template"></script>
+
+<script type="text/html" id="octolapse-file-browser-file-size">
+    <div class="text-right">
+        File Size:&nbsp;<span data-bind="text: data.parent.total_file_size_text"></span>
+    </div>
+</script>
+
+<!-- alternate slower binding - ko template: {name: 'octolapse-list', data: files} --><!-- /ko -->
+<script type="text/html" id="octolapse-file-browser">
+    <div data-bind="visible: !has_loaded(), template: files_not_loaded_template_id">
+    </div>
+    <div data-bind="visible: has_loaded">
+        <!-- ko template: {name: 'octolapse-list-custom-row', data: files} --><!-- /ko -->
+    </div>
+</script>
+
+<script type="text/html" id="octolapse-file-browser-custom-row">
+    <tr data-bind="css: {disabled: $data.disabled}">
+        <td data-bind="visible: $data.data.parent.is_admin" class="list-item-selection-dropdown">
+            <input type="checkbox" data-bind="checked: $data.selected"/>
+        </td>
+        <td class="file-browser-name">
+            <span data-bind="text: $data.name, attr: {title: $data.name}"></span>
+        </td>
+        <td class="file-browser-size">
+            <span data-bind="text: $data.value.size_formatted, attr: {title: $data.value.size_formatted}"></span>
+        </td>
+        <td class="file-browser-date">
+            <span data-bind="text: $data.value.date_formatted, attr: {title: $data.value.date_formatted}"></span>
+        </td>
+        <td data-bind="css: $data.data.parent.actions_class, visible: $data.data.parent.is_admin">
+            <!-- ko if: $data.data.parent.custom_actions_template_id -->
+                <!-- ko template: {name: $data.data.parent.custom_actions_template_id} --><!-- /ko -->
+            <!-- /ko -->
+            <!-- ko ifnot: $data.data.parent.custom_actions_template_id -->
+                <a data-bind="attr: {href: $data.value.get_download_url($data)}" download="" >
+                <i class="fa fa-lg fa-download"></i>
+            </a>
+                &nbsp;|&nbsp;
+                <a data-bind="click: function(){$data.data.parent.delete_file($data.value);}">
+                <i class="fa fa-lg fa-trash-o"></i>
+            </a>
+            <!-- /ko -->
+        </td>
+    </tr>
+</script>
+

@@ -23,26 +23,25 @@
 #define SNAPSHOT_PLAN_STEP_H
 #include <string>
 #ifdef _DEBUG
-#undef _DEBUG
+//#undef _DEBUG
 #include <Python.h>
-#define _DEBUG
+//python311_d.lib
 #else
 #include <Python.h>
 #endif
-class snapshot_plan_step
+struct snapshot_plan_step
 {
-public:
-	snapshot_plan_step();
-	snapshot_plan_step(double* x, double* y, double* z, double* e, double* f, std::string action);
-	snapshot_plan_step(const snapshot_plan_step & source);
-	~snapshot_plan_step();
-	PyObject * to_py_object();
-	double *p_x_;
-	double *p_y_;
-	double *p_z_;
-	double *p_e_;
-	double *p_f_;
-	std::string action_;
+  snapshot_plan_step();
+  snapshot_plan_step(double* x, double* y, double* z, double* e, double* f, std::string action_type);
+  snapshot_plan_step(const snapshot_plan_step& source);
+  ~snapshot_plan_step();
+  PyObject* to_py_object() const;
+  double* p_x;
+  double* p_y;
+  double* p_z;
+  double* p_e;
+  double* p_f;
+  std::string action;
 };
 
 #endif

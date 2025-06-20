@@ -1,7 +1,7 @@
 # coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2019  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -24,11 +24,19 @@ from __future__ import unicode_literals
 import logging
 import datetime as datetime
 import os
-import functools
-import types
-import six
-import copy
+# Remove python 2 support
+# import six
 from octoprint.logging.handlers import AsyncLogHandlerMixin, CleaningTimedRotatingFileHandler
+
+
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
 
 # custom log level - VERBOSE
 VERBOSE = 5
@@ -68,15 +76,6 @@ class OctolapseFormatter(logging.Formatter):
         return s
 
 
-class Singleton(type):
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-
 class OctolapseConsoleHandler(logging.StreamHandler, AsyncLogHandlerMixin):
     def __init__(self, *args, **kwargs):
         super(OctolapseConsoleHandler, self).__init__(*args, **kwargs)
@@ -86,8 +85,18 @@ class OctolapseFileHandler(CleaningTimedRotatingFileHandler, AsyncLogHandlerMixi
     def __init__(self, *args, **kwargs):
         super(OctolapseFileHandler, self).__init__(*args, **kwargs)
 
-@six.add_metaclass(Singleton)
-class LoggingConfigurator(object):
+    def delete_all_backups(self):
+        # clean up old files on handler start
+        backup_count = self.backupCount
+        self.backupCount = 0
+        for s in self.getFilesToDelete():
+            os.remove(s)
+        self.backupCount = backup_count
+
+# remove python 2 support
+# @six.add_metaclass(Singleton)
+class LoggingConfigurator(metaclass=Singleton):
+    BACKUP_COUNT = 3
 
     def __init__(self):
         self.logging_formatter = OctolapseFormatter()
@@ -138,7 +147,7 @@ class LoggingConfigurator(object):
             self._console_handler = None
 
     def _add_file_handler(self, log_file_path, log_level):
-        self._file_handler = OctolapseFileHandler(log_file_path, when="D", backupCount=3)
+        self._file_handler = OctolapseFileHandler(log_file_path, when="D", backupCount=LoggingConfigurator.BACKUP_COUNT)
         self._file_handler.setFormatter(self.logging_formatter)
         self._file_handler.setLevel(log_level)
         self._root_logger.addHandler(self._file_handler)
@@ -149,65 +158,63 @@ class LoggingConfigurator(object):
         self._console_handler.setLevel(log_level)
         self._root_logger.addHandler(self._console_handler)
 
-    def configure_loggers(self, log_file_path=None, debug_settings=None):
+    def do_rollover(self, clear_all=False):
+        if self._file_handler is None:
+            return
+        # To clear everything, we'll roll over every file
+        self._file_handler.doRollover()
+        if clear_all:
+            self._file_handler.delete_all_backups()
+
+
+    def configure_loggers(self, log_file_path=None, logging_settings=None):
         default_log_level = logging.DEBUG
         log_to_console = True
-        if debug_settings is not None:
-            default_log_level = debug_settings.default_log_level
-            log_to_console = debug_settings.log_to_console
+        if logging_settings is not None:
+            default_log_level = logging_settings.default_log_level
+            log_to_console = logging_settings.log_to_console
 
         # clear any handlers from the root logger
         self._remove_handlers()
         # set the log level
         self._root_logger.setLevel(logging.NOTSET)
 
-        if (
-            debug_settings is None or
-            debug_settings.enabled or
-            debug_settings.enabled_loggers
-            or debug_settings.log_all_errors
-        ):
-            if log_file_path is not None:
-                # ensure that the logging path and file exist
-                directory = os.path.dirname(log_file_path)
-                import distutils.dir_util
-                distutils.dir_util.mkpath(directory)
-                if not os.path.isfile(log_file_path):
-                    open(log_file_path, 'w').close()
+        if log_file_path is not None:
+            # ensure that the logging path and file exist
+            directory = os.path.dirname(log_file_path)
+            import distutils.dir_util
+            distutils.dir_util.mkpath(directory)
+            if not os.path.isfile(log_file_path):
+                open(log_file_path, 'w').close()
 
-                # add the file handler
-                self._add_file_handler(log_file_path, logging.NOTSET)
+            # add the file handler
+            self._add_file_handler(log_file_path, logging.NOTSET)
 
-            # if we are logging to console, add the console logging handler
-            if log_to_console:
-                self._add_console_handler(logging.NOTSET)
-            for logger_full_name in self.child_loggers:
+        # if we are logging to console, add the console logging handler
+        if log_to_console:
+            self._add_console_handler(logging.NOTSET)
+        for logger_full_name in self.child_loggers:
 
-                if logger_full_name.startswith("octolapse."):
-                    logger_name = logger_full_name[10:]
+            if logger_full_name.startswith("octolapse."):
+                logger_name = logger_full_name[10:]
+            else:
+                logger_name = logger_full_name
+            if logging_settings is not None:
+                current_logger = self._root_logger.getChild(logger_name)
+                found_enabled_logger = None
+                for enabled_logger in logging_settings.enabled_loggers:
+                    if enabled_logger.name == logger_full_name:
+                        found_enabled_logger = enabled_logger
+                        break
+
+                if found_enabled_logger is None or current_logger.level > logging.ERROR:
+                    current_logger.setLevel(logging.ERROR)
+
+                elif found_enabled_logger is not None:
+                    current_logger.setLevel(found_enabled_logger.log_level)
                 else:
-                    logger_name = logger_full_name
-                if debug_settings is not None:
-                    current_logger = self._root_logger.getChild(logger_name)
-                    found_enabled_logger = None
-                    for enabled_logger in debug_settings.enabled_loggers:
-                        if enabled_logger["name"] == logger_full_name:
-                            found_enabled_logger = enabled_logger
-                            break
-
-                    if (
-                        debug_settings.log_all_errors and (
-                            found_enabled_logger is None or current_logger.level > logging.ERROR
-                        )
-                    ):
-                        current_logger.setLevel(logging.ERROR)
-
-                    elif found_enabled_logger is not None:
-                        current_logger.setLevel(found_enabled_logger["log_level"])
-                    else:
-                        # log level critical + 1 will not log anything
-                        current_logger.setLevel(logging.CRITICAL + 1)
-                else:
-                    current_logger = self._root_logger.getChild(logger_name)
-                    current_logger.setLevel(default_log_level)
-
+                    # log level critical + 1 will not log anything
+                    current_logger.setLevel(logging.CRITICAL + 1)
+            else:
+                current_logger = self._root_logger.getChild(logger_name)
+                current_logger.setLevel(default_log_level)

@@ -1,7 +1,7 @@
 <!--
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2019  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -38,8 +38,9 @@
                     </div>
                     <div class="modal-footer" style="bottom:0;position:relative">
                         <div class="row-fluid">
-                                <button type="button" class="span6 btn btn-default cancel input-block-level">Cancel</button>
-                                <button type="button" class="span6 btn btn-primary continue input-block-level">Continue</button>
+                                <button type="button" class="span6 btn btn-default cancel input-block-level" title="Cancel the print">Cancel Print</button>
+                                <button type="button" class="span6 btn btn-primary continue input-block-level" title="Accept the snapshot plan and continue printing">
+                                    Accept and Continue <span data-bind="visible: SnapshotPlanState.autoclose">(<span data-bind="text:SnapshotPlanState.autoclose_seconds"></span> seconds)</span></button>
                             </span>
                         </div>
                     </div>

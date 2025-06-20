@@ -1,7 +1,7 @@
 # coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -32,8 +32,14 @@ from csv import DictWriter
 from random import randint
 from shutil import rmtree
 from tempfile import mkdtemp, NamedTemporaryFile
+import errno
+# Recent versions of Pillow changed the case of the import
+# Why!?
+try:
+    from pil import Image
+except ImportError:
+    from PIL import Image
 
-from PIL import Image
 from mock import Mock
 
 from octoprint_octolapse.render import TimelapseRenderJob, Render, Rendering
@@ -50,7 +56,14 @@ class TestRender(unittest.TestCase):
         # Make the temp folder.
         dir = mkdtemp() + '/'
         # Make sure any nested folders specified by the capture template exist.
-        os.makedirs(os.path.dirname("{0}{1}".format(dir, capture_template) % 0))
+        try:
+            os.makedirs(os.path.dirname("{0}{1}".format(dir, capture_template) % 0))
+        except OSError as e:
+            if e.errno == errno.EEXIST:
+                pass
+            else:
+                raise
+
         # Make images and save them with the correct names.
         random.seed(0)
 
@@ -82,7 +95,7 @@ class TestRender(unittest.TestCase):
         self.on_render_error = Mock(return_value=None)
         return TimelapseRenderJob(job_id=self.rendering_job_id,
                                   rendering=rendering,
-                                  debug=self.octolapse_settings.current_debug_profile(),
+                                  logging=self.octolapse_settings.current_logging_profile(),
                                   print_filename=self.print_name,
                                   capture_dir=self.snapshot_dir_path,
                                   snapshot_filename_format=self.capture_template,
@@ -143,7 +156,7 @@ class TestRender(unittest.TestCase):
         self.print_end_time = 100
 
         # Create fake snapshots.
-        self.capture_template = get_snapshot_filename(self.print_name, self.print_start_time, SnapshotNumberFormat)
+        self.capture_template = get_snapshot_filename(self.print_name, SnapshotNumberFormat)
         self.data_directory = mkdtemp()
         self.octoprint_timelapse_folder = mkdtemp()
 

@@ -1,36 +1,66 @@
-
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2023  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
 <script type="text/html" id="octolapse-tab-settings-current-cameras">
-
-    <div data-bind="foreach: Octolapse.Status.cameras_sorted">
-        <div style="padding: 6px 0px 6px 3px;">
-                <div class="row-fluid">
-                    <div class="span10">
-                        <a data-bind="visible: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active() && Octolapse.Settings.is_loaded(), click: function() { Octolapse.Status.toggleCamera(guid); }" title="Enable/disable this camera for the next timelapse.">
-                            <i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': enabled , 'fa-square-o': !enabled } "></i>
-                            <span data-bind="text: name"></span>
-                        </a>
-                        <span data-bind="visible: !(Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active())" title="Cameras cannot be enabled or disabled while a timelapse is active, or by non-administrators.">
-                            <i class="fa fa-no-shadow disabled" data-bind="css: { 'fa-check-square': enabled , 'fa-square-o': !enabled } "></i>
-                            <span data-bind="text: name"></span>
-                        </span>
-                    </div>
-                    <div class="span2 text-right">
-                        <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Settings.is_loaded(), click: function() { $parent.openCameraProfile(guid); } " title="Edit this camera profile.">
-                            <i class="fa fa-pencil fa-2x"></i>
-                        </a>
-                    </div>
-                </div>
+    <div data-bind="visible:Octolapse.Globals.is_admin()">
+        <div data-bind="visible: Octolapse.Status.cameras_sorted().length == 0">
+            <span class="text-error">You must add at least one camera profile.  </span>
+            <a style="float:right;" data-bind="click: function() { Octolapse.Status.addNewCameraProfile(); } " title="Add a new camera profile.">
+                <i class="fa fa-plus fa-2x"></i>
+            </a>
+        </div>
+        <div data-bind="visible: Octolapse.Status.cameras_sorted().length > 0 && !Octolapse.Status.hasOneCameraEnabled()" class="text-error">
+            <p>You must enable at least one camera profile.</p>
         </div>
     </div>
-    <div data-bind="visible: Octolapse.Status.cameras_sorted().length == 0">
-        <span class="text-error">You must add at least one camera profile.  </span>
-        <a style="float:right;" data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Settings.is_loaded();, click: function() { Octolapse.Status.addNewCameraProfile(); } " title="Add a new camera profile.">
-            <i class="fa fa-plus fa-2x"></i>
-        </a>
+    <div data-bind="foreach: Octolapse.Status.cameras_sorted">
+        <div class="row-fluid">
+            <div class="span2 text-right">
+                <!-- ko if: $index() == 0 -->
+                <a data-bind="click: function() {$parent.openOctolapseSettings('camera');}"
+                   title="Open all camera settings.">
+                    Cameras
+                </a>
+                <!-- /ko -->
+            </div>
+            <div class="span9">
+                <div class="octolapse-camera-list-item">
+                    <a data-bind="visible: Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active(), click: function() { Octolapse.Status.toggleCamera(guid); }" title="Enable/disable this camera for the next timelapse.">
+                        <i class="fa fa-no-shadow" data-bind="css: { 'fa-check-square': enabled , 'fa-square-o': !enabled() } "></i>
+                        <span data-bind="text: name"></span>
+                    </a>
+                    <span data-bind="visible: !(Octolapse.Globals.is_admin() && !Octolapse.Status.is_timelapse_active())" title="Cameras cannot be enabled or disabled while a timelapse is active, or by non-administrators.">
+                        <i class="fa fa-no-shadow disabled" data-bind="css: { 'fa-check-square': enabled , 'fa-square-o': !enabled() } "></i>
+                        <span data-bind="text: name"></span>
+                    </span>
+                </div>
+            </div>
+            <div class="span1">
+                <a data-bind="visible: Octolapse.Globals.is_admin() && Octolapse.Settings.is_loaded(), click: function() { $parent.openCameraProfile(guid); } " title="Edit this camera profile.">
+                    <i class="fa fa-pencil fa-2x"></i>
+                </a>
+            </div>
+        </div>
     </div>
-    <div data-bind="visible: Octolapse.Status.cameras_sorted().length > 0 && !Octolapse.Status.hasOneCameraEnabled()" class="text-error">
-        <p>You must enable at least one camera profile.</p>
-    </div>
-
 </script>
 

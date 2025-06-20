@@ -1,3 +1,26 @@
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2023  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
 <!-- Default mjpg-streamer template -->
 <script type="text/html" id="webcam-mjpg-streamer-template">
     <div data-bind="foreach: controls" class="column">
@@ -8,10 +31,10 @@
 <!-- Default mjpg-streamer control templates -->
 <script type="text/html" id="mjpg-streamer-numeric-control-template">
     <div class="no-column-break">
-        <span data-bind="text: slider_label"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title':name, 'data-help-not-found': help_not_found}"/>
+        <span data-bind="text: slider_label"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title':name, 'data-help-not-found': help_not_found}"></a>
         <div class="row-fluid">
             <div class="span10">
-                <input type="range" class="slider" data-bind="attr: {min: min, max: max, step: step }, octolapseSliderValue: value" />
+                <input type="range" class="octolapse-slider" data-bind="attr: {min: min, max: max, step: step }, octolapseSliderValue: value" />
             </div>
             <div class="span2">
                 <span data-bind="text: value" />
@@ -26,7 +49,7 @@
             <div class="span12">
                 <label class="checkbox">
                     <input type="checkbox" data-bind="attr: {title: checkbox_title}, checked: checkbox_checked" /><span data-bind="text: name"></span>&nbsp;&nbsp;
-                    <a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title': name, 'data-help-not-found': help_not_found}" />
+                    <a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title': name, 'data-help-not-found': help_not_found}"></a>
                 </label>
             </div>
         </div>
@@ -42,7 +65,7 @@
 <script type="text/html" id="mjpg-streamer-dropdown-control-template">
     <div class="row-fluid">
         <div class="no-column-break">
-            <span data-bind="text: name"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title': name, 'data-help-not-found': help_not_found}" />
+            <span data-bind="text: name"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':help_url, 'data-help-title': name, 'data-help-not-found': help_not_found}"></a>
             <div class="row-fluid">
                 <div class="span10">
                     <select class="full-width"
@@ -65,3 +88,4 @@
 
 {% include "/webcams/mjpg_streamer/logitech_c920.jinja2" %}
 {% include "/webcams/mjpg_streamer/raspi_cam_v2.jinja2" %}
+{% include "/webcams/mjpg_streamer/logitech_c250.jinja2" %}

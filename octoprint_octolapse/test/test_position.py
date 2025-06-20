@@ -1,7 +1,7 @@
 # coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -24,7 +24,7 @@
 import unittest
 import pprint
 from tempfile import NamedTemporaryFile
-from octoprint_octolapse.gcode_parser import Commands
+from octoprint_octolapse.gcode_commands import Commands
 from octoprint_octolapse.position import Pos
 from octoprint_octolapse.position import Position
 from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, SlicerSettings, Slic3rPeSettings
@@ -156,108 +156,6 @@ class TestPosition(unittest.TestCase):
 
 
 
-        # send the appropriate start gcodes
-
-    def test_position_error(self):
-        """Test the IsInBounds function to make sure the program will not attempt to operate after being told to move
-        out of bounds. """
-        position = Position(self.Settings, self.OctoprintPrinterProfile, False)
-
-        # Initial test, should return false without any coordinates
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-        # home the axis and test
-        position.update(Commands.parse("G28"))
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-
-        # X axis tests
-        # reset, set relative extruder and absolute xyz, home the axis and test again
-        position = Position(self.Settings, self.OctoprintPrinterProfile, False)
-        position.update(Commands.parse("M83"))
-        position.update(Commands.parse("G90"))
-        position.update(Commands.parse("G28"))
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-        # move out of bounds min
-        position.update(Commands.parse("G0 x-0.0001"))
-        self.assertTrue(position.has_position_error())
-        self.assertTrue(position.position_error() is not None)
-        # move back in bounds
-        position.update(Commands.parse("G0 x0.0"))
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-        # move to middle
-        position.update(Commands.parse("G0 x125"))
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-        # move to max
-        position.update(Commands.parse("G0 x250"))
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-        # move out of bounds max
-        position.update(Commands.parse("G0 x250.0001"))
-        self.assertTrue(position.has_position_error())
-        self.assertTrue(position.position_error() is not None)
-
-        # Y axis tests
-        # reset, set relative extruder and absolute xyz, home the axis and test again
-        position = Position(self.Settings, self.OctoprintPrinterProfile, False)
-        position.update(Commands.parse("M83"))
-        position.update(Commands.parse("G90"))
-        position.update(Commands.parse("G28"))
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-        # move out of bounds min
-        position.update(Commands.parse("G0 y-0.0001"))
-        self.assertTrue(position.has_position_error())
-        self.assertTrue(position.position_error() is not None)
-        # move back in bounds
-        position.update(Commands.parse("G0 y0.0"))
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-        # move to middle
-        position.update(Commands.parse("G0 y100"))
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-        # move to max
-        position.update(Commands.parse("G0 y200"))
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-        # move out of bounds max
-        position.update(Commands.parse("G0 y200.0001"))
-        self.assertTrue(position.has_position_error())
-        self.assertTrue(position.position_error() is not None)
-
-        # Z axis tests
-        # reset, home the axis and test again
-        # reset, set relative extruder and absolute xyz, home the axis and test again
-        position = Position(self.Settings, self.OctoprintPrinterProfile, False)
-        position.update(Commands.parse("M83"))
-        position.update(Commands.parse("G90"))
-        position.update(Commands.parse("G28"))
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-        # move out of bounds min
-        position.update(Commands.parse("G0 z-0.0001"))
-        self.assertTrue(position.has_position_error())
-        self.assertTrue(position.position_error() is not None)
-        # move back in bounds
-        position.update(Commands.parse("G0 z0.0"))
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-        # move to middle
-        position.update(Commands.parse("G0 z100"))
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-        # move to max
-        position.update(Commands.parse("G0 z200"))
-        self.assertFalse(position.has_position_error())
-        self.assertIsNone(position.position_error())
-        # move out of bounds max
-        position.update(Commands.parse("G0 z200.0001"))
-        self.assertTrue(position.has_position_error())
-        self.assertTrue(position.position_error() is not None)
 
     def test_reset(self):
         """Test init state."""

@@ -1,0 +1,1313 @@
+{
+  "main_settings": {
+    "show_navbar_icon": true,
+    "show_navbar_when_not_printing": true,
+    "is_octolapse_enabled": true,
+    "auto_reload_latest_snapshot": true,
+    "auto_reload_frames": 30,
+    "show_printer_state_changes": true,
+    "show_position_changes": true,
+    "show_extruder_state_changes": true,
+    "show_trigger_state_changes": true,
+    "show_snapshot_plan_information": true,
+    "cancel_print_on_startup_error": true,
+    "platform": "unknown",
+    "version": "0.4.0rc1.dev5",
+    "preview_snapshot_plans": true,
+    "preview_snapshot_plan_autoclose": false,
+    "preview_snapshot_plan_seconds": 30,
+    "automatic_updates_enabled": true,
+    "automatic_update_interval_days": 30,
+    "test_mode_enabled": false
+  },
+  "profiles": {
+    "options": null,
+    "defaults": null,
+    "printers": {},
+    "current_printer_profile_guid": null,
+    "current_stabilization_profile_guid": "d35dbbe6-949e-4f97-b16f-c575d94ad062",
+    "stabilizations": {
+      "801846db-3889-4d90-8496-9a473ee99cc4": {
+        "name": "Animated - Orbit",
+        "description": "Moves  print in a circular pattern around the center.  Best for prints with lower framerates, else the spiraling will be too fast.  For snap to print triggers, the extruder will be moved as closely as possible to the stabilization positions depending on the trigger options.",
+        "guid": "801846db-3889-4d90-8496-9a473ee99cc4",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Animated - Orbit",
+              "value": "animated_orbit"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "x_type": "relative_path",
+        "x_fixed_coordinate": 0.0,
+        "x_fixed_path": "0",
+        "x_fixed_path_loop": true,
+        "x_fixed_path_invert_loop": true,
+        "x_relative": 50.0,
+        "x_relative_print": 50.0,
+        "x_relative_path": "54.904,54.619,54.157,53.536,52.778,51.913,50.975,50.000,49.025,48.087,47.222,46.464,45.843,45.381,45.096,45.000,45.096,45.381,45.843,46.464,47.222,48.087,49.025,50.000,50.975,51.913,52.778,53.536,54.157,54.619,54.904,55.000",
+        "x_relative_path_loop": true,
+        "x_relative_path_invert_loop": false,
+        "y_type": "relative_path",
+        "y_fixed_coordinate": 0.0,
+        "y_fixed_path": "0",
+        "y_fixed_path_loop": true,
+        "y_fixed_path_invert_loop": true,
+        "y_relative": 50.0,
+        "y_relative_print": 50.0,
+        "y_relative_path": "50.975,51.913,52.778,53.536,54.157,54.619,54.904,55.000,54.904,54.619,54.157,53.536,52.778,51.913,50.975,50.000,49.025,48.087,47.222,46.464,45.843,45.381,45.096,45.000,45.096,45.381,45.843,46.464,47.222,48.087,49.025,50.000",
+        "y_relative_path_loop": true,
+        "y_relative_path_invert_loop": false
+      },
+      "d35dbbe6-949e-4f97-b16f-c575d94ad062": {
+        "name": "Centered",
+        "description": "Stabilized the extruder to the center of the bed for most triggers.  For snap to print triggers, this will stabilize the extruder as close as possible the stabilization position depending on the trigger options.",
+        "guid": "d35dbbe6-949e-4f97-b16f-c575d94ad062",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Centered",
+              "value": "centered"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "x_type": "relative",
+        "x_fixed_coordinate": 0.0,
+        "x_fixed_path": "0",
+        "x_fixed_path_loop": true,
+        "x_fixed_path_invert_loop": true,
+        "x_relative": 50.0,
+        "x_relative_print": 50.0,
+        "x_relative_path": "50.0",
+        "x_relative_path_loop": true,
+        "x_relative_path_invert_loop": true,
+        "y_type": "relative",
+        "y_fixed_coordinate": 0.0,
+        "y_fixed_path": "0",
+        "y_fixed_path_loop": true,
+        "y_fixed_path_invert_loop": true,
+        "y_relative": 50.0,
+        "y_relative_print": 50.0,
+        "y_relative_path": "50",
+        "y_relative_path_loop": true,
+        "y_relative_path_invert_loop": true
+      },
+      "a1137d9a-70b6-4941-95fb-74c49e0ae9b8": {
+        "name": "Disabled",
+        "description": "No stabilization will be performed.  This has an interesting effect if you are using the 'snap to print' option with the new smart layer trigger.  For other profiles it replicates the look of the stock Octoprint timelapse but without the motion blur.",
+        "guid": "a1137d9a-70b6-4941-95fb-74c49e0ae9b8",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Disabled",
+              "value": "disabled"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "x_type": "disabled",
+        "x_fixed_coordinate": 0.0,
+        "x_fixed_path": "0",
+        "x_fixed_path_loop": true,
+        "x_fixed_path_invert_loop": true,
+        "x_relative": 50.0,
+        "x_relative_print": 50.0,
+        "x_relative_path": "50.0",
+        "x_relative_path_loop": true,
+        "x_relative_path_invert_loop": true,
+        "y_type": "disabled",
+        "y_fixed_coordinate": 0.0,
+        "y_fixed_path": "0",
+        "y_fixed_path_loop": true,
+        "y_fixed_path_invert_loop": true,
+        "y_relative": 50.0,
+        "y_relative_print": 50.0,
+        "y_relative_path": "50",
+        "y_relative_path_loop": true,
+        "y_relative_path_invert_loop": true
+      },
+      "0d97b0ec-57ee-425b-a202-ea037910337d": {
+        "name": "Animated - Printing",
+        "description": "Animate the X carriage with a back-and-forth motion while keeping the Bed stable.  I like this one!  For snap to print triggers, the extruder will be moved as closely as possible to the stabilization positions depending on the trigger options.",
+        "guid": "0d97b0ec-57ee-425b-a202-ea037910337d",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Animated - Printing",
+              "value": "animated_printing"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "x_type": "relative_path",
+        "x_fixed_coordinate": 0.0,
+        "x_fixed_path": "0",
+        "x_fixed_path_loop": true,
+        "x_fixed_path_invert_loop": true,
+        "x_relative": 50.0,
+        "x_relative_print": 50.0,
+        "x_relative_path": "45, 45.5, 46, 46.5, 47, 47.5, 48, 48.5, 49, 49.5, 50, 50.5, 51, 51.5, 52, 52.5, 53, 53.5, 54, 54.5, 55",
+        "x_relative_path_loop": true,
+        "x_relative_path_invert_loop": true,
+        "y_type": "relative",
+        "y_fixed_coordinate": 0.0,
+        "y_fixed_path": "0",
+        "y_fixed_path_loop": true,
+        "y_fixed_path_invert_loop": true,
+        "y_relative": 50.0,
+        "y_relative_print": 50.0,
+        "y_relative_path": "50",
+        "y_relative_path_loop": true,
+        "y_relative_path_invert_loop": true
+      },
+      "48413ad7-8345-4da5-af0b-a4f7a4350fc3": {
+        "name": "Back Right",
+        "description": "Stabilized the extruder to the back right for most triggers.  For snap to print triggers, the extruder will be moved as closely as possible to the stabilization positions depending on the trigger options.",
+        "guid": "48413ad7-8345-4da5-af0b-a4f7a4350fc3",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Back Right",
+              "value": "back_right"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "x_type": "relative",
+        "x_fixed_coordinate": 0.0,
+        "x_fixed_path": "0",
+        "x_fixed_path_loop": true,
+        "x_fixed_path_invert_loop": true,
+        "x_relative": 99.0,
+        "x_relative_print": 100.0,
+        "x_relative_path": "100.0",
+        "x_relative_path_loop": true,
+        "x_relative_path_invert_loop": true,
+        "y_type": "relative",
+        "y_fixed_coordinate": 0.0,
+        "y_fixed_path": "0",
+        "y_fixed_path_loop": true,
+        "y_fixed_path_invert_loop": true,
+        "y_relative": 99.0,
+        "y_relative_print": 100.0,
+        "y_relative_path": "100",
+        "y_relative_path_loop": true,
+        "y_relative_path_invert_loop": true
+      },
+      "93036d8c-de74-4fc9-96aa-d9bb410df9b0": {
+        "name": "Back Left",
+        "description": "Stabilized the extruder to the back left for most triggers. For snap to print triggers, the extruder will be moved as closely as possible to the stabilization positions depending on the trigger options.",
+        "guid": "93036d8c-de74-4fc9-96aa-d9bb410df9b0",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Back Left",
+              "value": "back_left"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "x_type": "relative",
+        "x_fixed_coordinate": 0.0,
+        "x_fixed_path": "0",
+        "x_fixed_path_loop": true,
+        "x_fixed_path_invert_loop": true,
+        "x_relative": 1.0,
+        "x_relative_print": 50.0,
+        "x_relative_path": "50.0",
+        "x_relative_path_loop": true,
+        "x_relative_path_invert_loop": true,
+        "y_type": "relative",
+        "y_fixed_coordinate": 0.0,
+        "y_fixed_path": "0",
+        "y_fixed_path_loop": true,
+        "y_fixed_path_invert_loop": true,
+        "y_relative": 99.0,
+        "y_relative_print": 50.0,
+        "y_relative_path": "50",
+        "y_relative_path_loop": true,
+        "y_relative_path_invert_loop": true
+      },
+      "40b1aeba-af5c-4042-88d6-c571412e3fcf": {
+        "name": "Back Center",
+        "description": "Stabilized the extruder to the back center for most triggers.  For snap to print triggers, the extruder will be moved as closely as possible to the stabilization positions depending on the trigger options.",
+        "guid": "40b1aeba-af5c-4042-88d6-c571412e3fcf",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Back Center",
+              "value": "back_center"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "x_type": "relative",
+        "x_fixed_coordinate": 0.0,
+        "x_fixed_path": "0",
+        "x_fixed_path_loop": true,
+        "x_fixed_path_invert_loop": true,
+        "x_relative": 50.0,
+        "x_relative_print": 100.0,
+        "x_relative_path": "100.0",
+        "x_relative_path_loop": true,
+        "x_relative_path_invert_loop": true,
+        "y_type": "relative",
+        "y_fixed_coordinate": 0.0,
+        "y_fixed_path": "0",
+        "y_fixed_path_loop": true,
+        "y_fixed_path_invert_loop": true,
+        "y_relative": 99.0,
+        "y_relative_print": 100.0,
+        "y_relative_path": "100",
+        "y_relative_path_loop": true,
+        "y_relative_path_invert_loop": true
+      }
+    },
+    "current_trigger_profile_guid": "c44de27e-053e-4a89-900f-c89502fec7ee",
+    "triggers": {
+      "f8e5e1a2-a54c-489b-961b-2530648e1625": {
+        "name": "Smart - High Quality",
+        "description": "Takes a snapshot on every layer with an emphasis on quality.  It attempts to reduce the travel distance as much as possible, but only if substantial travel savings are detected.  This trigger will not allow snapshots during an extrusion.  This trigger will not work with vase mode prints.",
+        "guid": "f8e5e1a2-a54c-489b-961b-2530648e1625",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Smart - High Quality",
+              "value": "smart_high_quality"
+            }
+          ],
+          "version": "1.1",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "trigger_type": "smart",
+        "smart_layer_trigger_type": 3,
+        "smart_layer_snap_to_print_high_quality": false,
+        "smart_layer_snap_to_print_smooth": false,
+        "smart_layer_disable_z_lift": true,
+        "is_default": false,
+        "trigger_subtype": "layer",
+        "timer_trigger_seconds": 30,
+        "layer_trigger_height": 0.0,
+        "position_restrictions_enabled": false,
+        "position_restrictions": [],
+        "require_zhop": false,
+        "extruder_state_requirements_enabled": true,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_extruding": "trigger_on",
+        "trigger_on_primed": "trigger_on",
+        "trigger_on_retracting_start": "",
+        "trigger_on_retracting": "",
+        "trigger_on_partially_retracted": "forbidden",
+        "trigger_on_retracted": "trigger_on",
+        "trigger_on_deretracting_start": "",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_deretracted": "forbidden"
+      },
+      "322d69ef-e7cb-454a-916a-15856682932c": {
+        "name": "Smart - Fast (low quality)",
+        "description": "Takes a snapshot on every layer with an emphasis on speed.  This trigger always chooses the closest position, which is usually an extrusion, and can cause significant artifacts/quality issues.  However, this trigger can be useful if your print contains a wipe tower that is the closest object on your print to the selected stabilization point, or if there is an ooze shield around the print.\n\nThe smart trigger pre-processes your gcode in order to choose better stabilization points, reducing travel time.  This trigger is configured for compatibility with different slicers and printers.",
+        "guid": "322d69ef-e7cb-454a-916a-15856682932c",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Smart - Fast (low quality)",
+              "value": "smart_fast"
+            }
+          ],
+          "version": "1.1",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "trigger_type": "smart",
+        "smart_layer_trigger_type": 1,
+        "smart_layer_snap_to_print_high_quality": false,
+        "smart_layer_snap_to_print_smooth": false,
+        "smart_layer_disable_z_lift": true,
+        "is_default": false,
+        "trigger_subtype": "layer",
+        "timer_trigger_seconds": 30,
+        "layer_trigger_height": 0.0,
+        "position_restrictions_enabled": false,
+        "position_restrictions": [],
+        "require_zhop": false,
+        "extruder_state_requirements_enabled": true,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_extruding": "trigger_on",
+        "trigger_on_primed": "trigger_on",
+        "trigger_on_retracting_start": "",
+        "trigger_on_retracting": "",
+        "trigger_on_partially_retracted": "forbidden",
+        "trigger_on_retracted": "trigger_on",
+        "trigger_on_deretracting_start": "",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_deretracted": "forbidden"
+      },
+      "3badd311-31f4-4cb9-b4d4-9d8640f4f761": {
+        "name": "Timer - Every 1:00",
+        "description": "This is the classic timer trigger.  Will take a snapshot approximately every minute.\n\nNot recommended for vase mode prints!",
+        "guid": "3badd311-31f4-4cb9-b4d4-9d8640f4f761",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Classic - Timer 1m 00s",
+              "value": "timer_60_sec"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "trigger_type": "real-time",
+        "smart_layer_trigger_type": 2,
+        "smart_layer_snap_to_print_high_quality": false,
+        "smart_layer_snap_to_print_smooth": false,
+        "smart_layer_disable_z_lift": true,
+        "is_default": false,
+        "trigger_subtype": "timer",
+        "timer_trigger_seconds": 60,
+        "layer_trigger_height": 0.0,
+        "position_restrictions_enabled": false,
+        "position_restrictions": [],
+        "require_zhop": false,
+        "extruder_state_requirements_enabled": true,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_extruding": "trigger_on",
+        "trigger_on_primed": "trigger_on",
+        "trigger_on_retracting_start": "",
+        "trigger_on_retracting": "",
+        "trigger_on_partially_retracted": "forbidden",
+        "trigger_on_retracted": "trigger_on",
+        "trigger_on_deretracting_start": "",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_deretracted": "forbidden"
+      },
+      "d1fc80ed-3482-419b-a00d-374f682ee13c": {
+        "name": "Timer - Every 0:30",
+        "description": "This is the classic timer trigger.  Will take a snapshot approximately every 30 seconds.\n\nNot recommended for vase mode prints!",
+        "guid": "d1fc80ed-3482-419b-a00d-374f682ee13c",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Classic - Timer 0m 30s",
+              "value": "timer_30_sec"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "trigger_type": "real-time",
+        "smart_layer_trigger_type": 2,
+        "smart_layer_snap_to_print_high_quality": false,
+        "smart_layer_snap_to_print_smooth": false,
+        "smart_layer_disable_z_lift": true,
+        "is_default": false,
+        "trigger_subtype": "timer",
+        "timer_trigger_seconds": 30,
+        "layer_trigger_height": 0.0,
+        "position_restrictions_enabled": false,
+        "position_restrictions": [],
+        "require_zhop": false,
+        "extruder_state_requirements_enabled": true,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_extruding": "trigger_on",
+        "trigger_on_primed": "trigger_on",
+        "trigger_on_retracting_start": "",
+        "trigger_on_retracting": "",
+        "trigger_on_partially_retracted": "forbidden",
+        "trigger_on_retracted": "trigger_on",
+        "trigger_on_deretracting_start": "",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_deretracted": "forbidden"
+      },
+      "e93e644a-cc3f-42bc-81ad-c1c87ef92ad1": {
+        "name": "Classic - Every 0.5mm",
+        "description": "This is the classic, real-time layer trigger that will take snapshots at most once every 0.5mm.  This can be used to reduce snapshot time for very tall prints or with very low layer heights.  Triggers as soon as possible after a layer change.  Depending on the quality settings, the snapshot might not be taken exactly on the layer change, and it's possible that snapshots can be missed on some layers.",
+        "guid": "e93e644a-cc3f-42bc-81ad-c1c87ef92ad1",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Classic - Layer 0.5mm",
+              "value": "layer_0.5mm"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "trigger_type": "real-time",
+        "smart_layer_trigger_type": 2,
+        "smart_layer_snap_to_print_high_quality": false,
+        "smart_layer_snap_to_print_smooth": false,
+        "smart_layer_disable_z_lift": true,
+        "is_default": false,
+        "trigger_subtype": "layer",
+        "timer_trigger_seconds": 30,
+        "layer_trigger_height": 0.5,
+        "position_restrictions_enabled": false,
+        "position_restrictions": [],
+        "require_zhop": false,
+        "extruder_state_requirements_enabled": true,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_extruding": "trigger_on",
+        "trigger_on_primed": "trigger_on",
+        "trigger_on_retracting_start": "",
+        "trigger_on_retracting": "",
+        "trigger_on_partially_retracted": "forbidden",
+        "trigger_on_retracted": "trigger_on",
+        "trigger_on_deretracting_start": "",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_deretracted": "forbidden"
+      },
+      "0713c9c9-7562-4a04-81e0-9f2f8953e069": {
+        "name": "Smart - Snap To Print",
+        "description": "This smart layer trigger keeps your extruder over your printed part while taking a snapshot.  As long as your camera is quick to return a snapshot, and there are no communication delays with your printer, this stabilization is very low impact.  Since there are no extra travel movements, it is the fastest trigger available, and adds very little time to your print.  \n\nConsider trying this trigger with the 'disabled' stabilization profile for an interesting effect, depending on the model you're printing.\n\nThis stabilization is suitable for vase mode prints, but may take snapshots more often than normal if you have not entered a 'Layer Height' into your slicer settings.  If you are using 'automatic' slicer settings, this will happen for you.\n\nThe smart trigger pre-processes your gcode in order to choose better stabilization points, reducing travel time.  This trigger is configured for compatibility with different slicers and printers.",
+        "guid": "0713c9c9-7562-4a04-81e0-9f2f8953e069",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Smart - Snap To Print",
+              "value": "smart_snap_to_print"
+            }
+          ],
+          "version": "1.1",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "trigger_type": "smart",
+        "smart_layer_trigger_type": 0,
+        "smart_layer_snap_to_print_high_quality": false,
+        "smart_layer_snap_to_print_smooth": false,
+        "smart_layer_disable_z_lift": true,
+        "is_default": false,
+        "trigger_subtype": "layer",
+        "timer_trigger_seconds": 30,
+        "layer_trigger_height": 0.0,
+        "position_restrictions_enabled": false,
+        "position_restrictions": [],
+        "require_zhop": false,
+        "extruder_state_requirements_enabled": true,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_extruding": "trigger_on",
+        "trigger_on_primed": "trigger_on",
+        "trigger_on_retracting_start": "",
+        "trigger_on_retracting": "",
+        "trigger_on_partially_retracted": "forbidden",
+        "trigger_on_retracted": "trigger_on",
+        "trigger_on_deretracting_start": "",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_deretracted": "forbidden"
+      },
+      "4e1302c8-c0a2-433c-9281-5247ba6de963": {
+        "name": "Smart - Snap To Print - High Quality",
+        "description": "This smart layer trigger keeps your extruder over your printed part while taking a snapshot.  As long as your camera is quick to return a snapshot, and there are no communication delays with your printer, this stabilization is very low impact.  Since there are no extra travel movements, it is the fastest trigger available, and adds very little time to your print.  \n\nConsider trying this trigger with the 'disabled' stabilization profile for an interesting effect, depending on the model you're printing.\n\nThis stabilization is suitable for vase mode prints, but may take snapshots more often than normal if you have not entered a 'Layer Height' into your slicer settings.  If you are using 'automatic' slicer settings, this will happen for you.\n\nThe smart trigger pre-processes your gcode in order to choose better stabilization points, reducing travel time.  This trigger is configured for compatibility with different slicers and printers.",
+        "guid": "4e1302c8-c0a2-433c-9281-5247ba6de963",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Smart - Snap To Print - High Quality",
+              "value": "smart_snap_to_print_high_quality"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": true
+        },
+        "trigger_type": "smart",
+        "smart_layer_trigger_type": 0,
+        "smart_layer_snap_to_print_high_quality": true,
+        "smart_layer_snap_to_print_smooth": false,
+        "smart_layer_disable_z_lift": true,
+        "is_default": false,
+        "trigger_subtype": "layer",
+        "timer_trigger_seconds": 30,
+        "layer_trigger_height": 0.0,
+        "position_restrictions_enabled": false,
+        "position_restrictions": [],
+        "require_zhop": false,
+        "extruder_state_requirements_enabled": true,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_extruding": "trigger_on",
+        "trigger_on_primed": "trigger_on",
+        "trigger_on_retracting_start": "",
+        "trigger_on_retracting": "",
+        "trigger_on_partially_retracted": "forbidden",
+        "trigger_on_retracted": "trigger_on",
+        "trigger_on_deretracting_start": "",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_deretracted": "forbidden"
+      },
+      "b852dc57-4d8e-457f-825f-2d13d0b1f825": {
+        "name": "Smart - Snap To Print - Smooth",
+        "description": "This smart layer trigger keeps your extruder over your printed part while taking a snapshot.  As long as your camera is quick to return a snapshot, and there are no communication delays with your printer, this stabilization is very low impact.  Since there are no extra travel movements, it is the fastest trigger available, and adds very little time to your print.  \n\nConsider trying this trigger with the 'disabled' stabilization profile for an interesting effect, depending on the model you're printing.\n\nThis stabilization is suitable for vase mode prints, but may take snapshots more often than normal if you have not entered a 'Layer Height' into your slicer settings.  If you are using 'automatic' slicer settings, this will happen for you.\n\nThe smart trigger pre-processes your gcode in order to choose better stabilization points, reducing travel time.  This trigger is configured for compatibility with different slicers and printers.",
+        "guid": "b852dc57-4d8e-457f-825f-2d13d0b1f825",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Smart - Snap To Print - Smooth",
+              "value": "smart_snap_to_print_smooth"
+            }
+          ],
+          "version": "1.1",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "trigger_type": "smart",
+        "smart_layer_trigger_type": 0,
+        "smart_layer_snap_to_print_high_quality": false,
+        "smart_layer_snap_to_print_smooth": true,
+        "smart_layer_disable_z_lift": true,
+        "is_default": false,
+        "trigger_subtype": "layer",
+        "timer_trigger_seconds": 30,
+        "layer_trigger_height": 0.0,
+        "position_restrictions_enabled": false,
+        "position_restrictions": [],
+        "require_zhop": false,
+        "extruder_state_requirements_enabled": true,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_extruding": "trigger_on",
+        "trigger_on_primed": "trigger_on",
+        "trigger_on_retracting_start": "",
+        "trigger_on_retracting": "",
+        "trigger_on_partially_retracted": "forbidden",
+        "trigger_on_retracted": "trigger_on",
+        "trigger_on_deretracting_start": "",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_deretracted": "forbidden"
+      },
+      "d15086ca-f785-4368-ab37-ce2a3e45d3f4": {
+        "name": "Classic - Every Layer",
+        "description": "This is the classic, real-time layer trigger.  Triggers as soon as possible after a layer change.  Depending on the quality settings, the snapshot might not be taken exactly on the layer change, and it's possible that snapshots can be missed on some layers.",
+        "guid": "d15086ca-f785-4368-ab37-ce2a3e45d3f4",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Classic - Layer",
+              "value": "layer"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "trigger_type": "real-time",
+        "smart_layer_trigger_type": 2,
+        "smart_layer_snap_to_print_high_quality": false,
+        "smart_layer_snap_to_print_smooth": false,
+        "smart_layer_disable_z_lift": true,
+        "is_default": false,
+        "trigger_subtype": "layer",
+        "timer_trigger_seconds": 30,
+        "layer_trigger_height": 0.0,
+        "position_restrictions_enabled": false,
+        "position_restrictions": [],
+        "require_zhop": false,
+        "extruder_state_requirements_enabled": true,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_extruding": "trigger_on",
+        "trigger_on_primed": "trigger_on",
+        "trigger_on_retracting_start": "",
+        "trigger_on_retracting": "",
+        "trigger_on_partially_retracted": "forbidden",
+        "trigger_on_retracted": "trigger_on",
+        "trigger_on_deretracting_start": "",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_deretracted": "forbidden"
+      },
+      "11db06c4-b80d-4e68-87d4-41729864e181": {
+        "name": "Classic - Gcode",
+        "description": "The classic real-time gcode trigger.  It will trigger any time the snapshot gocde (see your current Octolapse printer profile for the snapshot gcode, but it is 'snap' by defualt)",
+        "guid": "11db06c4-b80d-4e68-87d4-41729864e181",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Classic - Gcode",
+              "value": "gcode"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "trigger_type": "real-time",
+        "smart_layer_trigger_type": 2,
+        "smart_layer_snap_to_print_high_quality": false,
+        "smart_layer_snap_to_print_smooth": false,
+        "smart_layer_disable_z_lift": true,
+        "is_default": false,
+        "trigger_subtype": "gcode",
+        "timer_trigger_seconds": 30,
+        "layer_trigger_height": 0.0,
+        "position_restrictions_enabled": false,
+        "position_restrictions": [],
+        "require_zhop": false,
+        "extruder_state_requirements_enabled": false,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_extruding": "trigger_on",
+        "trigger_on_primed": "trigger_on",
+        "trigger_on_retracting_start": "",
+        "trigger_on_retracting": "",
+        "trigger_on_partially_retracted": "forbidden",
+        "trigger_on_retracted": "trigger_on",
+        "trigger_on_deretracting_start": "",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_deretracted": "forbidden"
+      },
+      "c44de27e-053e-4a89-900f-c89502fec7ee": {
+        "name": "Smart - Compatibility",
+        "description": "Takes a snapshot on every layer with an emphasis on compatibility.  This trigger will return the closest high quality position if one is available.  If no high quality point can be found, it will return the next best points, including extrusions. Because of this it will usually take a snapshot on every layer, regardless of slicer settings.  This trigger will not work with vase mode prints, but will leave substantial artifacts and is not recommended.  Use one of the 'Snap To Print' stabilizations for vase mode prints.\n\nThe smart trigger pre-processes your gcode in order to choose better stabilization points, reducing travel time.  This trigger is configured for compatibility with different slicers and printers.",
+        "guid": "c44de27e-053e-4a89-900f-c89502fec7ee",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Smart - Compatibility",
+              "value": "smart_compatibility"
+            }
+          ],
+          "version": "1.1",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "trigger_type": "smart",
+        "smart_layer_trigger_type": 2,
+        "smart_layer_snap_to_print_high_quality": false,
+        "smart_layer_snap_to_print_smooth": false,
+        "smart_layer_disable_z_lift": true,
+        "is_default": false,
+        "trigger_subtype": "layer",
+        "timer_trigger_seconds": 30,
+        "layer_trigger_height": 0.0,
+        "position_restrictions_enabled": false,
+        "position_restrictions": [],
+        "require_zhop": false,
+        "extruder_state_requirements_enabled": true,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_extruding": "trigger_on",
+        "trigger_on_primed": "trigger_on",
+        "trigger_on_retracting_start": "",
+        "trigger_on_retracting": "",
+        "trigger_on_partially_retracted": "forbidden",
+        "trigger_on_retracted": "trigger_on",
+        "trigger_on_deretracting_start": "",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_deretracted": "forbidden"
+      },
+      "b838fe36-1459-4867-8243-ab7604cf0e2d": {
+        "name": "Smart - Gcode",
+        "description": "Takes a snapshot each time the snapshot command is encountered.  The snapshot command is @OCTOLAPSE TAKE-SNAPSHOT, but you can specify an alternative snapshot command within your printer profile if you desire.",
+        "guid": "b838fe36-1459-4867-8243-ab7604cf0e2d",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Smart - Gcode",
+              "value": "smart_gcode"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "trigger_type": "smart",
+        "smart_layer_trigger_type": 1,
+        "smart_layer_snap_to_print_high_quality": false,
+        "smart_layer_snap_to_print_smooth": false,
+        "smart_layer_disable_z_lift": true,
+        "is_default": false,
+        "trigger_subtype": "gcode",
+        "timer_trigger_seconds": 30,
+        "layer_trigger_height": 0.0,
+        "position_restrictions_enabled": false,
+        "position_restrictions": [],
+        "require_zhop": false,
+        "extruder_state_requirements_enabled": true,
+        "trigger_on_extruding_start": "trigger_on",
+        "trigger_on_extruding": "trigger_on",
+        "trigger_on_primed": "trigger_on",
+        "trigger_on_retracting_start": "",
+        "trigger_on_retracting": "",
+        "trigger_on_partially_retracted": "forbidden",
+        "trigger_on_retracted": "trigger_on",
+        "trigger_on_deretracting_start": "",
+        "trigger_on_deretracting": "forbidden",
+        "trigger_on_deretracted": "forbidden"
+      }
+    },
+    "current_rendering_profile_guid": "b87d49db-72de-4285-87f6-50b8044d42b6",
+    "renderings": {
+      "694b4038-c83d-4edf-a61a-eb767854d882": {
+        "name": "GIF - Fixed Length - 00:05",
+        "description": "Generates a GIF with a fixed length of 5 seconds. Adds 2 seconds of pre-roll using the first frame and 2 seconds of post-roll using the last frame.",
+        "guid": "694b4038-c83d-4edf-a61a-eb767854d882",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "GIF - Fixed Length - 00:05",
+              "value": "gif_fixed_length_05"
+            }
+          ],
+          "version": "1.1",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "enabled": true,
+        "fps_calculation_type": "duration",
+        "run_length_seconds": 5,
+        "fps": 30,
+        "max_fps": 120.0,
+        "min_fps": 2.0,
+        "output_format": "gif",
+        "sync_with_timelapse": true,
+        "bitrate": "6000k",
+        "post_roll_seconds": 2,
+        "pre_roll_seconds": 2,
+        "output_template": "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}",
+        "enable_watermark": false,
+        "selected_watermark": "",
+        "overlay_text_template": "",
+        "overlay_font_path": "",
+        "overlay_font_size": 10,
+        "overlay_text_pos": "[0,0]",
+        "overlay_text_alignment": "left",
+        "overlay_text_valign": "top",
+        "overlay_text_halign": "left",
+        "overlay_text_color": [ 255, 255, 255, 1 ],
+        "overlay_outline_color": [ 0, 0, 0, 1.0 ],
+        "overlay_outline_width": 1,
+        "thread_count": 1,
+        "archive_snapshots": false,
+        "cleanup_after_render_fail": true
+      },
+      "d4898ba7-8d27-4479-b7d8-34c063ae7a68": {
+        "name": "MP4 - 30 FPS",
+        "description": "Generates an MP4 at a constant 30FPS. Adds 2 seconds of pre-roll using the first frame and 2 seconds of post-roll using the last frame.",
+        "guid": "d4898ba7-8d27-4479-b7d8-34c063ae7a68",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "MP4 - 30 FPS",
+              "value": "mp4_fixed_fps_30"
+            }
+          ],
+          "version": "1.1",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "enabled": true,
+        "fps_calculation_type": "static",
+        "run_length_seconds": 5,
+        "fps": 30,
+        "max_fps": 120.0,
+        "min_fps": 2.0,
+        "output_format": "mp4",
+        "sync_with_timelapse": true,
+        "bitrate": "6000k",
+        "post_roll_seconds": 2,
+        "pre_roll_seconds": 2,
+        "output_template": "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}",
+        "enable_watermark": false,
+        "selected_watermark": "",
+        "overlay_text_template": "",
+        "overlay_font_path": "",
+        "overlay_font_size": 10,
+        "overlay_text_pos": "[10, 10]",
+        "overlay_text_alignment": "left",
+        "overlay_text_valign": "top",
+        "overlay_text_halign": "left",
+        "overlay_text_color": [ 255, 255, 255, 1 ],
+        "overlay_outline_color": [ 0, 0, 0, 1.0 ],
+        "overlay_outline_width": 1,
+        "thread_count": 1,
+        "archive_snapshots": false
+      },
+      "c1f97198-49b1-4b4e-bd32-e65e470d5bca": {
+        "name": "MP4 - Fixed Length - 00:05",
+        "description": "Generates an MP4 with a fixed length of 5 seconds. Adds 2 seconds of pre-roll using the first frame and 2 seconds of post-roll using the last frame.",
+        "guid": "c1f97198-49b1-4b4e-bd32-e65e470d5bca",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "MP4 - Fixed Length - 00:05",
+              "value": "mp4_fixed_length_05"
+            }
+          ],
+          "version": "1.1",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "enabled": true,
+        "fps_calculation_type": "duration",
+        "run_length_seconds": 5,
+        "fps": 30,
+        "max_fps": 120.0,
+        "min_fps": 2.0,
+        "output_format": "mp4",
+        "sync_with_timelapse": true,
+        "bitrate": "6000k",
+        "post_roll_seconds": 2,
+        "pre_roll_seconds": 2,
+        "output_template": "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}",
+        "enable_watermark": false,
+        "selected_watermark": "",
+        "overlay_text_template": "",
+        "overlay_font_path": "",
+        "overlay_font_size": 10,
+        "overlay_text_pos": "[10,10]",
+        "overlay_text_alignment": "left",
+        "overlay_text_valign": "top",
+        "overlay_text_halign": "left",
+        "overlay_text_color": [ 255, 255, 255, 1 ],
+        "overlay_outline_color": [ 0, 0, 0, 1.0 ],
+        "overlay_outline_width": 1,
+        "thread_count": 1,
+        "archive_snapshots": false,
+        "cleanup_after_render_fail": true
+      },
+      "7db3e7d6-3fe6-4955-8419-7f63a10d0eee": {
+        "name": "MP4 - Fixed Length - 00:10",
+        "description": "Generates an MP4 with a fixed length of 10 seconds. Adds 2 seconds of pre-roll using the first frame and 2 seconds of post-roll using the last frame.",
+        "guid": "7db3e7d6-3fe6-4955-8419-7f63a10d0eee",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "MP4 - Fixed Length - 00:10",
+              "value": "mp4_fixed_length_10"
+            }
+          ],
+          "version": "1.1",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "enabled": true,
+        "fps_calculation_type": "duration",
+        "run_length_seconds": 10,
+        "fps": 30,
+        "max_fps": 120.0,
+        "min_fps": 2.0,
+        "output_format": "mp4",
+        "sync_with_timelapse": true,
+        "bitrate": "6000k",
+        "post_roll_seconds": 2,
+        "pre_roll_seconds": 2,
+        "output_template": "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}",
+        "enable_watermark": false,
+        "selected_watermark": "",
+        "overlay_text_template": "",
+        "overlay_font_path": "",
+        "overlay_font_size": 10,
+        "overlay_text_pos": "[10, 10]",
+        "overlay_text_alignment": "left",
+        "overlay_text_valign": "top",
+        "overlay_text_halign": "left",
+        "overlay_text_color": [ 255, 255, 255, 1 ],
+        "overlay_outline_color": [ 0, 0, 0, 1.0 ],
+        "overlay_outline_width": 1,
+        "thread_count": 1,
+        "archive_snapshots": false
+      },
+      "b87d49db-72de-4285-87f6-50b8044d42b6": {
+        "name": "MP4 - 60 FPS",
+        "description": "Generates an MP4 at a constant 60FPS. Adds 2 seconds of pre-roll using the first frame and 2 seconds of post-roll using the last frame.",
+        "guid": "b87d49db-72de-4285-87f6-50b8044d42b6",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "MP4 - 60 FPS",
+              "value": "mp4_fixed_fps_60"
+            }
+          ],
+          "version": "1.1",
+          "suppress_update_notification_version": false,
+          "is_custom": false
+        },
+        "enabled": true,
+        "fps_calculation_type": "static",
+        "run_length_seconds": 5,
+        "fps": 60,
+        "max_fps": 120.0,
+        "min_fps": 2.0,
+        "output_format": "mp4",
+        "sync_with_timelapse": true,
+        "bitrate": "6000k",
+        "post_roll_seconds": 2,
+        "pre_roll_seconds": 2,
+        "output_template": "{FAILEDFLAG}{FAILEDSEPARATOR}{GCODEFILENAME}_{PRINTENDTIME}",
+        "enable_watermark": false,
+        "selected_watermark": "",
+        "overlay_text_template": "",
+        "overlay_font_path": "",
+        "overlay_font_size": 10,
+        "overlay_text_pos": "[10, 10]",
+        "overlay_text_alignment": "left",
+        "overlay_text_valign": "top",
+        "overlay_text_halign": "left",
+        "overlay_text_color": [ 255, 255, 255, 1 ],
+        "overlay_outline_color": [ 0, 0, 0, 1.0 ],
+        "overlay_outline_width": 1,
+        "thread_count": 1,
+        "archive_snapshots": false
+      }
+    },
+    "current_camera_profile_guid": "354def78-9eea-409a-ad23-ee966dfff4ba",
+    "cameras": {
+      "354def78-9eea-409a-ad23-ee966dfff4ba": {
+        "name": "Webcam - Default OctoPi 0.16.0",
+        "description": "This profile should work for the default settings within OctoPi V0.16.0 for most locally attached USB or Raspberry Pi cameras.",
+        "guid": "354def78-9eea-409a-ad23-ee966dfff4ba",
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Webcam - Default OctoPi 0.16.0",
+              "value": "webcam_octopi_0.16.0"
+            }
+          ],
+          "version": "1.0",
+          "suppress_update_notification_version": false,
+          "is_custom": true
+        },
+        "enabled": true,
+        "camera_type": "webcam",
+        "gcode_camera_script": "",
+        "on_print_start_script": "",
+        "on_before_snapshot_script": "",
+        "external_camera_snapshot_script": "",
+        "on_after_snapshot_script": "",
+        "on_before_render_script": "",
+        "on_after_render_script": "",
+        "on_print_end_script": "",
+        "delay": 125,
+        "timeout_ms": 5000,
+        "snapshot_transpose": "",
+        "webcam_settings": {
+          "address": "http://tako3.prefecture/webcam/",
+          "snapshot_request_template": "{camera_address}?action=snapshot",
+          "stream_template": "http://tako3.prefecture:8081/?action=stream",
+          "ignore_ssl_error": true,
+          "server_type": "mjpg-streamer",
+          "username": "",
+          "password": "",
+          "type": null,
+          "use_custom_webcam_settings_page": true,
+          "mjpg_streamer": {
+            "name": "mjpg-streamer",
+            "server_type": "mjpg-streamer",
+            "controls": {}
+          },
+          "stream_download": false
+        },
+        "enable_custom_image_preferences": false,
+        "apply_settings_before_print": true,
+        "apply_settings_at_startup": true
+      }
+    },
+    "current_logging_profile_guid": "afbe12d6-0dee-4911-b77e-ee9ebfae7521",
+    "logging": {
+      "4d7411e9-f97e-41c0-921c-02e262660e83": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Log Parsing/Preprocessing/Position Tracking",
+              "value": "c++"
+            }
+          ],
+          "suppress_update_notification_version": false,
+          "is_custom": false,
+          "version": "1.0"
+        },
+        "name": "Log Parsing/Preprocessing/Position Tracking",
+        "log_to_console": false,
+        "enabled": true,
+        "default_log_level": 10,
+        "guid": "4d7411e9-f97e-41c0-921c-02e262660e83",
+        "enabled_loggers": [
+          {
+            "log_level": 5,
+            "name": "octolapse.stabilization_gcode"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.snapshot_plan"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.gcode_commands"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.gcode_position"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.settings_preprocessor"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.gcode_parser"
+          }
+        ],
+        "description": "This logging profile is useful for debugging problems parsing gcode, tracking the printer's position and state, or preprocessing gcode to create snapshot plans using the new smart layer trigger.  This profile will create very large log files and will make preprocessing VERY VERY slow, so use this only when necessary to solve a specific issue."
+      },
+      "afbe12d6-0dee-4911-b77e-ee9ebfae7521": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Log All Errors - Recommended",
+              "value": "errors"
+            }
+          ],
+          "suppress_update_notification_version": false,
+          "is_custom": false,
+          "version": "1.0"
+        },
+        "name": "Log All Errors",
+        "log_to_console": false,
+        "enabled": false,
+        "default_log_level": 10,
+        "guid": "afbe12d6-0dee-4911-b77e-ee9ebfae7521",
+        "enabled_loggers": [],
+        "description": "Logs only errors and exceptions.  This is the recommended default profile, logs a minimal amount of data, and has a low impact on performance."
+      },
+      "a417b5bf-9d26-4456-81ec-ba2f04f57084": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Debug Logging",
+              "value": "debug"
+            }
+          ],
+          "suppress_update_notification_version": false,
+          "is_custom": false,
+          "version": "1.0"
+        },
+        "name": "Debug",
+        "log_to_console": false,
+        "enabled": true,
+        "default_log_level": 10,
+        "guid": "a417b5bf-9d26-4456-81ec-ba2f04f57084",
+        "enabled_loggers": [
+          {
+            "log_level": 10,
+            "name": "octolapse.__init__"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.camera"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.stabilization_gcode"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.gcode_commands"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.gcode_position"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.settings_preprocessor"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.messenger_worker"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.position"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.render"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.settings"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.settings_migration"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.snapshot"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.snapshot_plan"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.stabilization_preprocessing"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.timelapse"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.trigger"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.utility"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.settings_external"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.gcode_processor"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.gcode_parser"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.script"
+          },
+          {
+            "log_level": 10,
+            "name": "octolapse.migration"
+          }
+        ],
+        "description": "Logs all but verbose messages.  This will create a very large log file that can affect performance, so only use this when necessary.  This is useful for debugging issues, or for submitting error reports in the github repository."
+      },
+      "02717525-3684-4bf7-ac53-037cdfbd4e66": {
+        "automatic_configuration": {
+          "key_values": [
+            {
+              "name": "Log Everything",
+              "value": "verbose"
+            }
+          ],
+          "suppress_update_notification_version": false,
+          "is_custom": false,
+          "version": "1.0"
+        },
+        "name": "Log Everything",
+        "log_to_console": false,
+        "enabled": true,
+        "default_log_level": 10,
+        "guid": "02717525-3684-4bf7-ac53-037cdfbd4e66",
+        "enabled_loggers": [
+          {
+            "log_level": 5,
+            "name": "octolapse.stabilization_gcode"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.snapshot_plan"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.gcode_commands"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.gcode_position"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.settings_preprocessor"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.__init__"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.camera"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.messenger_worker"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.position"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.render"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.settings"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.settings_external"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.settings_migration"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.snapshot"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.stabilization_preprocessing"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.timelapse"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.trigger"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.utility"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.gcode_processor"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.gcode_parser"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.script"
+          },
+          {
+            "log_level": 5,
+            "name": "octolapse.migration"
+          }
+        ],
+        "description": "This will log absolutely everything that Octolapse is capable of logging.  It will severely impact performance, and is only recommended for very difficult to debug or uncommon errors.  I do not recommend you use this profile unless you are asked for a verbose log after creating an issue in the Octolapse Github repository."
+      }
+    }
+  },
+  "global_options": null,
+  "upgrade_info": {
+    "previous_version": null,
+    "was_upgraded": false
+  }
+}

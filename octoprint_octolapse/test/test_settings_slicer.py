@@ -1,7 +1,7 @@
 # coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -44,4 +44,4 @@ class TestSettingsSlicer(unittest.TestCase):
         with open(file_path) as settingsJson:
             data = json.load(settingsJson)
             loaded_settings = OctolapseSettings.create_from("c:\\temp\\temp.log", "0.3.4", data)
-            self.assertNotEqual(loaded_settings.profiles.debug[0].name, "Default Debug")
+            self.assertNotEqual(loaded_settings.profiles.logging[0].name, "Default Logging")

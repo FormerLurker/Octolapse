@@ -1,7 +1,7 @@
 # coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2019  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -22,18 +22,25 @@
 ##################################################################################
 from __future__ import unicode_literals
 import json
-import six
+# remove unused imports
+# import six
 import octoprint_octolapse.utility as utility
+import octoprint_octolapse.script as script
 from threading import Thread
 import time
+import uuid
+import shutil
 # This file is subject to the terms and conditions defined in
 # file called 'LICENSE', which is part of this source code package.
 import requests
 import os
+import errno
 # Todo:  Do we need to add this to setup.py?
-from requests.auth import HTTPBasicAuth
+# remove unused import
+# from requests.auth import HTTPBasicAuth
 from requests.exceptions import SSLError
 from octoprint_octolapse.settings import CameraProfile, MjpgStreamerControl, MjpgStreamer
+from tempfile import mkdtemp
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -73,7 +80,9 @@ class CameraControl(object):
 
         server_types = camera_files["server_types"]
         # loop through each server type
-        for key, server_type in six.iteritems(server_types):
+        # remove python 2 compatibility
+        # for key, server_type in six.iteritems(server_types):
+        for key, server_type in server_types.items():
             camera_types["server_types"][key] = {'cameras': {}}
             # load all of the individual camera type info files for the current server
             for file_name in server_type["file_names"]:
@@ -120,7 +129,9 @@ class CameraControl(object):
                     control_setting.update(control)
                     controls[control_setting.id] = control_setting
             elif isinstance(data, dict):
-                for key, control in six.iteritems(data):
+                # remove python 2 compatibility
+                # for key, control in six.iteritems(data):
+                for key, control in data.items():
                     control_setting = MjpgStreamerControl()
                     control_setting.update(control)
                     controls[key] = control_setting
@@ -136,7 +147,9 @@ class CameraControl(object):
         cameras = CameraControl.camera_types["server_types"][server_type]["cameras"]
 
         # iterate the cameras dictionary for the given server type if possible
-        for key, camera in six.iteritems(cameras):
+        # remove python 2 compatibility
+        # for key, camera in six.iteritems(cameras):
+        for key, camera in cameras.items():
             # see if the current camera type matches the given data
             if CameraControl._is_webcam_type(server_type, camera, data):
                 return {
@@ -166,24 +179,22 @@ class CameraControl(object):
         return False
 
     @staticmethod
-    def apply_camera_settings(cameras, timeout_seconds=5):
+    def apply_camera_settings(cameras, retries=3, backoff_factor=0.1, no_wait=False):
         errors = []
 
         # make sure the supplied cameras are enabled and either webcams or script cameras
         cameras = [x for x in cameras if x.camera_type in [
-            CameraProfile.camera_type_webcam,
-            CameraProfile.camera_type_script
+            CameraProfile.camera_type_webcam
         ]]
 
         # create the threads
         threads = []
         for current_camera in cameras:
             thread = None
-            if current_camera.camera_type == CameraProfile.camera_type_webcam:
-                if current_camera.webcam_settings.server_type == MjpgStreamer.server_type:
-                    thread = MjpgStreamerSettingsThread(profile=current_camera)
-            elif current_camera.camera_type == CameraProfile.camera_type_script:
-                thread = CameraSettingScriptThread(current_camera)
+
+            if current_camera.webcam_settings.server_type == MjpgStreamer.server_type:
+                thread = MjpgStreamerSettingsThread(profile=current_camera, retries=retries, backoff_factor=backoff_factor)
+                thread.daemon = True
 
             if thread:
                 threads.append(thread)
@@ -191,19 +202,102 @@ class CameraControl(object):
         # start the threads
         for thread in threads:
             thread.start()
+
+        if not no_wait:
+            # join the threads, but timeout in a reasonable way
+            for thread in threads:
+                thread.join(requests.packages.urllib3.util.retry.Retry.BACKOFF_MAX)
+                if not thread.success:
+                    for error in thread.errors:
+                        errors.append(error)
+            return len(errors) == 0, CameraControl._get_errors_string(errors)
+        return True, ""
+
+    @staticmethod
+    def run_on_print_start_script(cameras):
+        # build the arg list
+        args_list = []
+        # remove python 2 compatibility
+        # for key, camera in six.iteritems(cameras):
+        for key, camera in cameras.items():
+            script_path = camera.on_print_start_script.strip()
+            if not script_path or not camera.enabled:
+                # skip any cameras where there is no on print start script or the camera is disabled
+                continue
+            script_args = [camera.name]
+            script_type = 'on print start'
+
+            args = {
+                'camera': camera,
+                'script_path': script_path,
+                'script_args': script_args,
+                'script_type': script_type
+            }
+            args_list.append(args)
+
+        if len(args_list) > 0:
+            return CameraControl._run_camera_scripts(args_list)
+
+        return True, None
+
+    @staticmethod
+    def run_on_print_end_script(cameras):
+        # build the arg list
+        args_list = []
+        # remove python 2 compatibility
+        # for key, camera in six.iteritems(cameras):
+        for key, camera in cameras.items():
+            script_path = camera.on_print_end_script.strip()
+            if not script_path or not camera.enabled:
+                # skip any cameras where there is no on print start script or the camera is disabled
+                continue
+            script_args = [camera.name]
+            script_type = 'on print end'
+
+            args = {
+                'camera': camera,
+                'script_path': script_path,
+                'script_args': script_args,
+                'script_type': script_type
+            }
+            args_list.append(args)
+
+        if len(args_list) > 0:
+            return CameraControl._run_camera_scripts(args_list)
+        return True, None
+
+    @staticmethod
+    def _run_camera_scripts(args_list, timeout_seconds=5):
+        errors = []
+
+        # create the threads
+        threads = []
+        for args in args_list:
+            thread = CameraSettingScriptThread(
+                args['camera'],
+                args['script_path'],
+                args['script_args'],
+                args['script_type']
+            )
+            thread.daemon = True
+            threads.append(thread)
+
+        # start the threads
+        for thread in threads:
+            thread.start()
         start_time = time.time()
-        timeout_time = start_time + 5
+        timeout_time = start_time + timeout_seconds
         # join the threads, but timeout in a reasonable way
         for thread in threads:
             timeout_sec = timeout_time - time.time()
             if timeout_sec < 0:
                 timeout_sec = 0.001
             thread.join(timeout_sec)
-            if not thread.success:
-                for error in thread.errors:
-                    errors.append(error)
+            if thread.error:
+                errors.append(thread.error)
 
         return len(errors) == 0, CameraControl._get_errors_string(errors)
+
 
     @staticmethod
     def _get_errors_string(errors):
@@ -223,7 +317,6 @@ class CameraControl(object):
             unknown_errors = "{} unknown errors, check plugin.octolapse.log for details.".format(unknown_errors_count)
         return "{}{}".format(camera_errors, unknown_errors)
 
-
     @staticmethod
     def apply_webcam_setting(
         server_type,
@@ -232,19 +325,18 @@ class CameraControl(object):
         address,
         username,
         password,
-        ignore_ssl_error,
-        timeout_seconds=5
+        ignore_ssl_error
     ):
         if server_type == 'mjpg-streamer':
             thread = MjpgStreamerSettingThread(
                 setting,
-                camera_name=camera_name,
-                address=address,
-                username=username,
-                password=password,
-                ignore_ssl_error=ignore_ssl_error,
-                timeout_seconds=timeout_seconds
+                address,
+                username,
+                password,
+                ignore_ssl_error,
+                camera_name
             )
+            thread.daemon = True
             thread.start()
             thread.join()
             return thread.success, thread.errors
@@ -261,7 +353,8 @@ class CameraControl(object):
         username,
         password,
         ignore_ssl_error,
-        timeout_seconds=5
+        retries=3,
+        backoff_factor=0.1
     ):
         try:
             errors = []
@@ -274,8 +367,10 @@ class CameraControl(object):
                     password=password,
                     ignore_ssl_error=ignore_ssl_error,
                     camera_name=camera_name,
-                    timeout_seconds=timeout_seconds
+                    retries=retries,
+                    backoff_factor=backoff_factor
                 )
+                thread.daemon = True
                 thread.start()
                 thread.join()
                 if thread.errors:
@@ -332,14 +427,24 @@ class CameraControl(object):
     def _test_mjpg_streamer_control(camera_profile, timeout_seconds=2):
         url = camera_profile.webcam_settings.address + "?action=command&id=-1"
         try:
+            s = requests.Session()
+            s.verify = not camera_profile.webcam_settings.ignore_ssl_error
             if len(camera_profile.webcam_settings.username) > 0:
-                r = requests.get(url, auth=HTTPBasicAuth(camera_profile.webcam_settings.username,
-                                                         camera_profile.webcam_settings.password),
-                                 verify=not camera_profile.webcam_settings.ignore_ssl_error,
-                                 timeout=float(timeout_seconds))
-            else:
-                r = requests.get(
-                    url, verify=not camera_profile.webcam_settings.ignore_ssl_error, timeout=float(timeout_seconds))
+                s.auth = (
+                    camera_profile.webcam_settings.username,
+                    camera_profile.webcam_settings.password
+                )
+
+            r = utility.requests_retry_session(session=s).request("GET", url, timeout=timeout_seconds)
+
+            #if len(camera_profile.webcam_settings.username) > 0:
+            #    r = requests.get(url, auth=HTTPBasicAuth(camera_profile.webcam_settings.username,
+            #                                             camera_profile.webcam_settings.password),
+            #                     verify=not camera_profile.webcam_settings.ignore_ssl_error,
+            #                     timeout=float(timeout_seconds))
+            #else:
+            #    r = requests.get(
+            #        url, verify=not camera_profile.webcam_settings.ignore_ssl_error, timeout=float(timeout_seconds))
 
             webcam_server_type = CameraControl.get_webcam_server_type_from_request(r)
             if webcam_server_type != "mjpg-streamer":
@@ -350,15 +455,14 @@ class CameraControl(object):
                 raise CameraError('unknown-server-type', message)
             if r.status_code == 501:
                 message = "The server denied access to the mjpg-streamer control.htm for the '{0}' camera profile.  <a " \
-                          "href=\"https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting#why-cant-i-change" \
-                          "-contrast-zoom-focus-etc\" target = \"_blank\">Please see this link to correct this " \
+                          "href=\"https://github.com/FormerLurker/Octolapse/wiki/V0.4---Enabling-Camera-Controls\" target = \"_blank\">Please see this link to correct this " \
                           "error.</a>, or disable the 'Enable And Apply Preferences at Startup' and " \
                           "'Enable And Apply Preferences Before Print' options.".format(camera_profile.name)
                 logger.error(message)
-                raise CameraError("mjpg_streamer-control-error", message)
+                raise CameraError("mjpg_streamer_control_error", message)
             if r.status_code != requests.codes.ok:
                 message = "Status code received ({0}) was not OK.  Double check your webcam 'Base Addresss' address and " \
-                          "your 'Snapshot Address Template'.  Or, disable the 'Enable And Apply Preferences at Startup' " \
+                          "your 'Snapshot Address'.  Or, disable the 'Enable And Apply Preferences at Startup' " \
                           "and 'Enable And Apply Preferences Before Print' options for the {1} camera " \
                           "profile and try again.".format(r.status_code, camera_profile.name)
                 logger.error(message)
@@ -392,15 +496,27 @@ class CameraControl(object):
         # first see what kind of server we have
         url = format_request_template(
             camera_profile.webcam_settings.address, camera_profile.webcam_settings.snapshot_request_template, "")
+
         try:
+            s = requests.Session()
+            s.verify = not camera_profile.webcam_settings.ignore_ssl_error
             if len(camera_profile.webcam_settings.username) > 0:
-                r = requests.get(url, auth=HTTPBasicAuth(camera_profile.webcam_settings.username,
-                                                         camera_profile.webcam_settings.password),
-                                 verify=not camera_profile.webcam_settings.ignore_ssl_error,
-                                 timeout=float(timeout_seconds))
-            else:
-                r = requests.get(url, verify=not camera_profile.webcam_settings.ignore_ssl_error,
-                                 timeout=float(timeout_seconds))
+                s.auth = (
+                    camera_profile.webcam_settings.username,
+                    camera_profile.webcam_settings.password
+                )
+
+            r = utility.requests_retry_session(session=s).request("GET", url, timeout=timeout_seconds)
+
+
+        #    if len(camera_profile.webcam_settings.username) > 0:
+        #        r = requests.get(url, auth=HTTPBasicAuth(camera_profile.webcam_settings.username,
+        #                                                 camera_profile.webcam_settings.password),
+        #                         verify=not camera_profile.webcam_settings.ignore_ssl_error,
+        #                         timeout=float(timeout_seconds))
+        #    else:
+        #        r = requests.get(url, verify=not camera_profile.webcam_settings.ignore_ssl_error,
+        #                         timeout=float(timeout_seconds))
 
             webcam_server_type = CameraControl.get_webcam_server_type_from_request(r)
 
@@ -413,7 +529,7 @@ class CameraControl(object):
             raise CameraError('ssl-error', message, cause=e)
         except requests.ConnectionError as e:
             message = "Unable to connect to '{0}' for the '{1}' camera profile.  Please double check your 'Base Address' " \
-                      "and 'Snapshot Address Template' settings.".format(url, camera_profile.name)
+                      "and 'Snapshot Address' settings.".format(url, camera_profile.name)
             logger.exception(message)
             raise CameraError('connection-error', message, cause=e)
         except Exception as e:
@@ -451,14 +567,35 @@ class CameraControl(object):
         url = format_request_template(
             camera_profile.webcam_settings.address, camera_profile.webcam_settings.snapshot_request_template, "")
         try:
+            s = requests.Session()
+            s.verify = not camera_profile.webcam_settings.ignore_ssl_error
             if len(camera_profile.webcam_settings.username) > 0:
-                r = requests.get(url, auth=HTTPBasicAuth(camera_profile.webcam_settings.username,
-                                                         camera_profile.webcam_settings.password),
-                                 verify=not camera_profile.webcam_settings.ignore_ssl_error,
-                                 timeout=float(timeout_seconds))
-            else:
-                r = requests.get(
-                    url, verify=not camera_profile.webcam_settings.ignore_ssl_error, timeout=float(timeout_seconds))
+                s.auth = (
+                    camera_profile.webcam_settings.username,
+                    camera_profile.webcam_settings.password
+                )
+            retry_session = utility.requests_retry_session(session=s)
+            r = retry_session.get(url, stream=True, timeout=timeout_seconds)
+
+            body = []
+            start_time = time.time()
+            for chunk in r.iter_content(1024):
+                body.append(chunk)
+                if time.time() > (start_time + timeout_seconds):
+                    message = (
+                        "A read timeout occurred while connecting to {0} for the '{1}' camera profile.  Are you using the video stream URL by mistake?"
+                            .format(url, camera_profile.name)
+                    )
+                    logger.exception(message)
+                    raise CameraError('read-timeout', message)
+            #if len(camera_profile.webcam_settings.username) > 0:
+            #    r = requests.get(url, auth=HTTPBasicAuth(camera_profile.webcam_settings.username,
+            #                                             camera_profile.webcam_settings.password),
+            #                     verify=not camera_profile.webcam_settings.ignore_ssl_error,
+            #                     timeout=float(timeout_seconds))
+            #else:
+            #    r = requests.get(
+            #        url, verify=not camera_profile.webcam_settings.ignore_ssl_error, timeout=float(timeout_seconds))
             if r.status_code == requests.codes.ok:
                 if 'content-length' in r.headers and r.headers["content-length"] == 0:
                     message = "The request contained no data for the '{0}' camera profile.".format(camera_profile.name)
@@ -466,16 +603,20 @@ class CameraControl(object):
                     raise CameraError('request-contained-no-data', message)
                 elif "image/jpeg" not in r.headers["content-type"].lower():
                     message = (
-                        "The returned daata was not an image for the '{0}' camera profile.".format(camera_profile.name)
+                        "The returned data was not an image for the '{0}' camera profile.".format(camera_profile.name)
                     )
                     logger.error(message)
                     raise CameraError('not-an-image', message)
-                elif not is_before_print_test or camera_profile.apply_settings_before_print:
+                elif (
+                    is_before_print_test and
+                    camera_profile.enable_custom_image_preferences and
+                    camera_profile.apply_settings_before_print
+                ):
                     CameraControl._test_web_camera_image_preferences(camera_profile, timeout_seconds)
             else:
                 message = (
                     "An invalid status code or {0} was returned from the '{1}' camera profile."
-                        .format(r.status_code, camera_profile.name)
+                    .format(r.status_code, camera_profile.name)
                 )
                 logger.error(message)
                 raise CameraError('invalid-status-code', message)
@@ -521,6 +662,283 @@ class CameraControl(object):
             raise CameraError('missing-schema', message, cause=e)
 
     @staticmethod
+    def test_script(camera_profile, script_type, base_folder):
+        snapshot_created = None
+        if script_type == 'snapshot':
+            success, error, snapshot_created = CameraControl._test_camera_snapshot_script(camera_profile, script_type, base_folder)
+        elif script_type in ['before-snapshot', 'after-snapshot']:
+            success, error = CameraControl._test_camera_before_after_snapshot_script(
+                camera_profile, script_type, base_folder
+            )
+        elif script_type in ['before-print', 'after-print']:
+            success, error = CameraControl._test_print_script(camera_profile, script_type, base_folder)
+        elif script_type == 'before-render':
+            success, error = CameraControl._test_before_render_script(camera_profile, script_type, base_folder)
+        elif script_type == 'after-render':
+            success, error = CameraControl._test_after_render_script(camera_profile, script_type, base_folder)
+        else:
+            return False, "An unknown script type of {0} was sent.  Cannot test script".format(script), None
+
+        return success, error, snapshot_created
+
+    @staticmethod
+    def _test_camera_snapshot_script(camera_profile, script_type, base_folder):
+        """Test a script camera."""
+        # create a temp directory for use with this test
+        temp_directory = mkdtemp()
+
+        try:
+            camera_name = camera_profile.name
+            snapshot_number = 0
+            delay_seconds = camera_profile.delay
+            data_directory = temp_directory
+            snapshot_directory = os.path.join(
+                data_directory, "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
+            )
+            snapshot_filename = utility.get_snapshot_filename(
+                "test_snapshot", snapshot_number
+            )
+            snapshot_full_path = os.path.join(snapshot_directory, snapshot_filename)
+            timeout_seconds = camera_profile.timeout_ms / 1000.0
+
+            script_path = camera_profile.external_camera_snapshot_script
+
+            cmd = script_job = script.CameraScriptSnapshot(
+                script_path,
+                camera_name,
+                snapshot_number,
+                delay_seconds,
+                data_directory,
+                snapshot_directory,
+                snapshot_filename,
+                snapshot_full_path,
+                timeout_seconds=timeout_seconds
+            )
+            cmd.run()
+            # check to see if the snapshot image was created
+            success = cmd.success()
+            snapshot_created = os.path.exists(snapshot_full_path)
+            return cmd.success(), cmd.error_message, snapshot_created
+        finally:
+            utility.rmtree(temp_directory)
+
+    @staticmethod
+    def _test_camera_before_after_snapshot_script(camera_profile, script_type, base_folder):
+        """Test a script camera."""
+        # create a temp directory for use with this test
+        temp_directory = mkdtemp()
+
+        try:
+            camera_name = camera_profile.name
+            snapshot_number = 0
+            delay_seconds = camera_profile.delay
+            data_directory = temp_directory
+            snapshot_directory = os.path.join(
+                data_directory, "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
+            )
+            snapshot_filename = utility.get_snapshot_filename(
+                "test_snapshot", snapshot_number
+            )
+            snapshot_full_path = os.path.join(snapshot_directory, snapshot_filename)
+            timeout_seconds = camera_profile.timeout_ms / 1000.0
+
+            # setup test depending on the script_type
+            script_path = ""
+            if script_type == 'before-snapshot':
+                script_path = camera_profile.on_before_snapshot_script
+            elif script_type == 'after-snapshot':
+                script_path = camera_profile.on_after_snapshot_script
+                # we need to add an image to the temp folder, in case the script operates on the image
+                test_image_path = os.path.join(base_folder, "data", "Images", "test-snapshot-image.jpg")
+                target_directory = os.path.dirname(snapshot_full_path)
+                if not os.path.exists(target_directory):
+                    try:
+                        os.makedirs(target_directory)
+                    except OSError as e:
+                        if e.errno == errno.EEXIST:
+                            pass
+                        else:
+                            raise
+                shutil.copy(test_image_path, snapshot_full_path)
+
+            if script_type == 'before-snapshot':
+                cmd = script.CameraScriptBeforeSnapshot(
+                    script_path,
+                    camera_name,
+                    snapshot_number,
+                    delay_seconds,
+                    data_directory,
+                    snapshot_directory,
+                    snapshot_filename,
+                    snapshot_full_path,
+                    timeout_seconds=timeout_seconds
+                )
+            else:
+                cmd = script.CameraScriptAfterSnapshot(
+                    script_path,
+                    camera_name,
+                    snapshot_number,
+                    delay_seconds,
+                    data_directory,
+                    snapshot_directory,
+                    snapshot_filename,
+                    snapshot_full_path,
+                    timeout_seconds=timeout_seconds
+                )
+            cmd.run()
+            return cmd.success(), cmd.error_message
+        finally:
+            utility.rmtree(temp_directory)
+
+    @staticmethod
+    def _test_print_script(camera_profile, script_type, base_folder):
+        timeout_seconds = camera_profile.timeout_ms / 1000.0
+        # build the arg list
+        if script_type == "before-print":
+            script_path = camera_profile.on_print_start_script.strip()
+        else:
+            script_path = camera_profile.on_print_end_script.strip()
+
+        if script_type == "before-print":
+            cmd = script.CameraScriptBeforePrint(
+                script_path,
+                camera_profile.name,
+                timeout_seconds=timeout_seconds
+            )
+        else:
+            cmd = script.CameraScriptAfterPrint(
+                script_path,
+                camera_profile.name,
+                timeout_seconds=timeout_seconds
+            )
+        cmd.run()
+        return cmd.success(), cmd.error_message
+
+    @staticmethod
+    def _test_before_render_script(camera_profile, script_type, base_folder):
+        timeout_seconds = camera_profile.timeout_ms / 1000.0
+        # create a temp folder for the rendered file and the snapshots
+        temp_directory = mkdtemp()
+
+        try:
+            # create 10 snapshots
+            test_image_path = os.path.join(base_folder, "data", "Images", "test-snapshot-image.jpg")
+            snapshot_directory = os.path.join(
+                temp_directory, "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
+            )
+            if not os.path.exists(snapshot_directory):
+                try:
+                    os.makedirs(snapshot_directory)
+                except OSError as e:
+                    if e.errno == errno.EEXIST:
+                        pass
+                    else:
+                        raise
+
+            for snapshot_number in range(10):
+                snapshot_file_name = utility.get_snapshot_filename(
+                    'test', snapshot_number
+                )
+                target_snapshot_path = os.path.join(snapshot_directory, snapshot_file_name)
+                shutil.copy(test_image_path, target_snapshot_path)
+
+            snapshot_filename_format = os.path.basename(
+                utility.get_snapshot_filename(
+                    "render_script_test", utility.SnapshotNumberFormat
+                )
+            )
+            script_path = camera_profile.on_before_render_script.strip()
+
+            if script_path is None or len(script_path) == 0:
+                return False, "No script path was provided.  Please enter a script path and try again."
+
+            if not os.path.isfile(script_path):
+                return False, "The script path '{0}' does not exist.  Please enter a valid script path and try again.".format(script_path)
+
+            console_output = ""
+            error_message = ""
+
+            cmd = script.CameraScriptBeforeRender(
+                script_path,
+                camera_profile.name,
+                snapshot_directory,
+                snapshot_filename_format,
+                os.path.join(snapshot_directory, snapshot_filename_format),
+                timeout_seconds=timeout_seconds
+            )
+            cmd.run()
+            return cmd.success(), cmd.error_message
+        finally:
+            utility.rmtree(temp_directory)
+
+    @staticmethod
+    def _test_after_render_script(camera_profile, script_type, base_folder):
+
+        # create a temp folder for the rendered file and the snapshots
+        temp_directory = mkdtemp()
+        timeout_seconds = camera_profile.timeout_ms / 1000.0
+        try:
+            # create 10 snapshots
+            test_image_path = os.path.join(base_folder, "data", "Images", "test-snapshot-image.jpg")
+            snapshot_directory = os.path.join(
+                temp_directory, "{}".format(uuid.uuid4()), "{}".format(uuid.uuid4())
+            )
+            if not os.path.exists(snapshot_directory):
+                try:
+                    os.makedirs(snapshot_directory)
+                except OSError as e:
+                    if e.errno == errno.EEXIST:
+                        pass
+                    else:
+                        raise
+
+            for snapshot_number in range(10):
+                snapshot_file_name = utility.get_snapshot_filename(
+                    'test', snapshot_number
+                )
+                target_snapshot_path = os.path.join(snapshot_directory, snapshot_file_name)
+                shutil.copy(test_image_path, target_snapshot_path)
+
+            snapshot_filename_format = os.path.basename(
+                utility.get_snapshot_filename(
+                    "render_script_test", utility.SnapshotNumberFormat
+                )
+            )
+
+
+            script_path = camera_profile.on_after_render_script.strip()
+            rendering_path = os.path.join(temp_directory, "timelapse", "test_rendering.mp4")
+
+            output_filepath = utility.get_collision_free_filepath(rendering_path)
+            output_filename = utility.get_filename_from_full_path(rendering_path)
+            output_directory = utility.get_directory_from_full_path(rendering_path)
+            output_extension = utility.get_extension_from_full_path(rendering_path)
+
+            if script_path is None or len(script_path) == 0:
+                return False, "No script path was provided.  Please enter a script path and try again."
+
+            if not os.path.exists(script_path):
+                return False, "The script path '{0}' does not exist.  Please enter a valid script path and try again.".format(
+                    script_path)
+
+            cmd = script.CameraScriptAfterRender(
+                script_path,
+                camera_profile.name,
+                snapshot_directory,
+                snapshot_filename_format,
+                os.path.join(snapshot_directory, snapshot_filename_format),
+                output_directory,
+                output_filename,
+                output_extension,
+                rendering_path,
+                timeout_seconds=timeout_seconds
+            )
+            cmd.run()
+            return cmd.success(), cmd.error_message
+        finally:
+            utility.rmtree(temp_directory)
+
+    @staticmethod
     def load_webcam_defaults(
         server_type,
         camera_name,
@@ -528,7 +946,8 @@ class CameraControl(object):
         username,
         password,
         ignore_ssl_error,
-        timeout_seconds=5):
+        retries=3,
+        backoff_factor=0.1):
 
         if server_type == MjpgStreamer.server_type:
 
@@ -540,14 +959,16 @@ class CameraControl(object):
                 username,
                 password,
                 ignore_ssl_error,
-                timeout_seconds=timeout_seconds
+                retries=retries,
+                backoff_factor=backoff_factor
             )
             if not success:
                 return False, errors
             # set the control values to the defaults
             controls = settings["webcam_settings"]["mjpg_streamer"]["controls"]
-            for key, control in six.iteritems(controls):
-
+            # remove python 2 compatibility
+            # for key, control in six.iteritems(controls):
+            for key, control in controls.items():
                 control.value = control.default
                 controls[key] = control.to_dict()
 
@@ -559,8 +980,10 @@ class CameraControl(object):
                 password=password,
                 ignore_ssl_error=ignore_ssl_error,
                 camera_name=camera_name,
-                timeout_seconds=timeout_seconds
+                retries=retries,
+                backoff_factor=backoff_factor
             )
+            thread.daemon = True
             thread.start()
             thread.join()
 
@@ -581,7 +1004,8 @@ class MjpgStreamerThread(Thread):
         password=None,
         ignore_ssl_error=False,
         camera_name=None,
-        timeout_seconds=4
+        retries=3,
+        backoff_factor=0.1
     ):
         super(MjpgStreamerThread, self).__init__()
         if profile:
@@ -589,18 +1013,19 @@ class MjpgStreamerThread(Thread):
             self.username = profile.webcam_settings.username
             self.password = profile.webcam_settings.password
             self.ignore_ssl_error = profile.webcam_settings.ignore_ssl_error
-            self.timeout_seconds = timeout_seconds
             self.camera_name = profile.name
         else:
             self.address = address
             self.username = username
             self.password = password
             self.ignore_ssl_error = ignore_ssl_error
-            self.timeout_seconds = timeout_seconds
             self.camera_name = camera_name
-        if isinstance(self.address, six.string_types):
+        # remove python 2 compatibility
+        # if isinstance(self.address, six.string_types):
+        if isinstance(self.address, str):
             self.address = self.address.strip()
-
+        self.retries = retries
+        self.backoff_factor=backoff_factor
         self.errors = []
         self.success = False
 
@@ -614,7 +1039,8 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
         password=None,
         ignore_ssl_error=False,
         camera_name=None,
-        timeout_seconds=4
+        retries=3,
+        backoff_factor=0.1
     ):
         super(MjpgStreamerControlThread, self).__init__(
             profile=profile,
@@ -623,7 +1049,8 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
             password=password,
             ignore_ssl_error=ignore_ssl_error,
             camera_name=camera_name,
-            timeout_seconds=timeout_seconds
+            retries=retries,
+            backoff_factor=backoff_factor
         )
         self.controls = None
 
@@ -631,7 +1058,7 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
         try:
             self.controls = self.get_controls_from_server()
         except CameraError as e:
-            logger.exception(e)
+            logger.exception("An unexpected error occurred while running the MjpgStreamerControlThread.")
             self.errors.append(e)
 
     def get_controls_from_server(self):
@@ -648,32 +1075,22 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
         return control_settings
 
     def get_file(self, file_name):
-        try:
-            url = "{camera_address}{file_name}".format(camera_address=self.address, file_name=file_name)
-            if len(self.username) > 0:
-                r = requests.get(url, auth=HTTPBasicAuth(self.username, self.password),
-                                 verify=not self.ignore_ssl_error, timeout=float(self.timeout_seconds))
-            else:
-                r = requests.get(url, verify=not self.ignore_ssl_error,
-                                 timeout=float(self.timeout_seconds))
 
-            if r.status_code == 501:
-                message = "Access was denied to the mjpg-streamer {0} file for the " \
-                          "'{1}' camera profile.".format(file_name, self.camera_name)
-                raise CameraError("mjpg_streamer-control-error", message)
-            if r.status_code != requests.codes.ok:
-                message = (
-                    "Recived a status code of ({0}) while retrieving the {1} file from the {2} camera profile.  Double "
-                    "check your 'Base Address' and 'Snapshot Address Template' within your camera profile settings."
-                        .format(r.status_code, file_name, self.camera_name)
-                )
-                raise CameraError('webcam_settings_apply_error', message)
-            try:
-                data = json.loads(r.text)
-            except ValueError as e:
-                raise CameraError('json_error', "Unable to read the input.json file from mjpg-streamer.  Please chack "
-                                                "your base address and try again.", cause=e)
-            return data
+        url = "{camera_address}{file_name}".format(camera_address=self.address, file_name=file_name)
+        try:
+            s = requests.Session()
+            s.verify = not self.ignore_ssl_error
+            if len(self.username) > 0:
+                s.auth = (self.username, self.password)
+
+            r = utility.requests_retry_session(session=s, retries=self.retries,
+                                               backoff_factor=self.backoff_factor).request("GET", url)
+            #if len(self.username) > 0:
+            #    r = requests.get(url, auth=HTTPBasicAuth(self.username, self.password),
+            #                     verify=not self.ignore_ssl_error, timeout=float(self.timeout_seconds))
+            #else:
+            #    r = requests.get(url, verify=not self.ignore_ssl_error,
+            #                     timeout=float(self.timeout_seconds))
         except SSLError as e:
             message = (
                 "An SSL error was raised while retrieving the {0} file for the '{1}' camera profile."
@@ -683,15 +1100,36 @@ class MjpgStreamerControlThread(MjpgStreamerThread):
         except requests.ConnectionError as e:
             message = (
                 "Unable to connect to the camera to '{0}' to retrieve controls for the {1} camera profile."
-                .format(url, self.camera_name)
+                    .format(url, self.camera_name)
             )
-            raise CameraError("connection-error", message, cause=e)
+            raise CameraError("connection_error", message, cause=e)
         except Exception as e:
             message = (
                 "An unexpected error was raised while retrieving the {0} file for the '{1}' camera profile."
-                .format(file_name, self.camera_name)
+                    .format(file_name, self.camera_name)
             )
-            raise CameraError('unexpected-error', message, cause=e)
+            raise CameraError('unexpected_error', message, cause=e)
+
+        if r.status_code == 501:
+            message = "Access was denied to the mjpg-streamer {0} file for the " \
+                      "'{1}' camera profile.".format(file_name, self.camera_name)
+            raise CameraError("access_denied", message)
+        if r.status_code == 404:
+            message = "Unable to find the camera at the supplied base address for the " \
+                      "'{0}' camera profile.".format(self.camera_name)
+            raise CameraError("file_not_found", message)
+        if r.status_code != requests.codes.ok:
+            message = (
+                "Recived a status code of ({0}) while retrieving the {1} file from the {2} camera profile."
+                .format(r.status_code, file_name, self.camera_name)
+            )
+            raise CameraError('unexpected_status_code', message)
+        try:
+            data = json.loads(r.text, strict=False)
+        except ValueError as e:
+            raise CameraError('json_error', "Unable to read the input.json file from mjpg-streamer.  Please chack "
+                                            "your base address and try again.", cause=e)
+        return data
 
 
 class MjpgStreamerSettingsThread(MjpgStreamerThread):
@@ -704,7 +1142,8 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
         password=None,
         ignore_ssl_error=False,
         camera_name=None,
-        timeout_seconds=4
+        retries=3,
+        backoff_factor=0.1
     ):
         super(MjpgStreamerSettingsThread, self).__init__(
             profile=profile,
@@ -713,7 +1152,8 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
             password=password,
             ignore_ssl_error=ignore_ssl_error,
             camera_name=camera_name,
-            timeout_seconds=timeout_seconds
+            retries=retries,
+            backoff_factor=backoff_factor
         )
         if profile:
             mjpg_streamer = profile.webcam_settings.mjpg_streamer.clone()
@@ -734,8 +1174,9 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
 
         controls_list = []
 
-
-        for key, control in six.iteritems(self.controls):
+        # remove python 2 compatibility
+        # for key, control in six.iteritems(self.controls):
+        for key, control in self.controls.items():
             controls_list.append(control)
 
         # Sort the controls.  They need to be sent in order.
@@ -754,8 +1195,10 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
                 self.password,
                 self.ignore_ssl_error,
                 self.camera_name,
-                timeout_seconds=self.timeout_seconds
+                retries=self.retries,
+                backoff_factor=self.backoff_factor
             )
+            thread.daemon = True
             threads.append(thread)
 
         if len(threads) > 0:
@@ -770,6 +1213,7 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
             if not self.success:
                 for error in errors:
                     self.errors.append(error)
+                break  # Do not continue applying settings if one fails.
         self.success = len(self.errors) == 0
 
 
@@ -782,7 +1226,8 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
         password,
         ignore_ssl_error,
         camera_name,
-        timeout_seconds=4
+        retries=3,
+        backoff_factor=0.1
      ):
         super(MjpgStreamerSettingThread, self).__init__(
             address=address,
@@ -790,7 +1235,8 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
             password=password,
             ignore_ssl_error=ignore_ssl_error,
             camera_name=camera_name,
-            timeout_seconds=timeout_seconds
+            retries=retries,
+            backoff_factor=backoff_factor
         )
         self.control = control
 
@@ -830,14 +1276,22 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
             address=self.address,
             querystring=querystring
         )
-        logger.debug("Changing %s to %s for %s.  Querystring: %s", name, str(value), self.camera_name, querystring)
+        logger.debug("Changing %s to %s for %s.  Request: %s", name, str(value), self.camera_name, url)
         try:
+            # old version without session
+            #if len(self.username) > 0:
+            #    r = requests.get(url, auth=HTTPBasicAuth(self.username, self.password),
+            #                     verify=not self.ignore_ssl_error, timeout=float(self.timeout_seconds))
+            #else:
+            #    r = requests.get(url, verify=not self.ignore_ssl_error,
+            #                     timeout=float(self.timeout_seconds))
+
+            s = requests.Session()
+            s.verify = not self.ignore_ssl_error
             if len(self.username) > 0:
-                r = requests.get(url, auth=HTTPBasicAuth(self.username, self.password),
-                                 verify=not self.ignore_ssl_error, timeout=float(self.timeout_seconds))
-            else:
-                r = requests.get(url, verify=not self.ignore_ssl_error,
-                                 timeout=float(self.timeout_seconds))
+                s.auth = (self.username, self.password)
+
+            r = utility.requests_retry_session(session=s, retries=self.retries, backoff_factor=self.backoff_factor).request("GET", url)
 
             webcam_server_type = CameraControl.get_webcam_server_type_from_request(r)
             if webcam_server_type != "mjpg-streamer":
@@ -849,17 +1303,16 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
             if r.status_code == 501:
                 message = "Access was denied to the mjpg-streamer control.html while applying the {0} setting to the '{" \
                           "1}' camera profile.  <a " \
-                          "href=\"https://github.com/FormerLurker/Octolapse/wiki/Troubleshooting#why-cant-i-change" \
-                          "-contrast-zoom-focus-etc\" target = \"_blank\">Please see this link to correct this " \
+                          "href=\"https://github.com/FormerLurker/Octolapse/wiki/V0.4---Enabling-Camera-Controls\" target = \"_blank\">Please see this link to correct this " \
                           "error.</a>, disable the 'Enable And Apply Preferences at Startup' " \
                           "and 'Enable And Apply Preferences Before Print' options '.".format(name,
                                                                                               self.camera_name)
                 logger.error(message)
-                raise CameraError("mjpg_streamer-control-error", message)
+                raise CameraError("mjpg_streamer_control_error", message)
             if r.status_code != requests.codes.ok:
                 message = (
                     "Recived a status code of ({0}) while applying the {1} settings to the {2} camera profile.  "
-                    "Double check your 'Base Address' and 'Snapshot Address Template' within your camera profile "
+                    "Double check your 'Base Address' and 'Snapshot Address' within your camera profile "
                     "settings.  Or disable 'Custom Image Preferences' for this profile and try again.".format(
                         r.status_code, name, self.camera_name
                     )
@@ -873,73 +1326,42 @@ class MjpgStreamerSettingThread(MjpgStreamerThread):
                 "An SSL error was raised while applying the {0} setting to the '{1}' camera profile."
                 .format(name, self.camera_name)
             )
-            logger.error(message)
+            logger.exception(message)
             raise CameraError('ssl_error', message, cause=e)
         except Exception as e:
             message = (
                 "An unexpected error was raised while applying the {0} setting to the '{1}' camera profile."
                 .format(name, self.camera_name)
             )
-            logger.error(message)
+            logger.exception(message)
             raise CameraError('webcam_settings_apply_error', message, cause=e)
 
 
 class CameraSettingScriptThread(Thread):
-    def __init__(self, camera):
+    def __init__(self, camera, script_path, script_args, script_type):
         super(CameraSettingScriptThread, self).__init__()
         self.Camera = camera
         self.camera_name = camera.name
-        self.errors = []
+        self.script_path = script_path.strip()
+        self.script_type = script_type
+        self.script_args = script_args
+        self.console_output = ""
+        self.error = None
 
     def run(self):
-        try:
-            script = self.Camera.on_print_start_script.strip()
-            logger.info(
-                "Executing the 'Before Print Starts' script at %s for the '%s' camera.", script, self.camera_name
+        if self.script_type == "before-print":
+            cmd = script.CameraScriptBeforePrint(
+                self.script_path,
+                self.camera_name
             )
-            if not script:
-                message = "The Camera Initialization script is empty"
-                logger.error(message)
-                raise CameraError('no_camera_script_path', message)
-            try:
-                script_args = [
-                    script,
-                    self.Camera.name
-                ]
-                cmd = utility.POpenWithTimeout()
-                return_code = cmd.run(script_args, None)
-                console_output = cmd.stdout
-                error_message = cmd.stderr
-            except utility.POpenWithTimeout.ProcessError as e:
-                message = "An OS Error error occurred while executing the custom camera initialization script"
-                logger.exception(message)
-                raise CameraError('camera_initialization_error', message, cause=e)
-
-            if error_message is not None:
-                if error_message.endswith("\r\n"):
-                    error_message = error_message[:-2]
-            if not return_code == 0:
-                if error_message is not None:
-                    error_message = "The custom camera initialization script failed with the following error message: {0}" \
-                        .format(error_message)
-                else:
-                    error_message = (
-                        "The custom camera initialization script returned {0},"
-                        " which indicates an error.".format(return_code)
-                    )
-                logger.exception(error_message)
-            elif error_message is not None:
-                logger.warn(
-                    "The console returned an error while running the script at %s for the '%s' camera.  Details:%s",
-                    script, self.camera_name, error_message
-                )
-            else:
-                logger.info(
-                    "The 'Before Print Starts' script for the %s camera completed successfully.", self.camera_name
-                )
-                raise CameraError('camera_initialization_error', error_message)
-        except CameraError as e:
-            self.errors.append(e)
+        else:
+            cmd = script.CameraScriptAfterPrint(
+                self.script_path,
+                self.camera_name
+            )
+        cmd.run()
+        if not cmd.success():
+            self.error = CameraError('error_message_returned', cmd.error_message)
 
 
 class CameraError(Exception):
