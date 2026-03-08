@@ -20,7 +20,7 @@ import json
 
 def send_progress(host, api_key, percent):
     """POST a progress update to Octolapse. Returns True on success."""
-    url = "{}/api/plugin/octolapse/renderProgress".format(host.rstrip("/"))
+    url = "{}/plugin/octolapse/renderProgress".format(host.rstrip("/"))
     payload = json.dumps({"percent": percent}).encode("utf-8")
     req = urllib.request.Request(
         url,
