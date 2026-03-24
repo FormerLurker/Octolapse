@@ -1,3 +1,26 @@
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2023  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
 <script type="text/html" id="octolapse-import-dialog-template">
     <div id="octolapse_settings_import_dialog" class="modal fade hide">
         <div class="modal-dialog" role="document">
@@ -15,7 +38,7 @@
                                                optionsText: 'name',
                                                optionsValue: 'value',
                                                value: Octolapse.SettingsImport.import_method"></select>
-                                <a class="octolapse_help" data-help-url="settings.import.import_method.md" data-help-title="Import Settings From"/>
+                                <a class="octolapse_help" data-help-url="settings.import.import_method.md" data-help-title="Import Settings From"></a>
                                 <div class="error_label_container text-error" data-error-for="octolapse_settings_import_method"></div>
                             </div>
                         </div>
@@ -25,7 +48,7 @@
                                     <label class="control-label">Settings Text</label>
                                     <div class="controls">
                                         <textarea id="octolapse_settings_import_text" name="octolapse_settings_import_text" type="text" class="input-xlg ignore_hidden_errors" data-bind="value: Octolapse.SettingsImport.import_text" required="true"></textarea>
-                                        <a class="octolapse_help" data-help-url="settings.import.import_text.md" data-help-title="Import Settings Text"/>
+                                        <a class="octolapse_help" data-help-url="settings.import.import_text.md" data-help-title="Import Settings Text"></a>
                                         <div class="error_label_container text-error" data-error-for="octolapse_settings_import_text"></div>
                                     </div>
                                 </div>

@@ -1,13 +1,21 @@
 <!--
 READ THE FOLLOWING FIRST:
 
-I like to keep things clean.  This is a place to
-reporting bugs and request new features, but is not a good place
-to ask questions about or learn how to use octoprint.  Unfortunately
-there is currently no user form, but you can find lots of information
-in the Wiki (https://github.com/FormerLurker/Octolapse/wiki).  For now, if
-you get stuck and can't find help please send an email to:
-FormerLurker@pm.me.
+I like to keep things clean.  This is a place for reporting bugs and
+requesting new features, but is not a good place to ask questions about
+or to learn how to use OctoPrint, Octolapse, or any third party programs
+and tools like OctoPi, mjpg-streamer, or GPhoto2. Unfortunately there is
+currently no user form dedicated to Octolapse, but you can find lots of
+information directly within Octolapse (click on the blue question marks or
+the help buttons within the interface), and in the Octolapse Wiki
+(https://github.com/FormerLurker/Octolapse/wiki).  You should also
+consider submitting an issue in Octoprint Community Forms within the
+plugin category (https://community.octoprint.org/c/plugins/), or via the
+official OctoPrint Discord server within #support-plugins channel.
+Basically, please exhaust every other option before positing an issue so I
+can focus as much as possible on improving Octolapse, and fixing known
+bugs.  However, if you get stuck and can't find help, and you are sure your
+problem isn't actually a bug, please send an email to: FormerLurker@pm.me.
 
 For feature requests, add the prefix "[Request]" in the title (without the
 quotes).
@@ -24,7 +32,7 @@ Thanks!
 Please be as clear as possible.  After you are finished, please fill in the
 OctoPrint and Octolapse version.  Maybe the feature already exists?
 -->
-FEATURE_REQUEST_DESCRIPTION_GOES_HERE
+___REPLACE_THIS__FEATURE_REQUEST_DESCRIPTION_GOES_HERE
 
 
 #### Version of Octolapse
@@ -35,7 +43,7 @@ FEATURE_REQUEST_DESCRIPTION_GOES_HERE
  branch, and not the default (master) branch.
  DO NOT OMIT
  -->
-Octolapse Version: OCTOLAPSE_VERSION_GOES_HERE
+Octolapse Version: ___REPLACE_THIS__OCTOLAPSE_VERSION_GOES_HERE
 
 
 #### Version of OctoPrint
@@ -43,7 +51,7 @@ Octolapse Version: OCTOLAPSE_VERSION_GOES_HERE
 Can be found in the lower left corner of the web interface.
 DO NOT OMIT
 -->
-OctoPrint Version: OCTOPRINT_VERSION_GOES_HERE
+OctoPrint Version: ___REPLACE_THIS__OCTOPRINT_VERSION_GOES_HERE
 
 
 <!--
@@ -58,9 +66,9 @@ You can find out more about diagnostic logging here:
 https://github.com/FormerLurker/Octolapse/wiki/Debug-Profiles#log-additional-information
 
 It is very helpful for certain problems.  If you can reproduce the issue with
-one of the Diagnostic debug profiles, please do so before submitting an issue.
+one of the Diagnostic logging profiles, please do so before submitting an issue.
 -->
-Diagnostic Logging was Enabled: YES_OR_NO
+Diagnostic Logging was Enabled: ___REPLACE_THIS__YES_OR_NO
 
 
 #### What were you doing when the problem occurred
@@ -69,17 +77,17 @@ Be specific.  Explain what you did as clearly as possible.
 It's best if you provide a list of steps you took that can
 be used to reproduce the error you encountered.
 -->
-1. STEP_ONE_GOES_HERE
-2. STEP_TWO_GOES_HERE
-3. STEP_...
+1. ___REPLACE_THIS__STEP_ONE_GOES_HERE
+2. ___REPLACE_THIS__STEP_TWO_GOES_HERE
+3. ___REPLACE_THIS__STEP_...
 
 
 #### What should have happened?
-PUT_YOUR_DESCRIPTION_HERE
+___REPLACE_THIS__PUT_YOUR_DESCRIPTION_HERE
 
 
 #### What happened instead?
-PUT_YOUR_DESCRIPTION_HERE
+___REPLACE_THIS__PUT_YOUR_DESCRIPTION_HERE
 
 
 #### Operating System running OctoPrint and Octolapse
@@ -90,24 +98,24 @@ OctoPi's version can be found in /etc/octopi_version or in the lower left
 corner of the web interface.
 DO NOT OMIT
 -->
-OS Name: OS_NAME_GOES_HERE
-Os Version: OS_VERSION_GOES_HERE
+OS Name: ___REPLACE_THIS__OS_NAME_GOES_HERE
+Os Version: ___REPLACE_THIS__OS_VERSION_GOES_HERE
 
 
 #### Printer model & used firmware incl. version
 <!--
 OMIT ONLY IF IT IS DEFINITELY NOT NEEDED.
 -->
-Printer Model: PRINTER_MODEL_GOES_HERE
-Printer Firmware Version: PRINTER_FIRMWARE_VERSION_GOES_HERE
+Printer Model: ___REPLACE_THIS__PRINTER_MODEL_GOES_HERE
+Printer Firmware Version: ___REPLACE_THIS__PRINTER_FIRMWARE_VERSION_GOES_HERE
 
 
 #### Browser and version of browser, operating system running browser
 <!--
 OMIT ONLY IF IT IS DEFINITELY NOT NEEDED
 -->
-Browser: BROWSER_VERSION_GOES_HERE
-Browser OS: BROWSER_OS_GOES_HERE
+Browser: ___REPLACE_THIS__BROWSER_VERSION_GOES_HERE
+Browser OS: ___REPLACE_THIS__BROWSER_OS_GOES_HERE
 
 
 #### Link to the gcode file you were printing when the problem occurred
@@ -121,7 +129,7 @@ In any case, the gcode file is often very useful.
 On gist.github.com or pastebin.com.
 OMIT ONLY IF IT IS DEFINITELY NOT NEEDED
 !-->
-Link to Gcode File: GCODE_FILE_LINK_GOES_HERE
+Link to Gcode File: ___REPLACE_THIS__GCODE_FILE_LINK_GOES_HERE
 
 
 #### Link to settings.json
@@ -142,7 +150,7 @@ to find all of the entries containing passwords.
 OMIT ONLY IF YOU HAVE ENTERED A PASSWORD TO ACCESS YOUR CAMERA
 WITHIN OCTOLAPSE
 !-->
-Link to settings.json with all passwords removed: SETTINGS_JSON_LINK_GOES_HERE
+Link to settings.json with all passwords removed: ___REPLACE_THIS__SETTINGS_JSON_LINK_GOES_HERE
 
 
 #### Link to plugin_octolapse.log
@@ -163,7 +171,7 @@ Link to plugin_octolapse.log:  LINK_GOES_HERE
 On gist.github.com or pastebin.com.
 DO NOT OMIT
 -->
-Link to octoprint.log:  LINK_GOES_HERE
+Link to octoprint.log:  ___REPLACE_THIS__LINK_GOES_HERE
 
 
 #### Link to contents of Javascript console in the browser
@@ -173,7 +181,7 @@ settings, please inlude the javascript console output
 on gist.github.com or pastebin.com.
 OMIT ONLY IF IT IS DEFINITELY NOT NEEDED
 -->
-Link to javascript console output: LINK_GOES_HERE
+Link to javascript console output: ___REPLACE_THIS__LINK_GOES_HERE
 
 
 #### Screenshots and/or videos of the problem:
@@ -181,7 +189,7 @@ Link to javascript console output: LINK_GOES_HERE
 This is really nice to include, especially if you're having trouble
 putting your issue into words.  A picture speaks 1000 of them, afterall!
 -->
-Screenshot/Video Links: LINKs_GO_HERE
+Screenshot/Video Links: ___REPLACE_THIS__LINKs_GO_HERE
 
 
 ## Please consider becoming a patron

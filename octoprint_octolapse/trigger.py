@@ -1,7 +1,7 @@
 # coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -36,35 +36,31 @@ class Triggers(object):
     TRIGGER_TYPE_IN_PATH = 'in-path'
 
     def __init__(self, settings):
-        self.trigger_profile = None
         self._triggers = []
         self.reset()
         self._settings = settings
         self.name = "Unknown"
-        self.printer = None
 
     def count(self):
         return len(self._triggers)
 
     def reset(self):
-        self.trigger_profile = None
         self._triggers = []
 
     def create(self):
         self.reset()
-        self.printer = self._settings.profiles.current_printer()
-        self.trigger_profile = self._settings.profiles.current_trigger()
-        self.name = self.trigger_profile.name
+        trigger_profile = self._settings.profiles.current_trigger()
+        self.name = trigger_profile.name
         # create the triggers
         # If the gcode trigger is enabled, add it
-        if self.trigger_profile.trigger_subtype == TriggerProfile.GCODE_TRIGGER_TYPE:
+        if trigger_profile.trigger_subtype == TriggerProfile.GCODE_TRIGGER_TYPE:
             # Add the trigger to the list
             self._triggers.append(GcodeTrigger(self._settings))
         # If the layer trigger is enabled, add it
-        elif self.trigger_profile.trigger_subtype == TriggerProfile.LAYER_TRIGGER_TYPE:
+        elif trigger_profile.trigger_subtype == TriggerProfile.LAYER_TRIGGER_TYPE:
             self._triggers.append(LayerTrigger(self._settings))
         # If the layer trigger is enabled, add it
-        elif self.trigger_profile.trigger_subtype == TriggerProfile.TIMER_TRIGGER_TYPE:
+        elif trigger_profile.trigger_subtype == TriggerProfile.TIMER_TRIGGER_TYPE:
             self._triggers.append(TimerTrigger(self._settings))
 
     def resume(self):
@@ -77,10 +73,10 @@ class Triggers(object):
             if type(trigger) == TimerTrigger:
                 trigger.pause()
 
-    def update(self, position, parsed_command):
+    def update(self, position):
         # the previous command (not just the current) MUST have homed positions else
         # we may have some null coordinates.
-        #if not position.current_pos.has_homed_position:
+        #if not position.current_pos.has_definite_position:
         #    return
         ## Note:  I think we need to add waits to handle the above
         """Update all triggers and return any that are triggering"""
@@ -89,15 +85,11 @@ class Triggers(object):
             for current_trigger in self._triggers:
                 # determine what type the current trigger is and update appropriately
                 if isinstance(current_trigger, GcodeTrigger):
-                    current_trigger.update(position, parsed_command)
+                    current_trigger.update(position)
                 elif isinstance(current_trigger, TimerTrigger):
                     current_trigger.update(position)
                 elif isinstance(current_trigger, LayerTrigger):
                     current_trigger.update(position)
-
-                # Make sure there are no position errors (unknown position, out of bounds, etc)
-                if position.current_pos.has_position_error:
-                    logger.error("A trigger has a position error:%s", position.current_pos.position_error)
                 # see if the current trigger is triggering, indicting that a snapshot should be taken
         except Exception as e:
             logger.exception("Failed to update the snapshot triggers.")
@@ -160,7 +152,7 @@ class TriggerState(object):
         self.is_waiting_on_zhop = False if state is None else state.is_waiting_on_zhop
         self.is_waiting_on_extruder = False if state is None else state.is_waiting_on_extruder
         self.has_changed = False if state is None else state.has_changed
-        self.is_homed = False if state is None else state.is_homed
+        self.has_definite_position = False if state is None else state.has_definite_position
 
     def to_dict(self, trigger):
         return {
@@ -174,7 +166,7 @@ class TriggerState(object):
             "is_waiting_on_extruder": self.is_waiting_on_extruder,
             "has_changed": self.has_changed,
             "require_zhop": trigger.require_zhop,
-            "is_homed": self.is_homed,
+            "has_definite_position": self.has_definite_position,
             "trigger_count": trigger.trigger_count
         }
 
@@ -195,7 +187,7 @@ class TriggerState(object):
                 and self.is_home_position_wait == state.is_home_position_wait
                 and self.is_waiting_on_zhop == state.is_waiting_on_zhop
                 and self.is_waiting_on_extruder == state.is_waiting_on_extruder
-                and self.is_homed == state.is_homed):
+                and self.has_definite_position == state.has_definite_position):
             return True
         return False
 
@@ -206,12 +198,20 @@ class Trigger(object):
         self._settings = octolapse_settings
         self.printer = self._settings.profiles.current_printer()
         self.trigger_profile = self._settings.profiles.current_trigger()
-
         self.type = 'Trigger'
         self._state_history = []
         self._max_states = max_states
         self.extruder_triggers = None
         self.trigger_count = 0
+        self.snapshots_enabled = True
+
+    def update(self, position):
+        parsed_command = position.current_pos.parsed_command
+        if parsed_command.is_octolapse_command:
+            if "STOP-SNAPSHOTS" in parsed_command.parameters:
+                self.snapshots_enabled = False
+            elif "START-SNAPSHOTS" in parsed_command.parameters:
+                self.snapshots_enabled = True
 
     def name(self):
         return self.trigger_profile.name + " Trigger"
@@ -284,10 +284,9 @@ class GcodeTrigger(Trigger):
     def __init__(self, octolapse_settings):
         # call parent constructor
         super(GcodeTrigger, self).__init__(octolapse_settings)
-        self.snapshot_command = self.printer.snapshot_command
         self.type = "gcode"
         self.require_zhop = self.trigger_profile.require_zhop
-
+        self.snapshot_command = octolapse_settings.profiles.current_printer().snapshot_command
         if self.trigger_profile.extruder_state_requirements_enabled:
             self.extruder_triggers = ExtruderTriggers(
                 self.trigger_profile.trigger_on_extruding_start,
@@ -324,16 +323,19 @@ class GcodeTrigger(Trigger):
         message = "Creating Gcode Trigger - Gcode Command:%s, require_zhop:%s"
         logger.info(
             message,
-            self.printer.snapshot_command,
+            self.snapshot_command,
             self.trigger_profile.require_zhop
         )
 
         # add an initial state
         self.add_state(GcodeTriggerState())
 
-    def update(self, position, parsed_command):
+    def update(self, position):
+        super(GcodeTrigger, self).update(position)
+        parsed_command = position.current_pos.parsed_command
         """If the provided command matches the trigger command, sets is_triggered to true, else false"""
         try:
+
             # get the last state to use as a starting point for the update
             # if there is no state, this will return the default state
             state = self.get_state(0)
@@ -345,32 +347,59 @@ class GcodeTrigger(Trigger):
                 state = GcodeTriggerState(state)
             # reset any variables that must be reset each update
             state.reset_state()
+
+            # set the trigger position.  It should be the previous position, not the current
+            trigger_position = position.previous_pos
+
             # Don't update the trigger if we don't have a homed axis
-            # Make sure to use the previous value so the homing operation can complete
-            if not position.current_pos.has_homed_position:
+            if not trigger_position.has_definite_position:
                 state.is_triggered = False
-                state.is_homed = False
+                state.has_definite_position = False
             else:
-                state.is_homed = True
+                state.has_definite_position = trigger_position.has_definite_position
                 # check to see if we are in the proper position to take a snapshot
 
                 # set is in position
-                state.is_in_position = position.current_pos.is_in_position and position.current_pos.is_in_bounds
+                state.is_in_position = trigger_position.is_in_position and trigger_position.is_in_bounds
                 state.in_path_position = position.current_pos.in_path_position
 
-                if self.snapshot_command.lower() == parsed_command.gcode.lower():
-                    state.is_waiting = True
+                if self.printer.is_snapshot_command(parsed_command.gcode):
+                    if self.snapshots_enabled:
+                        state.is_waiting = True
+                    else:
+                        logger.info("GcodeTrigger - A snapshot was detected, but snapshots were disabled via "
+                                    "@Octolapse stop-snapshots.")
                 if state.is_waiting:
-                    if position.is_extruder_triggered(self.extruder_triggers):
-                        if not position.previous_pos.has_homed_position:
-                            state.is_waiting_for_homed_position = True
-                            logger.debug("GcodeTrigger - Triggering - Waiting for the previous position to be homed.")
-                        elif self.require_zhop and not position.current_pos.is_zhop:
+                    if position.is_previous_extruder_triggered(self.extruder_triggers):
+                        if not trigger_position.has_definite_position:
+                            state.is_waiting_for_definite_position = True
+                            logger.debug("GcodeTrigger - Triggering - Waiting for a definite previous position.")
+                        elif self.require_zhop and not trigger_position.is_zhop:
                             state.is_waiting_on_zhop = True
                             logger.debug("GcodeTrigger - Waiting on ZHop.")
+                        elif not trigger_position.is_in_bounds:
+                            logger.debug("GcodeTrigger - Waiting for in-bounds position.")
                         elif not state.is_in_position and not state.in_path_position:
                             # Make sure the previous X,Y is in position
                             logger.debug("GcodeTrigger - Waiting on Position.")
+                        elif not trigger_position.last_extrusion_height:
+                            logger.debug(
+                                "GcodeTrigger - Waiting for at least one extrusion on a previous layer."
+                            )
+                        elif not utility.greater_than_or_equal(
+                                trigger_position.z, trigger_position.last_extrusion_height
+                        ):
+                            # The extruder is below the last extrusion height, do not take a snapshot else we might
+                            # run into the part!
+                            logger.debug(
+                                "GcodeTrigger - Waiting for extruder to move above the highest extrusion point."
+                            )
+                        elif not self.snapshots_enabled:
+                            # Snapshot have been disabled by an octolapse gcode command
+                            logger.debug(
+                                "GcodeTrigger - Waiting for snapshots to be enabled via @Octolapse start-snapshots "
+                                "command. "
+                            )
                         else:
                             state.is_triggered = True
                             self.trigger_count += 1
@@ -495,6 +524,7 @@ class LayerTrigger(Trigger):
 
     def update(self, position):
         """Updates the layer monitor position.  x, y and z may be absolute, but e must always be relative"""
+        super(LayerTrigger, self).update(position)
         try:
             # get the last state to use as a starting point for the update
             # if there is no state, this will return the default state
@@ -508,16 +538,20 @@ class LayerTrigger(Trigger):
 
             # reset any variables that must be reset each update
             state.reset_state()
+
+            # set the trigger position.  It should be the previous position, not the current
+            trigger_position = position.previous_pos
             # Don't update the trigger if we don't have a homed axis
-            # Make sure to use the previous value so the homing operation can complete
-            if not position.current_pos.has_homed_position:
+            if not trigger_position.has_definite_position:
                 state.is_triggered = False
-                state.is_homed = False
+                state.has_definite_position = False
             else:
-                state.is_homed = True
+                state.has_definite_position = True
 
                 # set is in position
-                state.is_in_position = position.current_pos.is_in_position and position.current_pos.is_in_bounds
+                state.is_in_position = trigger_position.is_in_position and trigger_position.is_in_bounds
+                # the in path position will be our CURRENT POSITION not the trigger position
+                # (which is the previous position)
                 state.in_path_position = position.current_pos.in_path_position
 
                 # calculate height increment changed
@@ -526,16 +560,16 @@ class LayerTrigger(Trigger):
                     and self.height_increment > 0
                     and position.current_pos.is_layer_change
                     and (
-                        state.current_increment * self.height_increment < position.current_pos.height or
+                        state.current_increment * self.height_increment < trigger_position.height or
                         state.current_increment == 0
                     )
                 ):
 
-                    new_increment = int(math.ceil(position.current_pos.height/self.height_increment))
+                    new_increment = int(math.ceil(trigger_position.height/self.height_increment))
 
                     if new_increment <= state.current_increment:
                         message = (
-                            "Layer Trigger - Warning - The height increment was expected to increase, but it did not." 
+                            "Layer Trigger - Warning - The height increment was expected to increase, but it did not."
                             " Height Increment:%s, Current Increment:%s, Calculated Increment:%s"
                         )
                         logger.warning(
@@ -556,7 +590,7 @@ class LayerTrigger(Trigger):
                             "Layer Trigger - Height Increment:%s, Current Increment:%s, Height: %s",
                             self.height_increment,
                             state.current_increment,
-                            position.current_pos.height
+                            trigger_position.height
                         )
 
                 # see if we've encountered a layer or height change
@@ -566,8 +600,9 @@ class LayerTrigger(Trigger):
                         state.is_waiting = True
 
                 else:
+                    # see if the CURRENT position is a layer change
                     if position.current_pos.is_layer_change:
-                        state.layer = position.current_pos.layer
+                        state.layer = trigger_position.layer
                         state.is_layer_change_wait = True
                         state.is_layer_change = True
                         state.is_waiting = True
@@ -575,7 +610,7 @@ class LayerTrigger(Trigger):
                 if state.is_height_change_wait or state.is_layer_change_wait or state.is_waiting:
                     state.is_waiting = True
                     # see if the extruder is triggering
-                    is_extruder_triggering = position.is_extruder_triggered(self.extruder_triggers)
+                    is_extruder_triggering = position.is_previous_extruder_triggered(self.extruder_triggers)
                     if not is_extruder_triggering:
                         state.is_waiting_on_extruder = True
                         if state.is_height_change_wait:
@@ -583,15 +618,36 @@ class LayerTrigger(Trigger):
                         elif state.is_layer_change_wait:
                             logger.debug("LayerTrigger - Layer change triggering, waiting on extruder.")
                     else:
-                        if not position.previous_pos.has_homed_position:
-                            state.is_waiting_for_homed_position = True
-                            logger.debug("LayerTrigger - Triggering - Waiting for the previous position to be homed.")
-                        elif self.require_zhop and not position.current_pos.is_zhop:
+                        if not trigger_position.has_definite_position:
+                            state.is_waiting_for_definite_position = True
+                            logger.debug("LayerTrigger - Triggering - Waiting for a definite previous position.")
+                        elif self.require_zhop and not trigger_position.is_zhop:
                             state.is_waiting_on_zhop = True
                             logger.debug("LayerTrigger - Triggering - Waiting on ZHop.")
+                        elif not trigger_position.is_in_bounds:
+                            logger.debug("GcodeTrigger - Waiting for in-bounds position.")
                         elif not state.is_in_position and not state.in_path_position:
                             # Make sure the previous X,Y is in position
                             logger.debug("LayerTrigger - Waiting on Position.")
+                        elif not trigger_position.last_extrusion_height:
+                            # this should never be hit, but just in case!
+                            logger.debug(
+                                "LayerTrigger - Waiting for at least one extrusion on a previous layer."
+                            )
+                        elif utility.less_than(
+                            trigger_position.z, trigger_position.last_extrusion_height
+                        ):
+                        # The extruder is below the last extrusion height, do not take a snapshot else we might
+                        # run into the part!
+                            logger.debug(
+                                "LayerTrigger - Waiting for extruder to move above the highest extrusion point."
+                            )
+                        elif not self.snapshots_enabled:
+                            # Snapshot have been disabled by an octolapse gcode command
+                            logger.debug(
+                                "LayerTrigger - Waiting for snapshots to be enabled via @Octolapse start-snapshots "
+                                "command. "
+                            )
                         else:
                             if state.is_height_change_wait:
                                 logger.debug("LayerTrigger - Height change triggering.")
@@ -736,6 +792,7 @@ class TimerTrigger(Trigger):
             state.pause_time = None
 
     def update(self, position):
+        super(TimerTrigger, self).update(position)
         try:
             # get the last state to use as a starting point for the update
             # if there is no state, this will return the default state
@@ -750,19 +807,20 @@ class TimerTrigger(Trigger):
             state.reset_state()
             state.is_triggered = False
 
+            # set the trigger position.  It should be the previous position, not the current
+            trigger_position = position.previous_pos
             # Don't update the trigger if we don't have a homed axis
-            # Make sure to use the previous value so the homing operation can complete
-            if not position.current_pos.has_homed_position:
+            if not trigger_position.has_definite_position:
                 state.is_triggered = False
-                state.is_homed = False
+                state.has_definite_position = False
             else:
-                state.is_homed = True
+                state.has_definite_position = True
 
                 # record the current time to keep things consistant
                 current_time = time.time()
 
                 # set is in position
-                state.is_in_position = position.current_pos.is_in_position and position.current_pos.is_in_bounds
+                state.is_in_position = trigger_position.is_in_position and trigger_position.is_in_bounds
                 state.in_path_position = position.current_pos.in_path_position
 
                 # if the trigger start time is null, set it now.
@@ -790,17 +848,36 @@ class TimerTrigger(Trigger):
                     state.is_waiting = True
 
                     # see if the exturder is in the right position
-                    if position.is_extruder_triggered(self.extruder_triggers):
-                        if not position.previous_pos.has_homed_position:
-                            state.is_waiting_for_homed_position = True
-                            logger.debug("TimerTrigger - Triggering - Waiting for the previous position to be homed.")
-                        if self.require_zhop and not position.current_pos.is_zhop:
+                    if position.is_previous_extruder_triggered(self.extruder_triggers):
+                        if not trigger_position.has_definite_position:
+                            state.is_waiting_for_definite_position = True
+                            logger.debug("TimerTrigger - Triggering - Waiting for a definite previous position.")
+                        if self.require_zhop and not trigger_position.is_zhop:
                             logger.debug("TimerTrigger - Waiting on ZHop.")
                             state.is_waiting_on_zhop = True
+                        elif not trigger_position.is_in_bounds:
+                            logger.debug("TimerTrigger - Waiting for in-bounds position.")
                         elif not state.is_in_position and not state.in_path_position:
                             # Make sure the previous X,Y is in position
-
                             logger.debug("TimerTrigger - Waiting on Position.")
+                        elif not trigger_position.last_extrusion_height:
+                            logger.debug(
+                                "TimerTrigger - Waiting for at least one extrusion on a previous layer."
+                            )
+                        elif not utility.greater_than_or_equal(
+                            trigger_position.z, trigger_position.last_extrusion_height
+                        ):
+                        # The extruder is below the last extrusion height, do not take a snapshot else we might
+                        # run into the part!
+                            logger.debug(
+                                "TimerTrigger - Waiting for extruder to move above the highest extrusion point."
+                            )
+                        elif not self.snapshots_enabled:
+                            # Snapshot have been disabled by an octolapse gcode command
+                            logger.debug(
+                                "TimerTrigger - Waiting for snapshots to be enabled via @Octolapse start-snapshots "
+                                "command. "
+                            )
                         else:
                             # Is Triggering
                             self.trigger_count += 1

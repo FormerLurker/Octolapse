@@ -1,0 +1,21 @@
+name: Create master.zip
+on:
+  push:
+    branches:
+      - master  # Change to 'master' if your branch is named master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Create ZIP Archive
+        run: zip -r master.zip . -x "*.git*"
+
+      - name: Upload ZIP as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: master-zip
+          path: master.zip

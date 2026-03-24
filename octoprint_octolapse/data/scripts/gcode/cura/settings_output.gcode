@@ -14,4 +14,4 @@
 ; retraction_enable = {retraction_enable}
 ; layer_height = {layer_height}
 ; smooth_spiralized_contours = {smooth_spiralized_contours}
-; magic_mesh_surface_mode = {magic_mesh_surface_mode}
+

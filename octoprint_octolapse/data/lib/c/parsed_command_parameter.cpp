@@ -24,103 +24,84 @@
 #include "parsed_command.h"
 #include "logging.h"
 #include "python_helpers.h"
+
 parsed_command_parameter::parsed_command_parameter()
 {
-	//name_ = "";
-	value_type_ = 'N';
-	//double_value_ = 0.0;
-	//string_value_ = "";
-	//unsigned_long_value_ = 0;
+  value_type = 'N';
+  name.reserve(1);
 }
 
-parsed_command_parameter::parsed_command_parameter(parsed_command_parameter & source)
+parsed_command_parameter::
+parsed_command_parameter(const std::string name, double value) : name(name), double_value(value)
 {
-	name_ = source.name_;
-	value_type_ = source.value_type_;
-	double_value_ = source.double_value_;
-	string_value_ = source.string_value_;
-	unsigned_long_value_ = source.unsigned_long_value_;
+  value_type = 'F';
 }
 
-parsed_command_parameter::parsed_command_parameter(std::string name, double double_value) : name_(name), double_value_(double_value)
+parsed_command_parameter::
+parsed_command_parameter(const std::string name, const std::string value) : name(name), string_value(value)
 {
-	value_type_ = 'F';
-	//string_value_ = "";
-	//unsigned_long_value_ = 0;
+  value_type = 'S';
 }
 
-parsed_command_parameter::parsed_command_parameter(std::string name, std::string string_value) : name_(name), string_value_(string_value)
+parsed_command_parameter::
+parsed_command_parameter(const std::string name, const unsigned long value) : name(name), unsigned_long_value(value)
 {
-	value_type_ = 'S';
-	//double_value_ = 0.0;
-	//unsigned_long_value_ = 0;
+  value_type = 'U';
 }
 
-parsed_command_parameter::parsed_command_parameter(std::string name, unsigned int unsigned_int_value) : name_(name), string_value_(string_value_), unsigned_long_value_(unsigned_int_value)
-{
-	value_type_ = 'U';
-	//double_value_ = 0.0;
-	//string_value_ = "";
-}
 parsed_command_parameter::~parsed_command_parameter()
 {
-
 }
 
-PyObject * parsed_command_parameter::value_to_py_object()
+PyObject* parsed_command_parameter::value_to_py_object()
 {
-	PyObject * ret_val;
-	// check the parameter type
-	if (value_type_ == 'F')
-	{
-		ret_val = PyFloat_FromDouble(double_value_);
-		if (ret_val == NULL)
-		{
-			std::string message = "parsedCommandParameter.value_to_py_object: Unable to convert double value to a PyObject.";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_SetString(PyExc_ValueError, message.c_str());
-			return NULL;
-		}
-	}
-	else if (value_type_ == 'N')
-	{
-		// None Type
-		Py_INCREF(Py_None);
-		ret_val = Py_None;
-	}
-	else if (value_type_ == 'S')
-	{
-		ret_val = PyUnicode_SafeFromString(string_value_.c_str());
-		if (ret_val == NULL)
-		{
-			std::string message = "parsedCommandParameter.value_to_py_object: Unable to convert string value to a PyObject.";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_SetString(PyExc_ValueError, message.c_str());
-			return NULL;
-		}
-		
-	}
-	else if (value_type_ == 'U')
-	{
-		ret_val = PyLong_FromUnsignedLong(unsigned_long_value_);
-		if (ret_val == NULL)
-		{
-			std::string message = "parsedCommandParameter.value_to_py_object: Unable to convert unsigned long value to a PyObject.";
-			octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-			PyErr_SetString(PyExc_ValueError, message.c_str());
-			return NULL;
-		}
-	}
-	else
-	{
-		std::string message = "The command parameter value type does not exist.  Value Type: ";
-		message += value_type_;
-		octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
-		// There has been an error, we don't support this value_type!
-		PyErr_SetString(PyExc_ValueError, "Error creating ParsedCommand: Unknown value_type");
-		return NULL;
-	}
+  PyObject* ret_val;
+  // check the parameter type
+  if (value_type == 'F')
+  {
+    ret_val = PyFloat_FromDouble(double_value);
+    if (ret_val == NULL)
+    {
+      std::string message = "parsedCommandParameter.value_to_py_object: Unable to convert double value to a PyObject.";
+      octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
+      return NULL;
+    }
+  }
+  else if (value_type == 'N')
+  {
+    // None Type
+    Py_INCREF(Py_None);
+    ret_val = Py_None;
+  }
+  else if (value_type == 'S')
+  {
+    ret_val = PyUnicode_SafeFromString(string_value.c_str());
+    if (ret_val == NULL)
+    {
+      std::string message = "parsedCommandParameter.value_to_py_object: Unable to convert string value to a PyObject.";
+      octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
+      return NULL;
+    }
+  }
+  else if (value_type == 'U')
+  {
+    ret_val = PyLong_FromUnsignedLong(unsigned_long_value);
+    if (ret_val == NULL)
+    {
+      std::string message =
+        "parsedCommandParameter.value_to_py_object: Unable to convert unsigned long value to a PyObject.";
+      octolapse_log_exception(octolapse_log::GCODE_PARSER, message);
+      return NULL;
+    }
+  }
+  else
+  {
+    std::string message = "The command parameter value type does not exist.  Value Type: ";
+    message += value_type;
+    octolapse_log(octolapse_log::GCODE_PARSER, octolapse_log::ERROR, message);
+    // There has been an error, we don't support this value_type!
+    return NULL;
+  }
 
-	return ret_val;
-
+  return ret_val;
 }

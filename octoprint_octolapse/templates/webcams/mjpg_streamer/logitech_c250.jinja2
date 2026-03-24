@@ -1,0 +1,180 @@
+<!-- Logitech C250 Template -->
+<script type="text/html" id="octolapse-mjpg-streamer-logitech-c250">
+    <div class="row-fluid">
+        <div class="span12 text-center no-min-height">
+            <strong>Logitech C920 or Equivalent Detected</strong>
+        </div>
+    </div>
+    <div class="column">
+        <div class="no-column-break">
+            <fieldset class="octolapse">
+                <legend>General Settings</legend>
+                <div>
+                    <!--Brightness-->
+                    <span data-bind="text: data.controls_dict['9963776'].slider_label"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':data.controls_dict['9963776'].help_url, 'data-help-title':data.controls_dict['9963776'].name}"></a>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="octolapse-slider" type="range" data-bind="attr: {min: data.controls_dict['9963776'].min, max: data.controls_dict['9963776'].max, step: data.controls_dict['9963776'].step }, octolapseSliderValue: data.controls_dict['9963776'].value" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.controls_dict['9963776'].value"></span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Contrast-->
+                    <span data-bind="text: data.controls_dict['9963777'].slider_label"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':data.controls_dict['9963777'].help_url, 'data-help-title':data.controls_dict['9963777'].name}"></a>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="octolapse-slider" type="range" data-bind="attr: {min: data.controls_dict['9963777'].min, max: data.controls_dict['9963777'].max, step: data.controls_dict['9963777'].step }, octolapseSliderValue: data.controls_dict['9963777'].value" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.controls_dict['9963777'].value"></span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Saturation-->
+                    <span data-bind="text: data.controls_dict['9963778'].slider_label"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':data.controls_dict['9963778'].help_url, 'data-help-title':data.controls_dict['9963778'].name}"></a>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="octolapse-slider" type="range" data-bind="attr: {min: data.controls_dict['9963778'].min, max: data.controls_dict['9963778'].max, step: data.controls_dict['9963778'].step }, octolapseSliderValue: data.controls_dict['9963778'].value" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.controls_dict['9963778'].value" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Sharpness-->
+                    <span data-bind="text: data.controls_dict['9963803'].slider_label"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':data.controls_dict['9963803'].help_url, 'data-help-title':data.controls_dict['9963803'].name}"></a>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="octolapse-slider" type="range" data-bind="attr: {min: data.controls_dict['9963803'].min, max: data.controls_dict['9963803'].max, step: data.controls_dict['9963803'].step }, octolapseSliderValue: data.controls_dict['9963803'].value" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.controls_dict['9963803'].value" />
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--JPEG Quality-->
+                    <span data-bind="text: data.controls_dict['1'].slider_label"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':data.controls_dict['1'].help_url, 'data-help-title':data.controls_dict['1'].name}"></a>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input class="octolapse-slider" type="range" data-bind="attr: {min: data.controls_dict['1'].min, max: data.controls_dict['1'].max, step: data.controls_dict['1'].step }, octolapseSliderValue: data.controls_dict['1'].value" min="0" max="100" step="1" required="true" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.controls_dict['1'].value" />
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="no-column-break">
+            <fieldset class="octolapse">
+                <legend>White Balance</legend>
+                <div>
+                    <!--Auto White Balance-->
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: data.controls_dict['9963788'].checkbox_checked, attr: {title: data.controls_dict['9963788'].checkbox_title" /><span data-bind="text: data.controls_dict['9963788'].name"></span>&nbsp;&nbsp;
+                        <a class="octolapse_help" data-bind="attr: {'data-help-url':data.controls_dict['9963788'].help_url, 'data-help-title':data.controls_dict['9963788'].name}"></a>
+                    </label>
+                </div>
+                <div>
+                    <span data-bind="text: data.controls_dict['9963802'].slider_label"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':data.controls_dict['9963802'].help_url, 'data-help-title':data.controls_dict['9963802'].name}"></a>
+                    <div class="row-fluid">
+                        <!--White Balance-->
+                        <div class="span10">
+                            <input class="octolapse-slider" type="range" data-bind="attr: {min: data.controls_dict['9963802'].min, max: data.controls_dict['9963802'].max, step: data.controls_dict['9963802'].step }, octolapseSliderValue: data.controls_dict['9963802'].value, disable: (data.controls_dict['9963788'].checkbox_checked())" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="visible: (data.controls_dict['9963788'].checkbox_checked)">AUTO</span>
+                            <span data-bind="visible: (!data.controls_dict['9963788'].checkbox_checked()), text: (data.controls_dict['9963802'].value().toString() + 'K')"></span>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="no-column-break">
+            <fieldset class="octolapse">
+                <legend>Exposure, Gain, Auto-Priority</legend>
+                <div>
+                    <!--Backlight Compensation-->
+                    <label class="checkbox">
+                        <input type="checkbox" data-bind="checked: data.controls_dict['9963804'].checkbox_checked, attr: {title: data.controls_dict['9963804'].checkbox_title}" /><span data-bind="text: data.controls_dict['9963804'].name"></span>&nbsp;&nbsp;
+                        <a class="octolapse_help" data-bind="attr: {'data-help-url':data.controls_dict['9963804'].help_url, 'data-help-title':data.controls_dict['9963804'].name}"></a>
+                    </label>
+                </div>
+                <div>
+                    <!--Exposure Type-->
+                    <span data-bind="text: data.controls_dict['10094849'].name"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':data.controls_dict['10094849'].help_url, 'data-help-title':data.controls_dict['10094849'].name}"></a>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <select class="full-width"
+                                    data-bind="options: data.controls_dict['10094849'].get_options,
+                                           optionsText: 'name',
+                                           optionsValue: 'value',
+                                           value: data.controls_dict['10094849'].value"></select>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Exposure-->
+                    <span data-bind="text: data.controls_dict['10094850'].slider_label"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':data.controls_dict['10094850'].help_url, 'data-help-title':data.controls_dict['10094850'].name}"></a>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input type="range" class="octolapse-slider" data-bind="attr: {min: data.controls_dict['10094850'].min, max: data.controls_dict['10094850'].max, step: data.controls_dict['10094850'].step }, octolapseSliderValue: data.controls_dict['10094850'].value, disable: (data.controls_dict['10094849'].value() != '1')" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.controls_dict['10094850'].value, visible: (data.controls_dict['10094849'].value() == '1')" />
+                            <span data-bind="visible: (data.controls_dict['10094849'].value() != '1')">Auto</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!--Gain-->
+                    <span data-bind="text: data.controls_dict['9963795'].slider_label"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':data.controls_dict['9963795'].help_url, 'data-help-title':data.controls_dict['9963795'].name}"></a>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <input type="range" class="octolapse-slider" data-bind="attr: {min: data.controls_dict['9963795'].min, max: data.controls_dict['9963795'].max, step: data.controls_dict['9963795'].step }, octolapseSliderValue: data.controls_dict['9963795'].value, disable: (data.controls_dict['10094849'].value() != '1')" />
+                        </div>
+                        <div class="span2">
+                            <span data-bind="text: data.controls_dict['9963795'].value, visible: (data.controls_dict['10094849'].value() == '1')" />
+                            <span data-bind="visible: (data.controls_dict['10094849'].value() != '1')">Auto</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="row-fluid">
+                        <!--Exposure Auto Priority-->
+                        <div class="span12">
+                            <label class="checkbox" data-bind="css: {'disabled': data.controls_dict['10094849'].value() == '1'}">
+                                <input type="checkbox" data-bind="attr: {title: data.controls_dict['10094851'].checkbox_title}, disable: (data.controls_dict['10094849'].value() == '1'), checked: data.controls_dict['10094851'].checkbox_checked" /><span data-bind="text: data.controls_dict['10094851'].name"></span>&nbsp;&nbsp;
+                                <a class="octolapse_help" data-bind="attr: {'data-help-url':data.controls_dict['10094851'].help_url, 'data-help-title':data.controls_dict['10094851'].name}"></a>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="no-column-break">
+            <fieldset class="octolapse">
+                <legend>Misc</legend>
+                <div>
+                    <!--Powerline Frequency-->
+                    <span data-bind="text: data.controls_dict['9963800'].name"></span>&nbsp;&nbsp;<a class="octolapse_help" data-bind="attr: {'data-help-url':data.controls_dict['9963800'].help_url, 'data-help-title':data.controls_dict['9963800'].name}"></a>
+                    <div class="row-fluid">
+                        <div class="span10">
+                            <select class="full-width"
+                                    data-bind="options: data.controls_dict['9963800'].get_options,
+                                           optionsText: 'name',
+                                           optionsValue: 'value',
+                                           value: data.controls_dict['9963800'].value"></select>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+    </div>
+</script>

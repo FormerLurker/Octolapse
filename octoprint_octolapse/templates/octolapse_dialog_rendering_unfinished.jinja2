@@ -1,0 +1,96 @@
+<!--
+##################################################################################
+# Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
+# Copyright (C) 2023  Brad Hochgesang
+##################################################################################
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see the following:
+# https://github.com/FormerLurker/Octolapse/blob/master/LICENSE
+#
+# You can contact the author either through the git-hub repository, or at the
+# following email address: FormerLurker@pm.me
+##################################################################################
+-->
+<script type="text/html" id="octolapse-rendering-failed-action">
+    <a data-bind="click: function(){item.data.parent.render(item);}"
+       title="Render with selected settings"
+    >
+        <i class="fa fa-lg icon-film"></i>
+    </a>
+    &nbsp;|&nbsp;
+    <a data-bind="click: item.data.parent.download">
+        <i data-bind="class: item.data.parent._download_icon_class, attr: {title: item.data.parent._download_icon_title}" class="fa fa-lg fa-download"></i>
+    </a>
+    &nbsp;|&nbsp;
+    <span>
+        <a data-bind="click: function(){item.data.parent.delete(item);}" title="Delete all files.">
+            <i class="fa fa-lg fa-trash-o"></i>
+        </a>
+    </span>
+</script>
+<script type="text/html" id="octolapse-rendering-failed-camera-profile">
+    <select
+        class="input-block-level"
+        data-bind="
+            options: Octolapse.Status.cameras_sorted,
+            optionsText: 'name',
+            optionsValue: 'guid',
+            value: item.value.camera_profile_override_guid,
+            optionsCaption: item.value.get_camera_option_caption(),
+            visible: item.data.parent.is_admin">
+    </select>
+    <span data-bind="visible: !item.data.parent.is_admin(), text: item.value.get_camera_option_caption()"></span>
+</script>
+<script type="text/html" id="octolapse-rendering-failed-render-profile">
+    <select
+        class="input-block-level"
+        data-bind="
+            options: Octolapse.Status.renderings_sorted,
+            optionsText: 'name',
+            optionsValue: 'guid',
+            value: item.value.render_profile_override_guid,
+            optionsCaption: item.value.get_rendering_option_caption(),
+            optionsAfterRender: item.value.set_rendering_profile_option_description_as_title,
+            visible: item.data.parent.is_admin">
+    </select>
+    <span data-bind="visible: !item.data.parent.is_admin(), text: item.value.get_rendering_option_caption()"></span>
+</script>
+<script type="text/html" id="octolapse-rendering-failed-no-items">
+    <p>
+        No there are no failed renderings.
+    </p>
+</script>
+<script type="text/html" id="octolapse-rendering-failed-selected-actions">
+    <div data-bind="visible: data.parent.is_admin() && list_items().length > 0 && selected_count() > 0">
+        <div class="dropdown-select">
+            <div>
+                <div class="btn-group">
+                    <button class="btn input-block-level dropdown-toggle" data-toggle="dropdown">Render/Delete <span data-bind="text: selected_count"></span> Selected</button>
+                    <ul class="dropdown-menu">
+                        <li><a href="javascript:void(0)" data-bind="click: data.parent.render_selected">Render All Selected Items</a></li>
+                        <li class="divider"></li>
+                        <li><a href="javascript:void(0)" data-bind="click: data.parent.delete_selected">Delete All Selected Items</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+<script type="text/html" id="octolapse-rendering-failed-file-size">
+    <div class="text-right">
+        File Size:&nbsp;<span data-bind="text: data.parent.failed_renderings_size_formatted"></span>
+    </div>
+</script>
+<script type="text/html" id="octolapse-rendering-failed-template">
+    <!-- ko template: {name: 'octolapse-list', data: failed_renderings} --><!-- /ko -->
+</script>

@@ -1,7 +1,7 @@
 <!--
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2017  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -22,39 +22,29 @@
 ##################################################################################
 -->
 <script type="text/html" id="latest-snapshot-template">
-  <div id="octolapse_latest_snapshot_dialog" class="latest-snapshot-modal fade hide" >
-    <div id="octolapse_snapshot_image_container">
-      <div class="button-container top-right">
-        <div class="snapshot_refresh_container ol-hover-button">
-          <a class="start-animation" data-bind="click:startSnapshotAnimation('octolapse_snapshot_image_container'),visible:Octolapse.Globals.auto_reload_latest_snapshot" >
-            <span class="fa-stack fa-2x" style="position:inline;">
-              <i class="fa fa-square fa-stack-2x" ></i>
-              <i class="fa fa-play-circle fa-stack-1x"></i>
-            </span>
-          </a>
-          <a class="refresh" data-bind="click:function() {refreshLatestImage('octolapse_snapshot_image_container');},visible:!Octolapse.Globals.auto_reload_latest_snapshot()" >
-            <span class="fa-stack fa-2x" style="position:inline;">
-              <i class="fa fa-square fa-stack-2x" ></i>
-              <i class="fa fa-refresh fa-stack-1x"></i>
-            </span>
-          </a>
-
+    <div id="octolapse_latest_snapshot_dialog" class="latest-snapshot-modal fade hide" data-backdrop="true" >
+        <div id="octolapse_snapshot_image_container">
+            <div class="snapshot-container">
+                <span class="previous-snapshots">
+                </span>
+                <span class="latest-snapshot">
+                    <img class="latest" src=""/>
+                    <div class="octolapse-snapshot-button-overlay">
+                        <a title="Play animation if there are enough frames stored." class="play"
+                           data-bind="click:function() { startSnapshotAnimation('octolapse_snapshot_image_container'); },visible:Octolapse.Globals.main_settings.auto_reload_latest_snapshot">
+                            <i class="fa fa-play-circle fa-3x"></i>
+                        </a>
+                        <a class="refresh" data-bind="click:function() {refreshLatestImage('octolapse_snapshot_image_container');},visible: !Octolapse.Globals.main_settings.auto_reload_latest_snapshot()">
+                          <i class="fa fa-refresh fa-3x"></i>
+                      </a>
+                    </div>
+                </span>
+            </div>
+          <div class="button-container bottom-center">
+            <button type="button" class="cancel btn btn-primary">Close</button>
+          </div>
         </div>
-      </div>
-      <div class="snapshot-container">
-        <span class="previous-snapshots">
-        </span>
-        <span class="latest-snapshot">
-          <img class="latest"></img>
-        </span>
-      </div>
-      <div class="button-container bottom-center">
-        <button type="button" class="cancel btn btn-primary">Close</button>
-
-      </div>
-
     </div>
-  </div>
 </script>
 
 

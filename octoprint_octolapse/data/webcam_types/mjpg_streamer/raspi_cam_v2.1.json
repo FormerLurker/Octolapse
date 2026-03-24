@@ -1,0 +1,700 @@
+{
+  "key": "raspi_cam_v2",
+  "name": "Raspberry Pi Camera Module V2.1",
+  "make": "Raspberry Pi",
+  "model": "V2.1",
+  "template": "octolapse-mjpg-streamer-raspi-cam-v2",
+  "controls": [
+    {
+      "name": "User Controls",
+      "id": "9961473",
+      "type": "6",
+      "min": "0",
+      "max": "0",
+      "step": "0",
+      "default": "0",
+      "value": "30",
+      "dest": "0",
+      "flags": "68",
+      "group": "1"
+    },
+    {
+      "name": "Brightness",
+      "id": "9963776",
+      "type": "1",
+      "min": "0",
+      "max": "100",
+      "step": "1",
+      "default": "50",
+      "value": "61",
+      "dest": "0",
+      "flags": "32",
+      "group": "1"
+    },
+    {
+      "name": "Contrast",
+      "id": "9963777",
+      "type": "1",
+      "min": "-100",
+      "max": "100",
+      "step": "1",
+      "default": "0",
+      "value": "12",
+      "dest": "0",
+      "flags": "32",
+      "group": "1"
+    },
+    {
+      "name": "Saturation",
+      "id": "9963778",
+      "type": "1",
+      "min": "-100",
+      "max": "100",
+      "step": "1",
+      "default": "0",
+      "value": "-19",
+      "dest": "0",
+      "flags": "32",
+      "group": "1"
+    },
+    {
+      "name": "Red Balance",
+      "id": "9963790",
+      "type": "1",
+      "min": "1",
+      "max": "7999",
+      "step": "1",
+      "default": "1000",
+      "value": "1106",
+      "dest": "0",
+      "flags": "32",
+      "group": "1"
+    },
+    {
+      "name": "Blue Balance",
+      "id": "9963791",
+      "type": "1",
+      "min": "1",
+      "max": "7999",
+      "step": "1",
+      "default": "1000",
+      "value": "1484",
+      "dest": "0",
+      "flags": "32",
+      "group": "1"
+    },
+    {
+      "name": "Horizontal Flip",
+      "id": "9963796",
+      "type": "2",
+      "min": "0",
+      "max": "1",
+      "step": "1",
+      "default": "0",
+      "value": "1",
+      "dest": "0",
+      "flags": "0",
+      "group": "1"
+    },
+    {
+      "name": "Vertical Flip",
+      "id": "9963797",
+      "type": "2",
+      "min": "0",
+      "max": "1",
+      "step": "1",
+      "default": "0",
+      "value": "1",
+      "dest": "0",
+      "flags": "0",
+      "group": "1"
+    },
+    {
+      "name": "Power Line Frequency",
+      "id": "9963800",
+      "type": "3",
+      "min": "0",
+      "max": "3",
+      "step": "1",
+      "default": "1",
+      "value": "1",
+      "dest": "0",
+      "flags": "0",
+      "group": "1",
+      "menu": {
+        "0": "Disabled",
+        "1": "50 Hz",
+        "2": "60 Hz",
+        "3": "Auto"
+      }
+    },
+    {
+      "name": "Sharpness",
+      "id": "9963803",
+      "type": "1",
+      "min": "-100",
+      "max": "100",
+      "step": "1",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "32",
+      "group": "1"
+    },
+    {
+      "name": "Color Effects",
+      "id": "9963807",
+      "type": "3",
+      "min": "0",
+      "max": "15",
+      "step": "1",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "0",
+      "group": "1",
+      "menu": {
+        "0": "None",
+        "1": "Black & White",
+        "2": "Sepia",
+        "3": "Negative",
+        "4": "Emboss",
+        "5": "Sketch",
+        "6": "Sky Blue",
+        "7": "Grass Green",
+        "8": "Skin Whiten",
+        "9": "Vivid",
+        "10": "Aqua",
+        "11": "Art Freeze",
+        "12": "Silhouette",
+        "13": "Solarization",
+        "14": "Antique",
+        "15": "Set Cb/Cr"
+      }
+    },
+    {
+      "name": "Rotate",
+      "id": "9963810",
+      "type": "1",
+      "min": "0",
+      "max": "360",
+      "step": "90",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "1024",
+      "group": "1"
+    },
+    {
+      "name": "Color Effects, CbCr",
+      "id": "9963818",
+      "type": "1",
+      "min": "0",
+      "max": "65535",
+      "step": "1",
+      "default": "32896",
+      "value": "32896",
+      "dest": "0",
+      "flags": "0",
+      "group": "1"
+    },
+    {
+      "name": "Codec Controls",
+      "id": "10027009",
+      "type": "6",
+      "min": "0",
+      "max": "0",
+      "step": "0",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "68",
+      "group": "1"
+    },
+    {
+      "name": "Video Bitrate Mode",
+      "id": "10029518",
+      "type": "3",
+      "min": "0",
+      "max": "1",
+      "step": "1",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "8",
+      "group": "1",
+      "menu": {
+        "0": "Variable Bitrate",
+        "1": "Constant Bitrate"
+      }
+    },
+    {
+      "name": "Video Bitrate",
+      "id": "10029519",
+      "type": "1",
+      "min": "25000",
+      "max": "25000000",
+      "step": "25000",
+      "default": "10000000",
+      "value": "10000000",
+      "dest": "0",
+      "flags": "0",
+      "group": "1"
+    },
+    {
+      "name": "Repeat Sequence Header",
+      "id": "10029538",
+      "type": "2",
+      "min": "0",
+      "max": "1",
+      "step": "1",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "0",
+      "group": "1"
+    },
+    {
+      "name": "H264 I-Frame Period",
+      "id": "10029670",
+      "type": "1",
+      "min": "0",
+      "max": "2147483647",
+      "step": "1",
+      "default": "60",
+      "value": "60",
+      "dest": "0",
+      "flags": "0",
+      "group": "1"
+    },
+    {
+      "name": "H264 Level",
+      "id": "10029671",
+      "type": "3",
+      "min": "0",
+      "max": "11",
+      "step": "1",
+      "default": "11",
+      "value": "11",
+      "dest": "0",
+      "flags": "0",
+      "group": "1",
+      "menu": {
+        "0": "1",
+        "1": "1b",
+        "2": "1.1",
+        "3": "1.2",
+        "4": "1.3",
+        "5": "2",
+        "6": "2.1",
+        "7": "2.2",
+        "8": "3",
+        "9": "3.1",
+        "10": "3.2",
+        "11": "4"
+      }
+    },
+    {
+      "name": "H264 Profile",
+      "id": "10029675",
+      "type": "3",
+      "min": "0",
+      "max": "4",
+      "step": "1",
+      "default": "4",
+      "value": "4",
+      "dest": "0",
+      "flags": "0",
+      "group": "1",
+      "menu": {
+        "0": "Baseline",
+        "1": "Constrained Baseline",
+        "2": "Main",
+        "3": " ",
+        "4": "High"
+      }
+    },
+    {
+      "name": "Camera Controls",
+      "id": "10092545",
+      "type": "6",
+      "min": "0",
+      "max": "0",
+      "step": "0",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "68",
+      "group": "1"
+    },
+    {
+      "name": "Auto Exposure",
+      "id": "10094849",
+      "type": "3",
+      "min": "0",
+      "max": "3",
+      "step": "1",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "0",
+      "group": "1",
+      "menu": {
+        "0": "Auto Mode",
+        "1": "Manual Mode",
+        "2": "",
+        "3": ""
+      }
+    },
+    {
+      "name": "Exposure Time, Absolute",
+      "id": "10094850",
+      "type": "1",
+      "min": "1",
+      "max": "10000",
+      "step": "1",
+      "default": "1000",
+      "value": "1000",
+      "dest": "0",
+      "flags": "0",
+      "group": "1"
+    },
+    {
+      "name": "Exposure, Dynamic Framerate",
+      "id": "10094851",
+      "type": "2",
+      "min": "0",
+      "max": "1",
+      "step": "1",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "0",
+      "group": "1"
+    },
+    {
+      "name": "Auto Exposure, Bias",
+      "id": "10094867",
+      "type": "9",
+      "min": "0",
+      "max": "24",
+      "step": "1",
+      "default": "12",
+      "value": "12",
+      "dest": "0",
+      "flags": "0",
+      "group": "1"
+    },
+    {
+      "name": "White Balance, Auto & Preset",
+      "id": "10094868",
+      "type": "3",
+      "min": "0",
+      "max": "10",
+      "step": "1",
+      "default": "1",
+      "value": "1",
+      "dest": "0",
+      "flags": "0",
+      "group": "1",
+      "menu": {
+        "0": "Manual",
+        "1": "Auto",
+        "2": "Incandescent",
+        "3": "Fluorescent",
+        "4": "Fluorescent H",
+        "5": "Horizon",
+        "6": "Daylight",
+        "7": "Flash",
+        "8": "Cloudy",
+        "9": "Shade",
+        "10": "Greyworld"
+      }
+    },
+    {
+      "name": "Image Stabilization",
+      "id": "10094870",
+      "type": "2",
+      "min": "0",
+      "max": "1",
+      "step": "1",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "0",
+      "group": "1"
+    },
+    {
+      "name": "ISO Sensitivity",
+      "id": "10094871",
+      "type": "9",
+      "min": "0",
+      "max": "4",
+      "step": "1",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "0",
+      "group": "1"
+    },
+    {
+      "name": "ISO Sensitivity, Auto",
+      "id": "10094872",
+      "type": "3",
+      "min": "0",
+      "max": "1",
+      "step": "1",
+      "default": "1",
+      "value": "1",
+      "dest": "0",
+      "flags": "0",
+      "group": "1",
+      "menu": {
+        "0": "Manual",
+        "1": "Auto"
+      }
+    },
+    {
+      "name": "Exposure, Metering Mode",
+      "id": "10094873",
+      "type": "3",
+      "min": "0",
+      "max": "2",
+      "step": "1",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "0",
+      "group": "1",
+      "menu": {
+        "0": "Average",
+        "1": "Center Weighted",
+        "2": "Spot"
+      }
+    },
+    {
+      "name": "Scene Mode",
+      "id": "10094874",
+      "type": "3",
+      "min": "0",
+      "max": "13",
+      "step": "1",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "0",
+      "group": "1",
+      "menu": {
+        "0": "None",
+        "1": "",
+        "2": "",
+        "3": "",
+        "4": "",
+        "5": "",
+        "6": "",
+        "7": "",
+        "8": "Night",
+        "9": "",
+        "10": "",
+        "11": "Sports",
+        "12": "",
+        "13": ""
+      }
+    },
+    {
+      "name": "JPEG Compression Controls",
+      "id": "10289153",
+      "type": "6",
+      "min": "0",
+      "max": "0",
+      "step": "0",
+      "default": "0",
+      "value": "0",
+      "dest": "0",
+      "flags": "68",
+      "group": "1"
+    },
+    {
+      "name": "Compression Quality",
+      "id": "10291459",
+      "type": "1",
+      "min": "1",
+      "max": "100",
+      "step": "1",
+      "default": "30",
+      "value": "30",
+      "dest": "0",
+      "flags": "0",
+      "group": "1"
+    },
+    {
+      "name": "JPEG quality",
+      "id": "1",
+      "type": "1",
+      "min": "0",
+      "max": "100",
+      "step": "1",
+      "default": "50",
+      "value": "0",
+      "dest": "0",
+      "flags": "0",
+      "group": "3"
+    }
+  ],
+  "formats": [
+    {
+      "id": "0",
+      "name": "Planar YUV 4:2:0",
+      "compressed": "false",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "255"
+    },
+    {
+      "id": "1",
+      "name": "YUYV 4:2:2",
+      "compressed": "false",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "255"
+    },
+    {
+      "id": "2",
+      "name": "24-bit RGB 8-8-8",
+      "compressed": "false",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "255"
+    },
+    {
+      "id": "3",
+      "name": "JFIF JPEG",
+      "compressed": "true",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "255"
+    },
+    {
+      "id": "4",
+      "name": "H.264",
+      "compressed": "true",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "255"
+    },
+    {
+      "id": "5",
+      "name": "Motion-JPEG",
+      "compressed": "true",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "0"
+    },
+    {
+      "id": "6",
+      "name": "YVYU 4:2:2",
+      "compressed": "false",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "255"
+    },
+    {
+      "id": "7",
+      "name": "VYUY 4:2:2",
+      "compressed": "false",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "255"
+    },
+    {
+      "id": "8",
+      "name": "UYVY 4:2:2",
+      "compressed": "false",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "255"
+    },
+    {
+      "id": "9",
+      "name": "Y/CbCr 4:2:0",
+      "compressed": "false",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "255"
+    },
+    {
+      "id": "10",
+      "name": "24-bit BGR 8-8-8",
+      "compressed": "false",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "255"
+    },
+    {
+      "id": "11",
+      "name": "Planar YVU 4:2:0",
+      "compressed": "false",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "255"
+    },
+    {
+      "id": "12",
+      "name": "Y/CrCb 4:2:0",
+      "compressed": "false",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "255"
+    },
+    {
+      "id": "13",
+      "name": "32-bit BGRA/X 8-8-8-8",
+      "compressed": "false",
+      "emulated": "false",
+      "current": "true",
+      "resolutions": {
+        "0": "32x3280"
+      },
+      "currentResolution": "255"
+    }
+  ]
+}

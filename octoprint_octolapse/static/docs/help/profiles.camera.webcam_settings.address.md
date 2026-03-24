@@ -1,4 +1,4 @@
-This is the full path to the web camera.  This address can be used in the Snapshot Address Template and the Camera Settings Request Templates by using the {camera_address} replacement token.
+This is the full path to the web camera.  This address can be used in the Snapshot Address and the Camera Settings Request Templates by using the {camera_address} replacement token.
 
 The initial setting (after install or after you restore the default settings) is based on the OctoPrint settings within the 'Webcam & Timelapse' screen.  The OctoPrint default is (I believe) ```http://127.0.0.1:8080/```
 

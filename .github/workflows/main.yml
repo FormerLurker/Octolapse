@@ -1,0 +1,20 @@
+name: Create Plugin ZIP
+on:
+  push:
+    tags:
+      - 'v*'  # Wird ausgeführt, wenn du ein neues Tag wie "v1.0" erstellst
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Repository
+        uses: actions/checkout@v3
+
+      - name: Erstelle ZIP-Archiv
+        run: zip -r master.zip Octolapse/builds
+
+      - name: Release mit ZIP-Datei
+        uses: softprops/action-gh-release@v1
+        with:
+          files: master.zip

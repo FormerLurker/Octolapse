@@ -1,7 +1,7 @@
 /*
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
-# Copyright (C) 2019  Brad Hochgesang
+# Copyright (C) 2023  Brad Hochgesang
 ##################################################################################
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
@@ -22,7 +22,7 @@
 ##################################################################################
 */
 $(function() {
-    ko.subscribable.fn.subscribeWithTarget = function (handler, target) {
+    ko.subscribable.fn.octolapseSubscriptWithTarget = function (handler, target) {
         var self = this;
         var _oldValue;
         self.before_change_subscription = this.subscribe(function (oldValue) {
@@ -40,11 +40,21 @@ $(function() {
        return self;
     };
 
-    Octolapse.WebcamSettingsPopupViewModel = function (values) {
+    Octolapse.WebcamSettingsPopupViewModel = function (id) {
         var self = this;
+        self.id = id;
+        self.selector = "#" + id;
+        self.loading_selector = self.selector + ' div.webcam_settings_preview div.loading';
+        self.error_selector = self.selector + ' div.webcam_settings_preview div.error';
+        self.dialog = {};
+
         self.closeWebcamSettingsDialog = function() {
             self.can_hide = true;
-            $("#octolapse_webcam_settings_dialog").modal("hide");
+            if (self.dialog.$webcamSettingsDialog)
+            {
+                self.dialog.$webcamSettingsDialog.modal("hide");
+            }
+
         };
 
         // variable to hold the custom webcam image preferences
@@ -52,57 +62,74 @@ $(function() {
 
         self.can_hide = false;
 
-        self.openWebcamSettingsDialog = function(){
-            var dialog = this;
+        self.openWebcamSettingsDialog = function(on_closed){
+            self.dialog = {};
+            self.on_closed_callback = on_closed;
+            // Set close callback
+            self.dialog.on_closed = function(send_settings) {
+                if (self.on_closed_callback)
+                {
+                    var settings = null;
+                    if (send_settings) {
+                        settings = ko.toJS(self.webcam_settings);
+                    }
+                    self.on_closed_callback(settings);
+                }
+                self.closeWebcamSettingsDialog();
+            };
             // Show the settings dialog
-            dialog.$webcamSettingsDialog = $("#octolapse_webcam_settings_dialog");
-            dialog.$webcamSettingsForm = dialog.$webcamSettingsDialog.find("#octolapse_webcam_settings_popup_form");
-            dialog.$webcamStreamImg = dialog.$webcamSettingsDialog.find("#octolapse_webcam_settings_stream");
-            dialog.$cancelButton = $(".cancel", dialog.$webcamSettingsDialog);
-            dialog.$closeIcon = $("a.close", dialog.$webcamSettingsDialog);
-            dialog.$saveButton = $(".save", dialog.$webcamSettingsDialog);
-            dialog.$defaultButton = $(".set-defaults", dialog.$webcamSettingsDialog);
-            dialog.$modalBody = dialog.$webcamSettingsDialog.find(".modal-body");
-            dialog.$modalHeader = dialog.$webcamSettingsDialog.find(".modal-header");
-            dialog.$modalFooter = dialog.$webcamSettingsDialog.find(".modal-footer");
-            dialog.$cancelButton.unbind("click");
+            self.dialog.$webcamSettingsDialog = $(self.selector);
+            self.dialog.$cancelButton = $(".cancel", self.dialog.$webcamSettingsDialog);
+            self.dialog.$closeIcon = $("a.close", self.dialog.$webcamSettingsDialog);
+            self.dialog.$saveButton = $(".save", self.dialog.$webcamSettingsDialog);
+            self.dialog.$defaultButton = $(".set-defaults", self.dialog.$webcamSettingsDialog);
+            self.dialog.$modalBody = self.dialog.$webcamSettingsDialog.find(".modal-body");
+            self.dialog.$modalHeader = self.dialog.$webcamSettingsDialog.find(".modal-header");
+            self.dialog.$modalFooter = self.dialog.$webcamSettingsDialog.find(".modal-footer");
+            self.dialog.$cancelButton.unbind("click");
             // Called when the user clicks the cancel button in any add/update dialog
-            dialog.$cancelButton.bind("click", self.webcam_settings.cancelWebcamChanges);
-            dialog.$closeIcon.unbind("click");
-            dialog.$closeIcon.bind("click", self.webcam_settings.cancelWebcamChanges);
-
-            dialog.$saveButton.unbind("click");
-            // Called when the user clicks the cancel button in any add/update dialog
-            dialog.$saveButton.bind("click", function () {
-                // Save the settings.
-                self.saveWebcamSettings();
+            self.dialog.$cancelButton.bind("click", function() {
+                self.webcam_settings.cancelWebcamChanges(self.dialog.on_closed);
+            });
+            self.dialog.$closeIcon.unbind("click");
+            self.dialog.$closeIcon.bind("click", function() {
+                self.webcam_settings.cancelWebcamChanges(self.dialog.on_closed);
             });
 
-            dialog.$defaultButton.unbind("click");
+            self.dialog.$saveButton.unbind("click");
             // Called when the user clicks the cancel button in any add/update dialog
-            dialog.$defaultButton.bind("click", function () {
+            self.dialog.$saveButton.bind("click", function () {
+                // Save the settings.
+                if (self.on_closed_callback) {
+                    self.dialog.on_closed(true);
+                }
+                else
+                {
+                    self.saveWebcamSettings();
+                }
+            });
+
+            self.dialog.$defaultButton.unbind("click");
+            // Called when the user clicks the cancel button in any add/update dialog
+            self.dialog.$defaultButton.bind("click", function () {
                 // Hide the dialog
                 self.webcam_settings.restoreWebcamDefaults();
             });
 
             // Prevent hiding unless the event was initiated by the hideAddEditDialog function
 
-            dialog.$webcamSettingsDialog.on("hide.bs.modal", function () {
-                console.log("Hiding webcam settings dialog");
+            self.dialog.$webcamSettingsDialog.on("hide.bs.modal", function () {
+                //console.log("Hiding webcam settings dialog");
                 if (!self.can_hide)
                     return false;
                 // Clear out error summary
                 self.webcam_settings.setStreamVisibility(false);
             });
 
-            dialog.$webcamSettingsDialog.on("show.bs.modal", function () {
-
-            });
-
-            dialog.$webcamSettingsDialog.on("shown.bs.modal", function () {
+            self.dialog.$webcamSettingsDialog.on("shown.bs.modal", function () {
                 self.can_hide = false;
                 self.webcam_settings.setStreamVisibility(true);
-                dialog.$webcamSettingsDialog.css({
+                self.dialog.$webcamSettingsDialog.css({
                     width: '940px',
                     'margin-left': function () {
                         return -($(this).width() / 2);
@@ -110,11 +137,11 @@ $(function() {
                 });
             });
 
-            dialog.$webcamSettingsDialog.modal({
+            self.dialog.$webcamSettingsDialog.modal({
                 backdrop: 'static',
                 maxHeight: function() {
                     return Math.max(
-                      window.innerHeight - dialog.$modalHeader.innerHeight()-dialog.$modalFooter.innerHeight()-30,
+                      window.innerHeight - self.dialog.$modalHeader.innerHeight()-self.dialog.$modalFooter.innerHeight()-30,
                       200
                     );
                 }
@@ -163,22 +190,39 @@ $(function() {
             });
         };
 
-        self.canEditSettings = ko.pureComputed(function(){
-            // Get the current camera profile
-            var current_camera = Octolapse.Status.getCurrentProfileByGuid(Octolapse.Status.profiles().cameras(),Octolapse.Status.current_camera_guid());
-                if (current_camera != null)
-                {
-                    return current_camera.enable_custom_image_preferences;
-                }
-            return false;
-        });
+        self.showWebcamSettingsForProfile = function(profile, on_preferences_changed) {
+            // First update the current webcam_settings based on the current profile
+            self.webcam_settings.updateWebcamSettings(profile);
 
-        self.showWebcamSettings = function() {
+            self.webcam_settings.getMjpgStreamerControls(false, function (results) {
+                // Update the current settings that we just received
+                if (results.settings.new_preferences_available)
+                {
+                    self.webcam_settings.updateWebcamSettings(results.settings);
+                }
+
+                self.openWebcamSettingsDialog(on_preferences_changed);
+            }, function(results){
+                 var message = "There was a problem retrieving webcam settings from the server.";
+                 if (results && results.error)
+                     message = message + " Details: " + results.error;
+                 var options = {
+                    title: 'Webcam Settings Error',
+                    text: message,
+                    type: 'error',
+                    hide: false,
+                    addclass: "octolapse"
+                };
+                Octolapse.displayPopupForKey(options, "webcam_settings_error",["webcam_settings_error"]);
+            });
+        };
+
+        self.showWebcamSettingsForGuid = function(guid) {
             // Load the current webcam settings
             // On success, show the dialog
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
             var data = {
-                'guid': Octolapse.Status.current_camera_guid(),
+                'guid': guid,
                 'replace': false
             };
             self.webcam_settings.getImagePreferences(data, function (results) {
@@ -195,7 +239,7 @@ $(function() {
                         message,
                         function () {
                             data = {
-                                'guid': Octolapse.Status.current_camera_guid(),
+                                'guid': self.webcam_settings.guid(),
                                 'replace': true
                             };
                             self.webcam_settings.getImagePreferences(data, function (results) {
@@ -217,7 +261,7 @@ $(function() {
                 };
                 Octolapse.displayPopupForKey(options,"webcam_settings_error",["webcam_settings_error"]);
             });
-        }
+        };
     };
 
     Octolapse.WebcamSettingsViewModel = function (close_callback) {
@@ -236,6 +280,7 @@ $(function() {
         self.timeout_ms = ko.observable();
         self.server_type = ko.observable();
         self.type = ko.observable();
+        self.stream_download = ko.observable();
         self.mjpg_streamer = new Octolapse.MjpgStreamerViewModel();
         self.use_custom_webcam_settings_page = ko.observable();
         self.webcam_two_column_view = ko.observable(Octolapse.getLocalStorage("webcam_two_column_view") || false);
@@ -243,7 +288,7 @@ $(function() {
         self.toggleColumns = function(){
             var two_column_view = !self.webcam_two_column_view();
             self.webcam_two_column_view(two_column_view);
-            console.log("Setting two column view.");
+            //console.log("Setting two column view.");
             Octolapse.setLocalStorage("webcam_two_column_view", two_column_view);
         };
 
@@ -274,14 +319,7 @@ $(function() {
             if (!self.server_type() || !self.address())
                 return;
             var data = {
-                "guid": self.guid(),
-                "server_type": self.server_type(),
-                "camera_name": self.name() ? self.name() : "unknown",
-                "address": self.address(),
-                "username": self.username() ? self.username() : "",
-                "password": self.password() ? self.password() : "",
-                "ignore_ssl_error": self.ignore_ssl_error() ? self.ignore_ssl_error() : false,
-                "replace": replace
+                "profile": ko.toJS(self)
             };
 
             $.ajax({
@@ -301,9 +339,6 @@ $(function() {
                     }
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-
-                    //if(self.close_callback)
-                    //    self.close_callback();
                     error_callback();
                 }
             });
@@ -315,11 +350,11 @@ $(function() {
                return "Switch to Default Page";
            }
            else{
-               return "Check for Custom Page";
+               return "Switch to Custom Page";
            }
         });
 
-        self.toggleCustomCameraSettingsPage = function(){
+        self.toggleCustomCameraSettingsPage = function(prevent_errors, force_custom){
             // fetch control settings from the server
             if (!self.server_type() || !self.address())
             {
@@ -375,7 +410,7 @@ $(function() {
                         return;
                     }
                     // set our camera type info
-                    var use_custom_webcam_settings_page = !self.use_custom_webcam_settings_page();
+                    var use_custom_webcam_settings_page = !self.use_custom_webcam_settings_page() || force_custom;
                     if(!results.type)
                         use_custom_webcam_settings_page = false;
                     data = {
@@ -390,38 +425,44 @@ $(function() {
                     self.updateWebcamSettings(data);
                     // We meed to rebind the help links here, else they will not show up.
                     Octolapse.Help.bindHelpLinks(".octolapse .webcam_settings");
-                    var message;
-                    var title = "Webcam type found!";
-                    var type = "success";
-                    if (!results.type) {
-                        message = "This webcam does not currently support a custom camera control page.";
-                        title = 'Unknown webcam';
-                        type = "error";
-                    }
-                    else if (!use_custom_webcam_settings_page)
-                    {
-                        message = "Successfully switched to the default mjpg-streamer control page.";
-                    }
-                    var options = {
+                    if (!prevent_errors) {
+                        var message;
+                        var title = "Webcam type found!";
+                        var type = "success";
+                        if (!results.type) {
+                            message = "There is no custom control for your webcam model at the moment!";
+                            title = 'Unknown webcam';
+                            type = "error";
+                        } else if (!use_custom_webcam_settings_page) {
+                            title = "Changed to Default View";
+                            message = "Successfully switched to the default mjpg-streamer control page.";
+                        } else {
+                            title = "Webcam type found!";
+                            message = "A custom image preference control page exists for this camera!.";
+                        }
+                        var options = {
                             title: title,
                             text: message,
                             type: type,
                             hide: true,
                             addclass: "octolapse"
                         };
-                    Octolapse.displayPopupForKey(options, "camera-detected",["camera-detected"]);
+                        Octolapse.displayPopupForKey(options, "camera-detected", ["camera-detected"]);
+                    }
                     return;
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
-                    var options = {
-                        title: 'Unknown Camera Type',
-                        text: "Status: " + textStatus + ".  Error: " + errorThrown,
-                        type: 'error',
-                        hide: false,
-                        addclass: "octolapse"
-                    };
                     self.type(null);
-                    Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
+                    if (!prevent_errors) {
+                        var options = {
+                            title: 'Unknown Camera Type',
+                            text: "Status: " + textStatus + ".  Error: " + errorThrown,
+                            type: 'error',
+                            hide: false,
+                            addclass: "octolapse"
+                        };
+                        Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
+                    }
                 }
             });
         };
@@ -450,7 +491,7 @@ $(function() {
             else
                 value = 'webcam-other-template';
 
-            return value
+            return value;
         });
 
         self.get_webcam_data = ko.pureComputed(function(){
@@ -466,7 +507,7 @@ $(function() {
         self.stream_url = ko.pureComputed(function(){
             if(!self.camera_stream_visible())
                 return '';
-            console.log("Calculating stream url.");
+            //console.log("Calculating stream url.");
             var url = self.stream_template();
             if (url != "")
                 url = url.replace("{camera_address}", self.address());
@@ -474,9 +515,16 @@ $(function() {
         },this);
 
         self.setStreamVisibility = function(value){
-            console.log("Attempting to stop the camera stream");
-            self.camera_stream_visible(value);
-            self.stream_url();
+            if (self.camera_stream_visible() != value) {
+                if (value){
+                    //console.log("Attempting to start the camera stream");
+                }
+                else{
+                    //console.log("Attempting to stop the camera stream");
+                }
+                self.camera_stream_visible(value);
+                //self.stream_url();
+            }
         };
 
         self.subscriptions = [];
@@ -491,10 +539,11 @@ $(function() {
         };
 
         self.subscribe_to_mjpg_streamer_changes = function() {
+            self.unsubscribe_to_settings_changes();
             for(var index = 0; index < self.mjpg_streamer.controls().length; index++)
             {
                 var control = self.mjpg_streamer.controls()[index];
-                self.subscriptions.push(control.value.subscribeWithTarget(function (target, oldValue, newValue) {
+                self.subscriptions.push(control.value.octolapseSubscriptWithTarget(function (target, oldValue, newValue) {
                     if (oldValue !== newValue)
                     {
                         self.applyWebcamSetting(ko.toJS(target));
@@ -512,9 +561,9 @@ $(function() {
         };
         // I found this awesome binding handler created by Michael Rouse, available at https://codepen.io/mwrouse/pen/wWwvmN
 
-        self.cancelWebcamChanges = function(){
-            if (self.guid() == null || self.guid() == "")
-                self.close_callback();
+        self.cancelWebcamChanges = function(on_closed_callback){
+            //if (on_closed_callback && (self.guid() == null || self.guid() == ""))
+            //    on_closed_callback(ko.toJS(self));
             //console.log("Undoing webcam changes.");
             // If no guid is supplied, this is a new profile.  We will need to know that later when we push/update our observable array
 
@@ -541,8 +590,8 @@ $(function() {
 
                         Octolapse.displayPopupForKey(options, "camera_settings_error",["camera_settings_error"]);
                     }
-                    if(self.close_callback)
-                        self.close_callback();
+                    if (on_closed_callback)
+                        on_closed_callback(false);
                 },
                 error: function (XMLHttpRequest, textStatus, errorThrown) {
                     var options = {
@@ -553,8 +602,8 @@ $(function() {
                         addclass: "octolapse"
                     };
                     Octolapse.displayPopupForKey(options,"camera_settings_error",["camera_settings_error"]);
-                    if(self.close_callback)
-                        self.close_callback();
+                    if (on_closed_callback)
+                        on_closed_callback(true);
                 }
             });
         };
@@ -638,8 +687,12 @@ $(function() {
                 self.name(values.name);
             if ("address" in webcam_settings)
                 self.address(webcam_settings.address);
-            if ('snapshot_request_template' in webcam_settings)
+            if (
+                'snapshot_request_template' in webcam_settings &&
+                self.snapshot_request_template() != webcam_settings.snapshot_request_template
+            ) {
                 self.snapshot_request_template(webcam_settings.snapshot_request_template);
+            }
             if ("username" in webcam_settings)
                 self.username(webcam_settings.username);
             if ("password" in webcam_settings)
@@ -655,6 +708,9 @@ $(function() {
                 self.type(webcam_settings.type);
             }
 
+            if ("stream_download" in webcam_settings)
+                self.stream_download(webcam_settings.stream_download);
+
             if("use_custom_webcam_settings_page" in webcam_settings)
             {
                 self.use_custom_webcam_settings_page(webcam_settings.use_custom_webcam_settings_page);
@@ -665,7 +721,7 @@ $(function() {
                 self.mjpg_streamer.update(webcam_settings.mjpg_streamer, self.type(), self.use_custom_webcam_settings_page());
             }
             // notify subscribers of a possible stream url change.
-            self.stream_url.notifySubscribers();
+            //self.stream_url.notifySubscribers();
             // restore the webcam settings template so that the custom controls show
             self.restore_webcam_settings_template();
             setTimeout(function(){
@@ -760,7 +816,8 @@ $(function() {
         };
 
         self.previewStabilization = function() {
-            var message = "Make sure your bed is clear, and that your 'Home Axis Gcode Script' \
+            var message = "Your extruder will be moved to the selected stabilization position. \
+                           Make sure your bed is clear, and that your 'Home Axis Gcode Script' \
                            is correct before attempting to preview the stabilization point.  \
                            Are you sure you want to continue?";
             Octolapse.showConfirmDialog("preview-stabilization", "Preview Stabilization", message, function(){
@@ -795,5 +852,5 @@ $(function() {
             },null);
         };
 
-    }
+    };
 });
