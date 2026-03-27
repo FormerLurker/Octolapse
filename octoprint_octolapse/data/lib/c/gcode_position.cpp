@@ -655,7 +655,7 @@ void gcode_position::update(parsed_command& command, const long file_line_number
               if (height_increment_ != 0)
               {
                 const double increment_double = p_current_pos->height / height_increment_;
-                unsigned const int increment = utilities::round_up_to_int(increment_double);
+                const int increment = utilities::round_up_to_int(increment_double);
                 if (increment > p_current_pos->height_increment && increment > 1)
                 {
                   p_current_pos->height_increment = increment;

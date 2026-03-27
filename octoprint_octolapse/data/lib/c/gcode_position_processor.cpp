@@ -36,9 +36,17 @@
 // Sometimes used to test performance in release mode.
 //#include "test.h"
 
-int main(int argc, wchar_t* argv[])
+#if UNICODE
+int main(int argc, wchar_t *argv[])
+#else
+int main(int argc, char *argv[])
+#endif
 {
-	wchar_t* program = argv[0];
+#if UNICODE
+	wchar_t *program = argv[0];
+#else
+	char *program = argv[0];
+#endif
 	if (program == NULL) {
 		fprintf(stderr, "Fatal error: cannot decode argv[0]\n");
 		exit(1);
@@ -59,13 +67,38 @@ int main(int argc, wchar_t* argv[])
 		PyConfig_InitPythonConfig(&config);
 
 		if (argc && argv) {
+#if UNICODE
 			status = PyConfig_SetString(&config, &config.program_name, program);
+#else
+			wchar_t wprogram[PATH_MAX];
+			if (mbstowcs(wprogram, program, PATH_MAX) == (size_t)-1) {
+				fprintf(stderr, "Fatal error: cannot convert argv[0] to wchar_t\n");
+				exit(1);
+			}
+			status = PyConfig_SetString(&config, &config.program_name, wprogram);
+#endif
 			if (PyStatus_Exception(status)) {
 				PyConfig_Clear(&config);
 				return 1;
 			}
-
+#if UNICODE
 			status = PyConfig_SetArgv(&config, argc, argv);
+#else
+			wchar_t **wargv = (wchar_t **)malloc(argc * sizeof(wchar_t *));
+			if (!wargv) {
+				fprintf(stderr, "Fatal error: memory allocation failed\n");
+				exit(1);
+			}
+			for (int i = 0; i < argc; i++) {
+				size_t len = strlen(argv[i]) + 1;
+				wargv[i] = (wchar_t *)malloc(len * sizeof(wchar_t));
+				if (!wargv[i] || mbstowcs(wargv[i], argv[i], len) == (size_t)-1) {
+					fprintf(stderr, "Fatal error: cannot convert argv[%d] to wchar_t\n", i);
+					exit(1);
+				}
+			}
+			status = PyConfig_SetArgv(&config, argc, wargv);
+#endif
 			if (PyStatus_Exception(status)) {
 				PyConfig_Clear(&config);
 				return 1;
@@ -365,8 +398,7 @@ extern "C" {
 		}
 
 		// see if we already have a gcode_position object for the given key
-		std::map<std::string, gcode_position*>::iterator gcode_position_iterator = gpp::gcode_positions.find(pKey);
-		gcode_position* p_gcode_position = NULL;
+		std::map<std::string, gcode_position *>::iterator gcode_position_iterator = gpp::gcode_positions.find(pKey);
 		if (gcode_position_iterator != gpp::gcode_positions.end())
 		{
 			octolapse_log(octolapse_log::GCODE_POSITION, octolapse_log::INFO, "Existing processor found, deleting.");

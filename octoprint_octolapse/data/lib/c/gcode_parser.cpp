@@ -145,7 +145,7 @@ bool gcode_parser::try_parse_gcode(const char* gcode, parsed_command& command)
     char cur_char = *p_gcode;
     if (cur_char == '\0' || cur_char == ';')
       break;
-    else if (cur_char > 32 || cur_char == ' ' && has_seen_character)
+    else if (cur_char > 32 || (cur_char == ' ' && has_seen_character))
     {
       if (cur_char >= 'a' && cur_char <= 'z')
         command.gcode.push_back(cur_char - 32);
