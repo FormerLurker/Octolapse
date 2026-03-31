@@ -22,7 +22,7 @@
 ##################################################################################
 -->
 
-<a id="octolapse_navbar" data-bind="click: navbarClicked, visible:Octolapse.Globals.main_settings.show_navbar_icon">
+<a id="octolapse_navbar" data-bind="click: navbarClicked, visible:Octolapse.Globals.main_settings.show_navbar_icon" href="#">
     <span class="fa-lg" style="display:none;" data-bind="visible: Octolapse.Status.is_timelapse_active() || Octolapse.Globals.main_settings.show_navbar_when_not_printing(), attr: { title: Octolapse.Status.is_taking_snapshot() ? 'Taking a snapshot' : Octolapse.Status.is_rendering() ? 'Rendering' : 'Waiting to take snapshot'}">
       OCT<span data-bind="visible: ! Octolapse.Status.is_timelapse_active()">O</span><i class="fa fa-inverse" data-bind="css:{'icon-camera': (Octolapse.Status.is_timelapse_active() && !Octolapse.Status.is_rendering()), 'icon-film': Octolapse.Status.is_rendering()}, style: { color: (!Octolapse.Status.is_taking_snapshot() && !Octolapse.Status.is_rendering() ? '' : 'greenyellow')}"></i>LAPSE
     </span>
