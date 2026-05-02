@@ -600,6 +600,10 @@ class RenderingProcessor(threading.Thread):
         with self.r_lock:
             return self._has_pending_jobs() or self.rendering_task_queue.qsize() > 0
 
+    def get_current_rendering_job(self):
+        with self.r_lock:
+            return copy.copy(self._current_rendering_job)
+
     def get_failed(self):
         with self.r_lock:
             return {

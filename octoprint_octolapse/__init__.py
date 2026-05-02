@@ -403,6 +403,24 @@ class OctolapsePlugin(
             self._timelapse.stop_snapshots()
             return jsonify({'success': True})
 
+    @octoprint.plugin.BlueprintPlugin.route("/renderProgress", methods=["POST"])
+    @restricted_access
+    def render_progress_request(self):
+        with OctolapsePlugin.admin_permission.require(http_exception=403):
+            request_values = request.get_json()
+            percent = request_values.get("percent")
+            if percent is None:
+                return jsonify({'success': False, 'error': 'Missing required field: percent'})
+            try:
+                percent = float(percent)
+            except (ValueError, TypeError):
+                return jsonify({'success': False, 'error': 'percent must be a number'})
+            if not 0.0 <= percent <= 100.0:
+                return jsonify({'success': False, 'error': 'percent must be between 0 and 100'})
+            job = self._rendering_processor.get_current_rendering_job()
+            self.send_render_progress_message(percent, job)
+            return jsonify({'success': True})
+
     @octoprint.plugin.BlueprintPlugin.route("/previewStabilization", methods=["POST"])
     @restricted_access
     def preview_stabilization(self):
