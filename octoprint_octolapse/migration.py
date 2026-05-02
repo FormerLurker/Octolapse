@@ -107,7 +107,10 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
         raise Exception("Could not find version information within the settings json, cannot perform migration.")
 
     if version == "0+unknown":
-        raise Exception("An unknown settings version was detected, cannot perform migration.")
+        if settings_version is None:
+            raise Exception("An unknown settings version was detected, cannot perform migration.")
+        # settings_version is present — all migration steps that use `version` also gate on
+        # `settings_version is None`, so we can proceed safely without a resolvable version string.
 
     # create a copy of the settings
     original_settings_copy = copy.deepcopy(settings_dict)
