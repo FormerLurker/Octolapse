@@ -5,14 +5,21 @@ import sys
 import platform
 
 # Versioneer import with fallback
+_PINNED_VERSION = "0.4.5+azuer88"
+
 try:
     import versioneer
     cmdclass = versioneer.get_cmdclass()
+    _raw_get_version = versioneer.get_version
+    def get_version():
+        v = _raw_get_version()
+        return _PINNED_VERSION if v == "0+unknown" else v
+    versioneer.get_version = get_version
 except (ImportError, AttributeError):
     print("Warning: versioneer not available, using fallback version")
     cmdclass = {}
     def get_version():
-        return "0.4.51"
+        return _PINNED_VERSION
     def get_cmdclass():
         return {}
     class _versioneer:
