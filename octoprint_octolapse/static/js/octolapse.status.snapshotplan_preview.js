@@ -32,6 +32,7 @@ $(function() {
             dialog.$snapshotPlanPreviewDialog = $("#octolapse_snapshot_plan_preview_dialog");
             dialog.$snapshotPlanPreviewForm = dialog.$snapshotPlanPreviewDialog.find("#octolapse_snapshot_plan_preview_form");
             dialog.$cancelButton = $(".cancel", dialog.$snapshotPlanPreviewDialog);
+            dialog.$disableButton = $(".continue-disable", dialog.$snapshotPlanPreviewDialog);
             dialog.$closeIcon = $("a.close", dialog.$snapshotPlanPreviewDialog);
             dialog.$continueButton = $(".continue", dialog.$snapshotPlanPreviewDialog);
             dialog.$modalBody = dialog.$snapshotPlanPreviewDialog.find(".modal-body");
@@ -48,6 +49,11 @@ $(function() {
                 // Save the settings.
                 Octolapse.Globals.acceptSnapshotPlanPreview();
                 self.closeSnapshotPlanPreviewDialog();
+            });
+
+            dialog.$disableButton.unbind("click");
+            dialog.$disableButton.bind("click", function () {
+                Octolapse.Globals.acceptSnapshotPlanPreview(true);
             });
 
             // Prevent hiding unless the event was initiated by the hideAddEditDialog function

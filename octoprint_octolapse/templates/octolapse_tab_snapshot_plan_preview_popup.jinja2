@@ -38,8 +38,9 @@
                     </div>
                     <div class="modal-footer" style="bottom:0;position:relative">
                         <div class="row-fluid">
-                                <button type="button" class="span6 btn btn-default cancel input-block-level" title="Cancel the print">Cancel Print</button>
-                                <button type="button" class="span6 btn btn-primary continue input-block-level" title="Accept the snapshot plan and continue printing">
+                                <button type="button" class="span4 btn btn-default cancel input-block-level" title="Cancel the print">Cancel Print</button>
+                                <button type="button" class="span4 btn btn-default continue-disable input-block-level" title="Disable Octolapse for this print and continue printing">Print without Timelapse</button>
+                                <button type="button" class="span4 btn btn-primary continue input-block-level" title="Accept the snapshot plan and continue printing">
                                     Accept and Continue <span data-bind="visible: SnapshotPlanState.autoclose">(<span data-bind="text:SnapshotPlanState.autoclose_seconds"></span> seconds)</span></button>
                             </span>
                         </div>

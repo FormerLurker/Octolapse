@@ -1498,9 +1498,12 @@ $(function () {
             */
         };
 
-        self.acceptSnapshotPlanPreview = function () {
+        self.acceptSnapshotPlanPreview = function (disable_for_print) {
             //console.log("Accepting snapshot plan preview.");
-            var data = { "preprocessing_job_guid": self.preprocessing_job_guid };
+            var data = {
+                "preprocessing_job_guid": self.preprocessing_job_guid,
+                "disable_for_print": !!disable_for_print
+            };
             $.ajax({
                 url: "./plugin/octolapse/acceptSnapshotPlanPreview",
                 type: "POST",

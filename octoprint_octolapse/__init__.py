@@ -1490,11 +1490,18 @@ class OctolapsePlugin(
         with OctolapsePlugin.admin_permission.require(http_exception=403):
             request_values = request.get_json()
             preprocessing_job_guid = request_values["preprocessing_job_guid"]
+            disable_for_print = request_values.get("disable_for_print", False)
             if (
                 preprocessing_job_guid is not None and
                 str(self.preprocessing_job_guid) == preprocessing_job_guid
             ):
-                self.accept_snapshot_plan_preview(preprocessing_job_guid)
+                if not disable_for_print:
+                    self.accept_snapshot_plan_preview(preprocessing_job_guid)
+                else:
+                    logger.info("Disabling Octolapse for the current print as per user request.")
+                    self.reset_preprocessing()
+                    self._timelapse.release_job_on_hold_lock(reset=True)
+                    self.send_snapshot_preview_complete_message()
                 return jsonify({
                     'success': True
                 })
