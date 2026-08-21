@@ -203,7 +203,7 @@ _octolapse_errors = {
         },
         'incorrect_octoprint_version': {
             "name": "Please Upgrade Octoprint",
-            "description": "Octolapse requires Octoprint v1.3.9 rc3 or above, but version v{installed_version} is "
+            "description": "Octolapse requires Octoprint v1.4.0 or above, but version v{installed_version} is "
                            "installed.  Please update Octoprint to use Octolapse.",
             'help_link': "error_help_init_incorrect_octoprint_version.md"
         },

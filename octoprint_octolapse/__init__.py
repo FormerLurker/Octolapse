@@ -127,12 +127,8 @@ class OctolapsePlugin(
     PREPROCESSING_CANCEL_TIMEOUT_SECONDS = 5
     PREPROCESSING_NOTIFICATION_PERIOD_SECONDS = 1
 
-    if LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4"):
-        import octoprint.access.permissions as permissions
-        admin_permission = permissions.Permissions.ADMIN
-    else:
-        import flask_principal
-        admin_permission = flask_principal.Permission(flask_principal.RoleNeed('admin'))
+    import octoprint.access.permissions as permissions
+    admin_permission = permissions.Permissions.ADMIN
 
     def __init__(self):
         super(OctolapsePlugin, self).__init__()
@@ -2604,10 +2600,10 @@ class OctolapsePlugin(
                 error=before_print_start_camera_script_errors)
             return {"success": False, "error": error}
 
-        # check for version 1.3.8 min
-        logger.verbose("Ensure we are running at least OctoPrint version 1.3.8.")
-        if not (LooseVersion(octoprint.server.VERSION) > LooseVersion("1.3.8")):
-            logger.error("The current octoprint version is older than V1.3.8, and is not supported.  Failed to start "
+        # check for version 1.4.0 min
+        logger.verbose("Ensure we are running at least OctoPrint version 1.4.0.")
+        if not (LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4.0")):
+            logger.error("The current octoprint version is older than V1.4.0, and is not supported.  Failed to start "
                          "timelapse.")
             error = error_messages.get_error(
                 ["init", "incorrect_octoprint_version"], installed_version=octoprint.server.DISPLAY_VERSION
@@ -3782,21 +3778,11 @@ class OctolapsePlugin(
         return ["movie_done", "snapshot_archive_done"]
 
     def register_custom_routes(self, server_routes, *args, **kwargs):
-        # version specific permission validator
-        if LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4"):
-            admin_validation_chain = [
-                util.tornado.access_validation_factory(app, util.flask.admin_validator),
-            ]
-        else:
-            # the concept of granular permissions does not exist in this version of Octoprint.  Fallback to the
-            # admin role
-            def admin_permission_validator(flask_request):
-                user = util.flask.get_flask_user_from_request(flask_request)
-                if user is None or not user.is_authenticated() or not user.is_admin():
-                    raise tornado.web.HTTPError(403)
-            permission_validator = admin_permission_validator
-            admin_validation_chain = [util.tornado.access_validation_factory(app, permission_validator), ]
+        from octoprint.access.permissions import Permissions
 
+        admin_validation_chain = [
+            util.tornado.access_validation_factory(app, util.flask.permission_validator, Permissions.ADMIN),
+        ]
 
         return [
             (
