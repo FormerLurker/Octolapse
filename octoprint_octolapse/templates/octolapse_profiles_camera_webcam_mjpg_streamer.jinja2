@@ -86,6 +86,6 @@
     </div>
 </script>
 
-{% include "plugin_octolapse/webcams/mjpg_streamer/logitech_c920.jinja2" %}
-{% include "plugin_octolapse/webcams/mjpg_streamer/raspi_cam_v2.jinja2" %}
-{% include "plugin_octolapse/webcams/mjpg_streamer/logitech_c250.jinja2" %}
+{% include ["plugin_octolapse/webcams/mjpg_streamer/logitech_c920.jinja2", "webcams/mjpg_streamer/logitech_c920.jinja2"] %}
+{% include ["plugin_octolapse/webcams/mjpg_streamer/raspi_cam_v2.jinja2", "webcams/mjpg_streamer/raspi_cam_v2.jinja2"] %}
+{% include ["plugin_octolapse/webcams/mjpg_streamer/logitech_c250.jinja2", "webcams/mjpg_streamer/logitech_c250.jinja2"] %}

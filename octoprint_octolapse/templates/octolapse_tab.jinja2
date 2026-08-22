@@ -258,18 +258,18 @@
 </div>
 
 
-{% include "octolapse_status_triggers.jinja2" %}
-{% include "octolapse_status_extruder.jinja2" %}
-{% include "octolapse_status_position.jinja2" %}
-{% include "octolapse_status_printer_state.jinja2" %}
-{% include "octolapse_status_snapshot_plan.jinja2" %}
-{% include "octolapse_snapshot_plan.jinja2" %}
-{% include "octolapse_tab_latest_snapshot.jinja2" %}
-{% include "octolapse_tab_settings_current.jinja2" %}
-{% include "octolapse_tab_webcam_settings_popup.jinja2" %}
-{% include "octolapse_tab_snapshot_plan_preview_popup.jinja2" %}
-{% include "octolapse_dialog_rendering_unfinished.jinja2" %}
-{% include "octolapse_dialog_rendering_in_process.jinja2" %}
-{% include "octolapse_dialog_timelapse_files.jinja2" %}
-{% include "octolapse_dialog.jinja2" %}
-{% include "octolapse_helpers.jinja2" %}
+{% include ["plugin_octolapse/octolapse_status_triggers.jinja2", "octolapse_status_triggers.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_status_extruder.jinja2", "octolapse_status_extruder.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_status_position.jinja2", "octolapse_status_position.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_status_printer_state.jinja2", "octolapse_status_printer_state.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_status_snapshot_plan.jinja2", "octolapse_status_snapshot_plan.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_snapshot_plan.jinja2", "octolapse_snapshot_plan.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_tab_latest_snapshot.jinja2", "octolapse_tab_latest_snapshot.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_tab_settings_current.jinja2", "octolapse_tab_settings_current.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_tab_webcam_settings_popup.jinja2", "octolapse_tab_webcam_settings_popup.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_tab_snapshot_plan_preview_popup.jinja2", "octolapse_tab_snapshot_plan_preview_popup.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_dialog_rendering_unfinished.jinja2", "octolapse_dialog_rendering_unfinished.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_dialog_rendering_in_process.jinja2", "octolapse_dialog_rendering_in_process.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_dialog_timelapse_files.jinja2", "octolapse_dialog_timelapse_files.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_dialog.jinja2", "octolapse_dialog.jinja2"] %}
+{% include ["plugin_octolapse/octolapse_helpers.jinja2", "octolapse_helpers.jinja2"] %}
