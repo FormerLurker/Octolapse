@@ -48,7 +48,6 @@ $(function () {
         // rename this so that it never gets updated when saved
         self.octolapse_version = ko.observable("unknown");
         self.settings_version = ko.observable("unknown");
-        self.octolapse_git_version = ko.observable(null);
         // Computed Observables
         self.preview_snapshot_plan_seconds_text = ko.pureComputed(function(){
             if (!self.preview_snapshot_plan_seconds())
@@ -57,16 +56,11 @@ $(function () {
         });
 
         self.github_link = ko.pureComputed(function(){
-            var git_version = self.octolapse_git_version();
-            if (!git_version)
+            var version = self.octolapse_version();
+            if (!version || version === "unknown")
                 return null;
-            // If this is a commit, link to the commit
-            if (self.octolapse_version().includes("+"))
-            {
-                return  'https://github.com/FormerLurker/Octolapse/commit/' + Octolapse.Globals.main_settings.octolapse_git_version();
-            }
-            // This is a release, link to the tag
-            return 'https://github.com/FormerLurker/Octolapse/releases/tag/v' + self.octolapse_version();
+            // Link to the release tag
+            return 'https://github.com/FormerLurker/Octolapse/releases/tag/v' + version;
         });
 
         self.update = function (settings, defaults) {
@@ -93,7 +87,6 @@ $(function () {
             self.settings_version(settings.settings_version);
             self.test_mode_enabled(settings.test_mode_enabled);
             self.octolapse_version(settings.version || settings.octolapse_version || null);
-            self.octolapse_git_version(settings.git_version || settings.octolapse_git_version || null);
 
             if (defaults)
                 self.defaults = settings.defaults;

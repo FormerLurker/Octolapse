@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Octolapse"
+version = "0.4.5"
+description = "Create a stabilized timelapse of your 3D prints."
+authors = [
+    {name = "Brad Hochgesang", email = "FormerLurker@pm.me"}
+]
+readme = {file = "README.md", content-type = "text/markdown"}
+dynamic = [
+    "license"
+]
+
+requires-python = ">=3.7, <4"
+
+# any additional requirements (besides OctoPrint) should be listed here
+dependencies = [
+    "Pillow>=9.3",
+    "file_read_backwards",
+    "psutil",
+    "requests"
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = [
+    "octoprint_octolapse",
+    "octoprint_octolapse.*"
+]
+exclude = [
+    "octoprint_octolapse.test",
+    "octoprint_octolapse.test.*"
+]
+
+[project.entry-points."octoprint.plugin"]
+octolapse = "octoprint_octolapse"
+
+[project.urls]
+Homepage = "https://github.com/FormerLurker/Octolapse"
+
+[project.optional-dependencies]
+develop = [
+    "go-task-bin",
+    "mock>=2.0.0"
+]

@@ -1614,7 +1614,7 @@ class LoggingProfile(AutomaticConfigurationProfile):
 
 class MainSettings(Settings):
 
-    def __init__(self, plugin_version, git_version):
+    def __init__(self, plugin_version):
         # Main Settings
         self.show_navbar_icon = True
         self.show_navbar_when_not_printing = True
@@ -1630,7 +1630,6 @@ class MainSettings(Settings):
         self.platform = sys.platform
         self.version = plugin_version
         self.settings_version = migration.CURRENT_SETTINGS_VERSION
-        self.git_version = git_version
         self.preview_snapshot_plans = True
         self.preview_snapshot_plan_autoclose = False
         self.preview_snapshot_plan_seconds = 30
@@ -1755,21 +1754,21 @@ class ProfileOptions(StaticSettings):
 
 
 class ProfileDefaults(StaticSettings):
-    def __init__(self, plugin_version, git_version):
+    def __init__(self, plugin_version):
         self.printer = PrinterProfile("Default Printer")
         self.stabilization = StabilizationProfile("Default Stabilization")
         self.trigger = TriggerProfile("Default Trigger")
         self.rendering = RenderingProfile("Default Rendering")
         self.camera = CameraProfile("Default Camera")
         self.logging = LoggingProfile("Default Logging")
-        self.main_settings = MainSettings(plugin_version, git_version)
+        self.main_settings = MainSettings(plugin_version)
 
 
 class Profiles(Settings):
-    def __init__(self, plugin_version, git_version):
+    def __init__(self, plugin_version):
         self.options = ProfileOptions()
         # create default profiles
-        self.defaults = ProfileDefaults(plugin_version, git_version)
+        self.defaults = ProfileDefaults(plugin_version)
 
         # printers is initially empty - user must select a printer
         self.printers = {}
@@ -2218,9 +2217,9 @@ class OctolapseSettings(Settings):
 
     DefaultLoggingProfile = None
 
-    def __init__(self, plugin_version="unknown", git_version=None):
-        self.main_settings = MainSettings(plugin_version, git_version)
-        self.profiles = Profiles(plugin_version, git_version)
+    def __init__(self, plugin_version="unknown"):
+        self.main_settings = MainSettings(plugin_version)
+        self.profiles = Profiles(plugin_version)
         self.global_options = GlobalOptions()
         self.upgrade_info = {
             "was_upgraded": False,
@@ -2342,7 +2341,6 @@ class OctolapseSettings(Settings):
         cls,
         file_path,
         plugin_version,
-        git_version,
         default_settings_folder,
         default_settings_filename,
         data_directory,
@@ -2412,8 +2410,7 @@ class OctolapseSettings(Settings):
             # update the profile options within the octolapse settings
             new_settings.profiles.options.update_server_options(available_profiles)
 
-        # set the current and git versions (always use the passed in values)
-        new_settings.main_settings.git_version = git_version
+        # set the current version (always use the passed in value)
         new_settings.main_settings.version = plugin_version
         # set the settings version (always use migration.CURRENT_SETTINGS_VERSION)
         new_settings.main_settings.settings_version = migration.CURRENT_SETTINGS_VERSION
@@ -2444,7 +2441,6 @@ class OctolapseSettings(Settings):
         self,
         settings_path,
         plugin_version,
-        git_version,
         default_settings_folder,
         data_directory,
         available_server_profiles,
@@ -2453,7 +2449,7 @@ class OctolapseSettings(Settings):
         with open(settings_path, mode='r') as settings_file:
             settings_text = settings_file.read()
         return self.import_settings_from_text(
-            settings_text, plugin_version, git_version, default_settings_folder, data_directory,
+            settings_text, plugin_version, default_settings_folder, data_directory,
             available_server_profiles, update_existing=update_existing
         )
 
@@ -2461,7 +2457,6 @@ class OctolapseSettings(Settings):
         self,
         settings_text,
         plugin_version,
-        git_version,
         default_settings_folder,
         data_directory,
         available_server_profiles,
@@ -2493,7 +2488,7 @@ class OctolapseSettings(Settings):
             migrated_settings = migration.migrate_settings(
                 plugin_version, settings, default_settings_folder, data_directory
             )
-            new_settings = OctolapseSettings(plugin_version, git_version)
+            new_settings = OctolapseSettings(plugin_version)
             new_settings.update(migrated_settings)
             settings = new_settings
 
