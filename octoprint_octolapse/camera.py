@@ -194,7 +194,7 @@ class CameraControl(object):
         if not no_wait:
             # join the threads, but timeout in a reasonable way
             for thread in threads:
-                thread.join(requests.packages.urllib3.util.retry.Retry.BACKOFF_MAX)
+                thread.join(getattr(utility.Retry, "DEFAULT_BACKOFF_MAX", 120))
                 if not thread.success:
                     for error in thread.errors:
                         errors.append(error)
