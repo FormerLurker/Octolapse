@@ -22,6 +22,7 @@
 import logging
 import datetime
 import os
+import time
 from octoprint.logging.handlers import AsyncLogHandlerMixin, CleaningTimedRotatingFileHandler
 
 
@@ -64,12 +65,9 @@ class OctolapseFormatter(logging.Formatter):
         super(OctolapseFormatter, self).__init__(fmt=fmt, datefmt=datefmt)
 
     def formatTime(self, record, datefmt=None):
-        ct = self.converter(record.created)
         if datefmt:
-            s = ct.strftime(datefmt)
-        else:
-            return format_log_time(record.created)
-        return s
+            return time.strftime(datefmt, self.converter(record.created))
+        return format_log_time(record.created)
 
 
 class OctolapseConsoleHandler(logging.StreamHandler, AsyncLogHandlerMixin):
