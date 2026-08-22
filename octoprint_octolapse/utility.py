@@ -21,7 +21,6 @@
 ##################################################################################
 import math
 import uuid
-import ntpath
 import os
 import re
 import subprocess
@@ -152,13 +151,7 @@ def get_directory_from_full_path(path):
 
 
 def get_filename_from_full_path(path):
-    basename = ntpath.basename(path)
-    head, tail = ntpath.split(basename)
-    file_name = tail or ntpath.basename(head)
-    split_filename = os.path.splitext(file_name)
-    if len(split_filename) > 0:
-        return split_filename[0]
-    return ""
+    return os.path.splitext(os.path.basename(path))[0]
 
 
 def remove_extension_from_filename(filename):
@@ -166,12 +159,12 @@ def remove_extension_from_filename(filename):
 
 
 def get_extension_from_full_path(path):
-    return get_extension_from_filename(ntpath.basename(path))
+    return get_extension_from_filename(os.path.basename(path))
 
 
 def get_extension_from_filename(filename):
-    head, tail = ntpath.split(filename)
-    file_name = tail or ntpath.basename(head)
+    head, tail = os.path.split(filename)
+    file_name = tail or os.path.basename(head)
     split_filename = os.path.splitext(file_name)
     if len(split_filename) > 1:
         extension = split_filename[1]
