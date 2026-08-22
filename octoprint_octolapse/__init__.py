@@ -149,6 +149,9 @@ class OctolapsePlugin(
         # returns a guaranteed up-to-date settings object
         return self._octolapse_settings
 
+    def is_blueprint_csrf_protected(self):
+        return True
+
     @octoprint.plugin.BlueprintPlugin.route("/clearLog", methods=["POST"])
     @restricted_access
     def clear_log_request(self):
