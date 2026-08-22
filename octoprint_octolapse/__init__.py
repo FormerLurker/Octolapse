@@ -2164,6 +2164,9 @@ class OctolapsePlugin(
         logger.info("Octolapse - is loading template configurations.")
         return [dict(type="settings", custom_bindings=True)]
 
+    def is_template_autoescaped(self):
+        return True
+
     def create_timelapse_object(self):
         self._timelapse = Timelapse(
             self.get_current_octolapse_settings,
