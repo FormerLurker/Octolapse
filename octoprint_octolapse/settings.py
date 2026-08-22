@@ -164,7 +164,7 @@ class Settings(object):
             try:
                 temp_file.close()
                 os.unlink(temp_file.name)
-            except WindowsError as e:
+            except OSError:
                 pass
 
     @classmethod

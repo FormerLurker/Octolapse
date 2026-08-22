@@ -782,14 +782,6 @@ def is_windows():
     return sys.platform.startswith('win')
 
 
-# Handle windows errors that do not exist on Linux (why???)
-# Windows Exceptions in Linux
-try:
-    from exceptions import WindowsError
-except ImportError:
-    class WindowsError(OSError): pass
-
-
 ERROR_WINDOWS_DIRECTORY_NOT_EMPTY = 145
 ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRIES = 10
 ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRY_MS = 1.0/1000.0
@@ -807,8 +799,8 @@ def rmtree(path):
         try:
             shutil.rmtree(path)
             break
-        except WindowsError as e:
-            if not e.winerror != ERROR_WINDOWS_DIRECTORY_NOT_EMPTY:
+        except OSError as e:
+            if getattr(e, "winerror", None) != ERROR_WINDOWS_DIRECTORY_NOT_EMPTY:
                 raise e
             num_tries += 1
             if num_tries < ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRIES:
@@ -832,8 +824,8 @@ def remove(path):
         try:
             os.remove(path)
             break
-        except WindowsError as e:
-            if e.winerror != ERROR_WINDOWS_FILE_IS_IN_USE:
+        except OSError as e:
+            if getattr(e, "winerror", None) != ERROR_WINDOWS_FILE_IS_IN_USE:
                 raise e
             num_tries += 1
             if num_tries < ERROR_WINDOWS_FILE_IS_IN_USE_RETRIES:
@@ -851,8 +843,8 @@ def move(src, dst):
         try:
             shutil.move(src, dst)
             break
-        except WindowsError as e:
-            if e.winerror != ERROR_WINDOWS_FILE_IS_IN_USE:
+        except OSError as e:
+            if getattr(e, "winerror", None) != ERROR_WINDOWS_FILE_IS_IN_USE:
                 raise e
             num_tries += 1
             if num_tries < ERROR_WINDOWS_FILE_IS_IN_USE_RETRIES:
