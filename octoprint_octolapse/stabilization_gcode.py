@@ -341,7 +341,7 @@ class SnapshotGcodeGenerator(object):
         self.is_extruder_relative_current = snapshot_plan.initial_position.is_extruder_relative
         self.current_tool = snapshot_plan.initial_position.current_tool
         if self.current_tool > len(self.gcode_generation_settings.extruders) - 1:
-            logger.warning("The requested tool index of %d is greater than the number of extruders ($d).",
+            logger.warning("The requested tool index of %d is greater than the number of extruders (%d).",
                            self.current_tool, len(self.gcode_generation_settings.extruders))
             self.current_tool = len(self.gcode_generation_settings.extruders) - 1
 
