@@ -366,7 +366,9 @@ $(function () {
             Octolapse.ConfirmDialogs[popup_key] = (
                 new PNotify({
                     title: options.title,
+                    title_escape: true,
                     text: options.text,
+                    text_escape: true,
                     icon: options.icon,
                     hide: options.hide,
                     desktop: options.desktop,
