@@ -19,7 +19,8 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from octoprint_octolapse_setuptools import NumberedVersion
+from octoprint.util.version import get_comparable_version
+from octoprint_octolapse.migration import CURRENT_SETTINGS_VERSION
 import requests
 import uuid
 import json
@@ -149,13 +150,13 @@ class ExternalSettings(object):
                     if (
                         updatable_profile["version"] is None or
                         (
-                            NumberedVersion(str(available_profile["version"])) > NumberedVersion(str(updatable_profile["version"])) and
+                            get_comparable_version(str(available_profile["version"])) > get_comparable_version(str(updatable_profile["version"])) and
                             (
                                 not updatable_profile["suppress_update_notification_version"] or
                                 (
                                     force_updates or ignore_suppression or
-                                    NumberedVersion(str(available_profile["version"])) >
-                                    NumberedVersion(str(updatable_profile["suppress_update_notification_version"]))
+                                    get_comparable_version(str(available_profile["version"])) >
+                                    get_comparable_version(str(updatable_profile["suppress_update_notification_version"]))
                                 )
                             )
                         )
@@ -215,11 +216,11 @@ class ExternalSettings(object):
         if not versions:
             return None
 
-        versions.sort(key=NumberedVersion)
+        versions.sort(key=lambda x: get_comparable_version(str(x)))
 
         settings_version = None
         for version in versions:
-            if NumberedVersion(str(version)) > NumberedVersion(str(NumberedVersion.CurrentSettingsVersion)):
+            if get_comparable_version(str(version)) > get_comparable_version(CURRENT_SETTINGS_VERSION):
                 break
             settings_version = version
 

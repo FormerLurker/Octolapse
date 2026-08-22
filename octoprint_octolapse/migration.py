@@ -19,7 +19,7 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from octoprint_octolapse_setuptools import NumberedVersion
+from octoprint.util.version import get_comparable_version
 
 import json
 import sys
@@ -30,6 +30,10 @@ import shutil
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
+
+# The settings schema version written by this build of the plugin.  Bump it whenever a migration
+# is added below.
+CURRENT_SETTINGS_VERSION = "0.4.3"
 
 
 def get_version(settings_dict):
@@ -69,7 +73,7 @@ def migrate_files(current_version, target_version, data_directory):
     has_updated = False
     if current_version is None:
         return False
-    if NumberedVersion(current_version) < NumberedVersion("0.4.0rc1.dev3"):
+    if get_comparable_version(current_version) < get_comparable_version("0.4.0rc1.dev3"):
         if migrate_files_pre_0_4_0_rc1_dev3(current_version, data_directory):
             has_updated = True
     return has_updated
@@ -113,23 +117,23 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
     # create a flag to indicate that we've updated settings
     has_updated = False
 
-    if settings_version is None and NumberedVersion(version) <= NumberedVersion("0.3.3rc3.dev0"):
+    if settings_version is None and get_comparable_version(version) <= get_comparable_version("0.3.3rc3.dev0"):
         has_updated = True
         settings_dict = migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.3.3rc3.dev0.json'))
 
-    if settings_version is None and NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev0"):
+    if settings_version is None and get_comparable_version(version) < get_comparable_version("0.4.0rc1.dev0"):
         has_updated = True
         settings_dict = migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev0.json'))
 
-    if settings_version is None and NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev2"):
+    if settings_version is None and get_comparable_version(version) < get_comparable_version("0.4.0rc1.dev2"):
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev2(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev2.json'))
 
-    if settings_version is None and NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev3"):
+    if settings_version is None and get_comparable_version(version) < get_comparable_version("0.4.0rc1.dev3"):
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev3.json'))
 
-    if settings_version is None and NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev4"):
+    if settings_version is None and get_comparable_version(version) < get_comparable_version("0.4.0rc1.dev4"):
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev4(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev4.json'))
 
@@ -139,7 +143,7 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
         has_updated = True
         settings_dict = migrate_pre_0_4_0(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0.json'))
 
-    if settings_version is not None and NumberedVersion(settings_version) < NumberedVersion("0.4.3"):  # None < 0.4.0
+    if settings_version is not None and get_comparable_version(settings_version) < get_comparable_version("0.4.3"):  # None < 0.4.0
         has_updated = True
         settings_dict = migrate_pre_0_4_0(current_version, settings_dict,
                                           os.path.join(default_settings_directory, 'settings_default_0.4.3.json'))
@@ -153,7 +157,7 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
 
     # Ensure that the version and settings_version within the settings.json file is up to date
     settings_dict["main_settings"]["version"] = current_version
-    settings_dict["main_settings"]["settings_version"] = NumberedVersion.CurrentSettingsVersion
+    settings_dict["main_settings"]["settings_version"] = CURRENT_SETTINGS_VERSION
 
     return settings_dict
 

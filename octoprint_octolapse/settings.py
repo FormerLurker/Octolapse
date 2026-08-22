@@ -28,7 +28,7 @@ import tempfile
 import sys
 import re
 import errno
-from octoprint_octolapse_setuptools import NumberedVersion
+from octoprint.util.version import get_comparable_version
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.log as log
 import math
@@ -226,7 +226,7 @@ class AutomaticConfiguration(Settings):
         }
 
     def suppress_updates(self, available_profile):
-        if NumberedVersion(self.version) < NumberedVersion(available_profile["version"]):
+        if get_comparable_version(self.version) < get_comparable_version(available_profile["version"]):
             self.suppress_update_notification_version = available_profile["version"]
 
     def try_convert_value(cls, destination, value, key):
@@ -1629,7 +1629,7 @@ class MainSettings(Settings):
         self.cancel_print_on_startup_error = True
         self.platform = sys.platform
         self.version = plugin_version
-        self.settings_version = NumberedVersion.CurrentSettingsVersion
+        self.settings_version = migration.CURRENT_SETTINGS_VERSION
         self.git_version = git_version
         self.preview_snapshot_plans = True
         self.preview_snapshot_plan_autoclose = False
@@ -2415,8 +2415,8 @@ class OctolapseSettings(Settings):
         # set the current and git versions (always use the passed in values)
         new_settings.main_settings.git_version = git_version
         new_settings.main_settings.version = plugin_version
-        # set the settings version (always use NumberedVersion.CurrentSettingsVersion)
-        new_settings.main_settings.settings_version = NumberedVersion.CurrentSettingsVersion
+        # set the settings version (always use migration.CURRENT_SETTINGS_VERSION)
+        new_settings.main_settings.settings_version = migration.CURRENT_SETTINGS_VERSION
 
         return new_settings, load_defualt_settings
 
@@ -2431,7 +2431,7 @@ class OctolapseSettings(Settings):
         profile = self.profiles.get_profile(profile_type, guid)
         export_dict = {
             'version': self.main_settings.version,
-            'settings_version': NumberedVersion.CurrentSettingsVersion,
+            'settings_version': migration.CURRENT_SETTINGS_VERSION,
             'type': profile_type,
             'profile': profile
         }
@@ -2472,10 +2472,10 @@ class OctolapseSettings(Settings):
         settings_version = OctolapseSettings.get_settings_version_from_dict(settings)
         # see if this is a structured import
         if "type" in settings:
-            if settings_version != NumberedVersion.CurrentSettingsVersion:
+            if settings_version != migration.CURRENT_SETTINGS_VERSION:
                 raise OctolapseSettings.IncorrectSettingsVersionException(
                     "Cannot import profiles exported from an incompatible version of Octolapse ({0}).  Was expecting settings version: {1} ".format(
-                        settings_version, NumberedVersion.CurrentSettingsVersion
+                        settings_version, migration.CURRENT_SETTINGS_VERSION
                     )
                 )
             else:
@@ -2483,10 +2483,10 @@ class OctolapseSettings(Settings):
                 settings = self
         else:
             # Make sure the settings version is not greater than the current version
-            if settings_version != "unknown" and NumberedVersion(NumberedVersion.CurrentSettingsVersion) < NumberedVersion(settings_version):
+            if settings_version != "unknown" and get_comparable_version(migration.CURRENT_SETTINGS_VERSION) < get_comparable_version(settings_version):
                 raise OctolapseSettings.IncorrectSettingsVersionException(
                     "Cannot import settings exported from a newer and incompatible version of Octolapse ({0}).  Was expecting settings version: {1} ".format(
-                        settings_version, NumberedVersion.CurrentSettingsVersion
+                        settings_version, migration.CURRENT_SETTINGS_VERSION
                     )
                 )
             # this is a regular settings file.  Try to migrate

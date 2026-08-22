@@ -99,8 +99,7 @@ setup(
     author_email="FormerLurker@pm.me",
     url="https://github.com/FormerLurker/Octolapse/",
     license="GNU Affero General Public License v3",
-    packages=["octoprint_octolapse",
-              "octoprint_octolapse_setuptools"],
+    packages=["octoprint_octolapse"],
     package_data={
         "octoprint_octolapse": package_data_dirs(
             'octoprint_octolapse',
