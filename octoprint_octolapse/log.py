@@ -70,12 +70,12 @@ class OctolapseFormatter(logging.Formatter):
         return format_log_time(record.created)
 
 
-class OctolapseConsoleHandler(logging.StreamHandler, AsyncLogHandlerMixin):
+class OctolapseConsoleHandler(AsyncLogHandlerMixin, logging.StreamHandler):
     def __init__(self, *args, **kwargs):
         super(OctolapseConsoleHandler, self).__init__(*args, **kwargs)
 
 
-class OctolapseFileHandler(CleaningTimedRotatingFileHandler, AsyncLogHandlerMixin):
+class OctolapseFileHandler(AsyncLogHandlerMixin, CleaningTimedRotatingFileHandler):
     def __init__(self, *args, **kwargs):
         super(OctolapseFileHandler, self).__init__(*args, **kwargs)
 
