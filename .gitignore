@@ -8,3 +8,5 @@ dist
 .DS_Store
 .vs/
 *.zip
+__pycache__
+*.so
