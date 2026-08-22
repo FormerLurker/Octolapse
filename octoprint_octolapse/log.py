@@ -176,8 +176,8 @@ class LoggingConfigurator(metaclass=Singleton):
         if log_file_path is not None:
             # ensure that the logging path and file exist
             directory = os.path.dirname(log_file_path)
-            import distutils.dir_util
-            distutils.dir_util.mkpath(directory)
+            if directory:
+                os.makedirs(directory, exist_ok=True)
             if not os.path.isfile(log_file_path):
                 open(log_file_path, 'w').close()
 

@@ -43,12 +43,12 @@ import uuid
 import time
 import queue
 from tempfile import mkdtemp
-from distutils.version import LooseVersion
 from io import BytesIO
 import octoprint.plugin
 import octoprint.filemanager
 from octoprint.events import Events
 from octoprint.server.util.flask import restricted_access
+from octoprint.util.version import is_octoprint_compatible
 import octoprint_octolapse.camera as camera
 import octoprint_octolapse.render as render
 import octoprint_octolapse.snapshot as snapshot
@@ -2569,7 +2569,7 @@ class OctolapsePlugin(
 
         # check for version 1.4.0 min
         logger.verbose("Ensure we are running at least OctoPrint version 1.4.0.")
-        if not (LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4.0")):
+        if not is_octoprint_compatible(">=1.4.0"):
             logger.error("The current octoprint version is older than V1.4.0, and is not supported.  Failed to start "
                          "timelapse.")
             error = error_messages.get_error(
@@ -3692,7 +3692,7 @@ class OctolapsePlugin(
 
     def get_release_info(self):
         # Starting with V1.5.0 prerelease branches are supported!
-        if LooseVersion(octoprint.server.VERSION) < LooseVersion("1.5.0"):
+        if not is_octoprint_compatible(">=1.5.0"):
             # get the checkout type from the software updater
             prerelease_channel = None
             is_prerelease = False
