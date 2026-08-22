@@ -26,7 +26,7 @@ Octolapse is designed to make stabilized timelapses of your prints with as littl
 
 Octolapse moves the print bed and extruder into position before taking each snapshot, giving you a crisp image in every frame.  Snapshots can be taken at each layer change, at specific height increments, after a period of time has elapsed, or when certain GCodes are detected.
 
-**Important**:  *Octolapse requires OctoPrint v1.3.9 or higher, and some features require OctoPrint v1.3.10rc1 or above.*  You can check your OctoPrint version by looking in the lower left hand corner of your OctoPrint server home page.
+**Important**:  *Octolapse requires OctoPrint v1.4.0 or higher.*  You can check your OctoPrint version by looking in the lower left hand corner of your OctoPrint server home page.
 
 ## Getting Started
 

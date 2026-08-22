@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,12 +19,10 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
 import logging
-import datetime as datetime
+import datetime
 import os
-# Remove python 2 support
-# import six
+import time
 from octoprint.logging.handlers import AsyncLogHandlerMixin, CleaningTimedRotatingFileHandler
 
 
@@ -68,20 +65,17 @@ class OctolapseFormatter(logging.Formatter):
         super(OctolapseFormatter, self).__init__(fmt=fmt, datefmt=datefmt)
 
     def formatTime(self, record, datefmt=None):
-        ct = self.converter(record.created)
         if datefmt:
-            s = ct.strftime(datefmt)
-        else:
-            return format_log_time(record.created)
-        return s
+            return time.strftime(datefmt, self.converter(record.created))
+        return format_log_time(record.created)
 
 
-class OctolapseConsoleHandler(logging.StreamHandler, AsyncLogHandlerMixin):
+class OctolapseConsoleHandler(AsyncLogHandlerMixin, logging.StreamHandler):
     def __init__(self, *args, **kwargs):
         super(OctolapseConsoleHandler, self).__init__(*args, **kwargs)
 
 
-class OctolapseFileHandler(CleaningTimedRotatingFileHandler, AsyncLogHandlerMixin):
+class OctolapseFileHandler(AsyncLogHandlerMixin, CleaningTimedRotatingFileHandler):
     def __init__(self, *args, **kwargs):
         super(OctolapseFileHandler, self).__init__(*args, **kwargs)
 
@@ -93,8 +87,6 @@ class OctolapseFileHandler(CleaningTimedRotatingFileHandler, AsyncLogHandlerMixi
             os.remove(s)
         self.backupCount = backup_count
 
-# remove python 2 support
-# @six.add_metaclass(Singleton)
 class LoggingConfigurator(metaclass=Singleton):
     BACKUP_COUNT = 3
 
@@ -182,8 +174,8 @@ class LoggingConfigurator(metaclass=Singleton):
         if log_file_path is not None:
             # ensure that the logging path and file exist
             directory = os.path.dirname(log_file_path)
-            import distutils.dir_util
-            distutils.dir_util.mkpath(directory)
+            if directory:
+                os.makedirs(directory, exist_ok=True)
             if not os.path.isfile(log_file_path):
                 open(log_file_path, 'w').close()
 

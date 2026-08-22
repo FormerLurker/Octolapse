@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang

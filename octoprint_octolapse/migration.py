@@ -19,19 +19,21 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from octoprint_octolapse_setuptools import NumberedVersion
+from octoprint.util.version import get_comparable_version
 
 import json
 import sys
 import os
-# remove unused using
-# import six
 import copy
 import shutil
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
+
+# The settings schema version written by this build of the plugin.  Bump it whenever a migration
+# is added below.
+CURRENT_SETTINGS_VERSION = "0.4.3"
 
 
 def get_version(settings_dict):
@@ -71,7 +73,7 @@ def migrate_files(current_version, target_version, data_directory):
     has_updated = False
     if current_version is None:
         return False
-    if NumberedVersion(current_version) < NumberedVersion("0.4.0rc1.dev3"):
+    if get_comparable_version(current_version) < get_comparable_version("0.4.0rc1.dev3"):
         if migrate_files_pre_0_4_0_rc1_dev3(current_version, data_directory):
             has_updated = True
     return has_updated
@@ -115,23 +117,23 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
     # create a flag to indicate that we've updated settings
     has_updated = False
 
-    if settings_version is None and NumberedVersion(version) <= NumberedVersion("0.3.3rc3.dev0"):
+    if settings_version is None and get_comparable_version(version) <= get_comparable_version("0.3.3rc3.dev0"):
         has_updated = True
         settings_dict = migrate_pre_0_3_3_rc3_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.3.3rc3.dev0.json'))
 
-    if settings_version is None and NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev0"):
+    if settings_version is None and get_comparable_version(version) < get_comparable_version("0.4.0rc1.dev0"):
         has_updated = True
         settings_dict = migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev0.json'))
 
-    if settings_version is None and NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev2"):
+    if settings_version is None and get_comparable_version(version) < get_comparable_version("0.4.0rc1.dev2"):
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev2(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev2.json'))
 
-    if settings_version is None and NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev3"):
+    if settings_version is None and get_comparable_version(version) < get_comparable_version("0.4.0rc1.dev3"):
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev3.json'))
 
-    if settings_version is None and NumberedVersion(version) < NumberedVersion("0.4.0rc1.dev4"):
+    if settings_version is None and get_comparable_version(version) < get_comparable_version("0.4.0rc1.dev4"):
         has_updated = True
         settings_dict = migrate_pre_0_4_0_rc1_dev4(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0rc1.dev4.json'))
 
@@ -141,7 +143,7 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
         has_updated = True
         settings_dict = migrate_pre_0_4_0(current_version, settings_dict, os.path.join(default_settings_directory, 'settings_default_0.4.0.json'))
 
-    if settings_version is not None and NumberedVersion(settings_version) < NumberedVersion("0.4.3"):  # None < 0.4.0
+    if settings_version is not None and get_comparable_version(settings_version) < get_comparable_version("0.4.3"):  # None < 0.4.0
         has_updated = True
         settings_dict = migrate_pre_0_4_0(current_version, settings_dict,
                                           os.path.join(default_settings_directory, 'settings_default_0.4.3.json'))
@@ -155,7 +157,7 @@ def migrate_settings(current_version, settings_dict, default_settings_directory,
 
     # Ensure that the version and settings_version within the settings.json file is up to date
     settings_dict["main_settings"]["version"] = current_version
-    settings_dict["main_settings"]["settings_version"] = NumberedVersion.CurrentSettingsVersion
+    settings_dict["main_settings"]["settings_version"] = CURRENT_SETTINGS_VERSION
 
     return settings_dict
 
@@ -365,8 +367,6 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
     profiles['current_trigger_profile_guid'] = settings_dict['current_snapshot_profile_guid']
 
 
-    # Remove python 2 support
-    # for key, default_profile in six.iteritems(default_settings["profiles"]["triggers"]):
     # add all of the new triggers (the non-real time triggers)
     for key, default_profile in default_settings["profiles"]["triggers"].items():
         if default_profile["trigger_type"] != 'real-time':
@@ -462,8 +462,6 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
         del camera['powerline_frequency'],
         profiles['cameras'][camera['guid']] = camera
 
-    # Remove python 2 support
-    # for key, default_profile in six.iteritems(default_settings['profiles']['debug']):
 
     # UPGRADE THE DEBUG PROFILES - remove and replace the debug profiles, they are too different to salvage
     for key, default_profile in default_settings['profiles']['debug'].items():
@@ -521,8 +519,6 @@ def migrate_pre_0_3_5_rc1_dev(current_version, settings_dict, default_settings_p
     for profile_default in profile_default_types:
         profile_type = profile_default["profile_type"]
         default_profile_name = profile_default["default_profile_name"]
-        # Remove python 2 support
-        # for key, profile in six.iteritems(profiles[profile_type]):
         for key, profile in profiles[profile_type].items():
             defaults_copy = copy.deepcopy(default_settings["profiles"]["defaults"][default_profile_name])
             defaults_copy.update(profile)
@@ -542,8 +538,6 @@ def migrate_pre_0_4_0_rc1_dev2(current_version, settings_dict, default_settings_
     settings_dict["profiles"]["triggers"] = {}
     # add the default triggers
     triggers = default_settings["profiles"]["triggers"]
-    # Remove python 2 support
-    # for key, trigger in six.iteritems(triggers):
     for key, trigger in triggers.items():
         # Add default triggers
         settings_dict["profiles"]["triggers"][key] = trigger
@@ -559,8 +553,6 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
     # adjust each slicer profile to account for the new multiple extruder settings
     printers = settings_dict["profiles"]["printers"]
     default_settings = get_default_settings(default_settings_path)
-    # Remove python 2 support
-    # for key, printer in six.iteritems(printers):
     for key, printer in printers.items():
 
         # Adjust gcode generation settings
@@ -686,8 +678,6 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
             slic3r_pe.pop("deretract_speed", None)
 
     renderings = settings_dict["profiles"]["renderings"]
-    # Remove python 2 support
-    # for key, render in six.iteritems(renderings):
     for key, render in renderings.items():
         render["archive_snapshots"] = not render.get("cleanup_after_render_complete", True)
         render.pop("cleanup_after_render_complete",None)
@@ -697,8 +687,6 @@ def migrate_pre_0_4_0_rc1_dev3(current_version, settings_dict, default_settings_
         render.pop("snapshots_to_skip_beginning", None)
 
     triggers = settings_dict["profiles"]["triggers"]
-    # Remove python 2 support
-    #for key, trigger in six.iteritems(triggers):
     for key, trigger in triggers.items():
         if "trigger_type" in trigger and trigger["trigger_type"] == 'smart-layer':
             trigger["trigger_type"] = "smart"

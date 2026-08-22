@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,33 +19,20 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
-# remove unused usings
-# import six
 import os
 import json
 from csv import DictWriter
 from time import sleep
 import requests
 
-# Recent versions of Pillow changed the case of the import
-# Why!?
-try:
-    from pil import ImageFile
-except ImportError:
-    from PIL import ImageFile
+from PIL import ImageFile
 
 from requests.auth import HTTPBasicAuth
 from threading import Thread, Event
 from tempfile import mkdtemp
 from uuid import uuid4
 from time import time
-# Recent versions of Pillow changed the case of the import
-# Why!?
-try:
-    from pil import Image
-except ImportError:
-    from PIL import Image
+from PIL import Image
 
 import errno
 # create the module level logger
@@ -687,8 +673,6 @@ class WebcamSnapshotJob(SnapshotThread):
             on_post_processing_error_callback=on_post_processing_error_callback
         )
         self.address = self.snapshot_job_info.camera.webcam_settings.address
-        # Remove python 2 support
-        # if isinstance(self.address, six.string_types):
         if isinstance(self.address, str):
             self.address = self.address.strip()
         self.username = self.snapshot_job_info.camera.webcam_settings.username

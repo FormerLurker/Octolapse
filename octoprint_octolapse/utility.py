@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,25 +19,23 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
 import math
 import uuid
-import ntpath
 import os
 import re
 import subprocess
 import sys
 import time
 import urllib
-import traceback
+import urllib.parse
 import threading
 import json
 import shutil
 import errno
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
-# Todo:  Determin if this is still necessary.
+from urllib3.util.retry import Retry
+# Todo:  Determine if this is still necessary.
 try:
     from slugify import Slugify
 except ImportError:
@@ -51,7 +48,6 @@ from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 
-from threading import Timer
 FLOAT_MATH_EQUALITY_RANGE = 0.0000001
 
 def get_float(value, default):
@@ -155,13 +151,7 @@ def get_directory_from_full_path(path):
 
 
 def get_filename_from_full_path(path):
-    basename = ntpath.basename(path)
-    head, tail = ntpath.split(basename)
-    file_name = tail or ntpath.basename(head)
-    split_filename = os.path.splitext(file_name)
-    if len(split_filename) > 0:
-        return split_filename[0]
-    return ""
+    return os.path.splitext(os.path.basename(path))[0]
 
 
 def remove_extension_from_filename(filename):
@@ -169,12 +159,12 @@ def remove_extension_from_filename(filename):
 
 
 def get_extension_from_full_path(path):
-    return get_extension_from_filename(ntpath.basename(path))
+    return get_extension_from_filename(os.path.basename(path))
 
 
 def get_extension_from_filename(filename):
-    head, tail = ntpath.split(filename)
-    file_name = tail or ntpath.basename(head)
+    head, tail = os.path.split(filename)
+    file_name = tail or os.path.basename(head)
     split_filename = os.path.splitext(file_name)
     if len(split_filename) > 1:
         extension = split_filename[1]
@@ -792,14 +782,6 @@ def is_windows():
     return sys.platform.startswith('win')
 
 
-# Handle windows errors that do not exist on Linux (why???)
-# Windows Exceptions in Linux
-try:
-    from exceptions import WindowsError
-except ImportError:
-    class WindowsError(OSError): pass
-
-
 ERROR_WINDOWS_DIRECTORY_NOT_EMPTY = 145
 ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRIES = 10
 ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRY_MS = 1.0/1000.0
@@ -817,8 +799,8 @@ def rmtree(path):
         try:
             shutil.rmtree(path)
             break
-        except WindowsError as e:
-            if not e.winerror != ERROR_WINDOWS_DIRECTORY_NOT_EMPTY:
+        except OSError as e:
+            if getattr(e, "winerror", None) != ERROR_WINDOWS_DIRECTORY_NOT_EMPTY:
                 raise e
             num_tries += 1
             if num_tries < ERROR_WINDOWS_DIRECTORY_NOT_EMPTY_RETRIES:
@@ -842,8 +824,8 @@ def remove(path):
         try:
             os.remove(path)
             break
-        except WindowsError as e:
-            if e.winerror != ERROR_WINDOWS_FILE_IS_IN_USE:
+        except OSError as e:
+            if getattr(e, "winerror", None) != ERROR_WINDOWS_FILE_IS_IN_USE:
                 raise e
             num_tries += 1
             if num_tries < ERROR_WINDOWS_FILE_IS_IN_USE_RETRIES:
@@ -861,8 +843,8 @@ def move(src, dst):
         try:
             shutil.move(src, dst)
             break
-        except WindowsError as e:
-            if e.winerror != ERROR_WINDOWS_FILE_IS_IN_USE:
+        except OSError as e:
+            if getattr(e, "winerror", None) != ERROR_WINDOWS_FILE_IS_IN_USE:
                 raise e
             num_tries += 1
             if num_tries < ERROR_WINDOWS_FILE_IS_IN_USE_RETRIES:
@@ -965,12 +947,8 @@ class TimelapseJobInfo(object):
         )
 
 
-if sys.version_info < (3, 0):
-    def unquote(value):
-        return urllib.unquote(value)
-else:
-    def unquote(value):
-        return urllib.parse.unquote(value)
+def unquote(value):
+    return urllib.parse.unquote(value)
 
 
 class RecurringTimerThread(threading.Thread):

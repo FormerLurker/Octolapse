@@ -267,8 +267,12 @@ $(function () {
         return str.replace(new RegExp(find, 'g'), replace);
     };
 
+    Octolapse.escapePopupOptions = function (options) {
+        return $.extend({title_escape: true, text_escape: true}, options);
+    };
+
     Octolapse.displayPopup = function (options) {
-        new PNotify(options);
+        new PNotify(Octolapse.escapePopupOptions(options));
     };
 
     // Create Helpers
@@ -330,7 +334,7 @@ $(function () {
     Octolapse.Popups = {};
     Octolapse.displayPopupForKey = function (options, popup_key, remove_keys) {
         Octolapse.closePopupsForKeys(remove_keys);
-        var popup = new PNotify(options);
+        var popup = new PNotify(Octolapse.escapePopupOptions(options));
         Octolapse.Popups[popup_key] = popup;
         return popup;
     };
@@ -419,7 +423,9 @@ $(function () {
         Octolapse.checkPNotifyDefaultConfirmButtons();
         options = {
             title: title,
+            title_escape: true,
             text: text,
+            text_escape: true,
             icon: 'fa fa-question',
             hide: false,
             addclass: "octolapse",

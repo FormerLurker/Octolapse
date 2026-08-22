@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -21,8 +20,6 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
 # Create the root logger.  Note that it MUST be created before any imports that use the
 # plugin_octolapse.log.LoggingConfigurator, since it is a singleton and we want to be
 # the first to create it so that the name is correct.
@@ -32,64 +29,44 @@ root_logger = logging_configurator.get_root_logger()
 # so that we can
 logger = logging_configurator.get_logger("__init__")
 # be sure to configure the logger after we import all of our modules
-import tornado
+import tornado.web
 import errno
 from octoprint.server import util, app
-from octoprint.server.util.tornado import LargeResponseHandler, RequestlessExceptionLoggingMixin, CorsSupportMixin
+from octoprint.server.util.tornado import LargeResponseHandler
 import sys
 import base64
 import json
 import os
-# remove unused imports
-#from flask import request, send_file, jsonify, Response, stream_with_context, send_from_directory, current_app, Flask
 from flask import request, jsonify
 import threading
 import uuid
-# remove unused imports
-# import six
 import time
-# Remove python 2 support
-# from six.moves import queue
-import queue as queue
+import queue
 from tempfile import mkdtemp
-from distutils.version import LooseVersion
 from io import BytesIO
 import octoprint.plugin
 import octoprint.filemanager
 from octoprint.events import Events
 from octoprint.server.util.flask import restricted_access
-# remove unused import
-# import octoprint_octolapse.stabilization_preprocessing
+from octoprint.util.version import is_octoprint_compatible
 import octoprint_octolapse.camera as camera
 import octoprint_octolapse.render as render
 import octoprint_octolapse.snapshot as snapshot
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.error_messages as error_messages
 from octoprint_octolapse.migration import migrate_files, get_version_from_settings_index
-# remove unused import
-# from octoprint_octolapse.position import Position
 from octoprint_octolapse.stabilization_gcode import SnapshotGcodeGenerator
 from octoprint_octolapse.gcode_commands import Commands
-# remove unused import
-# from octoprint_octolapse.render import TimelapseRenderJob, RenderingCallbackArgs
 from octoprint_octolapse.settings import OctolapseSettings, PrinterProfile, StabilizationProfile, TriggerProfile, \
-    CameraProfile, RenderingProfile, LoggingProfile, SlicerSettings, CuraSettings, OtherSlicerSettings, \
-    Simplify3dSettings, Slic3rPeSettings, SettingsJsonEncoder, MjpgStreamer, MainSettings
+    CameraProfile, RenderingProfile, SettingsJsonEncoder, MjpgStreamer, MainSettings
 from octoprint_octolapse.timelapse import Timelapse, TimelapseState, TimelapseStartException
 from octoprint_octolapse.stabilization_preprocessing import StabilizationPreprocessingThread
 from octoprint_octolapse.messenger_worker import MessengerWorker, PluginMessage
 from octoprint_octolapse.settings_external import ExternalSettings, ExternalSettingsError
-from octoprint_octolapse.render import RenderError, RenderingProcessor, RenderingCallbackArgs, RenderJobInfo
-#import octoprint_octolapse_setuptools as octoprint_octolapse_setuptools
-#import octoprint_octolapse_setuptools.github_release as github_release
-# remove python 2 compatibility
-#try:
-#    # noinspection PyCompatibility
-#    from urlparse import urlparse as urlparse
-#except ImportError:
-#    # noinspection PyUnresolvedReferences
-#    from urllib.parse import urlparse as urlparse
+from octoprint_octolapse.render import RenderingProcessor, RenderingCallbackArgs
 from urllib.parse import urlparse as urlparse
+import octoprint.access.permissions as permissions
+
 # configure all imported loggers
 logging_configurator.configure_loggers()
 
@@ -101,10 +78,9 @@ def configure_debug_mode():
         logger.info("Debug mode detected.")
         # import python 3 specific debug modules
         logger.info("Python %s detected.", sys.version)
-        if sys.version_info > (3, 0):
-            import faulthandler
-            faulthandler.enable()
-            logger.info("Faulthandler enabled.")
+        import faulthandler
+        faulthandler.enable()
+        logger.info("Faulthandler enabled.")
     else:
         logger.info("Release mode detected.")
 
@@ -127,12 +103,7 @@ class OctolapsePlugin(
     PREPROCESSING_CANCEL_TIMEOUT_SECONDS = 5
     PREPROCESSING_NOTIFICATION_PERIOD_SECONDS = 1
 
-    if LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4"):
-        import octoprint.access.permissions as permissions
-        admin_permission = permissions.Permissions.ADMIN
-    else:
-        import flask_principal
-        admin_permission = flask_principal.Permission(flask_principal.RoleNeed('admin'))
+    admin_permission = permissions.Permissions.ADMIN
 
     def __init__(self):
         super(OctolapsePlugin, self).__init__()
@@ -177,6 +148,9 @@ class OctolapsePlugin(
     def get_current_octolapse_settings(self):
         # returns a guaranteed up-to-date settings object
         return self._octolapse_settings
+
+    def is_blueprint_csrf_protected(self):
+        return True
 
     @octoprint.plugin.BlueprintPlugin.route("/clearLog", methods=["POST"])
     @restricted_access
@@ -505,7 +479,7 @@ class OctolapsePlugin(
             client_id = request_values["client_id"]
 
             # make sure to test the provided directories first
-            main_settings_test = MainSettings(__version__, __git_version__)
+            main_settings_test = MainSettings(self._plugin_version)
             main_settings_test.update(request_values)
             success, results = main_settings_test.test_directories(
                 self.get_plugin_data_folder(),
@@ -838,8 +812,6 @@ class OctolapsePlugin(
             available_profiles = self.check_for_updates(ignore_suppression=ignore_suppression)
             available_profile_count = 0
             if available_profiles:
-                # remove python 2 support
-                # for key, profile_type in six.iteritems(available_profiles):
                 for key, profile_type in available_profiles.items():
                     available_profile_count += len(profile_type)
             return jsonify({
@@ -862,8 +834,6 @@ class OctolapsePlugin(
                         "num_updated": 0
                     })
                 num_profiles = 0
-                # remove python 2 support
-                # for profile_type, updatable_profiles in six.iteritems(profiles_to_update):
                 for profile_type, updatable_profiles in profiles_to_update.items():
                     # now iterate through the printer profiles
                     for updatable_profile in updatable_profiles:
@@ -908,8 +878,6 @@ class OctolapsePlugin(
 
             with self.automatic_update_lock:
                 has_updated = False
-                # remove python 2 support
-                # for profile_type, updatable_profiles in six.iteritems(self._octolapse_settings.profiles.get_updatable_profiles_dict()):
                 for profile_type, updatable_profiles in self._octolapse_settings.profiles.get_updatable_profiles_dict().items():
                     # now iterate through the printer profiles
                     for updatable_profile in updatable_profiles:
@@ -954,7 +922,6 @@ class OctolapsePlugin(
                     self._octolapse_settings = self._octolapse_settings.import_settings_from_file(
                         settings_path,
                         self._plugin_version,
-                        __git_version__,
                         self.get_default_settings_folder(),
                         self.get_plugin_data_folder(),
                         self.available_profiles
@@ -966,7 +933,6 @@ class OctolapsePlugin(
                     self._octolapse_settings = self._octolapse_settings.import_settings_from_text(
                         import_text,
                         self._plugin_version,
-                        __git_version__,
                         self.get_default_settings_folder(),
                         self.get_plugin_data_folder(),
                         self.available_profiles
@@ -1423,7 +1389,7 @@ class OctolapsePlugin(
             request_values = request.get_json()
             directory_type = request_values["type"]
             directory = request_values["directory"].strip()
-            test_profile = MainSettings(self._plugin_version, __git_version__,)
+            test_profile = MainSettings(self._plugin_version)
 
             success = False
             errors = "An unknown directory type was requested for testing."
@@ -2018,7 +1984,6 @@ class OctolapsePlugin(
             new_settings, defaults_loaded = OctolapseSettings.load(
                 settings_file_path,
                 self._plugin_version,
-                __git_version__,
                 self.get_default_settings_folder(),
                 self.get_default_settings_filename(),
                 self.get_plugin_data_folder(),
@@ -2100,8 +2065,6 @@ class OctolapsePlugin(
     def save_settings(self):
         # Save setting from file
         try:
-            # set the git-version
-            self._octolapse_settings.main_settings.git_version = __git_version__
             self._octolapse_settings.save(self.get_settings_file_path())
             self.configure_loggers()
         except Exception as e:
@@ -2204,6 +2167,9 @@ class OctolapsePlugin(
         logger.info("Octolapse - is loading template configurations.")
         return [dict(type="settings", custom_bindings=True)]
 
+    def is_template_autoescaped(self):
+        return True
+
     def create_timelapse_object(self):
         self._timelapse = Timelapse(
             self.get_current_octolapse_settings,
@@ -2298,8 +2264,6 @@ class OctolapsePlugin(
             if profiles_to_update:
                 if notify:
                     num_available = 0
-                    # remove python 2 support
-                    # for key, profile_type in six.iteritems(profiles_to_update):
                     for key, profile_type in profiles_to_update.items():
                         num_available += len(profile_type)
                     data = {
@@ -2360,7 +2324,6 @@ class OctolapsePlugin(
                 self._rendering_task_queue,
                 self._data_folder,
                 self._octolapse_settings.main_settings.version,
-                __git_version__,
                 self.get_default_settings_folder(),
                 self._settings,
                 self.get_current_octolapse_settings,
@@ -2604,10 +2567,10 @@ class OctolapsePlugin(
                 error=before_print_start_camera_script_errors)
             return {"success": False, "error": error}
 
-        # check for version 1.3.8 min
-        logger.verbose("Ensure we are running at least OctoPrint version 1.3.8.")
-        if not (LooseVersion(octoprint.server.VERSION) > LooseVersion("1.3.8")):
-            logger.error("The current octoprint version is older than V1.3.8, and is not supported.  Failed to start "
+        # check for version 1.4.0 min
+        logger.verbose("Ensure we are running at least OctoPrint version 1.4.0.")
+        if not is_octoprint_compatible(">=1.4.0"):
+            logger.error("The current octoprint version is older than V1.4.0, and is not supported.  Failed to start "
                          "timelapse.")
             error = error_messages.get_error(
                 ["init", "incorrect_octoprint_version"], installed_version=octoprint.server.DISPLAY_VERSION
@@ -2652,7 +2615,7 @@ class OctolapsePlugin(
         return {"success": True}
 
     def get_octoprint_timelapse_location(self):
-        return self._settings.settings.getBaseFolder("timelapse")
+        return self._settings.global_get_basefolder("timelapse")
 
     def get_octoprint_g90_influences_extruder(self):
         return self._settings.global_get(["feature", "g90InfluencesExtruder"])
@@ -3729,7 +3692,7 @@ class OctolapsePlugin(
 
     def get_release_info(self):
         # Starting with V1.5.0 prerelease branches are supported!
-        if LooseVersion(octoprint.server.VERSION) < LooseVersion("1.5.0"):
+        if not is_octoprint_compatible(">=1.5.0"):
             # get the checkout type from the software updater
             prerelease_channel = None
             is_prerelease = False
@@ -3763,8 +3726,6 @@ class OctolapsePlugin(
     # noinspection PyUnusedLocal
     def get_timelapse_extensions(self, *args, **kwargs):
         allowed_extensions = ["mpg", "mpeg", "mp4", "m4v", "mkv", "gif", "avi", "flv", "vob"]
-        if sys.version_info < (3,0):
-            return [i.encode('ascii', 'replace') for i in allowed_extensions]
 
         return allowed_extensions
 
@@ -3782,21 +3743,11 @@ class OctolapsePlugin(
         return ["movie_done", "snapshot_archive_done"]
 
     def register_custom_routes(self, server_routes, *args, **kwargs):
-        # version specific permission validator
-        if LooseVersion(octoprint.server.VERSION) >= LooseVersion("1.4"):
-            admin_validation_chain = [
-                util.tornado.access_validation_factory(app, util.flask.admin_validator),
-            ]
-        else:
-            # the concept of granular permissions does not exist in this version of Octoprint.  Fallback to the
-            # admin role
-            def admin_permission_validator(flask_request):
-                user = util.flask.get_flask_user_from_request(flask_request)
-                if user is None or not user.is_authenticated() or not user.is_admin():
-                    raise tornado.web.HTTPError(403)
-            permission_validator = admin_permission_validator
-            admin_validation_chain = [util.tornado.access_validation_factory(app, permission_validator), ]
+        from octoprint.access.permissions import Permissions
 
+        admin_validation_chain = [
+            util.tornado.access_validation_factory(app, util.flask.permission_validator, Permissions.ADMIN),
+        ]
 
         return [
             (
@@ -3885,10 +3836,3 @@ class OctolapseLargeResponseHandler(LargeResponseHandler):
 
             if self._after_request_callback:
                 self._after_request_callback()
-
-
-
-from ._version import get_versions
-__version__ = get_versions()['version']
-__git_version__ = get_versions()['full-revisionid']
-del get_versions

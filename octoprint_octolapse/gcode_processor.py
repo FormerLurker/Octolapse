@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -385,7 +384,7 @@ class Pos(utility.JsonSerializable):
         tool_index = self.current_tool
         if tool_index > len(self.extruders) - 1:
             tool_index = len(self.extruders) - 1
-            logger.warning("The requested tool index of %d is greater than the number of extruders ($d).",
+            logger.warning("The requested tool index of %d is greater than the number of extruders (%d).",
                            self.current_tool, len(self.extruders))
         if tool_index < 0:
             tool_index = 0

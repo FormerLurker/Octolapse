@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,15 +19,10 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
 import threading
 import time
 import uuid
-# remove unused usings
-# from six import iteritems, string_types
-# Remove python 2 support
-# from six.moves import queue
-import queue as queue
+import queue
 import os
 import octoprint_octolapse.utility as utility
 from octoprint_octolapse.stabilization_gcode import SnapshotGcodeGenerator, SnapshotGcode
@@ -39,7 +33,6 @@ from octoprint_octolapse.settings import PrinterProfile, OctolapseSettings
 from octoprint_octolapse.snapshot import CaptureSnapshot, SnapshotJobInfo, SnapshotError
 from octoprint_octolapse.trigger import Triggers
 import octoprint_octolapse.error_messages as error_messages
-import octoprint_octolapse.stabilization_preprocessing as preprocessing
 from octoprint_octolapse.gcode_processor import GcodeProcessor
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
@@ -342,8 +335,6 @@ class Timelapse(object):
                 error_count += 1
                 if isinstance(result.error, SnapshotError):
                     error_message = result.error.message
-                # remove python 2 support
-                # elif isinstance(result.error, string_types):
                 elif isinstance(result.error, str):
                     error_message = result.error
 
@@ -358,8 +349,6 @@ class Timelapse(object):
 
         error_message = ""
         if error_count == 1:
-            # remove python 2 support
-            # for key, value in iteritems(errors):
             for key, value in errors.items():
                 error = value["error"]
                 if key == 'before-snapshot':
@@ -375,8 +364,6 @@ class Timelapse(object):
             before_snapshot_error_count = False
             after_snapshot_error_count = False
             snapshot_error_count = False
-            # remove python 2 support
-            # for key, value in iteritems(errors):
             for key, value in errors.items():
                 if key == 'before-snapshot':
                     before_snapshot_error_count = value["count"]

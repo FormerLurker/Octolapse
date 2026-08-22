@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,15 +19,13 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
 from octoprint_octolapse.position import Pos
 from octoprint_octolapse.gcode_commands import Commands
 from octoprint_octolapse.settings import *
 from octoprint_octolapse.trigger import Triggers
+
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
-# remove unused using
-# import json
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 
@@ -344,7 +341,7 @@ class SnapshotGcodeGenerator(object):
         self.is_extruder_relative_current = snapshot_plan.initial_position.is_extruder_relative
         self.current_tool = snapshot_plan.initial_position.current_tool
         if self.current_tool > len(self.gcode_generation_settings.extruders) - 1:
-            logger.warning("The requested tool index of %d is greater than the number of extruders ($d).",
+            logger.warning("The requested tool index of %d is greater than the number of extruders (%d).",
                            self.current_tool, len(self.gcode_generation_settings.extruders))
             self.current_tool = len(self.gcode_generation_settings.extruders) - 1
 

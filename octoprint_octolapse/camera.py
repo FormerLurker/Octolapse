@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,24 +19,19 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
+# This file is subject to the terms and conditions defined in
+# file called 'LICENSE', which is part of this source code package.
+
 import json
-# remove unused imports
-# import six
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.script as script
 from threading import Thread
 import time
 import uuid
 import shutil
-# This file is subject to the terms and conditions defined in
-# file called 'LICENSE', which is part of this source code package.
 import requests
 import os
 import errno
-# Todo:  Do we need to add this to setup.py?
-# remove unused import
-# from requests.auth import HTTPBasicAuth
 from requests.exceptions import SSLError
 from octoprint_octolapse.settings import CameraProfile, MjpgStreamerControl, MjpgStreamer
 from tempfile import mkdtemp
@@ -80,8 +74,6 @@ class CameraControl(object):
 
         server_types = camera_files["server_types"]
         # loop through each server type
-        # remove python 2 compatibility
-        # for key, server_type in six.iteritems(server_types):
         for key, server_type in server_types.items():
             camera_types["server_types"][key] = {'cameras': {}}
             # load all of the individual camera type info files for the current server
@@ -129,8 +121,6 @@ class CameraControl(object):
                     control_setting.update(control)
                     controls[control_setting.id] = control_setting
             elif isinstance(data, dict):
-                # remove python 2 compatibility
-                # for key, control in six.iteritems(data):
                 for key, control in data.items():
                     control_setting = MjpgStreamerControl()
                     control_setting.update(control)
@@ -147,8 +137,6 @@ class CameraControl(object):
         cameras = CameraControl.camera_types["server_types"][server_type]["cameras"]
 
         # iterate the cameras dictionary for the given server type if possible
-        # remove python 2 compatibility
-        # for key, camera in six.iteritems(cameras):
         for key, camera in cameras.items():
             # see if the current camera type matches the given data
             if CameraControl._is_webcam_type(server_type, camera, data):
@@ -206,7 +194,7 @@ class CameraControl(object):
         if not no_wait:
             # join the threads, but timeout in a reasonable way
             for thread in threads:
-                thread.join(requests.packages.urllib3.util.retry.Retry.BACKOFF_MAX)
+                thread.join(getattr(utility.Retry, "DEFAULT_BACKOFF_MAX", 120))
                 if not thread.success:
                     for error in thread.errors:
                         errors.append(error)
@@ -217,8 +205,6 @@ class CameraControl(object):
     def run_on_print_start_script(cameras):
         # build the arg list
         args_list = []
-        # remove python 2 compatibility
-        # for key, camera in six.iteritems(cameras):
         for key, camera in cameras.items():
             script_path = camera.on_print_start_script.strip()
             if not script_path or not camera.enabled:
@@ -244,8 +230,6 @@ class CameraControl(object):
     def run_on_print_end_script(cameras):
         # build the arg list
         args_list = []
-        # remove python 2 compatibility
-        # for key, camera in six.iteritems(cameras):
         for key, camera in cameras.items():
             script_path = camera.on_print_end_script.strip()
             if not script_path or not camera.enabled:
@@ -966,8 +950,6 @@ class CameraControl(object):
                 return False, errors
             # set the control values to the defaults
             controls = settings["webcam_settings"]["mjpg_streamer"]["controls"]
-            # remove python 2 compatibility
-            # for key, control in six.iteritems(controls):
             for key, control in controls.items():
                 control.value = control.default
                 controls[key] = control.to_dict()
@@ -1020,8 +1002,6 @@ class MjpgStreamerThread(Thread):
             self.password = password
             self.ignore_ssl_error = ignore_ssl_error
             self.camera_name = camera_name
-        # remove python 2 compatibility
-        # if isinstance(self.address, six.string_types):
         if isinstance(self.address, str):
             self.address = self.address.strip()
         self.retries = retries
@@ -1174,8 +1154,6 @@ class MjpgStreamerSettingsThread(MjpgStreamerThread):
 
         controls_list = []
 
-        # remove python 2 compatibility
-        # for key, control in six.iteritems(self.controls):
         for key, control in self.controls.items():
             controls_list.append(control)
 

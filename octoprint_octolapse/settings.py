@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,7 +19,6 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
 import shutil
 import copy
 import json
@@ -30,24 +28,16 @@ import tempfile
 import sys
 import re
 import errno
-from octoprint_octolapse_setuptools import NumberedVersion
+from octoprint.util.version import get_comparable_version
 import octoprint_octolapse.utility as utility
 import octoprint_octolapse.log as log
 import math
-# remove python 2 support
-#try:
-#    from collections.abc import Iterable
-#except ImportError:
-#    # Python 2.7
-#    from collections import Iterable
 from collections.abc import Iterable
 import octoprint_octolapse.settings_preprocessor as settings_preprocessor
 import octoprint_octolapse.migration as migration
 from octoprint_octolapse.gcode_processor import GcodeProcessor, ParsedCommand
-# remove unused usings
-# import six
 from octoprint_octolapse.error_messages import OctolapseException
-import inspect
+
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
@@ -57,8 +47,6 @@ logger = logging_configurator.get_logger(__name__)
 class SettingsJsonEncoder(json.JSONEncoder):
     def default(self, obj):
         if issubclass(type(obj), Settings):
-            # Remove python 2 support
-            # return {k: v for (k, v) in six.iteritems(obj.to_dict()) if not k.startswith("_")}
             return {k: v for (k, v) in obj.to_dict().items() if not k.startswith("_")}
         elif issubclass(type(obj), StaticSettings):
             return obj.__dict__
@@ -106,8 +94,6 @@ class Settings(object):
 
     def to_json(self):
         # remove private variables
-        # Remove python 2 support
-        # filtered_dict = {k: v for (k, v) in six.iteritems(self.to_dict()) if not k.startswith("_")}
         filtered_dict = {k: v for (k, v) in self.to_dict().items() if not k.startswith("_")}
         return json.dumps(filtered_dict, cls=SettingsJsonEncoder)
 
@@ -136,8 +122,6 @@ class Settings(object):
                 if key.startswith("_"):
                     continue
                 class_item = getattr(source, key, '{octolapse_no_property_found}')
-                # Remove python 2 support
-                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                 if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if isinstance(class_item, Settings):
                         class_item.update(value)
@@ -180,7 +164,7 @@ class Settings(object):
             try:
                 temp_file.close()
                 os.unlink(temp_file.name)
-            except WindowsError as e:
+            except OSError:
                 pass
 
     @classmethod
@@ -242,7 +226,7 @@ class AutomaticConfiguration(Settings):
         }
 
     def suppress_updates(self, available_profile):
-        if NumberedVersion(self.version) < NumberedVersion(available_profile["version"]):
+        if get_comparable_version(self.version) < get_comparable_version(available_profile["version"]):
             self.suppress_update_notification_version = available_profile["version"]
 
     def try_convert_value(cls, destination, value, key):
@@ -1089,8 +1073,6 @@ class TriggerProfile(AutomaticConfigurationProfile):
 
     @staticmethod
     def get_extruder_trigger_value(value):
-        # Remove python 2 support
-        #if isinstance(value, six.string_types):
         if isinstance(value, str):
             if value is None or len(value) == 0:
                 return None
@@ -1183,8 +1165,6 @@ class RenderingProfile(AutomaticConfigurationProfile):
     @staticmethod
     def _get_color_(rgba_color):
         overlay_text_color = [255, 255, 255, 1.0]
-        # Remove python 2 support
-        # if isinstance(rgba_color, six.string_types):
         if isinstance(rgba_color, str):
             overlay_text_color = json.loads(rgba_color)
         elif isinstance(rgba_color, list):
@@ -1207,8 +1187,6 @@ class RenderingProfile(AutomaticConfigurationProfile):
     @classmethod
     def try_convert_value(cls, destination, value, key):
         if key in ['overlay_text_color', 'overlay_outline_color']:
-            # Remove python 2 support
-            # if isinstance(value, six.string_types):
             if isinstance(value, str):
                 value = json.loads(value)
             if not isinstance(value, list):
@@ -1312,8 +1290,6 @@ class MjpgStreamer(StreamingServer):
         # first see if the  number of controls match
         if len(self.controls) != len(server_settings):
             return False
-        # Remove python 2 support
-        # for key, control in six.iteritems(self.controls):
         for key, control in self.controls.items():
             # convert the key to a string
             key = str(key)
@@ -1336,8 +1312,6 @@ class MjpgStreamer(StreamingServer):
 
         for key, value in item_to_iterate.items():
             class_item = getattr(self, key, '{octolapse_no_property_found}')
-            # Remove python 2 support
-            # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
             if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                 if key == 'controls':
                     self.controls = {}
@@ -1480,8 +1454,6 @@ class WebcamSettings(Settings):
 
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                # Remove python 2 support
-                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                 if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == 'mjpg_streamer':
                         self.mjpg_streamer.controls = {}
@@ -1489,8 +1461,6 @@ class WebcamSettings(Settings):
                             controls = value["controls"]
                             # controls might be a dict or a list, iterate appropriately
                             if isinstance(controls, dict):
-                                # Remove python 2 support
-                                # for key, control in six.iteritems(value["controls"]):
                                 for key, control in value["controls"].items():
                                     if "id" in control:
                                         self.mjpg_streamer.controls[key] = (
@@ -1644,7 +1614,7 @@ class LoggingProfile(AutomaticConfigurationProfile):
 
 class MainSettings(Settings):
 
-    def __init__(self, plugin_version, git_version):
+    def __init__(self, plugin_version):
         # Main Settings
         self.show_navbar_icon = True
         self.show_navbar_when_not_printing = True
@@ -1659,8 +1629,7 @@ class MainSettings(Settings):
         self.cancel_print_on_startup_error = True
         self.platform = sys.platform
         self.version = plugin_version
-        self.settings_version = NumberedVersion.CurrentSettingsVersion
-        self.git_version = git_version
+        self.settings_version = migration.CURRENT_SETTINGS_VERSION
         self.preview_snapshot_plans = True
         self.preview_snapshot_plan_autoclose = False
         self.preview_snapshot_plan_seconds = 30
@@ -1785,21 +1754,21 @@ class ProfileOptions(StaticSettings):
 
 
 class ProfileDefaults(StaticSettings):
-    def __init__(self, plugin_version, git_version):
+    def __init__(self, plugin_version):
         self.printer = PrinterProfile("Default Printer")
         self.stabilization = StabilizationProfile("Default Stabilization")
         self.trigger = TriggerProfile("Default Trigger")
         self.rendering = RenderingProfile("Default Rendering")
         self.camera = CameraProfile("Default Camera")
         self.logging = LoggingProfile("Default Logging")
-        self.main_settings = MainSettings(plugin_version, git_version)
+        self.main_settings = MainSettings(plugin_version)
 
 
 class Profiles(Settings):
-    def __init__(self, plugin_version, git_version):
+    def __init__(self, plugin_version):
         self.options = ProfileOptions()
         # create default profiles
-        self.defaults = ProfileDefaults(plugin_version, git_version)
+        self.defaults = ProfileDefaults(plugin_version)
 
         # printers is initially empty - user must select a printer
         self.printers = {}
@@ -2107,8 +2076,6 @@ class Profiles(Settings):
 
         for key, value in item_to_iterate.items():
             class_item = getattr(self, key, '{octolapse_no_property_found}')
-            # Remove python 2 support
-            # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
             if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                 profiles_found = True
 
@@ -2188,43 +2155,31 @@ class Profiles(Settings):
             "logging": []
         }
         has_profiles = False
-        # Remove python 2 support
-        # for key, printer_profile in six.iteritems(self.printers):
         for key, printer_profile in self.printers.items():
             if printer_profile.is_updatable_from_server():
                 has_profiles = True
                 identifiers = printer_profile.get_server_update_identifiers_dict()
                 profiles["printer"].append(identifiers)
-        # Remove python 2 support
-        # for key, stabilization_profile in six.iteritems(self.stabilizations):
         for key, stabilization_profile in self.stabilizations.items():
             if stabilization_profile.is_updatable_from_server():
                 has_profiles = True
                 identifiers = stabilization_profile.get_server_update_identifiers_dict()
                 profiles["stabilization"].append(identifiers)
-        # Remove python 2 support
-        # for key, trigger_profile in six.iteritems(self.triggers):
         for key, trigger_profile in self.triggers.items():
             if trigger_profile.is_updatable_from_server():
                 has_profiles = True
                 identifiers = trigger_profile.get_server_update_identifiers_dict()
                 profiles["trigger"].append(identifiers)
-        # Remove python 2 support
-        # for key, rendering_profile in six.iteritems(self.renderings):
         for key, rendering_profile in self.renderings.items():
             if rendering_profile.is_updatable_from_server():
                 has_profiles = True
                 identifiers = rendering_profile.get_server_update_identifiers_dict()
                 profiles["rendering"].append(identifiers)
-        # Remove python 2 support
-        # for key, camera_profile in six.iteritems(self.cameras):
         for key, camera_profile in self.cameras.items():
             if camera_profile.is_updatable_from_server():
                 has_profiles = True
                 identifiers = camera_profile.get_server_update_identifiers_dict()
                 profiles["camera"].append(identifiers)
-        # Remove python 2 support
-        # for key, logging_profile in six.iteritems(self.logging):
         for key, logging_profile in self.logging.items():
             if logging_profile.is_updatable_from_server():
                 has_profiles = True
@@ -2262,9 +2217,9 @@ class OctolapseSettings(Settings):
 
     DefaultLoggingProfile = None
 
-    def __init__(self, plugin_version="unknown", git_version=None):
-        self.main_settings = MainSettings(plugin_version, git_version)
-        self.profiles = Profiles(plugin_version, git_version)
+    def __init__(self, plugin_version="unknown"):
+        self.main_settings = MainSettings(plugin_version)
+        self.profiles = Profiles(plugin_version)
         self.global_options = GlobalOptions()
         self.upgrade_info = {
             "was_upgraded": False,
@@ -2386,7 +2341,6 @@ class OctolapseSettings(Settings):
         cls,
         file_path,
         plugin_version,
-        git_version,
         default_settings_folder,
         default_settings_filename,
         data_directory,
@@ -2456,11 +2410,10 @@ class OctolapseSettings(Settings):
             # update the profile options within the octolapse settings
             new_settings.profiles.options.update_server_options(available_profiles)
 
-        # set the current and git versions (always use the passed in values)
-        new_settings.main_settings.git_version = git_version
+        # set the current version (always use the passed in value)
         new_settings.main_settings.version = plugin_version
-        # set the settings version (always use NumberedVersion.CurrentSettingsVersion)
-        new_settings.main_settings.settings_version = NumberedVersion.CurrentSettingsVersion
+        # set the settings version (always use migration.CURRENT_SETTINGS_VERSION)
+        new_settings.main_settings.settings_version = migration.CURRENT_SETTINGS_VERSION
 
         return new_settings, load_defualt_settings
 
@@ -2475,7 +2428,7 @@ class OctolapseSettings(Settings):
         profile = self.profiles.get_profile(profile_type, guid)
         export_dict = {
             'version': self.main_settings.version,
-            'settings_version': NumberedVersion.CurrentSettingsVersion,
+            'settings_version': migration.CURRENT_SETTINGS_VERSION,
             'type': profile_type,
             'profile': profile
         }
@@ -2488,7 +2441,6 @@ class OctolapseSettings(Settings):
         self,
         settings_path,
         plugin_version,
-        git_version,
         default_settings_folder,
         data_directory,
         available_server_profiles,
@@ -2497,7 +2449,7 @@ class OctolapseSettings(Settings):
         with open(settings_path, mode='r') as settings_file:
             settings_text = settings_file.read()
         return self.import_settings_from_text(
-            settings_text, plugin_version, git_version, default_settings_folder, data_directory,
+            settings_text, plugin_version, default_settings_folder, data_directory,
             available_server_profiles, update_existing=update_existing
         )
 
@@ -2505,7 +2457,6 @@ class OctolapseSettings(Settings):
         self,
         settings_text,
         plugin_version,
-        git_version,
         default_settings_folder,
         data_directory,
         available_server_profiles,
@@ -2516,10 +2467,10 @@ class OctolapseSettings(Settings):
         settings_version = OctolapseSettings.get_settings_version_from_dict(settings)
         # see if this is a structured import
         if "type" in settings:
-            if settings_version != NumberedVersion.CurrentSettingsVersion:
+            if settings_version != migration.CURRENT_SETTINGS_VERSION:
                 raise OctolapseSettings.IncorrectSettingsVersionException(
                     "Cannot import profiles exported from an incompatible version of Octolapse ({0}).  Was expecting settings version: {1} ".format(
-                        settings_version, NumberedVersion.CurrentSettingsVersion
+                        settings_version, migration.CURRENT_SETTINGS_VERSION
                     )
                 )
             else:
@@ -2527,17 +2478,17 @@ class OctolapseSettings(Settings):
                 settings = self
         else:
             # Make sure the settings version is not greater than the current version
-            if settings_version != "unknown" and NumberedVersion(NumberedVersion.CurrentSettingsVersion) < NumberedVersion(settings_version):
+            if settings_version != "unknown" and get_comparable_version(migration.CURRENT_SETTINGS_VERSION) < get_comparable_version(settings_version):
                 raise OctolapseSettings.IncorrectSettingsVersionException(
                     "Cannot import settings exported from a newer and incompatible version of Octolapse ({0}).  Was expecting settings version: {1} ".format(
-                        settings_version, NumberedVersion.CurrentSettingsVersion
+                        settings_version, migration.CURRENT_SETTINGS_VERSION
                     )
                 )
             # this is a regular settings file.  Try to migrate
             migrated_settings = migration.migrate_settings(
                 plugin_version, settings, default_settings_folder, data_directory
             )
-            new_settings = OctolapseSettings(plugin_version, git_version)
+            new_settings = OctolapseSettings(plugin_version)
             new_settings.update(migrated_settings)
             settings = new_settings
 
@@ -2760,8 +2711,6 @@ class CuraExtruder(SlicerExtruder):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                # Remove python 2 support
-                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                 if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     try:
                         if key in ['retraction_enable', 'retraction_hop_enabled']:
@@ -2872,17 +2821,12 @@ class CuraSettings(SlicerSettings):
                     extruder = self.extruders[extruder_index]
                     # for fun, make sure the setting exists in the extruder class
                     class_item = getattr(extruder, extruder_setting_name, '{octolapse_no_property_found}')
-                    # Remove python 2 support
                     if not (
-                        # Remove python 2 support
-                        # isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'
                         isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'
                     ):
                         extruder.__dict__[extruder_setting_name] = value
                     continue
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                # Remove python 2 support
-                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                 if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == 'version':
                         self.version = value
@@ -2901,8 +2845,6 @@ class CuraSettings(SlicerSettings):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                # Remove python 2 support
-                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                 if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == "extruders":
                         self.extruders = []
@@ -2963,8 +2905,6 @@ class Simplify3dExtruder(SlicerExtruder):
             item_to_iterate = iterable.__dict__
         for key, value in item_to_iterate.items():
             class_item = getattr(self, key, '{octolapse_no_property_found}')
-            # Remove python 2 support
-            # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
             if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                 try:
                     if key in ['extruder_use_retract']:
@@ -3120,8 +3060,6 @@ class Simplify3dSettings(SlicerSettings):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                # Remove python 2 support
-                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                 if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == "extruders":
                         self.extruders = []
@@ -3217,8 +3155,6 @@ class Slic3rPeExtruder(SlicerExtruder):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                # Remove python 2 support
-                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                 if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     try:
                         self.__dict__[key] = None if value is None else float(value)
@@ -3267,8 +3203,6 @@ class Slic3rPeSettings(SlicerSettings):
         try:
             if parse_string is None:
                 return None
-            # Remove python 2 support
-            # if isinstance(parse_string, six.string_types):
             if isinstance(parse_string, str):
                 percent_index = "{}".format(parse_string).strip().find('%')
                 if percent_index < 1:
@@ -3316,8 +3250,6 @@ class Slic3rPeSettings(SlicerSettings):
                         extruder = self.extruders[extruder_index]
                         class_item = getattr(extruder, key, '{octolapse_no_property_found}')
                         if not (
-                            # Remove python 2 support
-                            # isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'
                             isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'
                         ):
                             # All of the extruder values are floats
@@ -3325,8 +3257,6 @@ class Slic3rPeSettings(SlicerSettings):
                         extruder_index += 1
                     continue
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                # Remove python 2 support
-                #if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                 if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == 'version':
                         self.version = value["version"]
@@ -3339,8 +3269,6 @@ class Slic3rPeSettings(SlicerSettings):
 
     @classmethod
     def try_convert_value(cls, destination, value, key):
-        # Remove python 2 support
-        # if value is None or (isinstance(value, six.string_types) and value == 'None'):
         if value is None or (isinstance(value, str) and value == 'None'):
             return None
 
@@ -3353,8 +3281,6 @@ class Slic3rPeSettings(SlicerSettings):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                # Remove python 2 support
-                #if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                 if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == "extruders":
                         self.extruders = []
@@ -3416,8 +3342,6 @@ class OtherSlicerExtruder(SlicerExtruder):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                # Remove python 2 support
-                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                 if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     try:
                         if key in ['retract_before_move','lift_when_retracted']:
@@ -3477,8 +3401,6 @@ class OtherSlicerSettings(SlicerSettings):
                 item_to_iterate = iterable.__dict__
             for key, value in item_to_iterate.items():
                 class_item = getattr(self, key, '{octolapse_no_property_found}')
-                # Remove python 2 support
-                # if not (isinstance(class_item, six.string_types) and class_item == '{octolapse_no_property_found}'):
                 if not (isinstance(class_item, str) and class_item == '{octolapse_no_property_found}'):
                     if key == "extruders":
                         self.extruders = []

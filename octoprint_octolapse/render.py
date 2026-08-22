@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,32 +19,21 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
 import re
 import math
 import os
 import sys
 import threading
-# Remove python 2 support
-# from six.moves import queue
-import queue as queue
-# remove unused usings
-# from six import string_types, iteritems
+import queue
 import time
 import json
 import copy
-import zipfile as zipfile
+import zipfile
 from csv import DictReader
-# sarge was added to the additional requirements for the plugin
 import datetime
 from tempfile import mkdtemp
 import uuid
-# Recent versions of Pillow changed the case of the import
-# Why!?
-try:
-    from pil import Image, ImageDraw, ImageFont
-except ImportError:
-    from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 
 import octoprint_octolapse.utility as utility
@@ -288,7 +276,7 @@ def preview_overlay(rendering_profile, image=None):
         text_image = Image.new('RGBA', i.size, (255, 255, 255, 0))
         d = ImageDraw.Draw(text_image)
         iw, ih = i.size
-        tw, th = d.textsize(t, font=font)
+        tw, th = d.textbbox((0, 0), t, font=font)[2:]
 
         d.text(xy=(iw / 2 - tw / 2 + dx, ih / 2 - th / 2 + dy), text=t,
                fill=tuple(overlay_text_color), font=font)
@@ -553,13 +541,12 @@ class RenderingProcessor(threading.Thread):
        one at a time for each rendering job.  Notify the calling thread of the number of jobs in the queue on demand."""
 
     def __init__(
-        self, rendering_task_queue, data_directory, plugin_version, git_version, default_settings_folder,
+        self, rendering_task_queue, data_directory, plugin_version, default_settings_folder,
         octoprint_settings, get_current_settings_callback, on_start, on_success, on_render_progress, on_error, on_end,
         on_unfinished_renderings_changed, on_in_process_renderings_changed, on_unfinished_renderings_loaded
     ):
         super(RenderingProcessor, self).__init__()
         self._plugin_version = plugin_version
-        self._git_version = git_version
         self._default_settings_folder = default_settings_folder
         self._octoprint_settings = octoprint_settings
         self._get_current_settings_callback = get_current_settings_callback
@@ -621,7 +608,7 @@ class RenderingProcessor(threading.Thread):
             # mame sure the directories are tested
             success, errors = self._get_current_settings_callback().main_settings.test_directories(
                 self.data_directory,
-                self._octoprint_settings.settings.getBaseFolder("timelapse")
+                self._octoprint_settings.global_get_basefolder("timelapse")
             )
             if not success:
                 return False, errors
@@ -647,7 +634,7 @@ class RenderingProcessor(threading.Thread):
                 self._snapshot_archive_directory = snapshot_archive_directory
 
             timelapse_directory = self._get_current_settings_callback().main_settings.get_timelapse_directory(
-                self._octoprint_settings.settings.getBaseFolder("timelapse")
+                self._octoprint_settings.global_get_basefolder("timelapse")
             )
             if self._timelapse_directory != timelapse_directory:
                 timelapse_directory_changed = True
@@ -834,8 +821,6 @@ class RenderingProcessor(threading.Thread):
                     archive_files_temp_dict = {}
 
                     # now create the directories and files and place them in the temp snapshot directory
-                    # remove python 2 support
-                    # for job_guid, job in iteritems(archive_files_dict):
                     for job_guid, job in archive_files_dict.items():
                         job_path = utility.get_temporary_snapshot_job_path(temporary_directory, job_guid)
                         if not os.path.isdir(job_path):
@@ -846,8 +831,6 @@ class RenderingProcessor(threading.Thread):
                             with zip_file.open(job_info_file["fileinfo"]) as info_file:
                                 with open(file_path, 'wb') as target_file:
                                     target_file.write(info_file.read())
-                        # remove python 2 support
-                        # for camera_guid, camera in iteritems(job["cameras"]):
                         for camera_guid, camera in job["cameras"].items():
                             camera_path = utility.get_temporary_snapshot_job_camera_path(
                                 temporary_directory, job_guid, camera_guid
@@ -873,12 +856,8 @@ class RenderingProcessor(threading.Thread):
                 }
         # now we should have extracted all of the items, add the job to the queue for these cameras
         has_created_jobs = False
-        # remove python 2 support
-        # for job_guid, job in iteritems(archive_files_dict):
         for job_guid, job in archive_files_dict.items():
             has_created_jobs = True
-            # remove python 2 support
-            # for camera_guid, camera in iteritems(job["cameras"]):
             for camera_guid, camera in job["cameras"].items():
                 # add this job to the queue as an imported item
                 if prevent_archive:
@@ -1469,7 +1448,7 @@ class RenderingProcessor(threading.Thread):
 
     def _get_job_settings(self, job_guid, camera_guid, rendering_profile, camera_profile, temporary_directory):
         """Attempt to load all job settings from the snapshot path"""
-        settings = OctolapseSettings(self._plugin_version, self._git_version)
+        settings = OctolapseSettings(self._plugin_version)
         settings.profiles.cameras = {}
         settings.profiles.renderings = {}
 
@@ -2230,7 +2209,8 @@ class TimelapseRenderJob(threading.Thread):
             # replace time_elapsed with a formatted string, in case format strings are omitted
             format_vars['time_elapsed'] = format_vars['time_elapsed_formatted']
             del format_vars['time_elapsed_formatted']
-            text = text_template.format(**format_vars)
+
+        text = text_template.format(**format_vars)
 
         # No font selected
         if not font_path or not os.path.isfile(font_path):
@@ -2244,8 +2224,6 @@ class TimelapseRenderJob(threading.Thread):
         d = ImageDraw.Draw(text_image)
 
         # Process the text position to improve the alignment.
-        # remove python 2 support
-        # if isinstance(overlay_location, string_types):
         if isinstance(overlay_location, str):
             overlay_location = json.loads(overlay_location)
         x, y = tuple(overlay_location)
@@ -2253,10 +2231,10 @@ class TimelapseRenderJob(threading.Thread):
         if overlay_text_valign == 'top':
             pass
         elif overlay_text_valign == 'middle':
-            textsize = d.multiline_textsize(text, font=font, spacing=0)
+            textsize = d.multiline_textbbox((0, 0), text, font=font, spacing=0)[2:]
             y += image.size[1] / 2 - textsize[1] / 2
         elif overlay_text_valign == 'bottom':
-            textsize = d.multiline_textsize(text, font=font, spacing=0)
+            textsize = d.multiline_textbbox((0, 0), text, font=font, spacing=0)[2:]
             y += image.size[1] - textsize[1]
         else:
             raise RenderError('overlay-text-valign',
@@ -2265,10 +2243,10 @@ class TimelapseRenderJob(threading.Thread):
         if overlay_text_halign == 'left':
             pass
         elif overlay_text_halign == 'center':
-            textsize = d.multiline_textsize(text, font=font, spacing=0)
+            textsize = d.multiline_textbbox((0, 0), text, font=font, spacing=0)[2:]
             x += image.size[0] / 2 - textsize[0] / 2
         elif overlay_text_halign == 'right':
-            textsize = d.multiline_textsize(text, font=font, spacing=0)
+            textsize = d.multiline_textbbox((0, 0), text, font=font, spacing=0)[2:]
             x += image.size[0] - textsize[0]
         else:
             raise RenderError('overlay-text-halign',

@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,31 +19,18 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
 import subprocess
 import threading
 import psutil
 import os
-import sys
-import platform
 
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 
-if sys.version_info >= (3, 2):
-    def fsdecode(filename):
-        return os.fsdecode(filename)
-else:
-    fs_encoding = sys.getfilesystemencoding()
-    fs_errors = 'surrogateescape' if platform.system() != "Windows" else 'strict'
-
-    def fsdecode(filename):
-        if isinstance(filename, bytes):
-            return filename.decode(fs_encoding, fs_errors)
-        else:
-            return filename
+def fsdecode(filename):
+    return os.fsdecode(filename)
 
 
 class POpenWithTimeout(object):

@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,13 +19,11 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
-from octoprint_octolapse_setuptools import NumberedVersion
+from octoprint.util.version import get_comparable_version
+from octoprint_octolapse.migration import CURRENT_SETTINGS_VERSION
 import requests
 import uuid
 import json
-# remove unused usings
-# import six
 import os
 import copy
 
@@ -137,8 +134,6 @@ class ExternalSettings(object):
             available_profiles is not None
         ):
             # loop through the updatable profile dicts
-            # Remove python 2 support
-            # for profile_type, value in six.iteritems(updatable_profiles):
             for profile_type, value in updatable_profiles.items():
                 # loop through the profiles
                 for updatable_profile in value:
@@ -155,13 +150,13 @@ class ExternalSettings(object):
                     if (
                         updatable_profile["version"] is None or
                         (
-                            NumberedVersion(str(available_profile["version"])) > NumberedVersion(str(updatable_profile["version"])) and
+                            get_comparable_version(str(available_profile["version"])) > get_comparable_version(str(updatable_profile["version"])) and
                             (
                                 not updatable_profile["suppress_update_notification_version"] or
                                 (
                                     force_updates or ignore_suppression or
-                                    NumberedVersion(str(available_profile["version"])) >
-                                    NumberedVersion(str(updatable_profile["suppress_update_notification_version"]))
+                                    get_comparable_version(str(available_profile["version"])) >
+                                    get_comparable_version(str(updatable_profile["suppress_update_notification_version"]))
                                 )
                             )
                         )
@@ -221,11 +216,11 @@ class ExternalSettings(object):
         if not versions:
             return None
 
-        versions.sort(key=NumberedVersion)
+        versions.sort(key=lambda x: get_comparable_version(str(x)))
 
         settings_version = None
         for version in versions:
-            if NumberedVersion(str(version)) > NumberedVersion(str(NumberedVersion.CurrentSettingsVersion)):
+            if get_comparable_version(str(version)) > get_comparable_version(CURRENT_SETTINGS_VERSION):
                 break
             settings_version = version
 
