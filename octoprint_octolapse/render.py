@@ -608,7 +608,7 @@ class RenderingProcessor(threading.Thread):
             # mame sure the directories are tested
             success, errors = self._get_current_settings_callback().main_settings.test_directories(
                 self.data_directory,
-                self._octoprint_settings.settings.getBaseFolder("timelapse")
+                self._octoprint_settings.global_get_basefolder("timelapse")
             )
             if not success:
                 return False, errors
@@ -634,7 +634,7 @@ class RenderingProcessor(threading.Thread):
                 self._snapshot_archive_directory = snapshot_archive_directory
 
             timelapse_directory = self._get_current_settings_callback().main_settings.get_timelapse_directory(
-                self._octoprint_settings.settings.getBaseFolder("timelapse")
+                self._octoprint_settings.global_get_basefolder("timelapse")
             )
             if self._timelapse_directory != timelapse_directory:
                 timelapse_directory_changed = True

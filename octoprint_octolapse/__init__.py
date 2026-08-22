@@ -2609,7 +2609,7 @@ class OctolapsePlugin(
         return {"success": True}
 
     def get_octoprint_timelapse_location(self):
-        return self._settings.settings.getBaseFolder("timelapse")
+        return self._settings.global_get_basefolder("timelapse")
 
     def get_octoprint_g90_influences_extruder(self):
         return self._settings.global_get(["feature", "g90InfluencesExtruder"])
