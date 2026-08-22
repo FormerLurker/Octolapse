@@ -34,7 +34,7 @@ import shutil
 import errno
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
+from urllib3.util.retry import Retry
 # Todo:  Determine if this is still necessary.
 try:
     from slugify import Slugify
