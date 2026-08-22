@@ -33,7 +33,7 @@ void octolapse_initialize_loggers()
 {
   // Create all of the objects necessary for logging
   // Import the octolapse.log module
-  py_logging_module = PyImport_ImportModuleNoBlock("octoprint_octolapse.log");
+  py_logging_module = PyImport_ImportModule("octoprint_octolapse.log");
   if (py_logging_module == NULL)
   {
     PyErr_SetString(PyExc_ImportError, "Could not import module 'octolapse.log'.");
