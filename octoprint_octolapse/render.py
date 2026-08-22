@@ -33,12 +33,7 @@ from csv import DictReader
 import datetime
 from tempfile import mkdtemp
 import uuid
-# Recent versions of Pillow changed the case of the import
-# Why!?
-try:
-    from pil import Image, ImageDraw, ImageFont
-except ImportError:
-    from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 
 import octoprint_octolapse.utility as utility
@@ -281,7 +276,7 @@ def preview_overlay(rendering_profile, image=None):
         text_image = Image.new('RGBA', i.size, (255, 255, 255, 0))
         d = ImageDraw.Draw(text_image)
         iw, ih = i.size
-        tw, th = d.textsize(t, font=font)
+        tw, th = d.textbbox((0, 0), t, font=font)[2:]
 
         d.text(xy=(iw / 2 - tw / 2 + dx, ih / 2 - th / 2 + dy), text=t,
                fill=tuple(overlay_text_color), font=font)
@@ -2214,7 +2209,8 @@ class TimelapseRenderJob(threading.Thread):
             # replace time_elapsed with a formatted string, in case format strings are omitted
             format_vars['time_elapsed'] = format_vars['time_elapsed_formatted']
             del format_vars['time_elapsed_formatted']
-            text = text_template.format(**format_vars)
+
+        text = text_template.format(**format_vars)
 
         # No font selected
         if not font_path or not os.path.isfile(font_path):
@@ -2235,10 +2231,10 @@ class TimelapseRenderJob(threading.Thread):
         if overlay_text_valign == 'top':
             pass
         elif overlay_text_valign == 'middle':
-            textsize = d.multiline_textsize(text, font=font, spacing=0)
+            textsize = d.multiline_textbbox((0, 0), text, font=font, spacing=0)[2:]
             y += image.size[1] / 2 - textsize[1] / 2
         elif overlay_text_valign == 'bottom':
-            textsize = d.multiline_textsize(text, font=font, spacing=0)
+            textsize = d.multiline_textbbox((0, 0), text, font=font, spacing=0)[2:]
             y += image.size[1] - textsize[1]
         else:
             raise RenderError('overlay-text-valign',
@@ -2247,10 +2243,10 @@ class TimelapseRenderJob(threading.Thread):
         if overlay_text_halign == 'left':
             pass
         elif overlay_text_halign == 'center':
-            textsize = d.multiline_textsize(text, font=font, spacing=0)
+            textsize = d.multiline_textbbox((0, 0), text, font=font, spacing=0)[2:]
             x += image.size[0] / 2 - textsize[0] / 2
         elif overlay_text_halign == 'right':
-            textsize = d.multiline_textsize(text, font=font, spacing=0)
+            textsize = d.multiline_textbbox((0, 0), text, font=font, spacing=0)[2:]
             x += image.size[0] - textsize[0]
         else:
             raise RenderError('overlay-text-halign',

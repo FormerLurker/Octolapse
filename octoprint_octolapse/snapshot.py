@@ -25,24 +25,14 @@ from csv import DictWriter
 from time import sleep
 import requests
 
-# Recent versions of Pillow changed the case of the import
-# Why!?
-try:
-    from pil import ImageFile
-except ImportError:
-    from PIL import ImageFile
+from PIL import ImageFile
 
 from requests.auth import HTTPBasicAuth
 from threading import Thread, Event
 from tempfile import mkdtemp
 from uuid import uuid4
 from time import time
-# Recent versions of Pillow changed the case of the import
-# Why!?
-try:
-    from pil import Image
-except ImportError:
-    from PIL import Image
+from PIL import Image
 
 import errno
 # create the module level logger
