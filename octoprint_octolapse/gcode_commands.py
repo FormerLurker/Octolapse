@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,9 +19,6 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
-# remove unused using
-# from six import string_types
 import operator
 import re
 
@@ -50,8 +46,6 @@ class CommandParameter(object):
 
     @staticmethod
     def parse_float(parameter_string):
-        # remove python 2 support
-        # assert (isinstance(parameter_string, string_types))
         assert (isinstance(parameter_string, str))
         parameter_string = parameter_string.lstrip()
 
@@ -93,8 +87,6 @@ class CommandParameter(object):
 
     @staticmethod
     def parse_int(parameter_string):
-        # remove python 2 support
-        # assert (isinstance(parameter_string, string_types))
         assert (isinstance(parameter_string, str))
         parameter_string = parameter_string.lstrip()
         index = 0
@@ -120,8 +112,6 @@ class CommandParameter(object):
 
     @staticmethod
     def parse_tool(parameter_string):
-        # remove python 2 support
-        # assert (isinstance(parameter_string, string_types))
         assert (isinstance(parameter_string, str))
         parameter_string = parameter_string.strip().upper()
 
@@ -139,33 +129,6 @@ class Command(object):
         self.DisplayTemplate = display_template
         self.Parameters = parameters
         self.TextOnlyParameter = text_only_parameter
-
-    def parse_parameters(self, parameters_string):
-        parameters = {}
-        parameter = None
-        parameter_cmd = None
-        index = 0
-        for index in range(0, len(parameters_string)):
-            _c = parameters_string[index].upper()
-            if _c.isspace():
-                continue
-            elif _c in self.Parameters:
-                parameter = _c
-                parameter_cmd = self.Parameters[parameter].ParseFunction
-                break
-
-        if parameter is not None and len(parameters_string) > 0:
-            parameters_string = parameters_string[index + 1:]
-            if parameter_cmd is not None:
-                parameter_value, parameters_string = parameter_cmd(parameters_string)
-                parameters[parameter] = parameter_value
-                additional_parameters = self.parse_parameters(parameters_string)
-                if any(filter(parameters.has_key, additional_parameters.keys())):
-                    raise ValueError("Either a parameter value was repeated or an unexpected character was found, "
-                                     "cannot parse gcode.")
-                parameters.update(additional_parameters)
-
-        return parameters
 
     def to_string(self):
         # if we do not have gcode, construct from the command and parameters

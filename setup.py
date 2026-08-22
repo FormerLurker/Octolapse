@@ -1,8 +1,8 @@
 # coding=utf-8
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
+import os
 import sys
-import platform
 
 # Versioneer import with fallback
 try:
@@ -74,7 +74,6 @@ def get_requirements(requirements_path):
                 requirements.append(line)
     return requirements
 
-import os
 requirements = get_requirements('requirements.txt')
 
 setup(

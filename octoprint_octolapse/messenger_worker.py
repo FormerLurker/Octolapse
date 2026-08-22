@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,12 +19,8 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import absolute_import
-from __future__ import unicode_literals
 from threading import Thread, Lock
-# Remove python 2 support
-# from six.moves import queue
-import queue as queue
+import queue
 from collections import deque
 import time
 from octoprint_octolapse.log import LoggingConfigurator

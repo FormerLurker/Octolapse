@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,9 +19,6 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
-# remove unused usings
-# import six
 import os
 import json
 from csv import DictWriter
@@ -687,8 +683,6 @@ class WebcamSnapshotJob(SnapshotThread):
             on_post_processing_error_callback=on_post_processing_error_callback
         )
         self.address = self.snapshot_job_info.camera.webcam_settings.address
-        # Remove python 2 support
-        # if isinstance(self.address, six.string_types):
         if isinstance(self.address, str):
             self.address = self.address.strip()
         self.username = self.snapshot_job_info.camera.webcam_settings.username

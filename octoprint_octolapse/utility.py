@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,7 +19,6 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
 import math
 import uuid
 import ntpath
@@ -30,7 +28,7 @@ import subprocess
 import sys
 import time
 import urllib
-import traceback
+import urllib.parse
 import threading
 import json
 import shutil
@@ -38,7 +36,7 @@ import errno
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
-# Todo:  Determin if this is still necessary.
+# Todo:  Determine if this is still necessary.
 try:
     from slugify import Slugify
 except ImportError:
@@ -51,7 +49,6 @@ from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
 logger = logging_configurator.get_logger(__name__)
 
-from threading import Timer
 FLOAT_MATH_EQUALITY_RANGE = 0.0000001
 
 def get_float(value, default):
@@ -965,12 +962,8 @@ class TimelapseJobInfo(object):
         )
 
 
-if sys.version_info < (3, 0):
-    def unquote(value):
-        return urllib.unquote(value)
-else:
-    def unquote(value):
-        return urllib.parse.unquote(value)
+def unquote(value):
+    return urllib.parse.unquote(value)
 
 
 class RecurringTimerThread(threading.Thread):

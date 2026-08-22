@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -21,15 +20,12 @@
 # following email address: FormerLurker@pm.me
 ##################################################################################
 # Convert all string literals to unicode for Python 2 compatibility
-from __future__ import unicode_literals
 import os
 import time
 import datetime
 from file_read_backwards import FileReadBackwards
 import re
-# remove unused usings
-# import six
-# import string
+
 # create the module level logger
 from octoprint_octolapse.log import LoggingConfigurator
 logging_configurator = LoggingConfigurator()
@@ -230,8 +226,6 @@ class GcodeProcessor(object):
 
     @staticmethod
     def get_comment(self, line):
-        # Remove python 2 support
-        # assert (isinstance(line, six.string_types))
         assert (isinstance(line, str))
         match_position = line.find(u';')
         if match_position > -1 and len(line) > match_position + 1:
@@ -278,8 +272,6 @@ class GcodeSettingsProcessor(GcodeProcessor):
         self.active_settings_dictionary = {}
         self.active_regex_definitions = {}
         # copy any matching settings definitions
-        # Remove python 2 support
-        # for key, setting in six.iteritems(self.all_settings_dictionary):
         for key, setting in self.all_settings_dictionary.items():
             if (
                 filter_tags is None
@@ -290,8 +282,6 @@ class GcodeSettingsProcessor(GcodeProcessor):
                     setting.name, setting.parsing_function, setting.tags
                 )
         # apply regex filters
-        # Remove python 2 support
-        # for key, regex in six.iteritems(self.all_regex_definitions):
         for key, regex in self.all_regex_definitions.items():
             if (
                 filter_tags is None
@@ -323,8 +313,6 @@ class GcodeSettingsProcessor(GcodeProcessor):
             self.reverse_lines_processed += 1
 
         logger.verbose("Process type: %s, line: %s, gcode: %s", process_type, line_number, line)
-        # Remove python 2 support
-        # for key, regex_definition in six.iteritems(self.active_regex_definitions):
         for key, regex_definition in self.active_regex_definitions.items():
             if regex_definition.match_once and regex_definition.has_matched:
                 continue

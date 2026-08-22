@@ -1,4 +1,3 @@
-# coding=utf-8
 ##################################################################################
 # Octolapse - A plugin for OctoPrint used for making stabilized timelapse videos.
 # Copyright (C) 2023  Brad Hochgesang
@@ -20,23 +19,17 @@
 # You can contact the author either through the git-hub repository, or at the
 # following email address: FormerLurker@pm.me
 ##################################################################################
-from __future__ import unicode_literals
 import re
 import math
 import os
 import sys
 import threading
-# Remove python 2 support
-# from six.moves import queue
-import queue as queue
-# remove unused usings
-# from six import string_types, iteritems
+import queue
 import time
 import json
 import copy
-import zipfile as zipfile
+import zipfile
 from csv import DictReader
-# sarge was added to the additional requirements for the plugin
 import datetime
 from tempfile import mkdtemp
 import uuid
@@ -834,8 +827,6 @@ class RenderingProcessor(threading.Thread):
                     archive_files_temp_dict = {}
 
                     # now create the directories and files and place them in the temp snapshot directory
-                    # remove python 2 support
-                    # for job_guid, job in iteritems(archive_files_dict):
                     for job_guid, job in archive_files_dict.items():
                         job_path = utility.get_temporary_snapshot_job_path(temporary_directory, job_guid)
                         if not os.path.isdir(job_path):
@@ -846,8 +837,6 @@ class RenderingProcessor(threading.Thread):
                             with zip_file.open(job_info_file["fileinfo"]) as info_file:
                                 with open(file_path, 'wb') as target_file:
                                     target_file.write(info_file.read())
-                        # remove python 2 support
-                        # for camera_guid, camera in iteritems(job["cameras"]):
                         for camera_guid, camera in job["cameras"].items():
                             camera_path = utility.get_temporary_snapshot_job_camera_path(
                                 temporary_directory, job_guid, camera_guid
@@ -873,12 +862,8 @@ class RenderingProcessor(threading.Thread):
                 }
         # now we should have extracted all of the items, add the job to the queue for these cameras
         has_created_jobs = False
-        # remove python 2 support
-        # for job_guid, job in iteritems(archive_files_dict):
         for job_guid, job in archive_files_dict.items():
             has_created_jobs = True
-            # remove python 2 support
-            # for camera_guid, camera in iteritems(job["cameras"]):
             for camera_guid, camera in job["cameras"].items():
                 # add this job to the queue as an imported item
                 if prevent_archive:
@@ -2244,8 +2229,6 @@ class TimelapseRenderJob(threading.Thread):
         d = ImageDraw.Draw(text_image)
 
         # Process the text position to improve the alignment.
-        # remove python 2 support
-        # if isinstance(overlay_location, string_types):
         if isinstance(overlay_location, str):
             overlay_location = json.loads(overlay_location)
         x, y = tuple(overlay_location)
